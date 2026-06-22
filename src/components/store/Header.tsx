@@ -6,6 +6,7 @@ import { useHydrated } from '@/hooks/use-hydrated'
 import { Search, Heart, ShoppingBag, Menu, X, Sun } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { CurrencySelector } from './CurrencySelector'
+import { LoyaltyBadge } from './LoyaltyBadge'
 
 const navLinks = [
   { label: 'Collections', href: '#collections' },
@@ -98,6 +99,9 @@ export function Header() {
 
             {/* Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
+              <div className="hidden sm:block">
+                <LoyaltyBadge />
+              </div>
               <div className="hidden sm:block">
                 <CurrencySelector />
               </div>

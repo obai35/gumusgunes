@@ -1,21 +1,23 @@
 'use client'
 
-import { Heart, Star, Eye } from 'lucide-react'
+import { Heart, Star, Eye, GitCompare } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Product } from '@/lib/types'
 import { parseTags, discountPercent, cn } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
-import { useCart, useUI, useWishlist } from '@/lib/store'
+import { useCart, useUI, useWishlist, useCompare } from '@/lib/store'
 import { toast } from 'sonner'
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const { addItem } = useCart()
   const { setProductModal } = useUI()
   const wishlist = useWishlist()
+  const compare = useCompare()
   const formatPrice = useFormatPrice()
   const tags = parseTags(product.tags)
   const discount = discountPercent(product.price, product.compareAtPrice)
   const isWishlisted = wishlist.has(product.id)
+  const isCompared = compare.has(product.id)
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -71,19 +73,41 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           )}
         </div>
 
-        {/* Wishlist */}
-        <button
-          onClick={handleToggleWishlist}
-          className={cn(
-            'absolute top-3 right-3 h-9 w-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all',
-            isWishlisted
-              ? 'bg-gold text-navy-deep'
-              : 'bg-background/80 text-navy hover:bg-background hover:text-gold'
-          )}
-          aria-label="Toggle wishlist"
-        >
-          <Heart className={cn('h-4 w-4', isWishlisted && 'fill-current')} />
-        </button>
+        {/* Wishlist + Compare */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1.5">
+          <button
+            onClick={handleToggleWishlist}
+            className={cn(
+              'h-9 w-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all',
+              isWishlisted
+                ? 'bg-gold text-navy-deep'
+                : 'bg-background/80 text-navy hover:bg-background hover:text-gold'
+            )}
+            aria-label="Toggle wishlist"
+          >
+            <Heart className={cn('h-4 w-4', isWishlisted && 'fill-current')} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isCompared && compare.ids.length >= 3) {
+                toast.error('You can compare up to 3 pieces. Remove one first.')
+                return
+              }
+              compare.toggle(product.id)
+              toast(isCompared ? 'Removed from compare' : 'Added to compare', { description: product.name })
+            }}
+            className={cn(
+              'h-9 w-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all',
+              isCompared
+                ? 'bg-navy text-gold ring-2 ring-gold'
+                : 'bg-background/80 text-navy hover:bg-background hover:text-gold'
+            )}
+            aria-label="Toggle compare"
+          >
+            <GitCompare className={cn('h-4 w-4', isCompared && 'scale-110')} />
+          </button>
+        </div>
 
         {/* Hover actions */}
         <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
@@ -127,13 +151,18 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         </p>
 
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-semibold text-navy">{formatPrice(product.price)}</span>
-            {product.compareAtPrice && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(product.compareAtPrice)}
-              </span>
-            )}
+          <div className="flex flex-col">
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-semibold text-navy">{formatPrice(product.price)}</span>
+              {product.compareAtPrice && (
+                <span className="text-xs text-muted-foreground line-through">
+                  {formatPrice(product.compareAtPrice)}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] text-gold font-medium tracking-wide mt-0.5">
+              +{Math.floor(product.price)} pts
+            </span>
           </div>
           {tags[0] && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-muted-foreground tracking-wide">

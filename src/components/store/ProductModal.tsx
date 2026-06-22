@@ -12,6 +12,7 @@ import { useFormatPrice } from '@/hooks/use-format-price'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { ReviewForm, RingSizeSelector } from './ReviewForm'
+import { EngravingOption, ENGRAVING_PRICE } from './EngravingOption'
 
 type DetailData = {
   product: Product
@@ -33,7 +34,12 @@ export function ProductModal() {
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0)
   const [zoom, setZoom] = useState(false)
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 })
+  const [engraving, setEngraving] = useState({ enabled: false, text: '', font: 'serif' })
   const imageRef = useRef<HTMLDivElement>(null)
+
+  // Which products support engraving (rings, pendants, bracelets — items with a flat surface)
+  const supportsEngraving = (categorySlug?: string) =>
+    categorySlug === 'rings' || categorySlug === 'pendants' || categorySlug === 'bracelets'
 
   useEffect(() => {
     if (!productModalId) return
@@ -45,6 +51,7 @@ export function ProductModal() {
       setQty(1)
       setActiveImage(0)
       setRingSize('')
+      setEngraving({ enabled: false, text: '', font: 'serif' })
     })
     fetch(`/api/products/${productModalId}`)
       .then((r) => r.json())
@@ -87,9 +94,14 @@ export function ProductModal() {
     if (!product) return
     addItem(product, qty)
     const sizeNote = ringSize && product.category?.slug === 'rings' ? ` · Size ${ringSize}` : ''
-    toast.success(`${product.name} × ${qty} added to bag${sizeNote}`)
+    const engraveNote = engraving.enabled && engraving.text ? ` · Engraved: "${engraving.text}"` : ''
+    toast.success(`${product.name} × ${qty} added to bag${sizeNote}${engraveNote}`)
     setProductModal(null)
   }
+
+  // Total price including engraving
+  const unitPrice = product ? product.price + (engraving.enabled ? ENGRAVING_PRICE : 0) : 0
+  const lineTotal = unitPrice * qty
 
   return (
     <AnimatePresence>
@@ -273,6 +285,21 @@ export function ProductModal() {
                     </div>
                   )}
 
+                  {/* Custom engraving (rings, pendants, bracelets) */}
+                  {supportsEngraving(product.category?.slug) && (
+                    <div className="mb-5">
+                      <EngravingOption
+                        enabled={engraving.enabled}
+                        text={engraving.text}
+                        font={engraving.font}
+                        price={ENGRAVING_PRICE}
+                        onToggle={(enabled) => setEngraving((e) => ({ ...e, enabled }))}
+                        onTextChange={(text) => setEngraving((e) => ({ ...e, text }))}
+                        onFontChange={(font) => setEngraving((e) => ({ ...e, font }))}
+                      />
+                    </div>
+                  )}
+
                   {/* Quantity + Add */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center border border-border rounded-full">
@@ -296,7 +323,7 @@ export function ProductModal() {
                       className="flex-1 h-11 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors text-sm font-semibold tracking-wide"
                     >
                       <ShoppingBag className="h-4 w-4 mr-2" />
-                      Add to Bag · {formatPrice(product.price * qty)}
+                      Add to Bag · {formatPrice(lineTotal)}
                     </Button>
                     <button
                       onClick={() => {

@@ -22,6 +22,9 @@ import { SearchDialog } from '@/components/store/SearchDialog'
 import { WishlistDrawer } from '@/components/store/WishlistDrawer'
 import { ConciergeChat } from '@/components/store/ConciergeChat'
 import { ExitIntentPopup } from '@/components/store/ExitIntentPopup'
+import { CompareModal } from '@/components/store/CompareModal'
+import { CompareTray } from '@/components/store/CompareTray'
+import { RewardsSection } from '@/components/store/RewardsSection'
 import { useCart } from '@/lib/store'
 import type { Product, Category } from '@/lib/types'
 
@@ -107,6 +110,7 @@ export default function Home() {
         <AboutSection />
         <CraftsmanshipTimeline />
         <Testimonials />
+        <RewardsSection />
         <Newsletter />
       </main>
 
@@ -118,8 +122,10 @@ export default function Home() {
       <CheckoutDialog />
       <SearchDialog />
       <WishlistDrawer />
+      <CompareModal />
       <ConciergeChat />
       <ExitIntentPopup />
+      <CompareTray />
 
       {/* Floating action buttons */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">

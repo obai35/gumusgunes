@@ -171,3 +171,59 @@ export const useCurrency = create<CurrencyState>()(
     }
   )
 )
+
+// Product comparison (max 3 products)
+type CompareState = {
+  ids: string[]
+  toggle: (id: string) => void
+  clear: () => void
+  has: (id: string) => boolean
+  isOpen: boolean
+  setOpen: (open: boolean) => void
+}
+
+export const useCompare = create<CompareState>()(
+  persist(
+    (set, get) => ({
+      ids: [],
+      isOpen: false,
+      toggle: (id) => {
+        const ids = get().ids
+        if (ids.includes(id)) {
+          set({ ids: ids.filter((x) => x !== id) })
+        } else if (ids.length < 3) {
+          set({ ids: [...ids, id] })
+        }
+      },
+      clear: () => set({ ids: [] }),
+      has: (id) => get().ids.includes(id),
+      setOpen: (open) => set({ isOpen: open }),
+    }),
+    {
+      name: 'gg_compare',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ ids: state.ids }),
+    }
+  )
+)
+
+// Loyalty points (earned from purchases; 1 point per $1 spent)
+type LoyaltyState = {
+  points: number
+  addPoints: (n: number) => void
+  reset: () => void
+}
+
+export const useLoyalty = create<LoyaltyState>()(
+  persist(
+    (set, get) => ({
+      points: 125, // welcome bonus
+      addPoints: (n) => set({ points: get().points + n }),
+      reset: () => set({ points: 0 }),
+    }),
+    {
+      name: 'gg_loyalty',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)

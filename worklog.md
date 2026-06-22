@@ -204,3 +204,56 @@ Task: QA testing, implement currency selector, Complete the Look cross-sell, ima
 - Exit-intent popup uses `mouseout` with `clientY <= 0` — works on desktop but won't trigger on mobile (no mouse). **Next phase**: add a mobile fallback (e.g., trigger after 30s of inactivity, or on scroll-up past hero).
 - **Recommendation for next phase**: Add product comparison feature (compare 2-3 products side-by-side), a "back in stock" email notification signup for out-of-stock items, and a loyalty/rewards points display in the header. Could also add a wishlist share link feature.
 - All new components follow the established brand identity (navy + silver + gold, Cormorant display font, sun/sparkle motifs, luxury animations).
+
+---
+Task ID: 11 (Cron Review Round 3)
+Agent: Main (Z.ai Code) — scheduled review
+Task: QA testing, implement product comparison, loyalty rewards system, custom engraving
+
+## Current Project Status Assessment
+- Project stable from Round 2 (Tasks 1–10). All previously-built features verified working.
+- Lint clean, no console errors, no hydration errors.
+- This round focused on the next-phase recommendations from Round 2: product comparison, loyalty/rewards points, and custom engraving personalization.
+
+## Goals / Completed Modifications / Verification
+
+### New Features Implemented
+1. **Product Comparison** (`src/components/store/CompareModal.tsx` + `CompareTray.tsx` + `useCompare` store)
+   - Compare button on every ProductCard (next to wishlist) — adds to compare list (max 3).
+   - Floating CompareTray appears at bottom-center when items are selected, showing count, product IDs, and a "Compare" button.
+   - CompareModal opens with side-by-side product cards (image, name, price, add-to-bag) + a 12-row comparison table (Price, Material, Full Material, Weight, Category, Rating, Reviews, In Stock, Bestseller, New Arrival, SKU, Tags).
+   - Sticky product header row; striped rows for readability; empty slot placeholders.
+   - Max-3 enforcement with toast error if user tries to add a 4th.
+   - **Verified**: added 2 products to compare → tray appeared with "2/3 selected" → opened modal → 12-row comparison table rendered with correct values (e.g., Price $189.00 vs $410.00).
+
+2. **Loyalty/Rewards System** (`src/components/store/LoyaltyBadge.tsx` + `RewardsSection.tsx` + `useLoyalty` store)
+   - LoyaltyBadge in header: crown icon + points count (starts at 125 welcome bonus), click to open dropdown.
+   - Dropdown shows current tier (Silver/Gold/Platinum), progress bar to next tier, and all 3 tiers with perks + point requirements.
+   - RewardsSection on homepage: navy "Your Status" card with animated progress bar, 3 tier cards (Silver 0+, Gold 500+, Platinum 2000+) each with 3-4 perks, "Current" badge on active tier.
+   - Points earned indicator (+X pts) on every ProductCard below the price.
+   - Tier perks: Silver (birthday gift, early sale access), Gold (10% off, free express shipping, priority concierge, exclusive pieces), Platinum (15% off, first access, private atelier appointments, annual gift).
+   - **Verified**: header badge shows "125 pts" → dropdown shows "Silver Member, 375 pts to Gold" with progress bar → Rewards section shows status card + 3 tier cards with "Current" badge on Silver.
+
+3. **Custom Engraving** (`src/components/store/EngravingOption.tsx`)
+   - Toggleable engraving option (+$15) on rings, pendants, and bracelets.
+   - 3 font styles: Classic (serif), Script (italic), Modern (mono) — selectable chips.
+   - Text input with 12-character limit, auto-uppercase, character counter.
+   - Live preview on navy background showing the engraved text in the selected font.
+   - Price dynamically updates on the "Add to Bag" button to include engraving fee.
+   - Engraving details included in the add-to-cart toast ("Engraved: AYSE").
+   - **Verified**: opened a pendant → enabled engraving → selected Modern font → typed "AYSE" → preview showed stylized text → Add to Bag button updated from $189 to $204 ($189 + $15).
+
+### Verification Results
+- `bun run lint` → clean (0 errors, 0 warnings).
+- Dev server compiles without errors.
+- agent-browser QA: no console errors, no runtime errors (one transient error during testing resolved on reload).
+- All 3 new features visually + functionally verified via screenshots + VLM analysis + DOM inspection.
+- Compare table verified with 12 rows of correct comparison data.
+- Engraving price calculation verified ($189 + $15 = $204 on button).
+
+## Unresolved Issues / Risks / Next-Phase Recommendations
+- **No bugs or errors** found this round.
+- The compare modal's table is below the sticky product header and requires scrolling — on smaller screens the comparison can feel cramped. **Next phase**: consider a horizontal-scroll comparison on mobile, or a "swap to grid" view toggle.
+- Loyalty points are currently client-side only (localStorage). **Next phase**: persist points to the database tied to email, and actually award points on order completion (wire `useLoyalty.addPoints` into the CheckoutDialog success handler).
+- **Recommendation for next phase**: Add a "Virtual Try-On" AR feature for rings (using camera), a "Build Your Own Bundle" configurator (necklace + pendant + earrings with bundle discount), and a wishlist share-link feature (generate a URL to share the wishlist). Could also add a countdown timer for limited-time offers and a "back in stock" email notification signup.
+- All new components follow the established brand identity (navy + silver + gold, Cormorant display font, sun/sparkle/crown motifs, luxury animations).
