@@ -5,11 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Heart, ShoppingBag, Star, Truck, ShieldCheck, RefreshCw, Minus, Plus, ChevronRight,
 } from 'lucide-react'
-import { useUI, useCart, useWishlist } from '@/lib/store'
+import { useUI, useCart, useWishlist, useRecentlyViewed } from '@/lib/store'
 import type { Product, Review } from '@/lib/types'
 import { formatPrice, parseTags, discountPercent, formatDate, cn } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { ReviewForm, RingSizeSelector } from './ReviewForm'
 
 type DetailData = {
   product: Product
@@ -21,10 +22,13 @@ export function ProductModal() {
   const { productModalId, setProductModal } = useUI()
   const { addItem } = useCart()
   const wishlist = useWishlist()
+  const recentlyViewed = useRecentlyViewed()
   const [data, setData] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(false)
   const [qty, setQty] = useState(1)
   const [activeImage, setActiveImage] = useState(0)
+  const [ringSize, setRingSize] = useState('')
+  const [reviewRefreshKey, setReviewRefreshKey] = useState(0)
 
   useEffect(() => {
     if (!productModalId) return
@@ -35,12 +39,16 @@ export function ProductModal() {
       setLoading(true)
       setQty(1)
       setActiveImage(0)
+      setRingSize('')
     })
     fetch(`/api/products/${productModalId}`)
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return
-        if (d.ok) setData(d)
+        if (d.ok) {
+          setData(d)
+          recentlyViewed.add(d.product.id)
+        }
       })
       .finally(() => {
         if (cancelled) return
@@ -66,7 +74,8 @@ export function ProductModal() {
   const handleAdd = () => {
     if (!product) return
     addItem(product, qty)
-    toast.success(`${product.name} × ${qty} added to bag`)
+    const sizeNote = ringSize && product.category?.slug === 'rings' ? ` · Size ${ringSize}` : ''
+    toast.success(`${product.name} × ${qty} added to bag${sizeNote}`)
     setProductModal(null)
   }
 
@@ -221,6 +230,13 @@ export function ProductModal() {
                     </span>
                   </div>
 
+                  {/* Ring size selector (only for rings) */}
+                  {product.category?.slug === 'rings' && (
+                    <div className="mb-5">
+                      <RingSizeSelector value={ringSize} onChange={setRingSize} />
+                    </div>
+                  )}
+
                   {/* Quantity + Add */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center border border-border rounded-full">
@@ -291,12 +307,14 @@ export function ProductModal() {
                   )}
 
                   {/* Reviews */}
-                  {reviews.length > 0 && (
-                    <div className="mt-2">
-                      <h3 className="font-display text-lg font-semibold text-navy mb-3">
-                        Customer Reviews ({reviews.length})
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-display text-lg font-semibold text-navy">
+                        Customer Reviews {reviews.length > 0 && `(${reviews.length})`}
                       </h3>
-                      <div className="space-y-3 max-h-64 overflow-y-auto scroll-luxury pr-2">
+                    </div>
+                    {reviews.length > 0 && (
+                      <div className="space-y-3 max-h-64 overflow-y-auto scroll-luxury pr-2 mb-3">
                         {reviews.map((r) => (
                           <div key={r.id} className="p-3 rounded-xl bg-secondary/40">
                             <div className="flex items-center justify-between mb-1.5">
@@ -326,8 +344,13 @@ export function ProductModal() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
+                    <ReviewForm
+                      key={reviewRefreshKey}
+                      productId={product.id}
+                      onSubmitted={() => setReviewRefreshKey((k) => k + 1)}
+                    />
+                  </div>
 
                   {/* Related */}
                   {related.length > 0 && (

@@ -123,3 +123,27 @@ export const useWishlist = create<WishlistState>()(
     }
   )
 )
+
+// Recently viewed products (max 8, most recent first, no duplicates)
+type RecentlyViewedState = {
+  ids: string[]
+  add: (id: string) => void
+  clear: () => void
+}
+
+export const useRecentlyViewed = create<RecentlyViewedState>()(
+  persist(
+    (set, get) => ({
+      ids: [],
+      add: (id) => {
+        const ids = get().ids.filter((x) => x !== id)
+        set({ ids: [id, ...ids].slice(0, 8) })
+      },
+      clear: () => set({ ids: [] }),
+    }),
+    {
+      name: 'gg_recently_viewed',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)

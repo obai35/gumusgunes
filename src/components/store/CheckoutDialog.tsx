@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Check, CreditCard, Banknote, Wallet, ShieldCheck, Loader2, PartyPopper } from 'lucide-react'
+import { X, Check, CreditCard, Banknote, Wallet, ShieldCheck, Loader2, PartyPopper, Gift } from 'lucide-react'
 import { useCart, useUI } from '@/lib/store'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, cn } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,6 +12,8 @@ import { toast } from 'sonner'
 import type { Order } from '@/lib/types'
 
 type Step = 'details' | 'payment' | 'processing' | 'done'
+
+const GIFT_WRAP_PRICE = 5
 
 export function CheckoutDialog() {
   const { isOpen: _, items, subtotal, clearCart } = useCart()
@@ -32,12 +34,15 @@ export function CheckoutDialog() {
     cardName: '',
     cardExpiry: '',
     cardCvc: '',
+    giftWrap: false,
+    giftMessage: '',
   })
 
   const total = subtotal()
   const shipping = total >= 250 ? 0 : 15
+  const giftWrapFee = form.giftWrap ? GIFT_WRAP_PRICE : 0
   const tax = total * 0.18
-  const grandTotal = total + shipping + tax
+  const grandTotal = total + shipping + tax + giftWrapFee
 
   if (!checkoutOpen) return null
 
@@ -72,7 +77,7 @@ export function CheckoutDialog() {
         city: form.city,
         postalCode: form.postalCode,
         country: form.country,
-        notes: form.notes,
+        notes: [form.notes, form.giftWrap && form.giftMessage ? `[Gift message: ${form.giftMessage}]` : '', form.giftWrap ? '[Gift wrapping included]' : ''].filter(Boolean).join('\n'),
         paymentMethod: form.paymentMethod,
         items: items.map((i) => ({
           productId: i.product.id,
@@ -232,9 +237,57 @@ export function CheckoutDialog() {
                       id="notes"
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      placeholder="Gift wrapping, delivery instructions, etc."
+                      placeholder="Delivery instructions, special requests, etc."
                       className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm min-h-[80px] resize-none focus:outline-none focus:ring-2 focus:ring-gold"
                     />
+                  </div>
+
+                  {/* Gift wrap option */}
+                  <div className={cn(
+                    'p-4 rounded-xl border-2 transition-colors cursor-pointer',
+                    form.giftWrap ? 'border-gold bg-gold/5' : 'border-border bg-secondary/30 hover:border-gold/40'
+                  )}
+                    onClick={() => setForm({ ...form, giftWrap: !form.giftWrap })}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={cn(
+                        'h-5 w-5 rounded-md border-2 flex-shrink-0 flex items-center justify-center mt-0.5 transition-colors',
+                        form.giftWrap ? 'bg-gold border-gold' : 'border-border'
+                      )}>
+                        {form.giftWrap && <Check className="h-3 w-3 text-navy-deep" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Gift className="h-4 w-4 text-gold" />
+                          <span className="font-display text-sm font-semibold text-navy">
+                            Signature Gift Wrapping
+                          </span>
+                          <span className="ml-auto text-sm font-semibold text-gold">
+                            +{formatPrice(GIFT_WRAP_PRICE)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Each piece arrives in our signature navy box with a hand-tied gold ribbon.
+                          Add a personalized note below.
+                        </p>
+                        {form.giftWrap && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-3"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <textarea
+                              value={form.giftMessage}
+                              onChange={(e) => setForm({ ...form, giftMessage: e.target.value })}
+                              placeholder="Write a gift message (optional)…"
+                              maxLength={200}
+                              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm min-h-[60px] resize-none focus:outline-none focus:ring-2 focus:ring-gold"
+                            />
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Order summary */}
@@ -247,6 +300,14 @@ export function CheckoutDialog() {
                       <span className="text-muted-foreground">Shipping</span>
                       <span className="font-medium text-navy">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                     </div>
+                    {giftWrapFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Gift className="h-3 w-3 text-gold" /> Gift wrapping
+                        </span>
+                        <span className="font-medium text-navy">{formatPrice(giftWrapFee)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax (18% VAT)</span>
                       <span className="font-medium text-navy">{formatPrice(tax)}</span>
@@ -376,6 +437,14 @@ export function CheckoutDialog() {
                       <span className="text-silver/60">Shipping</span>
                       <span>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
                     </div>
+                    {giftWrapFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-silver/60 flex items-center gap-1">
+                          <Gift className="h-3 w-3 text-gold" /> Gift wrapping
+                        </span>
+                        <span>{formatPrice(giftWrapFee)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-silver/60">Tax</span>
                       <span>{formatPrice(tax)}</span>

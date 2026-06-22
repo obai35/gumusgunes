@@ -76,3 +76,72 @@ Stage Summary:
 - Brand identity (Gümüş Güneş / Silver Sun) consistently applied: navy + silver + gold, Cormorant display font, sun/diamond motifs.
 - All core interactions verified working in browser via agent-browser.
 - No console errors or hydration errors after fixes.
+
+---
+Task ID: 9 (Cron Review Round 1)
+Agent: Main (Z.ai Code) — scheduled review
+Task: QA testing via agent-browser, fix bugs, add new features and styling improvements
+
+## Current Project Status Assessment
+- Project was in a stable, complete state from previous round (Tasks 1–8).
+- Full e-commerce store functional: 6 categories, 17 products, 40+ reviews, cart/checkout/search/wishlist all working.
+- No bugs or errors found during QA (lint clean, no console errors, no hydration errors).
+- Decided to focus this round on **new features** and **styling enhancements** per the mandatory requirements.
+
+## Goals / Completed Modifications / Verification
+
+### New Features Implemented
+1. **AI Concierge Chat Widget** (`src/components/store/ConciergeChat.tsx` + `src/app/api/chat/route.ts`)
+   - Floating button bottom-left with pulsing ring animation.
+   - Opens a chat panel with navy-radial header, greeting message, 4 quick-suggestion chips.
+   - Powered by z-ai-web-dev-sdk LLM with a brand-aware system prompt (Gümüş Güneş concierge persona, Istanbul atelier, sizing/care advice, <120 word replies).
+   - Multi-turn conversation with history (last 8 messages), typing indicator, auto-scroll.
+   - **Verified**: sent "What ring size should I get for a 17mm finger?" → AI replied with accurate US 7.5 advice and measurement tips.
+
+2. **Recently Viewed Products** (`src/components/store/RecentlyViewed.tsx` + `useRecentlyViewed` store)
+   - Tracks viewed product IDs in localStorage (max 8, most recent first, no duplicates).
+   - Horizontal scrollable row of product cards with hover effects.
+   - Only appears after viewing 2+ products (hydration-safe via useHydrated hook).
+   - **Verified**: viewed 3 products → section appeared with 3 product thumbnails + clock icon.
+
+3. **Review Submission Form** (`src/components/store/ReviewForm.tsx`)
+   - Expandable form in ProductModal with 5-star rating selector (hover preview), name, email, title, comment fields.
+   - Posts to existing `/api/reviews` endpoint; backend recalculates product rating + reviewCount.
+   - Success state with checkmark animation; auto-collapses after 1.8s.
+   - **Verified**: submitted a test review → toast "Thank you! Your review has been published." → confirmed in DB (product now has 3 reviews, rating updated to 5.0).
+
+4. **Ring Size Selector** (`RingSizeSelector` in ReviewForm.tsx)
+   - Shows US sizes 5–10 (in 0.5 increments) as selectable chips, only for products in "rings" category.
+   - Includes expandable "Size guide" with mm-to-size conversion table.
+   - Selected size included in add-to-cart toast message.
+   - **Verified**: opened Silver Solitaire Diamond Ring → size selector visible with all 11 size chips + Size guide link.
+
+5. **Gift Wrap Option in Checkout** (`src/components/store/CheckoutDialog.tsx`)
+   - Toggleable gift wrap card (+$5) with navy box + gold ribbon description.
+   - Expands to show personalized gift message textarea (200 char limit).
+   - Gift wrap fee added to both details-step and payment-step order summaries.
+   - Gift message + gift wrap flag included in order notes payload.
+   - **Verified**: gift wrap section visible with +$5.00, order summary updates, Continue to Payment button present.
+
+### Styling Enhancements
+6. **Craftsmanship Timeline** (`src/components/store/CraftsmanshipTimeline.tsx`)
+   - New "From Sketch to Shine" section between About and Testimonials.
+   - 4-step horizontal timeline: Sketch & Design (01) → Stone Selection (02) → Casting & Forging (03) → Hand Finishing (04).
+   - Each step: navy circle with gold icon, gold number badge, pulsing ring animation, duration badge, description.
+   - Connecting gradient line on desktop; stacked on mobile.
+   - Closing quote: "We do not make jewelry to be worn once. We make it to be lived in."
+   - **Verified**: all 4 steps render with correct icons, titles, durations, and quote.
+
+### Verification Results
+- `bun run lint` → clean (0 errors, 0 warnings).
+- Dev server compiles without errors.
+- agent-browser QA: no console errors, no hydration errors, no runtime errors.
+- All 5 new features visually verified via screenshots + VLM analysis.
+- AI concierge backend verified end-to-end (real LLM response).
+- Review submission verified end-to-end (saved to DB, rating recalculated).
+
+## Unresolved Issues / Risks / Next-Phase Recommendations
+- **No bugs or errors** found this round.
+- The AI concierge currently has no product-context awareness (could pass the currently-viewed product to the API for tailored advice) — the backend already supports `productContext` param but the frontend doesn't send it yet. **Next phase**: wire ProductModal's product context into concierge chat.
+- **Recommendation for next phase**: Add a currency selector (USD/EUR/TRY), a "Complete the Look" cross-sell section in the cart drawer, and a promotional exit-intent popup. Could also add product image zoom on hover in the modal.
+- All new components follow the established brand identity (navy + silver + gold, Cormorant display font, sun/sparkle motifs).

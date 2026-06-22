@@ -10,14 +10,17 @@ import { FeaturedProducts } from '@/components/store/FeaturedProducts'
 import { ProductGrid } from '@/components/store/ProductGrid'
 import { PromoBanner } from '@/components/store/PromoBanner'
 import { AboutSection } from '@/components/store/AboutSection'
+import { CraftsmanshipTimeline } from '@/components/store/CraftsmanshipTimeline'
 import { Testimonials } from '@/components/store/Testimonials'
 import { Newsletter } from '@/components/store/Newsletter'
+import { RecentlyViewed } from '@/components/store/RecentlyViewed'
 import { Footer } from '@/components/store/Footer'
 import { ProductModal } from '@/components/store/ProductModal'
 import { CartDrawer } from '@/components/store/CartDrawer'
 import { CheckoutDialog } from '@/components/store/CheckoutDialog'
 import { SearchDialog } from '@/components/store/SearchDialog'
 import { WishlistDrawer } from '@/components/store/WishlistDrawer'
+import { ConciergeChat } from '@/components/store/ConciergeChat'
 import { useCart } from '@/lib/store'
 import type { Product, Category } from '@/lib/types'
 
@@ -98,7 +101,10 @@ export default function Home() {
           />
         )}
 
+        <RecentlyViewed allProducts={products} />
+
         <AboutSection />
+        <CraftsmanshipTimeline />
         <Testimonials />
         <Newsletter />
       </main>
@@ -111,6 +117,7 @@ export default function Home() {
       <CheckoutDialog />
       <SearchDialog />
       <WishlistDrawer />
+      <ConciergeChat />
 
       {/* Floating action buttons */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
