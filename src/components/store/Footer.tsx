@@ -1,6 +1,7 @@
 'use client'
 
-import { Sun, Instagram, Facebook, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react'
+import { Sun, Instagram, Facebook, Twitter, Youtube, Mail, Phone, MapPin, Package } from 'lucide-react'
+import { useUI } from '@/lib/store'
 
 const columns = [
   {
@@ -38,6 +39,7 @@ const columns = [
 ]
 
 export function Footer() {
+  const { setOrderTrackingOpen } = useUI()
   return (
     <footer className="bg-navy-deep text-silver mt-auto">
       {/* Top band */}
@@ -120,6 +122,17 @@ export function Footer() {
                       </a>
                     </li>
                   ))}
+                  {col.title === 'Care' && (
+                    <li>
+                      <button
+                        onClick={() => setOrderTrackingOpen(true)}
+                        className="text-sm text-silver/60 hover:text-gold transition-colors inline-flex items-center gap-1.5"
+                      >
+                        <Package className="h-3.5 w-3.5" />
+                        Track Your Order
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </div>
             ))}

@@ -1,0 +1,54 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { z } from 'zod'
+
+const Schema = z.object({
+  email: z.string().email(),
+  productId: z.string().min(1),
+})
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const parsed = Schema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: 'Valid email and product are required.' },
+        { status: 400 }
+      )
+    }
+
+    const { email, productId } = parsed.data
+
+    const product = await db.product.findUnique({ where: { id: productId } })
+    if (!product) {
+      return NextResponse.json({ ok: false, error: 'Product not found' }, { status: 404 })
+    }
+
+    // If already in stock, let them know
+    if (product.stock > 0) {
+      return NextResponse.json({
+        ok: true,
+        alreadyInStock: true,
+        message: 'Good news — this piece is already in stock!',
+      })
+    }
+
+    // Idempotent: if already subscribed, acknowledge
+    const existing = await db.backInStock.findUnique({
+      where: { email_productId: { email: email.toLowerCase(), productId } },
+    })
+    if (existing) {
+      return NextResponse.json({ ok: true, alreadySubscribed: true })
+    }
+
+    await db.backInStock.create({
+      data: { email: email.toLowerCase(), productId },
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('POST /api/back-in-stock error:', err)
+    return NextResponse.json({ ok: false, error: 'Subscription failed' }, { status: 500 })
+  }
+}

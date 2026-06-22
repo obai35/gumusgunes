@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { ReviewForm, RingSizeSelector } from './ReviewForm'
 import { EngravingOption, ENGRAVING_PRICE } from './EngravingOption'
+import { BackInStockSignup } from './BackInStockSignup'
 
 type DetailData = {
   product: Product
@@ -300,7 +301,12 @@ export function ProductModal() {
                     </div>
                   )}
 
-                  {/* Quantity + Add */}
+                  {/* Quantity + Add — or Back in Stock signup if sold out */}
+                  {product.stock === 0 ? (
+                    <div className="mb-4">
+                      <BackInStockSignup productId={product.id} />
+                    </div>
+                  ) : (
                   <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center border border-border rounded-full">
                       <button
@@ -340,6 +346,7 @@ export function ProductModal() {
                       <Heart className={cn('h-4 w-4', isWishlisted && 'fill-current')} />
                     </button>
                   </div>
+                  )}
 
                   {/* Trust */}
                   <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border/50 mb-6">

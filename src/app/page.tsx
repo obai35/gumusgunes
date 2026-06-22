@@ -27,6 +27,8 @@ import { CompareTray } from '@/components/store/CompareTray'
 import { RewardsSection } from '@/components/store/RewardsSection'
 import { FlashSaleBanner } from '@/components/store/FlashSaleBanner'
 import { GiftFinder } from '@/components/store/GiftFinder'
+import { BundleConfigurator } from '@/components/store/BundleConfigurator'
+import { OrderTrackingModal } from '@/components/store/OrderTrackingModal'
 import { useCart, useWishlist, useUI } from '@/lib/store'
 import type { Product, Category } from '@/lib/types'
 
@@ -112,6 +114,8 @@ export default function Home() {
 
         <PromoBanner />
 
+        <BundleConfigurator />
+
         {newArrivals.length > 0 && (
           <FeaturedProducts
             id="new"
@@ -159,6 +163,7 @@ export default function Home() {
       <SearchDialog />
       <WishlistDrawer />
       <CompareModal />
+      <OrderTrackingModal />
       <ConciergeChat />
       <ExitIntentPopup />
       <CompareTray />
