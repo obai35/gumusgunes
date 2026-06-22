@@ -1,0 +1,112 @@
+// Gümüş Güneş — Silver Sun Jewelry E-Commerce Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id             String      @id @default(cuid())
+  name           String
+  slug           String      @unique
+  description    String
+  price          Float
+  compareAtPrice Float?
+  sku            String      @unique
+  categoryId     String
+  category       Category    @relation(fields: [categoryId], references: [id])
+  imageUrl       String
+  images         String      // JSON array of image URLs
+  material       String
+  weight         String?
+  rating         Float       @default(0)
+  reviewCount    Int         @default(0)
+  stock          Int         @default(0)
+  tags           String      // JSON array of tags
+  isActive       Boolean     @default(true)
+  isFeatured     Boolean     @default(false)
+  isNew          Boolean     @default(false)
+  isBestseller   Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  reviews        Review[]
+  orderItems     OrderItem[]
+  wishlistItems  WishlistItem[]
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  icon        String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  authorName String
+  authorEmail String?
+  rating     Int
+  title      String
+  comment    String
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  email         String
+  fullName      String
+  phone         String?
+  address       String
+  city          String
+  postalCode    String
+  country       String
+  totalAmount   Float
+  subtotal      Float
+  shipping      Float
+  tax           Float
+  status        String      @default("pending") // pending, processing, shipped, delivered, cancelled
+  paymentMethod String      @default("card")
+  notes         String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+}
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  sessionId String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, productId])
+}

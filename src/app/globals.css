@@ -1,0 +1,173 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Brand + shadcn theme tokens. @theme generates utility classes (bg-navy, text-gold, etc.) */
+@theme {
+  --color-navy: oklch(0.20 0.045 250);
+  --color-navy-deep: oklch(0.13 0.035 250);
+  --color-navy-soft: oklch(0.27 0.055 250);
+  --color-silver: oklch(0.86 0.005 250);
+  --color-silver-soft: oklch(0.94 0.003 250);
+  --color-gold: oklch(0.78 0.13 85);
+  --color-gold-soft: oklch(0.88 0.09 85);
+  --color-cream: oklch(0.985 0.005 75);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-cormorant), Georgia, serif;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+
+  /* shadcn semantic tokens mapped to brand palette */
+  --background: var(--color-cream);
+  --foreground: oklch(0.18 0.02 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 250);
+  --primary: var(--color-navy);
+  --primary-foreground: var(--color-silver);
+  --secondary: oklch(0.96 0.005 75);
+  --secondary-foreground: var(--color-navy);
+  --muted: oklch(0.96 0.005 75);
+  --muted-foreground: oklch(0.45 0.02 250);
+  --accent: var(--color-gold);
+  --accent-foreground: oklch(0.15 0.03 250);
+  --destructive: oklch(0.58 0.22 25);
+  --border: oklch(0.90 0.005 250);
+  --input: oklch(0.92 0.005 250);
+  --ring: var(--color-gold);
+  --chart-1: var(--color-navy);
+  --chart-2: var(--color-gold);
+  --chart-3: var(--color-silver);
+  --chart-4: oklch(0.60 0.10 200);
+  --chart-5: oklch(0.45 0.08 30);
+  --sidebar: oklch(0.985 0.005 75);
+  --sidebar-foreground: oklch(0.18 0.02 250);
+  --sidebar-primary: var(--color-navy);
+  --sidebar-primary-foreground: var(--color-silver);
+  --sidebar-accent: var(--color-gold);
+  --sidebar-accent-foreground: oklch(0.15 0.03 250);
+  --sidebar-border: oklch(0.90 0.005 250);
+  --sidebar-ring: var(--color-gold);
+}
+
+.dark {
+  --background: oklch(0.13 0.035 250);
+  --foreground: oklch(0.96 0.005 250);
+  --card: oklch(0.18 0.04 250);
+  --card-foreground: oklch(0.96 0.005 250);
+  --popover: oklch(0.18 0.04 250);
+  --popover-foreground: oklch(0.96 0.005 250);
+  --primary: var(--color-gold);
+  --primary-foreground: oklch(0.13 0.035 250);
+  --secondary: oklch(0.25 0.04 250);
+  --secondary-foreground: oklch(0.96 0.005 250);
+  --muted: oklch(0.25 0.04 250);
+  --muted-foreground: oklch(0.70 0.01 250);
+  --accent: var(--color-gold);
+  --accent-foreground: oklch(0.13 0.035 250);
+  --destructive: oklch(0.70 0.19 22);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: var(--color-gold);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv01";
+  }
+}
+
+/* Custom brand utilities (non-color) */
+@layer utilities {
+  .silver-text {
+    background: linear-gradient(135deg, #f5f5f7 0%, #c0c5ce 35%, #e8e9ed 60%, #b8bcc4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .gold-text {
+    background: linear-gradient(135deg, #f5e6b8 0%, #d4af37 50%, #c9a227 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .silver-shimmer {
+    background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .gold-line {
+    background: linear-gradient(90deg, transparent 0%, var(--color-gold) 50%, transparent 100%);
+  }
+  .navy-radial {
+    background:
+      radial-gradient(ellipse at top, rgba(192,197,206,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at bottom, rgba(212,175,55,0.08) 0%, transparent 60%),
+      var(--color-navy-deep);
+  }
+  .luxury-shadow {
+    box-shadow: 0 10px 40px -10px rgba(11, 31, 58, 0.25), 0 4px 12px -4px rgba(11, 31, 58, 0.15);
+  }
+  .gold-shadow {
+    box-shadow: 0 8px 30px -6px rgba(212, 175, 55, 0.4);
+  }
+  .card-hover {
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .card-hover:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px -12px rgba(11, 31, 58, 0.30);
+  }
+  .image-zoom {
+    overflow: hidden;
+  }
+  .image-zoom img {
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .image-zoom:hover img {
+    transform: scale(1.06);
+  }
+  .scroll-luxury::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scroll-luxury::-webkit-scrollbar-track {
+    background: rgba(192, 197, 206, 0.1);
+    border-radius: 4px;
+  }
+  .scroll-luxury::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-gold-soft) 100%);
+    border-radius: 4px;
+  }
+  .scroll-luxury::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold);
+  }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}

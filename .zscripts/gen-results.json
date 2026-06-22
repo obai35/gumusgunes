@@ -1,0 +1,13 @@
+{
+  "ok": 19,
+  "fail": 1,
+  "failed": [
+    {
+      "filename": "promo-banner.jpg",
+      "success": false,
+      "attempts": 2,
+      "error": "API request failed with status 400: {\"error\":{\"code\":\"1214\",\"message\":\"size的长宽均需满足512px-2880px之间,且为32整数倍,并保证最大像素数不超过2^22px\"}}"
+    }
+  ],
+  "durationMs": 214356
+}
