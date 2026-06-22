@@ -13,6 +13,7 @@ const navLinks = [
   { label: 'Categories', href: '#categories' },
   { label: 'New Arrivals', href: '#new' },
   { label: 'Bestsellers', href: '#bestsellers' },
+  { label: 'Gift Finder', href: '#gift-finder' },
   { label: 'Our Story', href: '#about' },
 ]
 

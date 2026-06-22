@@ -5,6 +5,7 @@ import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react'
 import { useUI, useWishlist, useCart } from '@/lib/store'
 import { useFormatPrice } from '@/hooks/use-format-price'
 import { Button } from '@/components/ui/button'
+import { WishlistShareButton } from './WishlistShareButton'
 import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
 import type { Product } from '@/lib/types'
@@ -134,6 +135,7 @@ export function WishlistDrawer() {
                 ))}
               </div>
             )}
+            {products.length > 0 && <WishlistShareButton />}
           </motion.div>
         </motion.div>
       )}

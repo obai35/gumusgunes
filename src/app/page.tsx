@@ -25,7 +25,9 @@ import { ExitIntentPopup } from '@/components/store/ExitIntentPopup'
 import { CompareModal } from '@/components/store/CompareModal'
 import { CompareTray } from '@/components/store/CompareTray'
 import { RewardsSection } from '@/components/store/RewardsSection'
-import { useCart } from '@/lib/store'
+import { FlashSaleBanner } from '@/components/store/FlashSaleBanner'
+import { GiftFinder } from '@/components/store/GiftFinder'
+import { useCart, useWishlist, useUI } from '@/lib/store'
 import type { Product, Category } from '@/lib/types'
 
 export default function Home() {
@@ -35,6 +37,7 @@ export default function Home() {
   const [showTop, setShowTop] = useState(false)
 
   const { count, openCart } = useCart()
+  const wishlist = useWishlist()
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +49,36 @@ export default function Home() {
         if (prods.ok) setProducts(prods.products)
       })
       .finally(() => setLoading(false))
+
+    // Load shared wishlist from URL (?wishlist=<base64-ids>)
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const shared = params.get('wishlist')
+      if (shared) {
+        const decoded = atob(shared)
+        const ids = decoded.split(',').filter(Boolean)
+        // Merge with existing wishlist
+        const existing = wishlist.ids
+        const merged = Array.from(new Set([...existing, ...ids]))
+        // Set the wishlist (clear first then add each)
+        merged.forEach((id) => {
+          if (!wishlist.has(id)) wishlist.toggle(id)
+        })
+        // Show a toast and open wishlist
+        setTimeout(() => {
+          import('sonner').then(({ toast }) => {
+            toast.success(`Loaded ${ids.length} pieces from shared wishlist`, {
+              description: 'Added to your wishlist.',
+            })
+          })
+          useUI.getState().setWishlistOpen(true)
+        }, 800)
+        // Clean the URL
+        window.history.replaceState({}, '', window.location.pathname)
+      }
+    } catch {
+      // ignore decode errors
+    }
 
     const onScroll = () => setShowTop(window.scrollY > 600)
     window.addEventListener('scroll', onScroll, { passive: true })
@@ -62,6 +95,7 @@ export default function Home() {
 
       <main className="flex-1">
         <Hero />
+        <FlashSaleBanner />
         <TrustBadges />
         <CategoryGrid categories={categories} />
 
@@ -106,6 +140,8 @@ export default function Home() {
         )}
 
         <RecentlyViewed allProducts={products} />
+
+        <GiftFinder />
 
         <AboutSection />
         <CraftsmanshipTimeline />
