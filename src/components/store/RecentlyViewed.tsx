@@ -5,13 +5,14 @@ import { motion } from 'framer-motion'
 import { Clock, ArrowRight } from 'lucide-react'
 import type { Product } from '@/lib/types'
 import { useRecentlyViewed, useUI } from '@/lib/store'
-import { formatPrice, parseTags } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { useHydrated } from '@/hooks/use-hydrated'
 
 export function RecentlyViewed({ allProducts }: { allProducts: Product[] }) {
   const hydrated = useHydrated()
   const { ids } = useRecentlyViewed()
   const { setProductModal } = useUI()
+  const formatPrice = useFormatPrice()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {

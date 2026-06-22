@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/format'
+import { useUI } from '@/lib/store'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
@@ -28,6 +29,7 @@ export function ConciergeChat() {
   const [unread, setUnread] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { conciergeProduct } = useUI()
 
   useEffect(() => {
     if (open) {
@@ -54,6 +56,7 @@ export function ConciergeChat() {
         body: JSON.stringify({
           message: trimmed,
           history: next.slice(1, -1).map((m) => ({ role: m.role, content: m.content })),
+          productContext: conciergeProduct,
         }),
       })
       const data = await res.json()
@@ -131,6 +134,11 @@ export function ConciergeChat() {
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
                   Online · replies in seconds
                 </p>
+                {conciergeProduct && (
+                  <p className="text-[10px] text-gold-soft mt-0.5 line-clamp-1">
+                    Viewing: {conciergeProduct.name}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => setOpen(false)}

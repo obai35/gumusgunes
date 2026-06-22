@@ -1,24 +1,69 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ShoppingBag, Minus, Plus, Trash2, ArrowRight, Truck } from 'lucide-react'
+import { X, ShoppingBag, Minus, Plus, Trash2, ArrowRight, Truck, Sparkles, Plus as PlusIcon } from 'lucide-react'
 import { useCart, useUI } from '@/lib/store'
-import { formatPrice, cn } from '@/lib/format'
+import { cn } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { Button } from '@/components/ui/button'
+import type { Product } from '@/lib/types'
+import { toast } from 'sonner'
 
 const FREE_SHIPPING_THRESHOLD = 250
 
 export function CartDrawer() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal } = useCart()
+  const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, addItem } = useCart()
   const { setCheckoutOpen } = useUI()
+  const formatPrice = useFormatPrice()
+  const [recommendations, setRecommendations] = useState<Product[]>([])
 
   const total = subtotal()
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - total)
   const progress = Math.min(100, (total / FREE_SHIPPING_THRESHOLD) * 100)
 
+  // Fetch "Complete the Look" recommendations based on cart contents
+  useEffect(() => {
+    if (!isOpen || items.length === 0) {
+      return
+    }
+    let cancelled = false
+    const rafId = requestAnimationFrame(() => {
+      if (cancelled) return
+    })
+    fetch('/api/products?limit=20')
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d.ok) return
+        const cartIds = new Set(items.map((i) => i.product.id))
+        const cartCategoryIds = new Set(items.map((i) => i.product.categoryId))
+        // Prefer products from different categories than what's in the cart
+        const recs = (d.products as Product[])
+          .filter((p) => !cartIds.has(p.id))
+          .sort((a, b) => {
+            const aDiff = cartCategoryIds.has(a.categoryId) ? 0 : 1
+            const bDiff = cartCategoryIds.has(b.categoryId) ? 0 : 1
+            if (aDiff !== bDiff) return bDiff - aDiff
+            return Number(b.isBestseller) - Number(a.isBestseller)
+          })
+          .slice(0, 3)
+        if (!cancelled) setRecommendations(recs)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+      cancelAnimationFrame(rafId)
+    }
+  }, [isOpen, items])
+
   const handleCheckout = () => {
     closeCart()
     setCheckoutOpen(true)
+  }
+
+  const handleAddRec = (product: Product) => {
+    addItem(product, 1)
+    toast.success(`${product.name} added to bag`)
   }
 
   return (
@@ -143,6 +188,43 @@ export function CartDrawer() {
                       </div>
                     </div>
                   ))}
+
+                  {/* Complete the Look */}
+                  {recommendations.length > 0 && (
+                    <div className="mt-6 pt-5 border-t border-dashed border-border">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="h-4 w-4 text-gold" />
+                        <h3 className="font-display text-sm font-semibold text-navy">Complete the Look</h3>
+                      </div>
+                      <div className="space-y-2">
+                        {recommendations.map((rec) => (
+                          <div
+                            key={rec.id}
+                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
+                          >
+                            <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
+                              <img
+                                src={rec.imageUrl}
+                                alt={rec.name}
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-navy line-clamp-1">{rec.name}</p>
+                              <p className="text-xs text-gold font-semibold mt-0.5">{formatPrice(rec.price)}</p>
+                            </div>
+                            <button
+                              onClick={() => handleAddRec(rec)}
+                              className="h-8 w-8 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors flex items-center justify-center flex-shrink-0"
+                              aria-label={`Add ${rec.name}`}
+                            >
+                              <PlusIcon className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer */}

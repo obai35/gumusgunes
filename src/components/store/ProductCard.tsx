@@ -3,7 +3,8 @@
 import { Heart, Star, Eye } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Product } from '@/lib/types'
-import { formatPrice, parseTags, discountPercent, cn } from '@/lib/format'
+import { parseTags, discountPercent, cn } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { useCart, useUI, useWishlist } from '@/lib/store'
 import { toast } from 'sonner'
 
@@ -11,6 +12,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const { addItem } = useCart()
   const { setProductModal } = useUI()
   const wishlist = useWishlist()
+  const formatPrice = useFormatPrice()
   const tags = parseTags(product.tags)
   const discount = discountPercent(product.price, product.compareAtPrice)
   const isWishlisted = wishlist.has(product.id)

@@ -145,3 +145,62 @@ Task: QA testing via agent-browser, fix bugs, add new features and styling impro
 - The AI concierge currently has no product-context awareness (could pass the currently-viewed product to the API for tailored advice) — the backend already supports `productContext` param but the frontend doesn't send it yet. **Next phase**: wire ProductModal's product context into concierge chat.
 - **Recommendation for next phase**: Add a currency selector (USD/EUR/TRY), a "Complete the Look" cross-sell section in the cart drawer, and a promotional exit-intent popup. Could also add product image zoom on hover in the modal.
 - All new components follow the established brand identity (navy + silver + gold, Cormorant display font, sun/sparkle motifs).
+
+---
+Task ID: 10 (Cron Review Round 2)
+Agent: Main (Z.ai Code) — scheduled review
+Task: QA testing, implement currency selector, Complete the Look cross-sell, image zoom, exit-intent popup, product-context concierge
+
+## Current Project Status Assessment
+- Project stable from Round 1 (Tasks 1–9). All previously-built features (AI concierge, recently viewed, review form, ring size selector, gift wrap, craftsmanship timeline) verified working.
+- Lint clean, no console errors, no hydration errors.
+- This round focused on the next-phase recommendations from Round 1: currency selector, Complete the Look cross-sell, exit-intent popup, image zoom, and wiring product context into the concierge chat.
+
+## Goals / Completed Modifications / Verification
+
+### New Features Implemented
+1. **Currency Selector** (`src/components/store/CurrencySelector.tsx` + `useCurrency` store + `useFormatPrice` hook)
+   - Dropdown in header supporting USD ($), EUR (€), TRY (₺) with live conversion rates (USD→EUR 0.92, USD→TRY 34.5).
+   - Persisted to localStorage; all 7 price-displaying components updated to use `useFormatPrice()` hook (ProductCard, ProductModal, CartDrawer, CheckoutDialog, SearchDialog, WishlistDrawer, RecentlyViewed).
+   - TRY displays whole numbers (no decimals) per Turkish convention; EUR/USD show 2 decimals with locale-appropriate formatting.
+   - **Verified**: switched to EUR → prices showed €89, €129, €149. Switched to TRY → prices showed ₺ with correct conversion.
+
+2. **"Complete the Look" Cross-sell** (in `CartDrawer.tsx`)
+   - When cart has items, fetches up to 3 product recommendations not already in cart.
+   - Sorting prioritizes products from *different* categories than cart items (true cross-sell), then bestsellers.
+   - Each recommendation shows thumbnail, name, price, and a + button to instantly add to cart.
+   - **Verified**: added items to cart → "Complete the Look" section appeared with product recommendation + add button.
+
+3. **Image Zoom on Hover** (in `ProductModal.tsx`)
+   - Product image zooms 2.2× following the mouse cursor (transform-origin tracks pointer position).
+   - "Hover to zoom" hint badge in top-right (auto-hides when zooming).
+   - Cursor changes to zoom-in; smooth transition.
+   - **Verified**: hovered over product image → image zoomed in, hint disappeared, details visible.
+
+4. **Exit-Intent Popup** (`src/components/store/ExitIntentPopup.tsx`)
+   - Detects mouse leaving the top of the viewport (exit intent).
+   - Shows once per 7 days (localStorage flag); suppressed when other modals are open.
+   - Offers 15% off first order with email capture → posts to `/api/newsletter`.
+   - Navy-radial header with gift icon + sparkles, success state with checkmark animation.
+   - **Verified**: triggered exit intent → popup appeared with 15% offer → submitted email → "Welcome to the family!" success.
+
+5. **Product-Context-Aware Concierge** (wired `ProductModal` → `useUI.conciergeProduct` → `ConciergeChat` → `/api/chat`)
+   - When a product modal opens, its name/price/material are stored in the UI store.
+   - Concierge chat header shows "Viewing: [product name]".
+   - The `productContext` is sent to `/api/chat`, which injects it into the LLM system prompt.
+   - **Verified**: opened Silver Locket Pendant → concierge header showed "Viewing: Silver Locket Pendant" → asked "Tell me about the material of this piece" → AI replied specifically about "The Silver Locket Pendant" being 925 sterling silver, hand-finished in Istanbul.
+
+### Verification Results
+- `bun run lint` → clean (0 errors, 0 warnings).
+- Dev server compiles without errors.
+- agent-browser QA: no console errors, no runtime errors after reload.
+- All 5 new features visually + functionally verified via screenshots + VLM analysis + DOM inspection.
+- Currency conversion verified across all 3 currencies.
+- Product-context concierge verified with real LLM response referencing the specific product.
+
+## Unresolved Issues / Risks / Next-Phase Recommendations
+- **No bugs or errors** found this round.
+- The "Complete the Look" section sometimes shows fewer than 3 recommendations when the cart already contains many products (only 17 total products in catalog). **Next phase**: expand the product catalog with more items, or implement a "you may also like" fallback from recently viewed.
+- Exit-intent popup uses `mouseout` with `clientY <= 0` — works on desktop but won't trigger on mobile (no mouse). **Next phase**: add a mobile fallback (e.g., trigger after 30s of inactivity, or on scroll-up past hero).
+- **Recommendation for next phase**: Add product comparison feature (compare 2-3 products side-by-side), a "back in stock" email notification signup for out-of-stock items, and a loyalty/rewards points display in the header. Could also add a wishlist share link feature.
+- All new components follow the established brand identity (navy + silver + gold, Cormorant display font, sun/sparkle motifs, luxury animations).

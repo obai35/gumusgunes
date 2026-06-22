@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Heart, ShoppingBag, Trash2 } from 'lucide-react'
 import { useUI, useWishlist, useCart } from '@/lib/store'
-import { formatPrice } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
@@ -13,6 +13,7 @@ export function WishlistDrawer() {
   const { wishlistOpen, setWishlistOpen, setProductModal } = useUI()
   const wishlist = useWishlist()
   const { addItem } = useCart()
+  const formatPrice = useFormatPrice()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
 

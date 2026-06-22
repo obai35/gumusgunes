@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, X, TrendingUp, Loader2 } from 'lucide-react'
 import { useUI } from '@/lib/store'
 import type { Product } from '@/lib/types'
-import { formatPrice, parseTags } from '@/lib/format'
+import { parseTags } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { toast } from 'sonner'
 import { useCart } from '@/lib/store'
 
@@ -14,6 +15,7 @@ const popularSearches = ['Sunburst', 'Diamond', 'Necklace', 'Silver', 'Bracelet'
 export function SearchDialog() {
   const { searchOpen, setSearchOpen, setProductModal } = useUI()
   const { addItem } = useCart()
+  const formatPrice = useFormatPrice()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)

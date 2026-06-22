@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, CreditCard, Banknote, Wallet, ShieldCheck, Loader2, PartyPopper, Gift } from 'lucide-react'
 import { useCart, useUI } from '@/lib/store'
-import { formatPrice, cn } from '@/lib/format'
+import { cn } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +19,7 @@ const GIFT_WRAP_PRICE = 5
 export function CheckoutDialog() {
   const { isOpen: _, items, subtotal, clearCart } = useCart()
   const { checkoutOpen, setCheckoutOpen } = useUI()
+  const formatPrice = useFormatPrice()
   const [step, setStep] = useState<Step>('details')
   const [order, setOrder] = useState<Order | null>(null)
   const [form, setForm] = useState({

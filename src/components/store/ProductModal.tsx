@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Heart, ShoppingBag, Star, Truck, ShieldCheck, RefreshCw, Minus, Plus, ChevronRight,
+  X, Heart, ShoppingBag, Star, Truck, ShieldCheck, RefreshCw, Minus, Plus, ChevronRight, ZoomIn,
 } from 'lucide-react'
 import { useUI, useCart, useWishlist, useRecentlyViewed } from '@/lib/store'
 import type { Product, Review } from '@/lib/types'
-import { formatPrice, parseTags, discountPercent, formatDate, cn } from '@/lib/format'
+import { parseTags, discountPercent, formatDate, cn } from '@/lib/format'
+import { useFormatPrice } from '@/hooks/use-format-price'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { ReviewForm, RingSizeSelector } from './ReviewForm'
@@ -19,16 +20,20 @@ type DetailData = {
 }
 
 export function ProductModal() {
-  const { productModalId, setProductModal } = useUI()
+  const { productModalId, setProductModal, setConciergeProduct } = useUI()
   const { addItem } = useCart()
   const wishlist = useWishlist()
   const recentlyViewed = useRecentlyViewed()
+  const formatPrice = useFormatPrice()
   const [data, setData] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(false)
   const [qty, setQty] = useState(1)
   const [activeImage, setActiveImage] = useState(0)
   const [ringSize, setRingSize] = useState('')
   const [reviewRefreshKey, setReviewRefreshKey] = useState(0)
+  const [zoom, setZoom] = useState(false)
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 })
+  const imageRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!productModalId) return
@@ -48,6 +53,12 @@ export function ProductModal() {
         if (d.ok) {
           setData(d)
           recentlyViewed.add(d.product.id)
+          setConciergeProduct({
+            id: d.product.id,
+            name: d.product.name,
+            price: d.product.price,
+            material: d.product.material,
+          })
         }
       })
       .finally(() => {
@@ -61,6 +72,7 @@ export function ProductModal() {
       cancelled = true
       cancelAnimationFrame(id)
       document.body.style.overflow = ''
+      setConciergeProduct(null)
     }
   }, [productModalId])
 
@@ -116,14 +128,38 @@ export function ProductModal() {
               <div className="grid md:grid-cols-2 overflow-y-auto scroll-luxury">
                 {/* Image column */}
                 <div className="relative bg-secondary">
-                  <div className="aspect-square relative">
+                  <div
+                    ref={imageRef}
+                    className="aspect-square relative overflow-hidden cursor-zoom-in group"
+                    onMouseEnter={() => setZoom(true)}
+                    onMouseLeave={() => setZoom(false)}
+                    onMouseMove={(e) => {
+                      const rect = imageRef.current?.getBoundingClientRect()
+                      if (!rect) return
+                      const x = ((e.clientX - rect.left) / rect.width) * 100
+                      const y = ((e.clientY - rect.top) / rect.height) * 100
+                      setZoomPos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
+                    }}
+                  >
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className="absolute inset-0 h-full w-full object-cover"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-200"
+                      style={zoom ? {
+                        transform: `scale(2.2)`,
+                        transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
+                      } : undefined}
                     />
+                    {/* Zoom hint */}
+                    <div className={cn(
+                      'absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-navy-deep/70 backdrop-blur-md text-silver text-[10px] tracking-[0.15em] uppercase transition-opacity',
+                      zoom ? 'opacity-0' : 'opacity-100'
+                    )}>
+                      <ZoomIn className="h-3 w-3 text-gold" />
+                      Hover to zoom
+                    </div>
                     {/* Badges */}
-                    <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
                       {product.isNew && (
                         <span className="px-3 py-1 rounded-full bg-navy text-silver text-[10px] font-semibold tracking-[0.15em] uppercase">
                           New

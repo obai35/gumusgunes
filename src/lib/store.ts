@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Product, CartItem } from '@/lib/types'
+import type { Currency } from '@/lib/format'
 
 type CartState = {
   items: CartItem[]
@@ -75,11 +76,13 @@ type UIState = {
   wishlistOpen: boolean
   checkoutOpen: boolean
   mobileMenuOpen: boolean
+  conciergeProduct: { id: string; name: string; price: number; material: string } | null
   setProductModal: (id: string | null) => void
   setSearchOpen: (open: boolean) => void
   setWishlistOpen: (open: boolean) => void
   setCheckoutOpen: (open: boolean) => void
   setMobileMenuOpen: (open: boolean) => void
+  setConciergeProduct: (p: { id: string; name: string; price: number; material: string } | null) => void
 }
 
 export const useUI = create<UIState>((set) => ({
@@ -88,11 +91,13 @@ export const useUI = create<UIState>((set) => ({
   wishlistOpen: false,
   checkoutOpen: false,
   mobileMenuOpen: false,
+  conciergeProduct: null,
   setProductModal: (id) => set({ productModalId: id }),
   setSearchOpen: (open) => set({ searchOpen: open }),
   setWishlistOpen: (open) => set({ wishlistOpen: open }),
   setCheckoutOpen: (open) => set({ checkoutOpen: open }),
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
+  setConciergeProduct: (p) => set({ conciergeProduct: p }),
 }))
 
 type WishlistState = {
@@ -143,6 +148,25 @@ export const useRecentlyViewed = create<RecentlyViewedState>()(
     }),
     {
       name: 'gg_recently_viewed',
+      storage: createJSONStorage(() => localStorage),
+    }
+  )
+)
+
+// Currency selection (persisted)
+type CurrencyState = {
+  currency: Currency
+  setCurrency: (c: Currency) => void
+}
+
+export const useCurrency = create<CurrencyState>()(
+  persist(
+    (set) => ({
+      currency: 'USD',
+      setCurrency: (currency) => set({ currency }),
+    }),
+    {
+      name: 'gg_currency',
       storage: createJSONStorage(() => localStorage),
     }
   )

@@ -21,6 +21,7 @@ import { CheckoutDialog } from '@/components/store/CheckoutDialog'
 import { SearchDialog } from '@/components/store/SearchDialog'
 import { WishlistDrawer } from '@/components/store/WishlistDrawer'
 import { ConciergeChat } from '@/components/store/ConciergeChat'
+import { ExitIntentPopup } from '@/components/store/ExitIntentPopup'
 import { useCart } from '@/lib/store'
 import type { Product, Category } from '@/lib/types'
 
@@ -118,6 +119,7 @@ export default function Home() {
       <SearchDialog />
       <WishlistDrawer />
       <ConciergeChat />
+      <ExitIntentPopup />
 
       {/* Floating action buttons */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
