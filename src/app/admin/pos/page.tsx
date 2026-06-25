@@ -15,7 +15,8 @@ export default function POSPage() {
   const [discountCode, setDiscountCode] = useState('')
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number; type: string; value: number } | null>(null)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [receipt, setReceipt] = useState<{ orderId: string; total: number } | null>(null)
+  type OrderItemDetail = { id: string; quantity: number; price: number; product: { name: string; sku: string } }
+  const [receipt, setReceipt] = useState<{ orderId: string; total: number; items: OrderItemDetail[]; subtotal: number; discount: number } | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -89,7 +90,13 @@ export default function POSPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setReceipt({ orderId: data.orderId, total: data.total })
+        setReceipt({
+          orderId: data.orderId,
+          total: data.total,
+          items: data.order?.items || [],
+          subtotal: data.order?.subtotal || subtotal,
+          discount: data.order?.discountAmount || discountAmount,
+        })
         toast.success('Order completed!')
       } else {
         const err = await res.json()
@@ -112,13 +119,57 @@ export default function POSPage() {
 
   if (receipt) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center bg-white p-8 rounded-xl border border-border max-w-sm">
-          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-          <h2 className="text-xl font-display font-semibold text-navy mb-2">Payment Successful</h2>
-          <p className="text-muted-foreground mb-1">Order #{receipt.orderId.slice(-8).toUpperCase()}</p>
-          <p className="text-2xl font-bold text-navy mb-6">${receipt.total.toFixed(2)}</p>
-          <button onClick={newSale} className="w-full px-6 py-3 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">New Sale</button>
+      <div className="flex items-start justify-center min-h-[60vh] pt-8">
+        <div className="bg-white rounded-xl border border-border shadow-sm w-full max-w-sm">
+          {/* Receipt header */}
+          <div className="text-center p-6 border-b border-dashed border-border">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/30">
+                <img src="/gumusgunes-logo.jpeg" alt="" className="h-full w-full object-cover" />
+              </div>
+              <span className="font-display text-lg font-semibold text-navy">Gümüş <span className="gold-text">Güneş</span></span>
+            </div>
+            <p className="text-xs text-muted-foreground">In-store Purchase</p>
+            <p className="text-xs text-muted-foreground font-mono mt-1">#{receipt.orderId.slice(-8).toUpperCase()}</p>
+            <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          </div>
+
+          {/* Line items */}
+          <div className="p-4 space-y-2 border-b border-dashed border-border">
+            {receipt.items.map((item, i) => (
+              <div key={item.id || i} className="flex items-center justify-between text-sm">
+                <div className="flex-1 min-w-0 mr-2">
+                  <p className="font-medium text-navy truncate">{item.product.name}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{item.product.sku} × {item.quantity}</p>
+                </div>
+                <span className="font-medium text-navy whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Totals */}
+          <div className="p-4 space-y-1 border-b border-dashed border-border">
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>Subtotal</span>
+              <span>${receipt.subtotal.toFixed(2)}</span>
+            </div>
+            {receipt.discount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Discount</span>
+                <span>-${receipt.discount.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-bold text-navy pt-1 border-t border-border">
+              <span>Total</span>
+              <span>${receipt.total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="p-4 space-y-2">
+            <button onClick={() => window.print()} className="w-full px-6 py-2.5 border border-border rounded-lg text-sm text-navy font-medium hover:bg-gray-50 transition-colors">Print Receipt</button>
+            <button onClick={newSale} className="w-full px-6 py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">New Sale</button>
+          </div>
         </div>
       </div>
     )

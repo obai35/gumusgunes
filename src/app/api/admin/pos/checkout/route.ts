@@ -78,7 +78,11 @@ export async function POST(req: Request) {
       })
     })
 
-    return NextResponse.json({ orderId: order.id, total: order.totalAmount })
+    const fullOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: { items: { include: { product: { select: { name: true, sku: true } } } } },
+    })
+    return NextResponse.json({ orderId: fullOrder!.id, total: fullOrder!.totalAmount, order: fullOrder })
   } catch (err) {
     return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
   }
