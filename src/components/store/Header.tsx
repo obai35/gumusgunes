@@ -117,7 +117,9 @@ export function Header() {
                 <LanguageSelector />
               </div>
               <div className="relative">
-                {isAuthenticated() && user ? (
+                {!hydrated ? (
+                  <span className="p-2.5 inline-flex"><User className="h-5 w-5 text-muted-foreground" /></span>
+                ) : isAuthenticated() && user ? (
                   <>
                     <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors" aria-label={t('nav.account')}>
                       <User className="h-5 w-5" />
