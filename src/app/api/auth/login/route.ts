@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json()
+    const { email, password, totpToken } = await req.json()
     if (!email || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
     const user = await prisma.user.findUnique({ where: { email } })
@@ -14,6 +14,12 @@ export async function POST(req: Request) {
 
     const valid = await verifyPassword(password, user.password)
     if (!valid) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+
+    if (user.totpEnabled) {
+      if (!totpToken) return NextResponse.json({ totpRequired: true, userId: user.id })
+      const { verifyTotpCode } = await import('@/lib/totp')
+      if (!verifyTotpCode(totpToken, user.totpSecret!)) return NextResponse.json({ error: 'Invalid 2FA code' }, { status: 401 })
+    }
 
     const token = signToken({ userId: user.id, email: user.email })
     return NextResponse.json({ token, user: { id: user.id, email: user.email, name: user.name } })
