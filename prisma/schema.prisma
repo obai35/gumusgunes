@@ -37,6 +37,7 @@ model Product {
   orderItems     OrderItem[]
   wishlistItems  WishlistItem[]
   backInStock    BackInStock[]
+  inventoryLogs  InventoryLog[]
 }
 
 model Category {
@@ -79,8 +80,14 @@ model Order {
   tax           Float
   status        String      @default("pending") // pending, processing, shipped, delivered, cancelled
   paymentMethod String      @default("card")
-  notes         String?
-  items         OrderItem[]
+  notes          String?
+  discountId     String?
+  discount       Discount?  @relation(fields: [discountId], references: [id])
+  discountAmount Float?
+  paymentStatus  String     @default("pending")
+  processedById  String?
+  processedBy    Admin?     @relation(fields: [processedById], references: [id])
+  items          OrderItem[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -121,4 +128,39 @@ model BackInStock {
   createdAt DateTime @default(now())
 
   @@unique([email, productId])
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role             String   @default("admin")
+  createdAt        DateTime @default(now())
+  processedOrders  Order[]
+}
+
+model InventoryLog {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  type      String
+  quantity  Int
+  note      String?
+  orderId   String?
+  createdAt DateTime @default(now())
+}
+
+model Discount {
+  id         String   @id @default(cuid())
+  code       String   @unique
+  type       String
+  value      Float
+  minOrder   Float?
+  maxUses    Int?
+  usedCount  Int      @default(0)
+  isActive   Boolean  @default(true)
+  expiresAt  DateTime?
+  createdAt  DateTime @default(now())
+  orders     Order[]
 }
