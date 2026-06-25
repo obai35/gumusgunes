@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
 
 const prisma = new PrismaClient()
 
@@ -25,11 +26,12 @@ export async function POST(req: Request) {
       appliedDiscount = await prisma.discount.findUnique({ where: { code: discountCode } })
       if (!appliedDiscount || !appliedDiscount.isActive) return NextResponse.json({ error: 'Invalid discount code' }, { status: 400 })
       if (appliedDiscount.expiresAt && new Date(appliedDiscount.expiresAt) < new Date()) return NextResponse.json({ error: 'Discount code expired' }, { status: 400 })
-      if (appliedDiscount.usageLimit && appliedDiscount.usedCount >= appliedDiscount.usageLimit) return NextResponse.json({ error: 'Discount code usage limit reached' }, { status: 400 })
+      if (appliedDiscount.maxUses && appliedDiscount.usedCount >= appliedDiscount.maxUses) return NextResponse.json({ error: 'Discount code usage limit reached' }, { status: 400 })
       discountAmount = appliedDiscount.type === 'PERCENTAGE' ? subtotal * (appliedDiscount.value / 100) : appliedDiscount.value
     }
 
     const total = Math.max(0, subtotal - discountAmount)
+    const orderNumber = `POS-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
 
     const order = await prisma.$transaction(async (tx) => {
       for (const item of items) {
@@ -46,21 +48,37 @@ export async function POST(req: Request) {
 
       return tx.order.create({
         data: {
-          items: JSON.stringify(items),
-          total,
+          orderNumber,
+          email: 'pos@gumusgunes.com',
+          fullName: 'Walk-in Customer',
+          address: 'In-store purchase',
+          city: '-',
+          postalCode: '-',
+          country: 'EG',
+          totalAmount: total,
           subtotal,
-          discount: discountAmount,
-          discountCode: discountCode || null,
+          shipping: 0,
+          tax: 0,
+          discountAmount: discountAmount || null,
+          discountId: appliedDiscount?.id || null,
           status: 'confirmed',
           paymentMethod: 'pos',
-          customerName: 'Walk-in Customer',
-          customerEmail: 'pos@gumusgunes.com',
-          shippingAddress: 'In-store purchase',
+          paymentStatus: 'paid',
+          items: {
+            create: items.map((item: any) => {
+              const product = productMap.get(item.productId)!
+              return {
+                productId: item.productId,
+                quantity: item.quantity,
+                price: product.price,
+              }
+            }),
+          },
         },
       })
     })
 
-    return NextResponse.json({ orderId: order.id, total: order.total })
+    return NextResponse.json({ orderId: order.id, total: order.totalAmount })
   } catch (err) {
     return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
   }

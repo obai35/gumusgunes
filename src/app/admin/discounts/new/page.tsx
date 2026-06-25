@@ -8,7 +8,7 @@ export default function NewDiscount() {
   const router = useRouter()
   const [form, setForm] = useState({
     code: '', type: 'PERCENTAGE' as 'PERCENTAGE' | 'FIXED', value: 0,
-    usageLimit: 0, expiresAt: '',
+    maxUses: 0, expiresAt: '',
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -43,7 +43,7 @@ export default function NewDiscount() {
         </div>
         <div>
           <label className="text-sm font-medium text-navy">Usage Limit (0 = unlimited)</label>
-          <input type="number" min="0" value={form.usageLimit} onChange={(e) => setForm({ ...form, usageLimit: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" />
+          <input type="number" min="0" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" />
         </div>
         <div>
           <label className="text-sm font-medium text-navy">Expires At (optional)</label>

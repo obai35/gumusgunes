@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         code: data.code,
         type: data.type,
         value: data.value,
-        usageLimit: data.usageLimit || null,
+        maxUses: data.maxUses || null,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       },
     })

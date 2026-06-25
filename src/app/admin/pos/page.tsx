@@ -18,11 +18,10 @@ export default function POSPage() {
   const [receipt, setReceipt] = useState<{ orderId: string; total: number } | null>(null)
 
   useEffect(() => {
-    if (search.length < 1) { setProducts([]); return }
     const timer = setTimeout(async () => {
       const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(search)}`)
       if (res.ok) setProducts(await res.json())
-    }, 200)
+    }, search.length < 1 ? 0 : 200)
     return () => clearTimeout(timer)
   }, [search])
 

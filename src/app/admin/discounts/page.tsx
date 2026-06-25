@@ -50,7 +50,7 @@ export default async function AdminDiscounts() {
                   {d.type === 'PERCENTAGE' ? `${d.value}%` : `$${d.value.toFixed(2)}`}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {d.usedCount}{d.usageLimit ? ` / ${d.usageLimit}` : ''}
+                  {d.usedCount}{d.maxUses ? ` / ${d.maxUses}` : ''}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">
                   {d.expiresAt ? new Date(d.expiresAt).toLocaleDateString() : 'Never'}
