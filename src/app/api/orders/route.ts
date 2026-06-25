@@ -55,6 +55,12 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         )
       }
+      if (p.stock < item.quantity) {
+        return NextResponse.json(
+          { ok: false, error: `Insufficient stock for "${p.name}" (available: ${p.stock})` },
+          { status: 400 }
+        )
+      }
       const lineTotal = p.price * item.quantity
       subtotal += lineTotal
       orderItemsData.push({

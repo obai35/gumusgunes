@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { Share2, Copy, Check, Link as LinkIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useWishlist } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 import { useHydrated } from '@/hooks/use-hydrated'
 import { toast } from 'sonner'
 
 export function WishlistShareButton() {
   const hydrated = useHydrated()
+  const { t } = useTranslation()
   const { ids } = useWishlist()
   const [copied, setCopied] = useState(false)
   const [showLink, setShowLink] = useState(false)
@@ -29,11 +31,11 @@ export function WishlistShareButton() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'My Gümüş Güneş Wishlist',
-          text: `Check out my favorite pieces from Gümüş Güneş ✨`,
+          title: t('wishlist.shareTitle'),
+          text: t('wishlist.share'),
           url,
         })
-        toast.success('Wishlist shared!')
+        toast.success(t('wishlist.shared'))
         return
       } catch {
         // User cancelled or share failed — fall through to copy
@@ -44,12 +46,10 @@ export function WishlistShareButton() {
     try {
       await navigator.clipboard.writeText(url)
       setCopied(true)
-      toast.success('Wishlist link copied to clipboard!', {
-        description: 'Share it with anyone you love.',
-      })
+      toast.success(t('wishlist.copied'))
       setTimeout(() => setCopied(false), 2500)
     } catch {
-      toast.error('Could not copy link — please copy it manually.')
+      toast.error(t('wishlist.copyError'))
     }
   }
 
@@ -62,7 +62,7 @@ export function WishlistShareButton() {
         className="w-full h-10 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors text-sm font-semibold tracking-wide flex items-center justify-center gap-2"
       >
         <Share2 className="h-4 w-4" />
-        Share My Wishlist
+        {t('wishlist.share')}
       </button>
 
       <AnimatePresence>
@@ -85,17 +85,17 @@ export function WishlistShareButton() {
                 onClick={() => {
                   navigator.clipboard.writeText(url)
                   setCopied(true)
-                  toast.success('Link copied!')
+                  toast.success(t('wishlist.copySuccess'))
                   setTimeout(() => setCopied(false), 2000)
                 }}
                 className="h-8 w-8 rounded-md bg-secondary hover:bg-gold hover:text-navy-deep flex items-center justify-center transition-colors flex-shrink-0"
-                aria-label="Copy link"
+                aria-label={t('wishlist.copyLinkAria')}
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
             </div>
             <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-              {ids.length} {ids.length === 1 ? 'piece' : 'pieces'} in this wishlist · Link valid forever
+              {ids.length} {t('wishlist.pieces')} · {t('wishlist.linkValid')}
             </p>
           </motion.div>
         )}

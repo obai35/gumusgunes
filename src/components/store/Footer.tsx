@@ -2,44 +2,44 @@
 
 import { Sun, Instagram, Facebook, Twitter, Youtube, Mail, Phone, MapPin, Package } from 'lucide-react'
 import { useUI } from '@/lib/store'
-
-const columns = [
-  {
-    title: 'Shop',
-    links: [
-      { label: 'Rings', href: '#collections' },
-      { label: 'Necklaces', href: '#collections' },
-      { label: 'Earrings', href: '#collections' },
-      { label: 'Bracelets', href: '#collections' },
-      { label: 'Pendants', href: '#collections' },
-      { label: 'Gift Sets', href: '#collections' },
-    ],
-  },
-  {
-    title: 'About',
-    links: [
-      { label: 'Our Story', href: '#about' },
-      { label: 'Craftsmanship', href: '#about' },
-      { label: 'Sustainability', href: '#about' },
-      { label: 'Press', href: '#about' },
-      { label: 'Careers', href: '#about' },
-    ],
-  },
-  {
-    title: 'Care',
-    links: [
-      { label: 'Shipping & Returns', href: '#' },
-      { label: 'Lifetime Warranty', href: '#' },
-      { label: 'Ring Sizing Guide', href: '#' },
-      { label: 'Jewelry Care', href: '#' },
-      { label: 'FAQs', href: '#' },
-      { label: 'Contact Us', href: '#' },
-    ],
-  },
-]
+import { useTranslation } from '@/hooks/use-translation'
 
 export function Footer() {
+  const { t } = useTranslation()
   const { setOrderTrackingOpen } = useUI()
+
+  const columns = [
+    {
+      title: t('footer.shop'),
+      links: [
+        { label: t('categories.headingGold'), href: '#collections' },
+        { label: t('nav.categories'), href: '#categories' },
+      ],
+      extra: true,
+    },
+    {
+      title: t('footer.about'),
+      links: [
+        { label: t('footer.ourStory'), href: '#about' },
+        { label: t('footer.craftsmanship'), href: '#about' },
+        { label: t('footer.sustainability'), href: '#about' },
+        { label: t('footer.press'), href: '#about' },
+        { label: t('footer.careers'), href: '#about' },
+      ],
+    },
+    {
+      title: t('footer.care'),
+      links: [
+        { label: t('footer.shippingReturns'), href: '#' },
+        { label: t('footer.lifetimeWarranty'), href: '#' },
+        { label: t('footer.ringSizing'), href: '#' },
+        { label: t('footer.jewelryCare'), href: '#' },
+        { label: t('footer.faqs'), href: '#' },
+        { label: t('footer.contactUs'), href: '#' },
+      ],
+      isCare: true,
+    },
+  ]
   return (
     <footer className="bg-navy-deep text-silver mt-auto">
       {/* Top band */}
@@ -61,13 +61,12 @@ export function Footer() {
                     Gümüş <span className="gold-text">Güneş</span>
                   </div>
                   <div className="text-[10px] tracking-[0.35em] uppercase text-silver/50 mt-0.5">
-                    Silver Sun · Istanbul
+                    {t('brand.subtitle')}
                   </div>
                 </div>
               </a>
               <p className="text-sm text-silver/60 leading-relaxed max-w-sm mb-5">
-                Handcrafted 925 sterling silver jewelry, inspired by the sun, moon, and stars.
-                Designed and finished in our atelier overlooking the Bosphorus.
+                {t('brand.description')}
               </p>
 
               <div className="space-y-2 text-sm text-silver/70">
@@ -122,14 +121,14 @@ export function Footer() {
                       </a>
                     </li>
                   ))}
-                  {col.title === 'Care' && (
+                  {col.isCare && (
                     <li>
                       <button
                         onClick={() => setOrderTrackingOpen(true)}
                         className="text-sm text-silver/60 hover:text-gold transition-colors inline-flex items-center gap-1.5"
                       >
                         <Package className="h-3.5 w-3.5" />
-                        Track Your Order
+                        {t('footer.trackOrder')}
                       </button>
                     </li>
                   )}
@@ -145,7 +144,7 @@ export function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-silver/50 tracking-wide">
             <Sun className="h-3.5 w-3.5 text-gold" />
-            <span>Certified 925 Sterling Silver · Conflict-Free Diamonds · Lifetime Warranty</span>
+            <span>{t('footer.paymentCert')}</span>
           </div>
           <div className="flex items-center gap-2">
             {['VISA', 'MC', 'AMEX', 'PAYPAL', 'APPLE PAY'].map((p) => (
@@ -162,11 +161,11 @@ export function Footer() {
 
       {/* Bottom */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-silver/40">
-        <p>© {new Date().getFullYear()} Gümüş Güneş Jewellery Ltd. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Gümüş Güneş Jewellery Ltd. {t('footer.rights')}</p>
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:text-silver transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-silver transition-colors">Terms of Service</a>
-          <a href="#" className="hover:text-silver transition-colors">Cookie Settings</a>
+          <a href="#" className="hover:text-silver transition-colors">{t('footer.privacy')}</a>
+          <a href="#" className="hover:text-silver transition-colors">{t('footer.terms')}</a>
+          <a href="#" className="hover:text-silver transition-colors">{t('footer.cookies')}</a>
         </div>
       </div>
     </footer>

@@ -4,13 +4,14 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Type, Check } from 'lucide-react'
 import { cn } from '@/lib/format'
+import { useTranslation } from '@/hooks/use-translation'
 
 const ENGRAVING_PRICE = 15
 const MAX_CHARS = 12
 const ALLOWED_FONTS = [
-  { id: 'serif', name: 'Classic', sample: 'ABC' },
-  { id: 'script', name: 'Script', sample: 'ABC' },
-  { id: 'mono', name: 'Modern', sample: 'ABC' },
+  { id: 'serif', name: 'engravings.classic', sample: 'ABC' },
+  { id: 'script', name: 'engravings.script', sample: 'ABC' },
+  { id: 'mono', name: 'engravings.modern', sample: 'ABC' },
 ]
 
 export function EngravingOption({
@@ -30,6 +31,7 @@ export function EngravingOption({
   onTextChange: (text: string) => void
   onFontChange: (font: string) => void
 }) {
+  const { t } = useTranslation()
   const [showPreview, setShowPreview] = useState(false)
 
   return (
@@ -51,15 +53,14 @@ export function EngravingOption({
           <div className="flex items-center gap-2 mb-1">
             <Type className="h-4 w-4 text-gold" />
             <span className="font-display text-sm font-semibold text-navy">
-              Custom Engraving
+              {t('engravings.title')}
             </span>
             <span className="ml-auto text-sm font-semibold text-gold">
-              +${ENGRAVING_PRICE}
+              {t('engravings.fee')}
             </span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Personalize this piece with hand-engraved initials or a short word (up to {MAX_CHARS} characters).
-            Adds 2–3 days to crafting time.
+            {t('engravings.engravingDesc', MAX_CHARS)}
           </p>
         </div>
       </div>
@@ -77,7 +78,7 @@ export function EngravingOption({
               {/* Font selector */}
               <div>
                 <label className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium mb-1.5 block">
-                  Font Style
+                  {t('engravings.font')}
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
                   {ALLOWED_FONTS.map((f) => (
@@ -102,7 +103,7 @@ export function EngravingOption({
                       >
                         {f.sample}
                       </span>
-                      <span className="text-[9px] text-muted-foreground tracking-wide">{f.name}</span>
+                      <span className="text-[9px] text-muted-foreground tracking-wide">{t(f.name)}</span>
                     </button>
                   ))}
                 </div>
@@ -112,20 +113,20 @@ export function EngravingOption({
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
-                    Engraving Text
+                    {t('engravings.addEngraving')}
                   </label>
                   <span className={cn(
                     'text-[10px] font-medium',
                     text.length > MAX_CHARS ? 'text-destructive' : 'text-muted-foreground'
                   )}>
-                    {text.length}/{MAX_CHARS}
+                    {t('engravings.charsLeft', MAX_CHARS - text.length)}
                   </span>
                 </div>
                 <input
                   type="text"
                   value={text}
                   onChange={(e) => onTextChange(e.target.value.slice(0, MAX_CHARS).toUpperCase())}
-                  placeholder="E.g. AYŞE"
+                  placeholder={t('engravings.placeholder')}
                   maxLength={MAX_CHARS}
                   className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm font-semibold text-navy placeholder:text-muted-foreground/50 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-gold uppercase tracking-widest"
                 />
@@ -134,7 +135,7 @@ export function EngravingOption({
               {/* Live preview */}
               {text && (
                 <div className="p-3 rounded-lg bg-navy text-silver text-center">
-                  <p className="text-[9px] tracking-[0.2em] uppercase text-gold-soft mb-1">Preview</p>
+                  <p className="text-[9px] tracking-[0.2em] uppercase text-gold-soft mb-1">{t('engravings.preview')}</p>
                   <p
                     className={cn(
                       'text-xl font-semibold silver-text tracking-[0.3em]',
@@ -145,13 +146,13 @@ export function EngravingOption({
                   >
                     {text || '—'}
                   </p>
-                  <p className="text-[9px] text-silver/40 mt-1">Engraved on the inner band</p>
+                  <p className="text-[9px] text-silver/40 mt-1">{t('engravings.previewLabel')}</p>
                 </div>
               )}
 
               <div className="flex items-start gap-1.5 text-[10px] text-muted-foreground">
                 <Sparkles className="h-3 w-3 text-gold flex-shrink-0 mt-0.5" />
-                <p>Each engraving is done by hand by our master engravers in Istanbul. Allow 2–3 additional days.</p>
+                <p>{t('engravings.footnote')}</p>
               </div>
             </div>
           </motion.div>

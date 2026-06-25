@@ -63,7 +63,7 @@ export function CurrencySelector() {
                   {c.code}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {c.code === 'TRY' ? '₺' : c.code === 'EUR' ? '€' : '$'}
+                  {c.symbol}
                 </span>
                 {currency === c.code && <Check className="h-3.5 w-3.5 text-gold ml-1" />}
               </button>

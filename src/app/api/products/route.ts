@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
       where,
       orderBy,
       include: { category: true },
-      take: limit ? parseInt(limit) : undefined,
+      take: limit ? Math.max(1, Math.min(100, parseInt(limit) || 20)) : undefined,
     })
 
     return NextResponse.json({ ok: true, products, count: products.length })

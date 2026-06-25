@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Star, Quote } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 const testimonials = [
   {
@@ -55,16 +56,17 @@ const testimonials = [
 ]
 
 export function Testimonials() {
+  const { t } = useTranslation()
   return (
     <section className="py-20 sm:py-28 bg-secondary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-block">
-            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">Loved Worldwide</span>
+            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">{t('testimonials.heading')}</span>
             <div className="h-px gold-line mt-2" />
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-semibold text-navy mt-4">
-            Stories from our clients
+            {t('testimonials.headingGold')}
           </h2>
           <div className="flex items-center justify-center gap-2 mt-4">
             <div className="flex">
@@ -73,15 +75,15 @@ export function Testimonials() {
               ))}
             </div>
             <span className="text-sm text-muted-foreground">
-              <strong className="text-navy">4.9/5</strong> from 2,400+ reviews
+              <strong className="text-navy">{t('testimonials.rating')}</strong> {t('testimonials.fromReviews')}
             </span>
           </div>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {testimonials.map((t, i) => (
+          {testimonials.map((testimonial, i) => (
             <motion.div
-              key={t.name}
+              key={testimonial.name}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
@@ -91,27 +93,27 @@ export function Testimonials() {
               <Quote className="absolute top-4 right-4 h-10 w-10 text-gold/10" />
 
               <div className="flex mb-3">
-                {Array.from({ length: t.rating }).map((_, s) => (
+                {Array.from({ length: testimonial.rating }).map((_, s) => (
                   <Star key={s} className="h-4 w-4 fill-gold text-gold" />
                 ))}
               </div>
 
               <p className="text-sm text-navy/80 leading-relaxed mb-5 relative z-10">
-                &ldquo;{t.text}&rdquo;
+                &ldquo;{testimonial.text}&rdquo;
               </p>
 
               <div className="flex items-center gap-3 pt-4 border-t border-border/50">
                 <div className="h-10 w-10 rounded-full bg-navy text-silver flex items-center justify-center font-display text-sm font-semibold">
-                  {t.avatar}
+                  {testimonial.avatar}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-navy">{t.name}</p>
-                  <p className="text-xs text-muted-foreground">{t.location}</p>
+                  <p className="text-sm font-semibold text-navy">{testimonial.name}</p>
+                  <p className="text-xs text-muted-foreground">{testimonial.location}</p>
                 </div>
               </div>
 
               <p className="text-[11px] text-gold mt-3 tracking-wide">
-                Verified purchase · {t.piece}
+                {t('testimonials.verified')} {testimonial.piece}
               </p>
             </motion.div>
           ))}

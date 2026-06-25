@@ -6,8 +6,10 @@ import { Mail, Send, Check, Gift } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
+import { useTranslation } from '@/hooks/use-translation'
 
 export function Newsletter() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,14 +28,14 @@ export function Newsletter() {
       const data = await res.json()
       if (data.ok) {
         setDone(true)
-        toast.success(data.alreadySubscribed ? 'You are already subscribed!' : 'Welcome to the Gümüş Güneş family! ✨')
+        toast.success(data.alreadySubscribed ? t('newsletter.alreadySubscribed') : t('newsletter.success'))
         setEmail('')
         setName('')
       } else {
-        toast.error(data.error || 'Subscription failed')
+        toast.error(data.error || t('newsletter.subFail'))
       }
     } catch {
-      toast.error('Something went wrong')
+      toast.error(t('newsletter.subGenericError'))
     } finally {
       setLoading(false)
     }
@@ -55,16 +57,15 @@ export function Newsletter() {
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/30 bg-gold/5 mb-6">
             <Gift className="h-3.5 w-3.5 text-gold" />
-            <span className="text-xs tracking-[0.25em] uppercase text-gold-soft">Members get 10% off</span>
+            <span className="text-xs tracking-[0.25em] uppercase text-gold-soft">{t('rewards.gold10Off')}</span>
           </div>
 
           <h2 className="font-display text-4xl sm:text-5xl font-semibold mb-4">
-            <span className="silver-text">Join the</span>{' '}
-            <span className="gold-text">Inner Circle</span>
+            <span className="silver-text">{t('newsletter.heading')}</span>{' '}
+            <span className="gold-text">{t('newsletter.headingGold')}</span>
           </h2>
           <p className="text-silver/70 text-base mb-8 max-w-xl mx-auto leading-relaxed">
-            Be the first to know about new collections, private sales, and behind-the-scenes
-            from our atelier. Plus, enjoy 10% off your first order.
+            {t('newsletter.subheading')}
           </p>
 
           {done ? (
@@ -74,7 +75,7 @@ export function Newsletter() {
               className="inline-flex items-center gap-3 px-6 py-4 rounded-full bg-gold/15 border border-gold/40"
             >
               <Check className="h-5 w-5 text-gold" />
-              <span className="text-silver font-medium">You&apos;re in! Check your inbox for your 10% code.</span>
+                  <span className="text-silver font-medium">{t('newsletter.checkInbox')}</span>
             </motion.div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
@@ -85,7 +86,7 @@ export function Newsletter() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Your email address"
+                  placeholder={t('newsletter.placeholder')}
                   className="pl-11 h-12 rounded-full bg-silver/10 border-silver/20 text-silver placeholder:text-silver/40 focus-visible:ring-gold"
                 />
               </div>
@@ -99,7 +100,7 @@ export function Newsletter() {
                 ) : (
                   <>
                     <Send className="h-4 w-4 mr-1.5" />
-                    Subscribe
+{t('newsletter.subscribe')}
                   </>
                 )}
               </Button>
@@ -107,7 +108,7 @@ export function Newsletter() {
           )}
 
           <p className="text-[11px] text-silver/40 mt-4 tracking-wide">
-            No spam, only sparkle. Unsubscribe anytime.
+            {t('newsletter.noSpam')}
           </p>
         </motion.div>
       </div>

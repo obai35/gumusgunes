@@ -7,12 +7,13 @@ import { useCart } from '@/lib/store'
 import { useFormatPrice } from '@/hooks/use-format-price'
 import { cn, parseTags } from '@/lib/format'
 import { toast } from 'sonner'
+import { useTranslation } from '@/hooks/use-translation'
 import type { Product } from '@/lib/types'
 
 const BUNDLE_STEPS = [
-  { key: 'necklaces', label: 'Necklace', icon: '📿', required: true, hint: 'The centerpiece' },
-  { key: 'pendants', label: 'Pendant', icon: '✦', required: false, hint: 'Add a charm (optional)' },
-  { key: 'earrings', label: 'Earrings', icon: '◯', required: true, hint: 'Complete the look' },
+  { key: 'necklaces', label: 'bundle.necklace', icon: '📿', required: true, hint: 'bundle.centerpiece' },
+  { key: 'pendants', label: 'bundle.pendant', icon: '✦', required: false, hint: 'bundle.addCharm' },
+  { key: 'earrings', label: 'bundle.earrings', icon: '◯', required: true, hint: 'bundle.completeLook' },
 ] as const
 
 const BUNDLE_DISCOUNT = 0.15 // 15% off when you build a bundle
@@ -22,6 +23,7 @@ type BundleSelections = Record<string, Product | null>
 export function BundleConfigurator() {
   const { addItem } = useCart()
   const formatPrice = useFormatPrice()
+  const { t } = useTranslation()
   const [products, setProducts] = useState<Product[]>([])
   const [selections, setSelections] = useState<BundleSelections>({
     necklaces: null,
@@ -56,7 +58,7 @@ export function BundleConfigurator() {
 
   const handleSelect = (stepKey: string, product: Product) => {
     setSelections((prev) => ({ ...prev, [stepKey]: product }))
-    toast.success(`${product.name} added to bundle`)
+    toast.success(t('bundle.addedToBundle', product.name))
   }
 
   const handleRemove = (stepKey: string) => {
@@ -66,8 +68,8 @@ export function BundleConfigurator() {
   const handleAddBundle = () => {
     if (!canComplete) return
     bundleItems.forEach((p) => addItem(p, 1))
-    toast.success(`Bundle of ${bundleItems.length} pieces added to bag!`, {
-      description: `You saved ${formatPrice(discount)} with the bundle discount.`,
+    toast.success(t('bundle.bundleAdded', bundleItems.length), {
+      description: t('bundle.bundleSaved', formatPrice(discount)),
     })
     // Reset
     setSelections({ necklaces: null, pendants: null, earrings: null })
@@ -108,16 +110,13 @@ export function BundleConfigurator() {
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/30 bg-gold/5 mb-6">
             <Layers className="h-3.5 w-3.5 text-gold" />
-            <span className="text-xs tracking-[0.25em] uppercase text-gold-soft">Build Your Own</span>
+            <span className="text-xs tracking-[0.25em] uppercase text-gold-soft">{t('bundle.buildYourOwn')}</span>
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-semibold mb-4">
-            <span className="silver-text">Curate Your</span>{' '}
-            <span className="gold-text">Perfect Set</span>
+            <span className="silver-text">{t('bundle.title')}</span>
           </h2>
           <p className="text-silver/70 text-base leading-relaxed">
-            Choose a necklace, a pendant, and a pair of earrings — and enjoy{' '}
-            <strong className="text-gold">15% off</strong> the combined price.
-            Each piece is handpicked to harmonize with the others.
+            {t('bundle.bundleDescription')}
           </p>
         </div>
 
@@ -143,15 +142,15 @@ export function BundleConfigurator() {
                     )}
                   >
                     <span className="text-xl">{step.icon}</span>
-                    <span className="text-xs font-semibold">{step.label}</span>
+                    <span className="text-xs font-semibold">{t(step.label)}</span>
                     {selected ? (
                       <span className="flex items-center gap-1 text-[10px] text-green-600">
-                        <Check className="h-3 w-3" /> Selected
+                        <Check className="h-3 w-3" /> {t('bundle.selected')}
                       </span>
                     ) : step.required ? (
-                      <span className="text-[10px] text-muted-foreground">Required</span>
+                      <span className="text-[10px] text-muted-foreground">{t('bundle.required')}</span>
                     ) : (
-                      <span className="text-[10px] text-muted-foreground">Optional</span>
+                      <span className="text-[10px] text-muted-foreground">{t('bundle.optional')}</span>
                     )}
                   </button>
                 )
@@ -163,16 +162,16 @@ export function BundleConfigurator() {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <h3 className="font-display text-lg font-semibold text-navy">
-                    Choose your {currentStep.label.toLowerCase()}
+                    {t('bundle.choose')} {t(currentStep.label).toLowerCase()}
                   </h3>
-                  <p className="text-xs text-muted-foreground">{currentStep.hint}</p>
+                  <p className="text-xs text-muted-foreground">{t(currentStep.hint)}</p>
                 </div>
                 {selections[currentStep.key] && (
                   <button
                     onClick={() => handleRemove(currentStep.key)}
                     className="text-xs text-muted-foreground hover:text-destructive inline-flex items-center gap-1"
                   >
-                    <X className="h-3 w-3" /> Clear
+                    <X className="h-3 w-3" /> {t('compare.clear')}
                   </button>
                 )}
               </div>
@@ -185,7 +184,7 @@ export function BundleConfigurator() {
               </div>
             ) : stepProducts.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-12">
-                No {currentStep?.label.toLowerCase()}s available right now.
+                {t('bundle.unavailable', t(currentStep?.label || '').toLowerCase())}
               </p>
             ) : (
               <div className="grid grid-cols-2 gap-3 max-h-[420px] overflow-y-auto scroll-luxury pr-1">
@@ -231,9 +230,9 @@ export function BundleConfigurator() {
           <div className="bg-background/95 backdrop-blur-sm text-navy rounded-3xl p-6 sm:p-8 luxury-shadow lg:sticky lg:top-24">
             <div className="flex items-center gap-2 mb-6">
               <Sparkles className="h-5 w-5 text-gold" />
-              <h3 className="font-display text-xl font-semibold">Your Bundle</h3>
+              <h3 className="font-display text-xl font-semibold">{t('bundle.yourBundle')}</h3>
               <span className="ml-auto text-xs text-muted-foreground">
-                {selectedItemCount}/3 pieces
+                {selectedItemCount}{t('bundle.piecesCount')}
               </span>
             </div>
 
@@ -258,7 +257,7 @@ export function BundleConfigurator() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground font-medium">
-                        {step.label}
+                        {t(step.label)}
                       </p>
                       {product ? (
                         <>
@@ -267,7 +266,7 @@ export function BundleConfigurator() {
                         </>
                       ) : (
                         <p className="text-xs text-muted-foreground">
-                          {step.required ? 'Select a ' + step.label.toLowerCase() : 'Optional'}
+                          {step.required ? t('bundle.selectFallback', t(step.label).toLowerCase()) : t('bundle.optional')}
                         </p>
                       )}
                     </div>
@@ -275,7 +274,7 @@ export function BundleConfigurator() {
                       <button
                         onClick={() => handleRemove(step.key)}
                         className="text-muted-foreground hover:text-destructive"
-                        aria-label="Remove"
+                        aria-label={t('bundle.removeAria')}
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -288,7 +287,7 @@ export function BundleConfigurator() {
             {/* Price summary */}
             <div className="space-y-2 p-4 rounded-2xl bg-secondary/50 mb-5">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal ({selectedItemCount} {selectedItemCount === 1 ? 'piece' : 'pieces'})</span>
+                <span className="text-muted-foreground">{t('bundle.subtotal')} ({selectedItemCount} {selectedItemCount === 1 ? t('bundle.pieceSingular') : t('bundle.piecePlural')})</span>
                 <span className="font-medium text-navy">{formatPrice(subtotal)}</span>
               </div>
               {discount > 0 && (
@@ -299,13 +298,13 @@ export function BundleConfigurator() {
                 >
                   <span className="text-gold flex items-center gap-1.5">
                     <Sparkles className="h-3 w-3" />
-                    Bundle discount (15%)
+                    {t('bundle.discountLabel')}
                   </span>
                   <span className="font-semibold text-green-600">−{formatPrice(discount)}</span>
                 </motion.div>
               )}
               <div className="border-t border-border pt-2 flex justify-between items-baseline">
-                <span className="font-display text-base font-semibold text-navy">Bundle Total</span>
+                <span className="font-display text-base font-semibold text-navy">{t('bundle.total')}</span>
                 <span className="font-display text-2xl font-semibold gold-text">{formatPrice(bundleTotal)}</span>
               </div>
             </div>
@@ -314,7 +313,7 @@ export function BundleConfigurator() {
             {!canComplete ? (
               <div className="text-center">
                 <p className="text-xs text-muted-foreground mb-3">
-                  Select a necklace and earrings to unlock your 15% bundle discount.
+                  {t('bundle.discount')}
                 </p>
                 <div className="flex gap-2">
                   {BUNDLE_STEPS.filter((s) => s.required).map((s, i) => {
@@ -331,7 +330,7 @@ export function BundleConfigurator() {
                             : 'bg-navy text-silver hover:bg-gold hover:text-navy-deep'
                         )}
                       >
-                        {filled ? `✓ ${s.label}` : `Choose ${s.label}`}
+                        {filled ? `✓ ${t(s.label)}` : `Choose ${t(s.label)}`}
                       </button>
                     )
                   })}
@@ -346,7 +345,7 @@ export function BundleConfigurator() {
                 >
                   <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
                   <p className="text-xs text-green-700 font-medium">
-                    Bundle complete! You saved {formatPrice(discount)}.
+                    {t('bundle.complete')} {t('bundle.saved')} {formatPrice(discount)}.
                   </p>
                 </motion.div>
                 <button
@@ -354,14 +353,14 @@ export function BundleConfigurator() {
                   className="w-full h-12 rounded-full bg-gold text-navy-deep font-semibold tracking-wide hover:bg-gold-soft transition-colors flex items-center justify-center gap-2 gold-shadow"
                 >
                   <ShoppingBag className="h-4 w-4" />
-                  Add Bundle to Bag · {formatPrice(bundleTotal)}
+                  {t('bundle.addBundle')} · {formatPrice(bundleTotal)}
                 </button>
                 <button
                   onClick={handleReset}
                   className="w-full text-center text-xs text-muted-foreground hover:text-navy transition-colors inline-flex items-center justify-center gap-1.5"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Start over
+                  {t('bundle.reset')}
                 </button>
               </div>
             )}

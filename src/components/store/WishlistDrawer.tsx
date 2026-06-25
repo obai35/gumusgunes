@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button'
 import { WishlistShareButton } from './WishlistShareButton'
 import { toast } from 'sonner'
 import { useEffect, useState } from 'react'
+import { useTranslation } from '@/hooks/use-translation'
 import type { Product } from '@/lib/types'
 
 export function WishlistDrawer() {
   const { wishlistOpen, setWishlistOpen, setProductModal } = useUI()
   const wishlist = useWishlist()
   const { addItem } = useCart()
+  const { t } = useTranslation()
   const formatPrice = useFormatPrice()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
@@ -62,7 +64,7 @@ export function WishlistDrawer() {
             <div className="flex items-center justify-between p-5 border-b border-border">
               <div className="flex items-center gap-2">
                 <Heart className="h-5 w-5 text-gold" />
-                <h2 className="font-display text-xl font-semibold text-navy">Wishlist</h2>
+                <h2 className="font-display text-xl font-semibold text-navy">{t('wishlist.title')}</h2>
                 <span className="text-xs text-muted-foreground">({products.length})</span>
               </div>
               <button
@@ -82,15 +84,15 @@ export function WishlistDrawer() {
                 <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center mb-4">
                   <Heart className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-display text-xl font-semibold text-navy mb-2">Your wishlist is empty</h3>
+                <h3 className="font-display text-xl font-semibold text-navy mb-2">{t('wishlist.empty')}</h3>
                 <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                  Tap the heart icon on any piece to save it here for later.
+                  {t('wishlist.emptyDesc')}
                 </p>
                 <Button
                   onClick={() => setWishlistOpen(false)}
                   className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep px-6"
                 >
-                  Browse the Collection
+                  {t('wishlist.browseCollection')}
                 </Button>
               </div>
             ) : (
@@ -109,7 +111,7 @@ export function WishlistDrawer() {
                         <button
                           onClick={() => {
                             wishlist.toggle(p.id)
-                            toast('Removed from wishlist')
+                            toast(t('wishlist.removed'))
                           }}
                           className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
                         >
@@ -122,12 +124,12 @@ export function WishlistDrawer() {
                         <button
                           onClick={() => {
                             addItem(p, 1)
-                            toast.success(`${p.name} added to bag`)
+                            toast.success(t('wishlist.addedToBag', p.name))
                           }}
                           className="inline-flex items-center gap-1.5 px-3 h-8 rounded-full bg-navy text-silver text-xs font-medium hover:bg-gold hover:text-navy-deep transition-colors"
                         >
                           <ShoppingBag className="h-3 w-3" />
-                          Add to Bag
+                          {t('products.addToBag')}
                         </button>
                       </div>
                     </div>

@@ -2,8 +2,10 @@
 
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 export function PromoBanner() {
+  const { t } = useTranslation()
   return (
     <section className="py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -42,17 +44,16 @@ export function PromoBanner() {
           <div className="relative p-8 sm:p-12 lg:p-16 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gold/30 bg-gold/10 mb-4">
               <Sparkles className="h-3 w-3 text-gold" />
-              <span className="text-[10px] tracking-[0.25em] uppercase text-gold-soft">Limited Time</span>
+              <span className="text-[10px] tracking-[0.25em] uppercase text-gold-soft">{t('promo.limitedTime')}</span>
             </div>
 
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight mb-3">
-              <span className="silver-text">The Summer</span>
+              <span className="silver-text">{t('promo.heading1')}</span>
               <br />
-              <span className="gold-text">Solstice Collection</span>
+              <span className="gold-text">{t('promo.heading2')}</span>
             </h2>
             <p className="text-silver/70 text-base mb-6 max-w-md leading-relaxed">
-              Up to 25% off selected pieces that celebrate the longest days of the year.
-              Each purchase arrives in our signature gift box.
+              {t('promo.description')}
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -60,18 +61,18 @@ export function PromoBanner() {
                 href="#collections"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow group"
               >
-                Shop the Sale
+                {t('general.shopNow')}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </a>
               <div className="flex items-center gap-3 text-silver/60 text-sm">
                 <div className="text-center">
                   <div className="font-display text-2xl gold-text font-semibold">25%</div>
-                  <div className="text-[10px] tracking-wide uppercase">Off</div>
+                  <div className="text-[10px] tracking-wide uppercase">{t('promo.off')}</div>
                 </div>
                 <div className="h-8 w-px bg-silver/20" />
                 <div className="text-center">
-                  <div className="font-display text-2xl gold-text font-semibold">Free</div>
-                  <div className="text-[10px] tracking-wide uppercase">Gift Box</div>
+                  <div className="font-display text-2xl gold-text font-semibold">{t('promo.free')}</div>
+                  <div className="text-[10px] tracking-wide uppercase">{t('promo.giftBox')}</div>
                 </div>
               </div>
             </div>

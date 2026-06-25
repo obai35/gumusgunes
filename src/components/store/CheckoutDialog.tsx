@@ -6,6 +6,7 @@ import { X, Check, CreditCard, Banknote, Wallet, ShieldCheck, Loader2, PartyPopp
 import { useCart, useUI } from '@/lib/store'
 import { cn } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
+import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +21,7 @@ export function CheckoutDialog() {
   const { isOpen: _, items, subtotal, clearCart } = useCart()
   const { checkoutOpen, setCheckoutOpen } = useUI()
   const formatPrice = useFormatPrice()
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>('details')
   const [order, setOrder] = useState<Order | null>(null)
   const [form, setForm] = useState({
@@ -29,7 +31,7 @@ export function CheckoutDialog() {
     address: '',
     city: '',
     postalCode: '',
-    country: 'Turkey',
+    country: t('checkout.countryDefault'),
     notes: '',
     paymentMethod: 'card' as 'card' | 'transfer' | 'cod',
     cardNumber: '',
@@ -61,7 +63,7 @@ export function CheckoutDialog() {
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.email || !form.fullName || !form.address || !form.city || !form.postalCode) {
-      toast.error('Please fill in all required fields')
+      toast.error(t('checkout.validationError'))
       return
     }
     setStep('payment')
@@ -100,10 +102,10 @@ export function CheckoutDialog() {
       if (!data.ok) throw new Error(data.error)
       setOrder(data.order)
       setStep('done')
-      toast.success('Order placed successfully!')
+      toast.success(t('checkout.orderSuccess'))
     } catch (err) {
       console.error(err)
-      toast.error(err instanceof Error ? err.message : 'Failed to place order')
+      toast.error(err instanceof Error ? err.message : t('checkout.orderFailed'))
       setStep('payment')
     }
   }
@@ -130,11 +132,11 @@ export function CheckoutDialog() {
             <div className="flex items-center justify-between p-5 border-b border-border">
               <div>
                 <h2 className="font-display text-2xl font-semibold text-navy">
-                  {step === 'done' ? 'Order Confirmed' : 'Checkout'}
+                  {step === 'done' ? t('checkout.orderConfirmed') : t('checkout.title')}
                 </h2>
                 {step !== 'done' && (
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Step {step === 'details' ? '1' : '2'} of 2 · {step === 'details' ? 'Shipping details' : 'Payment'}
+                    {step === 'details' ? t('checkout.step1') : t('checkout.step2')}
                   </p>
                 )}
               </div>
@@ -151,7 +153,7 @@ export function CheckoutDialog() {
                 <form onSubmit={handleDetailsSubmit} className="p-6 space-y-5">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="email">Email *</Label>
+                      <Label htmlFor="email">{t('checkout.email')} *</Label>
                       <Input
                         id="email"
                         type="email"
@@ -163,7 +165,7 @@ export function CheckoutDialog() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="fullName">Full Name *</Label>
+                      <Label htmlFor="fullName">{t('checkout.fullName')} *</Label>
                       <Input
                         id="fullName"
                         required
@@ -176,7 +178,7 @@ export function CheckoutDialog() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="address">Shipping Address *</Label>
+                    <Label htmlFor="address">{t('checkout.address')} *</Label>
                     <Input
                       id="address"
                       required
@@ -189,7 +191,7 @@ export function CheckoutDialog() {
 
                   <div className="grid sm:grid-cols-3 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="city">City *</Label>
+                      <Label htmlFor="city">{t('checkout.city')} *</Label>
                       <Input
                         id="city"
                         required
@@ -200,7 +202,7 @@ export function CheckoutDialog() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="postalCode">Postal Code *</Label>
+                      <Label htmlFor="postalCode">{t('checkout.postalCode')} *</Label>
                       <Input
                         id="postalCode"
                         required
@@ -211,7 +213,7 @@ export function CheckoutDialog() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="country">Country *</Label>
+                      <Label htmlFor="country">{t('checkout.country')} *</Label>
                       <Input
                         id="country"
                         required
@@ -223,7 +225,7 @@ export function CheckoutDialog() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="phone">Phone (optional)</Label>
+                    <Label htmlFor="phone">{t('checkout.phone')}</Label>
                     <Input
                       id="phone"
                       value={form.phone}
@@ -234,7 +236,7 @@ export function CheckoutDialog() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="notes">Order Notes (optional)</Label>
+                    <Label htmlFor="notes">{t('checkout.orderNotes')}</Label>
                     <textarea
                       id="notes"
                       value={form.notes}
@@ -262,15 +264,14 @@ export function CheckoutDialog() {
                         <div className="flex items-center gap-2 mb-1">
                           <Gift className="h-4 w-4 text-gold" />
                           <span className="font-display text-sm font-semibold text-navy">
-                            Signature Gift Wrapping
+                            {t('checkout.giftWrappingLabel')}
                           </span>
                           <span className="ml-auto text-sm font-semibold text-gold">
                             +{formatPrice(GIFT_WRAP_PRICE)}
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
-                          Each piece arrives in our signature navy box with a hand-tied gold ribbon.
-                          Add a personalized note below.
+                          {t('checkout.giftWrappingDesc')}
                         </p>
                         {form.giftWrap && (
                           <motion.div
@@ -295,27 +296,27 @@ export function CheckoutDialog() {
                   {/* Order summary */}
                   <div className="p-4 rounded-xl bg-secondary/50 space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
+                      <span className="text-muted-foreground">{t('cart.subtotal')} ({items.length} items)</span>
                       <span className="font-medium text-navy">{formatPrice(total)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Shipping</span>
-                      <span className="font-medium text-navy">{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+                      <span className="text-muted-foreground">{t('cart.shipping')}</span>
+                      <span className="font-medium text-navy">{shipping === 0 ? t('cart.free') : formatPrice(shipping)}</span>
                     </div>
                     {giftWrapFee > 0 && (
                       <div className="flex justify-between">
                         <span className="text-muted-foreground flex items-center gap-1">
-                          <Gift className="h-3 w-3 text-gold" /> Gift wrapping
+                          <Gift className="h-3 w-3 text-gold" /> {t('checkout.giftWrappingLineItem')}
                         </span>
                         <span className="font-medium text-navy">{formatPrice(giftWrapFee)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Tax (18% VAT)</span>
+                      <span className="text-muted-foreground">{t('cart.tax')}</span>
                       <span className="font-medium text-navy">{formatPrice(tax)}</span>
                     </div>
                     <div className="border-t border-border pt-2 flex justify-between">
-                      <span className="font-semibold text-navy">Total</span>
+                      <span className="font-semibold text-navy">{t('cart.total')}</span>
                       <span className="font-display text-lg font-semibold gold-text">{formatPrice(grandTotal)}</span>
                     </div>
                   </div>
@@ -324,7 +325,7 @@ export function CheckoutDialog() {
                     type="submit"
                     className="w-full h-12 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep font-semibold tracking-wide"
                   >
-                    Continue to Payment
+                    {t('checkout.continuePayment')}
                   </Button>
                 </form>
               )}
@@ -333,12 +334,12 @@ export function CheckoutDialog() {
                 <form onSubmit={handlePaymentSubmit} className="p-6 space-y-5">
                   {/* Payment method */}
                   <div className="space-y-2">
-                    <Label>Payment Method</Label>
+                    <Label>{t('checkout.payment')}</Label>
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { id: 'card', label: 'Card', icon: CreditCard },
-                        { id: 'transfer', label: 'Bank Transfer', icon: Banknote },
-                        { id: 'cod', label: 'Cash on Delivery', icon: Wallet },
+                        { id: 'card', label: t('checkout.card'), icon: CreditCard },
+                        { id: 'transfer', label: t('checkout.transfer'), icon: Banknote },
+                        { id: 'cod', label: t('checkout.cod'), icon: Wallet },
                       ].map((m) => (
                         <button
                           key={m.id}
@@ -362,7 +363,7 @@ export function CheckoutDialog() {
                   {form.paymentMethod === 'card' && (
                     <div className="space-y-4 p-4 rounded-xl bg-secondary/30">
                       <div className="space-y-1.5">
-                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Label htmlFor="cardNumber">{t('checkout.cardNumber')}</Label>
                         <Input
                           id="cardNumber"
                           value={form.cardNumber}
@@ -373,7 +374,7 @@ export function CheckoutDialog() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="cardName">Name on Card</Label>
+                        <Label htmlFor="cardName">{t('checkout.cardName')}</Label>
                         <Input
                           id="cardName"
                           value={form.cardName}
@@ -384,7 +385,7 @@ export function CheckoutDialog() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <Label htmlFor="cardExpiry">Expiry</Label>
+                          <Label htmlFor="cardExpiry">{t('checkout.expiry')}</Label>
                           <Input
                             id="cardExpiry"
                             value={form.cardExpiry}
@@ -395,7 +396,7 @@ export function CheckoutDialog() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="cardCvc">CVC</Label>
+                          <Label htmlFor="cardCvc">{t('checkout.cvc')}</Label>
                           <Input
                             id="cardCvc"
                             value={form.cardCvc}
@@ -408,51 +409,50 @@ export function CheckoutDialog() {
                       </div>
                       <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                         <ShieldCheck className="h-3 w-3 text-gold" />
-                        This is a demo — no real payment will be processed.
+                        {t('checkout.demo')}
                       </p>
                     </div>
                   )}
 
                   {form.paymentMethod === 'transfer' && (
                     <div className="p-4 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
-                      <p className="font-medium text-navy mb-1">Bank Transfer Details</p>
-                      <p>Gümüş Güneş Jewellery Ltd.</p>
-                      <p>İş Bankası · TR12 0006 4000 0011 2345 6789 01</p>
-                      <p className="mt-2 text-xs">Reference: Your order number will be sent after submission.</p>
+                      <p className="font-medium text-navy mb-1">{t('checkout.bankName')}</p>
+                      <p>{t('checkout.bankIban')}</p>
+                      <p className="mt-2 text-xs">{t('checkout.bankReference')}</p>
                     </div>
                   )}
 
                   {form.paymentMethod === 'cod' && (
                     <div className="p-4 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
                       <p className="font-medium text-navy mb-1">Cash on Delivery</p>
-                      <p>Pay with cash when your order arrives. A small handling fee of $2 applies.</p>
+                      <p>{t('checkout.codDesc')}</p>
                     </div>
                   )}
 
                   {/* Summary */}
                   <div className="p-4 rounded-xl bg-navy text-silver space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-silver/60">Subtotal</span>
+                      <span className="text-silver/60">{t('cart.subtotal')}</span>
                       <span>{formatPrice(total)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-silver/60">Shipping</span>
-                      <span>{shipping === 0 ? 'Free' : formatPrice(shipping)}</span>
+                      <span className="text-silver/60">{t('cart.shipping')}</span>
+                      <span>{shipping === 0 ? t('cart.free') : formatPrice(shipping)}</span>
                     </div>
                     {giftWrapFee > 0 && (
                       <div className="flex justify-between">
                         <span className="text-silver/60 flex items-center gap-1">
-                          <Gift className="h-3 w-3 text-gold" /> Gift wrapping
+                          <Gift className="h-3 w-3 text-gold" /> {t('checkout.giftWrappingLineItem')}
                         </span>
                         <span>{formatPrice(giftWrapFee)}</span>
                       </div>
                     )}
                     <div className="flex justify-between">
-                      <span className="text-silver/60">Tax</span>
+                      <span className="text-silver/60">{t('cart.tax')}</span>
                       <span>{formatPrice(tax)}</span>
                     </div>
                     <div className="border-t border-silver/20 pt-2 flex justify-between">
-                      <span className="font-semibold">Total</span>
+                      <span className="font-semibold">{t('cart.total')}</span>
                       <span className="font-display text-lg font-semibold gold-text">{formatPrice(grandTotal)}</span>
                     </div>
                   </div>
@@ -464,13 +464,13 @@ export function CheckoutDialog() {
                       variant="outline"
                       className="rounded-full px-6"
                     >
-                      Back
+                      {t('checkout.backDetails')}
                     </Button>
                     <Button
                       type="submit"
                       className="flex-1 h-12 rounded-full bg-gold text-navy-deep hover:bg-gold-soft font-semibold tracking-wide"
                     >
-                      Place Order · {formatPrice(grandTotal)}
+                      {t('checkout.placeOrder')} · {formatPrice(grandTotal)}
                     </Button>
                   </div>
                 </form>
@@ -479,8 +479,8 @@ export function CheckoutDialog() {
               {step === 'processing' && (
                 <div className="flex flex-col items-center justify-center py-20">
                   <Loader2 className="h-12 w-12 animate-spin text-gold mb-4" />
-                  <h3 className="font-display text-xl font-semibold text-navy">Processing your order…</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Please do not close this window.</p>
+                  <h3 className="font-display text-xl font-semibold text-navy">{t('checkout.processing')}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{t('checkout.dontClose')}</p>
                 </div>
               )}
 
@@ -496,42 +496,41 @@ export function CheckoutDialog() {
                   </motion.div>
 
                   <h3 className="font-display text-3xl font-semibold text-navy mb-2 flex items-center justify-center gap-2">
-                    Thank you, {order.fullName.split(' ')[0]}!
+                    {t('checkout.thankYou')}{order.fullName.split(' ')[0]}!
                     <PartyPopper className="h-6 w-6 text-gold" />
                   </h3>
                   <p className="text-muted-foreground mb-6">
-                    Your order has been received and is being prepared with care.
+                    {t('checkout.received')}
                   </p>
 
                   <div className="p-5 rounded-xl bg-secondary/50 text-left mb-6 max-w-md mx-auto">
                     <div className="flex justify-between mb-2">
-                      <span className="text-xs text-muted-foreground tracking-wide uppercase">Order Number</span>
+                      <span className="text-xs text-muted-foreground tracking-wide uppercase">{t('checkout.orderNumber')}</span>
                       <span className="font-mono font-semibold text-navy">{order.orderNumber}</span>
                     </div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-xs text-muted-foreground tracking-wide uppercase">Items</span>
+                      <span className="text-xs text-muted-foreground tracking-wide uppercase">{t('checkout.items')}</span>
                       <span className="font-medium text-navy">{order.items.length}</span>
                     </div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-xs text-muted-foreground tracking-wide uppercase">Total Paid</span>
+                      <span className="text-xs text-muted-foreground tracking-wide uppercase">{t('checkout.totalPaid')}</span>
                       <span className="font-display text-lg font-semibold gold-text">{formatPrice(order.totalAmount)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-xs text-muted-foreground tracking-wide uppercase">Ship to</span>
+                      <span className="text-xs text-muted-foreground tracking-wide uppercase">{t('checkout.shipTo')}</span>
                       <span className="font-medium text-navy text-right">{order.city}, {order.country}</span>
                     </div>
                   </div>
 
                   <p className="text-xs text-muted-foreground mb-6 max-w-md mx-auto">
-                    A confirmation email has been sent to <strong className="text-navy">{order.email}</strong>.
-                    You will receive tracking information once your order ships.
+                    {t('checkout.confirmationEmail', order.email)}
                   </p>
 
                   <Button
                     onClick={handleClose}
                     className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep px-8"
                   >
-                    Continue Shopping
+                    {t('checkout.continueShopping')}
                   </Button>
                 </div>
               )}

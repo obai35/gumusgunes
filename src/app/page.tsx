@@ -30,9 +30,11 @@ import { GiftFinder } from '@/components/store/GiftFinder'
 import { BundleConfigurator } from '@/components/store/BundleConfigurator'
 import { OrderTrackingModal } from '@/components/store/OrderTrackingModal'
 import { useCart, useWishlist, useUI } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 import type { Product, Category } from '@/lib/types'
 
 export default function Home() {
+  const { t } = useTranslation()
   const [categories, setCategories] = useState<Category[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,8 +71,8 @@ export default function Home() {
         // Show a toast and open wishlist
         setTimeout(() => {
           import('sonner').then(({ toast }) => {
-            toast.success(`Loaded ${ids.length} pieces from shared wishlist`, {
-              description: 'Added to your wishlist.',
+            toast.success(t('page.sharedWishlistLoaded', ids.length.toString()), {
+              description: t('page.sharedWishlistDesc'),
             })
           })
           useUI.getState().setWishlistOpen(true)
@@ -104,10 +106,10 @@ export default function Home() {
         {featured.length > 0 && (
           <FeaturedProducts
             id="featured"
-            eyebrow="Curated Selection"
-            title="Featured Pieces"
+            eyebrow={t('page.featured.eyebrow')}
+            title={t('page.featured.title')}
             products={featured}
-            ctaLabel="View all"
+            ctaLabel={t('page.featured.cta')}
             ctaHref="#collections"
           />
         )}
@@ -119,10 +121,10 @@ export default function Home() {
         {newArrivals.length > 0 && (
           <FeaturedProducts
             id="new"
-            eyebrow="Just Arrived"
-            title="New Arrivals"
+            eyebrow={t('page.newArrivals.eyebrow')}
+            title={t('page.newArrivals.title')}
             products={newArrivals}
-            ctaLabel="Shop all new"
+            ctaLabel={t('page.newArrivals.cta')}
             ctaHref="#collections"
           />
         )}
@@ -135,10 +137,10 @@ export default function Home() {
         {bestsellers.length > 0 && (
           <FeaturedProducts
             id="bestsellers"
-            eyebrow="Client Favorites"
-            title="Bestsellers"
+            eyebrow={t('page.bestsellers.eyebrow')}
+            title={t('page.bestsellers.title')}
             products={bestsellers}
-            ctaLabel="Explore more"
+            ctaLabel={t('page.bestsellers.cta')}
             ctaHref="#collections"
           />
         )}
@@ -175,7 +177,7 @@ export default function Home() {
           className={`h-11 w-11 rounded-full bg-navy text-silver shadow-lg hover:bg-gold hover:text-navy-deep transition-all flex items-center justify-center ${
             showTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
           }`}
-          aria-label="Back to top"
+          aria-label={t('page.backToTop')}
         >
           <ArrowUp className="h-5 w-5" />
         </button>
@@ -187,7 +189,7 @@ export default function Home() {
             className="sm:hidden h-14 px-5 rounded-full bg-gold text-navy-deep shadow-xl flex items-center gap-2 font-semibold text-sm"
           >
             <ShoppingBag className="h-5 w-5" />
-            View Bag ({count()})
+            {t('page.viewBag', count().toString())}
           </button>
         )}
       </div>
@@ -196,7 +198,7 @@ export default function Home() {
         <div className="fixed inset-0 z-[100] bg-background flex items-center justify-center pointer-events-none">
           <div className="text-center">
             <div className="h-12 w-12 rounded-full border-2 border-gold border-t-transparent animate-spin mx-auto mb-3" />
-            <p className="font-display text-sm text-navy">Loading the collection…</p>
+            <p className="font-display text-sm text-navy">{t('page.loading')}</p>
           </div>
         </div>
       )}

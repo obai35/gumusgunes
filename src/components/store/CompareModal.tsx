@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Check, Minus, Star, Trash2, ShoppingBag, GitCompare } from 'lucide-react'
 import { useCompare, useCart, useUI } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 import { useFormatPrice } from '@/hooks/use-format-price'
 import { useHydrated } from '@/hooks/use-hydrated'
 import { parseTags, cn } from '@/lib/format'
@@ -16,6 +17,7 @@ export function CompareModal() {
   const { ids, isOpen, setOpen, clear, toggle } = useCompare()
   const { addItem } = useCart()
   const { setProductModal } = useUI()
+  const { t } = useTranslation()
   const formatPrice = useFormatPrice()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
@@ -68,17 +70,17 @@ export function CompareModal() {
   }
 
   const rows: { label: string; key: (p: Product) => string | number | null; type?: 'check' | 'text' | 'rating' }[] = [
-    { label: 'Price', key: (p) => formatPrice(p.price) },
-    { label: 'Material', key: (p) => p.material.split('·')[0].trim() },
-    { label: 'Full Material', key: (p) => p.material },
-    { label: 'Weight', key: (p) => p.weight },
-    { label: 'Category', key: (p) => p.category?.name ?? '—' },
-    { label: 'Rating', key: (p) => p.rating, type: 'rating' },
-    { label: 'Reviews', key: (p) => p.reviewCount },
-    { label: 'In Stock', key: (p) => p.stock, type: 'check' },
-    { label: 'Bestseller', key: (p) => (p.isBestseller ? 'Yes' : 'No'), type: 'check' },
-    { label: 'New Arrival', key: (p) => (p.isNew ? 'Yes' : 'No'), type: 'check' },
-    { label: 'SKU', key: (p) => p.sku },
+    { label: 'compare.rows.price', key: (p) => formatPrice(p.price) },
+    { label: 'compare.rows.material', key: (p) => p.material.split('·')[0].trim() },
+    { label: 'compare.rows.fullMaterial', key: (p) => p.material },
+    { label: 'compare.rows.weight', key: (p) => p.weight },
+    { label: 'compare.rows.category', key: (p) => p.category?.name ?? '—' },
+    { label: 'compare.rows.rating', key: (p) => p.rating, type: 'rating' },
+    { label: 'compare.rows.reviews', key: (p) => p.reviewCount },
+    { label: 'compare.rows.inStock', key: (p) => p.stock, type: 'check' },
+    { label: 'compare.rows.bestseller', key: (p) => (p.isBestseller ? t('compare.yes') : t('compare.no')), type: 'check' },
+    { label: 'compare.rows.newArrival', key: (p) => (p.isNew ? t('compare.yes') : t('compare.no')), type: 'check' },
+    { label: 'compare.rows.sku', key: (p) => p.sku },
   ]
 
   return (
@@ -103,7 +105,7 @@ export function CompareModal() {
             <div className="flex items-center justify-between p-5 border-b border-border bg-navy text-silver">
               <div className="flex items-center gap-2">
                 <GitCompare className="h-5 w-5 text-gold" />
-                <h2 className="font-display text-2xl font-semibold">Compare Pieces</h2>
+                <h2 className="font-display text-2xl font-semibold">{t('compare.compare')}</h2>
                 <span className="text-xs text-silver/60">({products.length}/3)</span>
               </div>
               <div className="flex items-center gap-2">
@@ -113,7 +115,7 @@ export function CompareModal() {
                     className="hidden sm:inline-flex items-center gap-1.5 px-3 h-9 rounded-full text-xs text-silver/70 hover:text-silver hover:bg-silver/10 transition-colors"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                    Clear all
+                    {t('compare.clear')}
                   </button>
                 )}
                 <button
@@ -135,12 +137,12 @@ export function CompareModal() {
                   <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
                     <GitCompare className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <h3 className="font-display text-xl font-semibold text-navy mb-2">No pieces to compare yet</h3>
+                  <h3 className="font-display text-xl font-semibold text-navy mb-2">{t('compare.emptyTitle')}</h3>
                   <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                    Tap the compare icon on any product to add it here. You can compare up to 3 pieces side-by-side.
+                    {t('compare.emptyDesc')}
                   </p>
                   <Button onClick={() => setOpen(false)} className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep">
-                    Browse the Collection
+                    {t('compare.emptyCta')}
                   </Button>
                 </div>
               ) : (
@@ -173,7 +175,7 @@ export function CompareModal() {
                           className="w-full h-9 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep text-xs"
                         >
                           <ShoppingBag className="h-3.5 w-3.5 mr-1.5" />
-                          Add to Bag
+                          {t('products.addToBag')}
                         </Button>
                       </div>
                     ))}
@@ -181,7 +183,7 @@ export function CompareModal() {
                     {Array.from({ length: 3 - products.length }).map((_, i) => (
                       <div key={`empty-${i}`} className="p-4 border-b border-l border-border bg-secondary/20">
                         <div className="aspect-square rounded-xl border-2 border-dashed border-border flex items-center justify-center mb-3">
-                          <span className="text-xs text-muted-foreground">Empty slot</span>
+                          <span className="text-xs text-muted-foreground">{t('compare.emptySlot')}</span>
                         </div>
                       </div>
                     ))}
@@ -195,7 +197,7 @@ export function CompareModal() {
                       style={{ gridTemplateColumns: `140px repeat(${products.length}, 1fr)` }}
                     >
                       <div className={cn('p-3 text-xs font-semibold text-muted-foreground tracking-wide uppercase bg-secondary/20', ri % 2 === 1 && 'bg-secondary/40')}>
-                        {row.label}
+                        {t(row.label)}
                       </div>
                       {products.map((p) => (
                         <div
@@ -213,7 +215,7 @@ export function CompareModal() {
 
                   {/* Tags row */}
                   <div className="grid border-b border-border/50" style={{ gridTemplateColumns: `140px repeat(${products.length}, 1fr)` }}>
-                    <div className="p-3 text-xs font-semibold text-muted-foreground tracking-wide uppercase bg-secondary/20">Tags</div>
+                    <div className="p-3 text-xs font-semibold text-muted-foreground tracking-wide uppercase bg-secondary/20">{t('compare.rows.tags')}</div>
                     {products.map((p) => (
                       <div key={p.id} className="p-3 border-l border-border/50 flex flex-wrap gap-1 justify-center">
                         {parseTags(p.tags).slice(0, 3).map((t) => (
@@ -237,7 +239,7 @@ export function CompareModal() {
                   className="w-full h-10 rounded-full text-xs text-muted-foreground hover:text-destructive transition-colors inline-flex items-center justify-center gap-1.5"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
-                  Clear all comparisons
+                  {t('compare.clear')}
                 </button>
               </div>
             )}

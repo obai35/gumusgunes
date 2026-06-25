@@ -3,9 +3,11 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles, Sun } from 'lucide-react'
 import { useUI } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 
 export function Hero() {
   const { setSearchOpen } = useUI()
+  const { t } = useTranslation()
 
   return (
     <section id="top" className="relative overflow-hidden navy-radial text-silver">
@@ -46,20 +48,18 @@ export function Hero() {
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-gold/30 bg-gold/5 mb-6">
               <Sun className="h-3.5 w-3.5 text-gold" />
               <span className="text-xs tracking-[0.25em] uppercase text-gold-soft">
-                Handcrafted in Istanbul
+                {t('hero.handcraftedIn')}
               </span>
             </div>
 
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05] mb-6">
-              <span className="silver-text">Where Silver</span>
+              <span className="silver-text">{t('hero.heading1')}</span>
               <br />
-              <span className="gold-text">Meets the Sun</span>
+              <span className="gold-text">{t('hero.heading2')}</span>
             </h1>
 
             <p className="text-base sm:text-lg text-silver/70 max-w-lg mx-auto lg:mx-0 mb-8 leading-relaxed">
-              Discover Gümüş Güneş — a collection of 925 sterling silver jewelry
-              inspired by the eternal dance of the sun, moon, and stars. Each piece is
-              hand-finished by master artisans in the heart of the Grand Bazaar.
+              {t('hero.heroDescription')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
@@ -67,23 +67,23 @@ export function Hero() {
                 href="#collections"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow"
               >
-                Explore the Collection
+                {t('hero.cta')}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </a>
               <button
                 onClick={() => setSearchOpen(true)}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full border border-silver/30 text-silver hover:border-gold hover:text-gold transition-all text-sm font-medium tracking-wide"
               >
-                Search the Vault
+                {t('hero.searchVault')}
               </button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-silver/10 max-w-md mx-auto lg:mx-0">
               {[
-                { value: '15K+', label: 'Happy clients' },
-                { value: '4.9★', label: 'Avg. rating' },
-                { value: '100%', label: '925 Silver' },
+                { value: '15K+', label: t('hero.stat1') },
+                { value: '4.9★', label: t('hero.stat2') },
+                { value: '100%', label: t('hero.stat3') },
               ].map((s) => (
                 <div key={s.label} className="text-center lg:text-left">
                   <div className="font-display text-2xl sm:text-3xl gold-text font-semibold">{s.value}</div>
@@ -126,10 +126,10 @@ export function Hero() {
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div className="h-2 w-2 rounded-full bg-gold animate-pulse" />
-                  <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Signature</span>
+                  <span className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t('hero.badge1')}</span>
                 </div>
-                <p className="font-display text-sm font-semibold leading-tight">Sunburst Pendant</p>
-                <p className="text-xs text-gold mt-0.5">From $199</p>
+                <p className="font-display text-sm font-semibold leading-tight">{t('hero.badge2')}</p>
+                <p className="text-xs text-gold mt-0.5">{t('hero.badge3')}</p>
               </motion.div>
 
               <motion.div
@@ -137,8 +137,8 @@ export function Hero() {
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                 className="absolute -top-2 -right-2 sm:-right-4 bg-navy text-silver rounded-2xl shadow-xl p-4"
               >
-                <div className="text-[10px] tracking-[0.2em] uppercase text-gold-soft mb-1">Lifetime</div>
-                <p className="font-display text-sm font-semibold">Warranty</p>
+                <div className="text-[10px] tracking-[0.2em] uppercase text-gold-soft mb-1">{t('hero.lifetime')}</div>
+                <p className="font-display text-sm font-semibold">{t('hero.badge3')}</p>
               </motion.div>
             </div>
           </motion.div>

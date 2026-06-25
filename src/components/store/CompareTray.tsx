@@ -3,10 +3,12 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { GitCompare, X, ArrowRight } from 'lucide-react'
 import { useCompare } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 import { useHydrated } from '@/hooks/use-hydrated'
 
 export function CompareTray() {
   const hydrated = useHydrated()
+  const { t } = useTranslation()
   const { ids, setOpen, clear, toggle } = useCompare()
 
   if (!hydrated || ids.length === 0) return null
@@ -26,8 +28,8 @@ export function CompareTray() {
               <GitCompare className="h-5 w-5 text-gold" />
             </div>
             <div className="hidden sm:block">
-              <p className="text-xs font-semibold leading-tight">Compare</p>
-              <p className="text-[10px] text-silver/50">{ids.length}/3 selected</p>
+              <p className="text-xs font-semibold leading-tight">{t('compare.compare')}</p>
+              <p className="text-[10px] text-silver/50">{ids.length}/3 {t('compare.selected')}</p>
             </div>
           </div>
 
@@ -46,7 +48,7 @@ export function CompareTray() {
           <button
             onClick={clear}
             className="h-8 w-8 rounded-full hover:bg-silver/10 flex items-center justify-center flex-shrink-0"
-            aria-label="Clear compare"
+            aria-label={t('compare.clearAria')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -55,7 +57,7 @@ export function CompareTray() {
             onClick={() => setOpen(true)}
             className="h-9 px-4 rounded-full bg-gold text-navy-deep text-xs font-semibold hover:bg-gold-soft transition-colors flex items-center gap-1.5 flex-shrink-0"
           >
-            Compare
+            {t('compare.compare')}
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>

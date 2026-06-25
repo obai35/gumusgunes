@@ -7,6 +7,7 @@ import { useUI } from '@/lib/store'
 import type { Product } from '@/lib/types'
 import { parseTags } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
+import { useTranslation } from '@/hooks/use-translation'
 import { toast } from 'sonner'
 import { useCart } from '@/lib/store'
 
@@ -16,6 +17,7 @@ export function SearchDialog() {
   const { searchOpen, setSearchOpen, setProductModal } = useUI()
   const { addItem } = useCart()
   const formatPrice = useFormatPrice()
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
@@ -88,13 +90,14 @@ export function SearchDialog() {
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search for rings, necklaces, diamonds…"
+                placeholder={t('search.placeholder')}
                 className="flex-1 bg-transparent outline-none text-navy placeholder:text-muted-foreground text-base"
               />
               {loading && <Loader2 className="h-4 w-4 animate-spin text-gold" />}
               <button
                 onClick={() => setSearchOpen(false)}
                 className="h-8 w-8 rounded-full hover:bg-secondary flex items-center justify-center"
+                aria-label={t('general.close')}
               >
                 <X className="h-4 w-4 text-navy" />
               </button>
@@ -104,7 +107,7 @@ export function SearchDialog() {
             <div className="max-h-[60vh] overflow-y-auto scroll-luxury">
               {!query.trim() ? (
                 <div className="p-6">
-                  <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3">Popular searches</p>
+                  <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3">{t('search.popular')}</p>
                   <div className="flex flex-wrap gap-2">
                     {popularSearches.map((s) => (
                       <button
@@ -120,14 +123,14 @@ export function SearchDialog() {
                 </div>
               ) : results.length === 0 && !loading ? (
                 <div className="p-12 text-center">
-                  <p className="font-display text-xl text-navy mb-1">No results for "{query}"</p>
-                  <p className="text-sm text-muted-foreground">Try a different search term.</p>
+                  <p className="font-display text-xl text-navy mb-1">{t('search.noResults')}</p>
+                  <p className="text-sm text-muted-foreground">{t('search.tryDifferent')}</p>
                 </div>
               ) : (
                 <div className="p-2">
                   {suggestions.length > 0 && (
                     <div className="px-3 py-2 text-xs text-muted-foreground">
-                      Categories: {suggestions.join(' · ')}
+                      {t('search.categories')}: {suggestions.join(' · ')}
                     </div>
                   )}
                   {results.map((p) => (
@@ -151,11 +154,11 @@ export function SearchDialog() {
                           onClick={(e) => {
                             e.stopPropagation()
                             addItem(p, 1)
-                            toast.success(`${p.name} added to bag`)
+                            toast.success(t('products.addedToBag', p.name))
                           }}
                           className="text-[11px] text-gold hover:underline mt-0.5"
                         >
-                          Quick add
+                          {t('products.quickAdd')}
                         </button>
                       </div>
                     </div>

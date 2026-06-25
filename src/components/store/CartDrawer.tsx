@@ -6,6 +6,7 @@ import { X, ShoppingBag, Minus, Plus, Trash2, ArrowRight, Truck, Sparkles, Plus 
 import { useCart, useUI } from '@/lib/store'
 import { cn } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
+import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/lib/types'
 import { toast } from 'sonner'
@@ -16,6 +17,7 @@ export function CartDrawer() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, subtotal, addItem } = useCart()
   const { setCheckoutOpen } = useUI()
   const formatPrice = useFormatPrice()
+  const { t } = useTranslation()
   const [recommendations, setRecommendations] = useState<Product[]>([])
 
   const total = subtotal()
@@ -63,7 +65,7 @@ export function CartDrawer() {
 
   const handleAddRec = (product: Product) => {
     addItem(product, 1)
-    toast.success(`${product.name} added to bag`)
+    toast.success(t('cart.addedToBag', product.name))
   }
 
   return (
@@ -89,7 +91,7 @@ export function CartDrawer() {
               <div className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5 text-gold" />
                 <h2 className="font-display text-xl font-semibold text-navy">
-                  Shopping Bag
+                  {t('cart.title')}
                 </h2>
                 <span className="text-xs text-muted-foreground">({items.length})</span>
               </div>
@@ -106,15 +108,15 @@ export function CartDrawer() {
                 <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center mb-4">
                   <ShoppingBag className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h3 className="font-display text-xl font-semibold text-navy mb-2">Your bag is empty</h3>
+                <h3 className="font-display text-xl font-semibold text-navy mb-2">{t('cart.empty')}</h3>
                 <p className="text-sm text-muted-foreground mb-6 max-w-xs">
-                  Discover handcrafted sterling silver pieces that will last a lifetime.
+                  {t('cart.emptyDesc')}
                 </p>
                 <Button
                   onClick={closeCart}
                   className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep px-6"
                 >
-                  Start Shopping
+                  {t('cart.startShopping')}
                 </Button>
               </div>
             ) : (
@@ -124,9 +126,9 @@ export function CartDrawer() {
                   <div className="flex items-center gap-2 text-xs text-navy mb-2">
                     <Truck className="h-4 w-4 text-gold flex-shrink-0" />
                     {remaining > 0 ? (
-                      <span>Add <strong className="text-gold">{formatPrice(remaining)}</strong> for free shipping</span>
+                      <span>{t('cart.freeShipping', formatPrice(remaining))}</span>
                     ) : (
-                      <span className="text-gold font-medium">You unlocked free shipping! 🎉</span>
+                      <span className="text-gold font-medium">{t('cart.freeShippingAchieved')}</span>
                     )}
                   </div>
                   <div className="h-1.5 rounded-full bg-border overflow-hidden">
@@ -157,7 +159,7 @@ export function CartDrawer() {
                           <button
                             onClick={() => removeItem(item.product.id)}
                             className="text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
-                            aria-label="Remove"
+                            aria-label={t('cart.removeAria')}
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
@@ -194,7 +196,7 @@ export function CartDrawer() {
                     <div className="mt-6 pt-5 border-t border-dashed border-border">
                       <div className="flex items-center gap-2 mb-3">
                         <Sparkles className="h-4 w-4 text-gold" />
-                        <h3 className="font-display text-sm font-semibold text-navy">Complete the Look</h3>
+                        <h3 className="font-display text-sm font-semibold text-navy">{t('cart.completeLook')}</h3>
                       </div>
                       <div className="space-y-2">
                         {recommendations.map((rec) => (
@@ -230,25 +232,25 @@ export function CartDrawer() {
                 {/* Footer */}
                 <div className="border-t border-border p-5 space-y-3 bg-background">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t('cart.subtotal')}</span>
                     <span className="font-semibold text-navy">{formatPrice(total)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Shipping</span>
+                    <span className="text-muted-foreground">{t('cart.shipping')}</span>
                     <span className="font-semibold text-navy">
                       {total >= FREE_SHIPPING_THRESHOLD ? (
-                        <span className="text-gold">Free</span>
+                        <span className="text-gold">{t('cart.free')}</span>
                       ) : (
                         formatPrice(15)
                       )}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Tax (18% VAT)</span>
+                    <span className="text-muted-foreground">{t('cart.tax')}</span>
                     <span className="font-semibold text-navy">{formatPrice(total * 0.18)}</span>
                   </div>
                   <div className="border-t border-border pt-3 flex items-center justify-between">
-                    <span className="font-display text-base font-semibold text-navy">Total</span>
+                    <span className="font-display text-base font-semibold text-navy">{t('cart.total')}</span>
                     <span className="font-display text-xl font-semibold gold-text">
                       {formatPrice(total + (total >= FREE_SHIPPING_THRESHOLD ? 0 : 15) + total * 0.18)}
                     </span>
@@ -257,14 +259,14 @@ export function CartDrawer() {
                     onClick={handleCheckout}
                     className="w-full h-12 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors font-semibold tracking-wide"
                   >
-                    Proceed to Checkout
+                    {t('cart.checkout')}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                   <button
                     onClick={closeCart}
                     className="w-full text-center text-xs text-muted-foreground hover:text-navy transition-colors py-1"
                   >
-                    Continue shopping
+                    {t('cart.continueShopping')}
                   </button>
                 </div>
               </>

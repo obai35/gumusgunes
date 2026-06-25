@@ -5,25 +5,26 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { useUI } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
 const SUGGESTIONS = [
-  'Help me choose a gift',
-  'How do I care for silver?',
-  'What ring size am I?',
-  'Tell me about the brand',
+  'concierge.suggestions.0',
+  'concierge.suggestions.1',
+  'concierge.suggestions.2',
+  'concierge.suggestions.3',
 ]
 
 const GREETING: Message = {
   role: 'assistant',
-  content:
-    "Merhaba, and welcome to Gümüş Güneş ✨ I'm your personal concierge. I can help you find the perfect piece, advise on sizing, or share the story behind our silver. How may I assist you today?",
+  content: 'concierge.greeting',
 }
 
 export function ConciergeChat() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([GREETING])
+  const [messages, setMessages] = useState<Message[]>([{ ...GREETING, content: t(GREETING.content) }])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [unread, setUnread] = useState(false)
@@ -66,13 +67,13 @@ export function ConciergeChat() {
       } else {
         setMessages((m) => [
           ...m,
-          { role: 'assistant', content: "I apologize — I'm having trouble responding right now. Please email concierge@gumusgunes.com and we'll assist you personally." },
+          { role: 'assistant', content: t('concierge.errorReply') },
         ])
       }
     } catch {
       setMessages((m) => [
         ...m,
-        { role: 'assistant', content: "I seem to have lost my connection. Please try again in a moment." },
+        { role: 'assistant', content: t('concierge.connectionError') },
       ])
     } finally {
       setLoading(false)
@@ -88,7 +89,7 @@ export function ConciergeChat() {
         transition={{ delay: 1.5, type: 'spring', damping: 15 }}
         onClick={() => setOpen(!open)}
         className="fixed bottom-5 left-5 z-40 h-14 w-14 rounded-full bg-navy text-silver shadow-2xl flex items-center justify-center hover:bg-navy-soft transition-colors group ring-4 ring-gold/20 hover:ring-gold/40"
-        aria-label="Open concierge chat"
+        aria-label={t('concierge.openChat')}
       >
         <AnimatePresence mode="wait">
           {open ? (
@@ -128,15 +129,15 @@ export function ConciergeChat() {
               </div>
               <div className="flex-1">
                 <p className="font-display text-base font-semibold leading-tight">
-                  Gümüş Güneş Concierge
+                  {t('concierge.title')}
                 </p>
                 <p className="text-[11px] text-silver/60 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-                  Online · replies in seconds
+                  {t('concierge.online')}
                 </p>
                 {conciergeProduct && (
                   <p className="text-[10px] text-gold-soft mt-0.5 line-clamp-1">
-                    Viewing: {conciergeProduct.name}
+                    {t('concierge.viewing')}: {conciergeProduct.name}
                   </p>
                 )}
               </div>
@@ -191,10 +192,10 @@ export function ConciergeChat() {
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
-                    onClick={() => send(s)}
+                    onClick={() => send(t(s))}
                     className="px-3 py-1.5 rounded-full bg-secondary text-xs text-navy hover:bg-gold hover:text-navy-deep transition-colors border border-border"
                   >
-                    {s}
+                    {t(s)}
                   </button>
                 ))}
               </div>
@@ -212,7 +213,7 @@ export function ConciergeChat() {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about a piece, sizing, care…"
+                placeholder={t('concierge.placeholder')}
                 className="flex-1 bg-secondary/50 rounded-full px-4 py-2.5 text-sm text-navy placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-gold/50"
               />
               <button

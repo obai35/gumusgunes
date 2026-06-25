@@ -7,6 +7,7 @@ import { useUI, useCart } from '@/lib/store'
 import { useFormatPrice } from '@/hooks/use-format-price'
 import { cn, parseTags } from '@/lib/format'
 import { toast } from 'sonner'
+import { useTranslation } from '@/hooks/use-translation'
 import type { Product } from '@/lib/types'
 
 type Recipient = 'her' | 'him' | 'self' | 'couple'
@@ -24,47 +25,47 @@ type Answers = {
 const STEPS = [
   {
     key: 'recipient' as const,
-    question: 'Who is this gift for?',
+    question: 'giftFinder.recipient',
     subtitle: 'We will tailor our recommendations to the recipient.',
     options: [
-      { value: 'her' as Recipient, label: 'For Her', emoji: '♀', desc: 'Wife, partner, mother, sister' },
-      { value: 'him' as Recipient, label: 'For Him', emoji: '♂', desc: 'Husband, partner, father, brother' },
-      { value: 'self' as Recipient, label: 'For Myself', emoji: '✦', desc: 'A treat just for you' },
-      { value: 'couple' as Recipient, label: 'For a Couple', emoji: '⚭', desc: 'A shared gift for two' },
+      { value: 'her' as Recipient, label: 'giftFinder.her', emoji: '♀', desc: 'Wife, partner, mother, sister' },
+      { value: 'him' as Recipient, label: 'giftFinder.him', emoji: '♂', desc: 'Husband, partner, father, brother' },
+      { value: 'self' as Recipient, label: 'giftFinder.self', emoji: '✦', desc: 'A treat just for you' },
+      { value: 'couple' as Recipient, label: 'giftFinder.couple', emoji: '⚭', desc: 'A shared gift for two' },
     ],
   },
   {
     key: 'occasion' as const,
-    question: 'What is the occasion?',
+    question: 'giftFinder.occasion',
     subtitle: 'Different moments call for different pieces.',
     options: [
-      { value: 'birthday' as Occasion, label: 'Birthday', emoji: '🎂' },
-      { value: 'anniversary' as Occasion, label: 'Anniversary', emoji: '💍' },
-      { value: 'wedding' as Occasion, label: 'Wedding', emoji: '🏛' },
-      { value: 'graduation' as Occasion, label: 'Graduation', emoji: '🎓' },
-      { value: 'just-because' as Occasion, label: 'Just Because', emoji: '✨' },
+      { value: 'birthday' as Occasion, label: 'giftFinder.birthday', emoji: '🎂' },
+      { value: 'anniversary' as Occasion, label: 'giftFinder.anniversary', emoji: '💍' },
+      { value: 'wedding' as Occasion, label: 'giftFinder.wedding', emoji: '🏛' },
+      { value: 'graduation' as Occasion, label: 'giftFinder.graduation', emoji: '🎓' },
+      { value: 'just-because' as Occasion, label: 'giftFinder.justBecause', emoji: '✨' },
     ],
   },
   {
     key: 'budget' as const,
-    question: 'What is your budget?',
+    question: 'giftFinder.budget',
     subtitle: 'We will find something beautiful within your range.',
     options: [
-      { value: 'under-150' as Budget, label: 'Under $150', desc: 'Thoughtful & accessible' },
-      { value: '150-300' as Budget, label: '$150 – $300', desc: 'Our most popular range' },
-      { value: '300-500' as Budget, label: '$300 – $500', desc: 'Statement pieces' },
-      { value: 'over-500' as Budget, label: '$500+', desc: 'The extraordinary' },
+      { value: 'under-150' as Budget, label: 'giftFinder.under150', desc: 'Thoughtful & accessible' },
+      { value: '150-300' as Budget, label: 'giftFinder.midRange', desc: 'Our most popular range' },
+      { value: '300-500' as Budget, label: 'giftFinder.premium', desc: 'Statement pieces' },
+      { value: 'over-500' as Budget, label: 'giftFinder.luxury', desc: 'The extraordinary' },
     ],
   },
   {
     key: 'style' as const,
-    question: 'What style speaks to them?',
+    question: 'giftFinder.style',
     subtitle: 'Pick the aesthetic that feels right.',
     options: [
-      { value: 'minimal' as Style, label: 'Minimal', desc: 'Clean lines, everyday wear' },
-      { value: 'statement' as Style, label: 'Statement', desc: 'Bold, eye-catching' },
-      { value: 'celestial' as Style, label: 'Celestial', desc: 'Sun, moon & stars' },
-      { value: 'classic' as Style, label: 'Classic', desc: 'Timeless elegance' },
+      { value: 'minimal' as Style, label: 'giftFinder.minimal', desc: 'Clean lines, everyday wear' },
+      { value: 'statement' as Style, label: 'giftFinder.statement', desc: 'Bold, eye-catching' },
+      { value: 'celestial' as Style, label: 'giftFinder.celestial', desc: 'Sun, moon & stars' },
+      { value: 'classic' as Style, label: 'giftFinder.classic', desc: 'Timeless elegance' },
     ],
   },
 ]
@@ -120,6 +121,7 @@ function scoreProduct(product: Product, answers: Answers): number {
 export function GiftFinder() {
   const { setProductModal } = useUI()
   const { addItem } = useCart()
+  const { t } = useTranslation()
   const formatPrice = useFormatPrice()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Answers>({})
@@ -169,15 +171,15 @@ export function GiftFinder() {
         {!results && (
           <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-block">
-              <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">Let us help</span>
+              <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">{t('giftFinder.letUsHelp')}</span>
               <div className="h-px gold-line mt-2" />
             </div>
             <h2 className="font-display text-4xl sm:text-5xl font-semibold text-navy mt-4 flex items-center justify-center gap-3">
               <Gift className="h-8 w-8 text-gold" />
-              The Gift Finder
+              {t('giftFinder.title')}
             </h2>
             <p className="text-muted-foreground mt-4 text-base leading-relaxed">
-              Answer four quick questions and we will curate the perfect piece — wrapped, ready, and unforgettable.
+              {t('giftFinder.giftFinderDesc')}
             </p>
           </div>
         )}
@@ -195,7 +197,7 @@ export function GiftFinder() {
               {/* Progress */}
               <div className="flex items-center justify-between mb-8">
                 <span className="text-xs tracking-[0.2em] uppercase text-muted-foreground font-medium">
-                  Step {step + 1} of {STEPS.length}
+                  {t('giftFinder.step')} {step + 1} {t('giftFinder.of')} {STEPS.length}
                 </span>
                 <div className="flex gap-1.5 flex-1 ml-4 max-w-[200px]">
                   {STEPS.map((_, i) => (
@@ -211,15 +213,15 @@ export function GiftFinder() {
               </div>
 
               <h3 className="font-display text-2xl sm:text-3xl font-semibold text-navy mb-2 text-center">
-                {currentStep.question}
+                {t(currentStep.question)}
               </h3>
-              <p className="text-sm text-muted-foreground text-center mb-8">{currentStep.subtitle}</p>
+              <p className="text-sm text-muted-foreground text-center mb-8">{t('giftFinder.stepSubtitle')[step]}</p>
 
               <div className={cn(
                 'grid gap-3',
                 currentStep.options.length === 4 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
               )}>
-                {currentStep.options.map((opt) => {
+                {currentStep.options.map((opt, idx) => {
                   const selected = (answers as Record<string, string | undefined>)[currentStep.key] === opt.value
                   return (
                     <button
@@ -237,9 +239,15 @@ export function GiftFinder() {
                           <span className="text-2xl flex-shrink-0">{opt.emoji}</span>
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-display text-base font-semibold text-navy leading-tight">{opt.label}</p>
-                          {'desc' in opt && opt.desc && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                          <p className="font-display text-base font-semibold text-navy leading-tight">{t(opt.label)}</p>
+                          {currentStep.key === 'recipient' && t('giftFinder.recipientDesc')[idx] && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{t('giftFinder.recipientDesc')[idx]}</p>
+                          )}
+                          {currentStep.key === 'budget' && t('giftFinder.budgetDesc')[idx] && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{t('giftFinder.budgetDesc')[idx]}</p>
+                          )}
+                          {currentStep.key === 'style' && t('giftFinder.styleDesc')[idx] && (
+                            <p className="text-xs text-muted-foreground mt-0.5">{t('giftFinder.styleDesc')[idx]}</p>
                           )}
                         </div>
                         <ChevronRight className={cn(
@@ -258,7 +266,7 @@ export function GiftFinder() {
                   onClick={() => setStep(step - 1)}
                   className="mt-6 text-sm text-muted-foreground hover:text-navy transition-colors inline-flex items-center gap-1.5"
                 >
-                  ← Back
+                  {t('giftFinder.back')}
                 </button>
               )}
             </motion.div>
@@ -280,11 +288,10 @@ export function GiftFinder() {
                   <Sparkles className="h-8 w-8 text-gold" />
                 </motion.div>
                 <h2 className="font-display text-3xl sm:text-4xl font-semibold text-navy mb-2">
-                  Our Curated Picks
+                  {t('giftFinder.results')}
                 </h2>
                 <p className="text-muted-foreground text-sm max-w-md mx-auto">
-                  Based on your answers, we hand-selected these {results.length} pieces.
-                  Each arrives in our signature gift box.
+                  {t('giftFinder.resultsDesc')}
                 </p>
               </div>
 
@@ -309,7 +316,7 @@ export function GiftFinder() {
                       />
                       {i === 0 && (
                         <span className="absolute top-2 left-2 px-2 py-1 rounded-full bg-gold text-navy-deep text-[9px] font-bold tracking-[0.15em] uppercase">
-                          Top Match
+                          {t('giftFinder.topMatch')}
                         </span>
                       )}
                     </div>
@@ -326,10 +333,10 @@ export function GiftFinder() {
                         <button
                           onClick={() => {
                             addItem(p, 1)
-                            toast.success(`${p.name} added to bag`)
+                            toast.success(t('products.addedToBag', p.name))
                           }}
                           className="h-8 w-8 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors flex items-center justify-center"
-                          aria-label={`Add ${p.name}`}
+                          aria-label={t('products.addToBag')}
                         >
                           <ShoppingBag className="h-3.5 w-3.5" />
                         </button>
@@ -346,13 +353,13 @@ export function GiftFinder() {
                   className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-full border border-border text-navy hover:bg-secondary transition-colors text-sm font-medium"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Start Over
+                  {t('giftFinder.startOver')}
                 </button>
                 <a
                   href="#collections"
                   className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors text-sm font-semibold"
                 >
-                  Browse All Pieces
+                  {t('giftFinder.browseAll')}
                   <ChevronRight className="h-4 w-4" />
                 </a>
               </div>

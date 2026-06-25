@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Crown, Sparkles, Gift, Star, TrendingUp } from 'lucide-react'
 import { useLoyalty } from '@/lib/store'
 import { useHydrated } from '@/hooks/use-hydrated'
+import { useTranslation } from '@/hooks/use-translation'
 
 const TIERS = [
   {
@@ -11,25 +12,26 @@ const TIERS = [
     min: 0,
     color: '#c0c5ce',
     icon: Star,
-    perks: ['Welcome bonus: 125 pts', '5% birthday discount', 'Early sale access'],
+    perks: ['rewards.welcomeBonus', 'rewards.birthdayDiscount', 'rewards.earlySale'],
   },
   {
     name: 'Gold',
     min: 500,
     color: '#d4af37',
     icon: Crown,
-    perks: ['10% off all orders', 'Free express shipping', 'Priority concierge', 'Exclusive gold-member pieces'],
+    perks: ['rewards.gold10Off', 'rewards.freeExpress', 'rewards.priorityConcierge', 'rewards.exclusivePieces'],
   },
   {
     name: 'Platinum',
     min: 2000,
     color: '#e5e4e2',
     icon: Sparkles,
-    perks: ['15% off all orders', 'First access to new collections', 'Private atelier appointments', 'Annual gift on membership anniversary'],
+    perks: ['rewards.platinum15Off', 'rewards.firstAccess', 'rewards.privateAtelier', 'rewards.annualGift'],
   },
 ]
 
 export function RewardsSection() {
+  const { t } = useTranslation()
   const hydrated = useHydrated()
   const { points } = useLoyalty()
   const currentTier = [...TIERS].reverse().find((t) => points >= t.min) ?? TIERS[0]
@@ -46,15 +48,14 @@ export function RewardsSection() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-block">
-            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">Gümüş Güneş Circle</span>
+            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">{t('rewards.circle')}</span>
             <div className="h-px gold-line mt-2" />
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-semibold text-navy mt-4">
-            Rewards as radiant as our silver
+            {t('rewards.heading')}
           </h2>
           <p className="text-muted-foreground mt-4 text-base leading-relaxed">
-            Every purchase earns points that unlock tiered perks — from birthday gifts to private atelier appointments.
-            Membership is complimentary.
+            {t('rewards.subheading')}
           </p>
         </div>
 
@@ -77,19 +78,19 @@ export function RewardsSection() {
                 <currentTier.icon className="h-8 w-8" style={{ color: currentTier.color }} />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] tracking-[0.2em] uppercase text-silver/50">Your Status</p>
+                <p className="text-[10px] tracking-[0.2em] uppercase text-silver/50">{t('rewards.yourStatusLabel')}</p>
                 <p className="font-display text-2xl font-semibold">
-                  {currentTier.name} Member
+                  {t('rewards.' + currentTier.name.toLowerCase())} Member
                 </p>
                 <p className="text-sm text-gold-soft flex items-center gap-1.5 mt-0.5">
                   <Sparkles className="h-3 w-3" />
-                  {points} points
+                  {points} {t('rewards.points')}
                 </p>
               </div>
               <div className="hidden sm:block text-right">
                 <div className="flex items-center gap-1 text-xs text-silver/60 justify-end">
                   <TrendingUp className="h-3 w-3 text-gold" />
-                  Earn 1 pt / $1
+                  {t('rewards.rate')}
                 </div>
               </div>
             </div>
@@ -98,8 +99,8 @@ export function RewardsSection() {
             {nextTier && (
               <div>
                 <div className="flex items-center justify-between text-xs text-silver/60 mb-1.5">
-                  <span>{currentTier.name}</span>
-                  <span>{nextTier.min - points} pts to {nextTier.name}</span>
+                  <span>{t('rewards.' + currentTier.name.toLowerCase())}</span>
+                  <span>{nextTier.min - points} {t('rewards.points')} to {t('rewards.' + nextTier.name.toLowerCase())}</span>
                 </div>
                 <div className="h-2 rounded-full bg-silver/15 overflow-hidden">
                   <motion.div
@@ -115,7 +116,7 @@ export function RewardsSection() {
             {!nextTier && (
               <div className="flex items-center gap-2 text-gold text-sm">
                 <Sparkles className="h-4 w-4" />
-                You&apos;ve reached our highest tier. Thank you for your loyalty.
+                {t('rewards.maxTierMessage')}
               </div>
             )}
           </motion.div>
@@ -143,7 +144,7 @@ export function RewardsSection() {
               >
                 {isCurrent && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gold text-navy-deep text-[10px] font-bold tracking-[0.15em] uppercase">
-                    Current
+                    {t('rewards.current')}
                   </span>
                 )}
 
@@ -160,19 +161,19 @@ export function RewardsSection() {
                   />
                 </div>
 
-                <h3 className="font-display text-xl font-semibold text-navy text-center mb-1">{tier.name}</h3>
+                <h3 className="font-display text-xl font-semibold text-navy text-center mb-1">{t('rewards.' + tier.name.toLowerCase())}</h3>
                 <p className="text-xs text-center text-muted-foreground mb-4">
-                  {tier.min === 0 ? 'Free to join' : `${tier.min}+ points`}
+                  {tier.min === 0 ? t('rewards.freeToJoin') : `${tier.min}+ ${t('rewards.points')}`}
                 </p>
 
                 <ul className="space-y-2">
                   {tier.perks.map((perk) => (
-                    <li key={perk} className="flex items-start gap-2 text-xs text-navy/80">
+                    <li key={t(perk)} className="flex items-start gap-2 text-xs text-navy/80">
                       <span
                         className="h-1.5 w-1.5 rounded-full mt-1.5 flex-shrink-0"
                         style={{ background: reached ? tier.color : '#d1d5db' }}
                       />
-                      {perk}
+                      {t(perk)}
                     </li>
                   ))}
                 </ul>
@@ -180,7 +181,7 @@ export function RewardsSection() {
                 {!reached && tier.min > 0 && (
                   <p className="text-[10px] text-center text-muted-foreground mt-4 pt-3 border-t border-border/50">
                     <Gift className="h-3 w-3 inline text-gold mr-1" />
-                    Unlock at {tier.min} points
+                    {t('rewards.unlockAt')} {tier.min} {t('rewards.points')}
                   </p>
                 )}
               </motion.div>
@@ -189,9 +190,9 @@ export function RewardsSection() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8 max-w-lg mx-auto">
-          Points are earned on completed purchases and never expire. Program subject to terms.
+          {t('rewards.terms')}
           <br />
-          <span className="text-gold">1 point = $1 spent · No minimum to redeem</span>
+          <span className="text-gold">{t('rewards.rate')}</span>
         </p>
       </div>
     </section>

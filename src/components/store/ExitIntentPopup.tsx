@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Gift, Sparkles, Check } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 import { useUI } from '@/lib/store'
 
 const STORAGE_KEY = 'gg_exit_popup_shown'
@@ -12,6 +13,7 @@ export function ExitIntentPopup() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const { t } = useTranslation()
   const { searchOpen, wishlistOpen, checkoutOpen, productModalId } = useUI()
 
   useEffect(() => {
@@ -124,11 +126,9 @@ export function ExitIntentPopup() {
               >
                 <Gift className="h-8 w-8 text-gold" />
               </motion.div>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-gold-soft mb-2">Wait — a gift for you</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-gold-soft mb-2">{t('exitPopup.title')}</p>
               <h2 className="font-display text-3xl font-semibold mb-1">
-                <span className="silver-text">15% Off</span>
-                <br />
-                <span className="gold-text">Your First Piece</span>
+                <span className="silver-text">{t('exitPopup.discount')}</span>
               </h2>
             </div>
 
@@ -143,17 +143,15 @@ export function ExitIntentPopup() {
                   <div className="h-14 w-14 rounded-full bg-gold/15 border-2 border-gold flex items-center justify-center mx-auto mb-3">
                     <Check className="h-7 w-7 text-gold" />
                   </div>
-                  <p className="font-display text-xl font-semibold text-navy mb-1">Welcome to the family!</p>
+                  <p className="font-display text-xl font-semibold text-navy mb-1">{t('exitPopup.success')}</p>
                   <p className="text-sm text-muted-foreground">
-                    Check your inbox — your 15% code is on its way. ✨
+                    {t('exitPopup.successMessage')}
                   </p>
                 </motion.div>
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground text-center mb-5 leading-relaxed">
-                    Before you go — let us treat you. Sign up and receive{' '}
-                    <strong className="text-navy">15% off</strong> your first order,
-                    plus early access to new collections.
+                    {t('exitPopup.description')}
                   </p>
                   <form onSubmit={handleSubmit} className="space-y-3">
                     <input
@@ -161,7 +159,7 @@ export function ExitIntentPopup() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Your email address"
+                      placeholder={t('exitPopup.placeholder')}
                       className="w-full h-12 rounded-full bg-secondary/60 border border-border px-5 text-sm text-navy placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-gold/50"
                     />
                     <button
@@ -172,7 +170,7 @@ export function ExitIntentPopup() {
                       {loading ? (
                         <div className="h-4 w-4 rounded-full border-2 border-navy-deep border-t-transparent animate-spin" />
                       ) : (
-                        <>Claim My 15% Off</>
+                        <>{t('exitPopup.submit')}</>
                       )}
                     </button>
                   </form>
@@ -180,10 +178,10 @@ export function ExitIntentPopup() {
                     onClick={() => setOpen(false)}
                     className="w-full text-center text-xs text-muted-foreground hover:text-navy transition-colors mt-3"
                   >
-                    No thanks, I&apos;ll pay full price
+                    {t('exitPopup.noThanks')}
                   </button>
                   <p className="text-[10px] text-muted-foreground/60 text-center mt-3">
-                    By signing up you agree to receive marketing emails. Unsubscribe anytime.
+                    {t('exitPopup.disclaimer')}
                   </p>
                 </>
               )}

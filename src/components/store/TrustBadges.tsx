@@ -1,31 +1,34 @@
 'use client'
 
 import { Truck, ShieldCheck, RefreshCw, Gem } from 'lucide-react'
-
-const badges = [
-  {
-    icon: Truck,
-    title: 'Free Shipping',
-    desc: 'Complimentary worldwide delivery on orders over $250',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Lifetime Warranty',
-    desc: 'Every piece is guaranteed for life against manufacturing defects',
-  },
-  {
-    icon: RefreshCw,
-    title: '30-Day Returns',
-    desc: 'Not in love? Return it within 30 days for a full refund',
-  },
-  {
-    icon: Gem,
-    title: '925 Sterling Silver',
-    desc: 'Ethically sourced, certified sterling silver in every piece',
-  },
-]
+import { useTranslation } from '@/hooks/use-translation'
 
 export function TrustBadges() {
+  const { t } = useTranslation()
+
+  const badges = [
+    {
+      icon: Truck,
+      title: t('trust.shipping'),
+      desc: t('trust.shippingDesc'),
+    },
+    {
+      icon: ShieldCheck,
+      title: t('trust.warranty'),
+      desc: t('trust.warrantyDesc'),
+    },
+    {
+      icon: RefreshCw,
+      title: t('trust.returns'),
+      desc: t('trust.returnsDesc'),
+    },
+    {
+      icon: Gem,
+      title: t('trust.silver'),
+      desc: t('trust.silverDesc'),
+    },
+  ]
+
   return (
     <section className="bg-background border-y border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">

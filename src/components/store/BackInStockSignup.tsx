@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Check, Loader2, Mail } from 'lucide-react'
 import { cn } from '@/lib/format'
+import { useTranslation } from '@/hooks/use-translation'
 import { toast } from 'sonner'
 
 type State = 'idle' | 'loading' | 'done'
 
 export function BackInStockSignup({ productId }: { productId: string }) {
+  const { t } = useTranslation()
   const [state, setState] = useState<State>('idle')
   const [email, setEmail] = useState('')
 
@@ -26,18 +28,18 @@ export function BackInStockSignup({ productId }: { productId: string }) {
       if (data.ok) {
         setState('done')
         if (data.alreadyInStock) {
-          toast.success('Good news — this piece is back in stock!')
+          toast.success(t('backInStock.backInStockSuccess'))
         } else if (data.alreadySubscribed) {
-          toast.success('You are already on the list — we will email you when it returns.')
+          toast.success(t('backInStock.alreadyListed'))
         } else {
-          toast.success('You are on the list! We will email you when it returns.')
+          toast.success(t('backInStock.subscribed'))
         }
       } else {
-        toast.error(data.error || 'Subscription failed')
+        toast.error(data.error || t('backInStock.subFail'))
         setState('idle')
       }
     } catch {
-      toast.error('Something went wrong')
+      toast.error(t('backInStock.genericError'))
       setState('idle')
     }
   }
@@ -53,10 +55,7 @@ export function BackInStockSignup({ productId }: { productId: string }) {
           <Check className="h-5 w-5 text-green-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-navy">You&apos;re on the list</p>
-          <p className="text-xs text-muted-foreground">
-            We&apos;ll email <strong className="text-navy">{email}</strong> the moment this piece returns.
-          </p>
+          <p className="text-sm font-semibold text-navy">{t('backInStock.success')}</p>
         </div>
       </motion.div>
     )
@@ -71,10 +70,10 @@ export function BackInStockSignup({ productId }: { productId: string }) {
         >
           <Bell className="h-4 w-4 text-gold" />
         </motion.div>
-        <p className="text-sm font-semibold text-navy">Back in stock soon?</p>
+        <p className="text-sm font-semibold text-navy">{t('backInStock.title')}</p>
       </div>
       <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-        This piece is currently unavailable. Leave your email and we&apos;ll notify you the moment it returns.
+        {t('backInStock.description')}
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <div className="relative flex-1">
@@ -84,7 +83,7 @@ export function BackInStockSignup({ productId }: { productId: string }) {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email"
+            placeholder={t('backInStock.placeholder')}
             className="w-full h-10 pl-9 pr-3 rounded-full bg-background border border-border text-sm text-navy placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gold"
           />
         </div>
@@ -96,7 +95,7 @@ export function BackInStockSignup({ productId }: { productId: string }) {
           {state === 'loading' ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            'Notify Me'
+            t('backInStock.button')
           )}
         </button>
       </form>

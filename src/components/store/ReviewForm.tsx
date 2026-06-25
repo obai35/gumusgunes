@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { toast } from 'sonner'
 import { cn } from '@/lib/format'
+import { useTranslation } from '@/hooks/use-translation'
 
 const RING_SIZES = ['5', '5.5', '6', '6.5', '7', '7.5', '8', '8.5', '9', '9.5', '10']
 
 export function ReviewForm({ productId, onSubmitted }: { productId: string; onSubmitted: () => void }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [rating, setRating] = useState(5)
   const [hover, setHover] = useState(0)
@@ -21,7 +23,7 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.authorName || !form.title || !form.comment) {
-      toast.error('Please fill in your name, a title, and your comment.')
+      toast.error(t('reviewForm.validationError'))
       return
     }
     setSubmitting(true)
@@ -34,7 +36,7 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
       const data = await res.json()
       if (data.ok) {
         setDone(true)
-        toast.success('Thank you! Your review has been published.')
+        toast.success(t('reviewForm.success'))
         onSubmitted()
         setTimeout(() => {
           setDone(false)
@@ -43,10 +45,10 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
           setRating(5)
         }, 1800)
       } else {
-        toast.error(data.error || 'Failed to submit review')
+        toast.error(data.error || t('reviewForm.submitError'))
       }
     } catch {
-      toast.error('Something went wrong')
+      toast.error(t('reviewForm.genericError'))
     } finally {
       setSubmitting(false)
     }
@@ -58,7 +60,7 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
         onClick={() => setOpen(true)}
         className="w-full mt-3 py-2.5 rounded-full border border-navy/20 text-navy text-sm font-medium hover:bg-navy hover:text-silver hover:border-navy transition-colors inline-flex items-center justify-center gap-2"
       >
-        Write a Review
+        {t('reviewForm.title')}
       </button>
     )
   }
@@ -73,7 +75,7 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
       >
         <div className="p-4 rounded-xl bg-secondary/40 border border-border">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-display text-base font-semibold text-navy">Share your experience</h4>
+            <h4 className="font-display text-base font-semibold text-navy">{t('reviewForm.title')}</h4>
             <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-navy">
               <ChevronDown className="h-4 w-4" />
             </button>
@@ -89,13 +91,13 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
               >
                 <Check className="h-7 w-7 text-gold" />
               </motion.div>
-              <p className="font-display text-lg text-navy">Thank you for your review!</p>
+              <p className="font-display text-lg text-navy">{t('reviewForm.success')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Star rating */}
               <div>
-                <label className="text-xs font-medium text-navy mb-1.5 block">Your Rating</label>
+                <label className="text-xs font-medium text-navy mb-1.5 block">{t('reviewForm.rating')}</label>
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button
@@ -117,40 +119,40 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
                     </button>
                   ))}
                   <span className="ml-2 text-sm font-medium text-navy">
-                    {rating} {rating === 1 ? 'star' : 'stars'}
+                    {t('reviewForm.ratingLabel', rating)}
                   </span>
                 </div>
               </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-navy">Name *</label>
+                  <label className="text-xs font-medium text-navy">{t('reviewForm.name')} *</label>
                   <Input
                     value={form.authorName}
                     onChange={(e) => setForm({ ...form, authorName: e.target.value })}
-                    placeholder="Your name"
+                    placeholder={t('reviewForm.namePlaceholder')}
                     className="rounded-lg"
                     required
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-navy">Email (optional)</label>
+                  <label className="text-xs font-medium text-navy">{t('reviewForm.email')}</label>
                   <Input
                     type="email"
                     value={form.authorEmail}
                     onChange={(e) => setForm({ ...form, authorEmail: e.target.value })}
-                    placeholder="you@example.com"
+                    placeholder={t('reviewForm.emailPlaceholder')}
                     className="rounded-lg"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-navy">Title *</label>
+                <label className="text-xs font-medium text-navy">{t('reviewForm.reviewTitle')} *</label>
                 <Input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="Summarize your experience"
+                  placeholder={t('reviewForm.summaryPlaceholder')}
                   className="rounded-lg"
                   maxLength={120}
                   required
@@ -158,11 +160,11 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-navy">Your Review *</label>
+                <label className="text-xs font-medium text-navy">{t('reviewForm.comment')} *</label>
                 <textarea
                   value={form.comment}
                   onChange={(e) => setForm({ ...form, comment: e.target.value })}
-                  placeholder="Tell us about the quality, fit, and how it makes you feel…"
+                  placeholder={t('reviewForm.commentPlaceholder')}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm min-h-[90px] resize-none focus:outline-none focus:ring-2 focus:ring-gold"
                   maxLength={2000}
                   required
@@ -175,9 +177,9 @@ export function ReviewForm({ productId, onSubmitted }: { productId: string; onSu
                 className="w-full h-11 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep font-semibold tracking-wide"
               >
                 {submitting ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Publishing…</>
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('reviewForm.submit')}</>
                 ) : (
-                  <><Send className="h-4 w-4 mr-2" /> Publish Review</>
+                  <><Send className="h-4 w-4 mr-2" /> {t('reviewForm.submit')}</>
                 )}
               </Button>
             </form>
@@ -195,17 +197,18 @@ export function RingSizeSelector({
   value: string
   onChange: (size: string) => void
 }) {
+  const { t } = useTranslation()
   const [showGuide, setShowGuide] = useState(false)
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="text-xs font-medium text-navy">Ring Size (US)</label>
+        <label className="text-xs font-medium text-navy">{t('ringSize.title')} ({t('ringSize.usSize')})</label>
         <button
           type="button"
           onClick={() => setShowGuide(!showGuide)}
           className="text-[11px] text-gold hover:underline"
         >
-          Size guide
+          {t('ringSize.sizeGuide')}
         </button>
       </div>
       <div className="flex flex-wrap gap-1.5">
@@ -231,11 +234,11 @@ export function RingSizeSelector({
           animate={{ opacity: 1, height: 'auto' }}
           className="mt-2 p-3 rounded-lg bg-secondary/50 text-xs text-muted-foreground space-y-1"
         >
-          <p><strong className="text-navy">How to measure:</strong></p>
-          <p>• Wrap a strip of paper around your finger, mark where it overlaps.</p>
-          <p>• Measure the length in mm, then divide by 3.14 for diameter.</p>
-          <p>• US 6 ≈ 16.5mm · US 7 ≈ 17.3mm · US 8 ≈ 18.2mm · US 9 ≈ 19.0mm</p>
-          <p className="text-gold mt-1">Between sizes? Size up for comfort.</p>
+          <p><strong className="text-navy">{t('reviewForm.howToMeasure')}</strong></p>
+          <p>{t('reviewForm.measureStep1')}</p>
+          <p>{t('reviewForm.measureStep2')}</p>
+          <p>{t('reviewForm.measureStep3')}</p>
+          <p className="text-gold mt-1">{t('reviewForm.measureTip')}</p>
         </motion.div>
       )}
     </div>

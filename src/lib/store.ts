@@ -4,6 +4,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Product, CartItem } from '@/lib/types'
 import type { Currency } from '@/lib/format'
+import type { Locale } from '@/lib/i18n/translations'
 
 type CartState = {
   items: CartItem[]
@@ -207,6 +208,25 @@ export const useCompare = create<CompareState>()(
       name: 'gg_compare',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ ids: state.ids }),
+    }
+  )
+)
+
+// Language selection (persisted)
+type LocaleState = {
+  locale: Locale
+  setLocale: (l: Locale) => void
+}
+
+export const useLocale = create<LocaleState>()(
+  persist(
+    (set) => ({
+      locale: 'en',
+      setLocale: (locale) => set({ locale }),
+    }),
+    {
+      name: 'gg_locale',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 )

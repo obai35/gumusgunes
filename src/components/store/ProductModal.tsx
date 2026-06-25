@@ -9,6 +9,7 @@ import { useUI, useCart, useWishlist, useRecentlyViewed } from '@/lib/store'
 import type { Product, Review } from '@/lib/types'
 import { parseTags, discountPercent, formatDate, cn } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
+import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { ReviewForm, RingSizeSelector } from './ReviewForm'
@@ -27,6 +28,7 @@ export function ProductModal() {
   const wishlist = useWishlist()
   const recentlyViewed = useRecentlyViewed()
   const formatPrice = useFormatPrice()
+  const { t } = useTranslation()
   const [data, setData] = useState<DetailData | null>(null)
   const [loading, setLoading] = useState(false)
   const [qty, setQty] = useState(1)
@@ -96,7 +98,7 @@ export function ProductModal() {
     addItem(product, qty)
     const sizeNote = ringSize && product.category?.slug === 'rings' ? ` · Size ${ringSize}` : ''
     const engraveNote = engraving.enabled && engraving.text ? ` · Engraved: "${engraving.text}"` : ''
-    toast.success(`${product.name} × ${qty} added to bag${sizeNote}${engraveNote}`)
+    toast.success(t('products.addedToBag', product.name))
     setProductModal(null)
   }
 
@@ -169,18 +171,18 @@ export function ProductModal() {
                       zoom ? 'opacity-0' : 'opacity-100'
                     )}>
                       <ZoomIn className="h-3 w-3 text-gold" />
-                      Hover to zoom
+                      {t('products.hoverToZoom')}
                     </div>
                     {/* Badges */}
                     <div className="absolute top-4 left-4 flex flex-col gap-2 pointer-events-none">
                       {product.isNew && (
                         <span className="px-3 py-1 rounded-full bg-navy text-silver text-[10px] font-semibold tracking-[0.15em] uppercase">
-                          New
+                          {t('products.new')}
                         </span>
                       )}
                       {product.isBestseller && (
                         <span className="px-3 py-1 rounded-full bg-gold text-navy-deep text-[10px] font-semibold tracking-[0.15em] uppercase">
-                          Bestseller
+                          {t('products.bestseller')}
                         </span>
                       )}
                     </div>
@@ -242,7 +244,7 @@ export function ProductModal() {
                           {formatPrice(product.compareAtPrice)}
                         </span>
                         <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-xs font-semibold">
-                          Save {formatPrice(product.compareAtPrice - product.price)}
+                          {t('products.youSave')} {formatPrice(product.compareAtPrice - product.price)}
                         </span>
                       </>
                     )}
@@ -255,11 +257,11 @@ export function ProductModal() {
                   {/* Specs */}
                   <div className="grid grid-cols-2 gap-3 mb-6 p-4 rounded-xl bg-secondary/50">
                     <div>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-0.5">Material</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-0.5">{t('products.material')}</p>
                       <p className="text-sm font-medium text-navy">{product.material}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-0.5">Weight</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-0.5">{t('products.weight')}</p>
                       <p className="text-sm font-medium text-navy">{product.weight || '—'}</p>
                     </div>
                   </div>
@@ -272,10 +274,10 @@ export function ProductModal() {
                     )} />
                     <span className="text-navy font-medium">
                       {product.stock > 10
-                        ? 'In stock'
+                        ? t('products.inStock')
                         : product.stock > 0
-                          ? `Only ${product.stock} left`
-                          : 'Out of stock'}
+                          ? t('products.onlyLeft', product.stock)
+                          : t('products.outOfStock')}
                     </span>
                   </div>
 
@@ -329,7 +331,7 @@ export function ProductModal() {
                       className="flex-1 h-11 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors text-sm font-semibold tracking-wide"
                     >
                       <ShoppingBag className="h-4 w-4 mr-2" />
-                      Add to Bag · {formatPrice(lineTotal)}
+                      {t('products.addToBag')} · {formatPrice(lineTotal)}
                     </Button>
                     <button
                       onClick={() => {
@@ -350,16 +352,16 @@ export function ProductModal() {
 
                   {/* Trust */}
                   <div className="grid grid-cols-3 gap-2 pt-4 border-t border-border/50 mb-6">
-                    {[
-                      { icon: Truck, label: 'Free shipping over $250' },
-                      { icon: ShieldCheck, label: 'Lifetime warranty' },
-                      { icon: RefreshCw, label: '30-day returns' },
-                    ].map((t) => (
-                      <div key={t.label} className="flex flex-col items-center text-center gap-1.5">
-                        <t.icon className="h-4 w-4 text-gold" />
-                        <span className="text-[10px] text-muted-foreground leading-tight">{t.label}</span>
-                      </div>
-                    ))}
+                  {[
+                    { icon: Truck, label: t('trust.shippingDesc') },
+                    { icon: ShieldCheck, label: t('trust.warranty') },
+                    { icon: RefreshCw, label: t('trust.returns') },
+                  ].map((item) => (
+                    <div key={item.label} className="flex flex-col items-center text-center gap-1.5">
+                      <item.icon className="h-4 w-4 text-gold" />
+                      <span className="text-[10px] text-muted-foreground leading-tight">{item.label}</span>
+                    </div>
+                  ))}
                   </div>
 
                   {/* Tags */}
@@ -380,7 +382,7 @@ export function ProductModal() {
                   <div className="mt-2">
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-display text-lg font-semibold text-navy">
-                        Customer Reviews {reviews.length > 0 && `(${reviews.length})`}
+                        {t('testimonials.headingGold')} {reviews.length > 0 && `(${reviews.length})`}
                       </h3>
                     </div>
                     {reviews.length > 0 && (
@@ -403,7 +405,7 @@ export function ProductModal() {
                                 <span className="text-xs font-medium text-navy">{r.authorName}</span>
                                 {r.isVerified && (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-700">
-                                    Verified
+                                    {t('testimonials.verified')}
                                   </span>
                                 )}
                               </div>
@@ -425,7 +427,7 @@ export function ProductModal() {
                   {/* Related */}
                   {related.length > 0 && (
                     <div className="mt-6">
-                      <h3 className="font-display text-lg font-semibold text-navy mb-3">You may also love</h3>
+                      <h3 className="font-display text-lg font-semibold text-navy mb-3">{t('products.youMayAlsoLove')}</h3>
                       <div className="grid grid-cols-4 gap-2">
                         {related.slice(0, 4).map((rp) => (
                           <button

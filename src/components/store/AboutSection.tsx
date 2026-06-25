@@ -2,31 +2,33 @@
 
 import { motion } from 'framer-motion'
 import { Sparkles, Gem, Sun, Award } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 const pillars = [
   {
     icon: Gem,
-    title: 'Ethically Sourced',
-    desc: 'Every diamond and gemstone is conflict-free, traceable from mine to masterpiece.',
+    title: 'about.pillar1Title',
+    desc: 'about.pillar1Desc',
   },
   {
     icon: Sun,
-    title: 'Hand-Finished',
-    desc: 'Each piece is polished and inspected by master artisans in our Istanbul atelier.',
+    title: 'about.pillar2Title',
+    desc: 'about.pillar2Desc',
   },
   {
     icon: Award,
-    title: 'Certified 925',
-    desc: 'Hallmarked sterling silver, certified for purity and stamped with our sun seal.',
+    title: 'about.pillar3Title',
+    desc: 'about.pillar3Desc',
   },
   {
     icon: Sparkles,
-    title: 'Designed to Last',
-    desc: 'Timeless silhouettes engineered for a lifetime of wear, never fast fashion.',
+    title: 'about.pillar4Title',
+    desc: 'about.pillar4Desc',
   },
 ]
 
 export function AboutSection() {
+  const { t } = useTranslation()
   return (
     <section id="about" className="py-20 sm:py-28 bg-background scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -60,9 +62,9 @@ export function AboutSection() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <p className="font-display text-sm leading-relaxed italic">
-                "Silver is the moon&apos;s gift to the earth. We simply shape its light."
+                {t('about.quote')}
               </p>
-              <p className="text-xs text-silver/60 mt-2 tracking-wide">— Founder, Gümüş Güneş</p>
+              <p className="text-xs text-silver/60 mt-2 tracking-wide">{t('about.attribution')}</p>
             </motion.div>
           </motion.div>
 
@@ -74,42 +76,30 @@ export function AboutSection() {
             transition={{ duration: 0.7 }}
           >
             <div className="inline-block">
-              <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">Our Story</span>
+              <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">{t('about.ourStory')}</span>
               <div className="h-px gold-line mt-2" />
             </div>
             <h2 className="font-display text-4xl sm:text-5xl font-semibold text-navy mt-4 mb-6 leading-tight">
-              Born from the light of the Bosphorus
+              {t('about.heading')} {t('about.headingGold')}
             </h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
               <p>
-                Gümüş Güneş — &ldquo;Silver Sun&rdquo; — began in 2019 in a small workshop
-                overlooking the Bosphorus, where two generations of silversmiths
-                decided to bring the warmth of the Anatolian sun into the cool elegance
-                of sterling silver.
+                {t('about.subheading')}
               </p>
-              <p>
-                Every piece we create is a conversation between two elements: the radiant
-                güneş (sun) and the luminous gümüş (silver). From the first sketch to the
-                final polish, we honor centuries of Turkish jewellery tradition while
-                designing for the modern world.
-              </p>
-              <p>
-                We believe luxury should be intimate, not intimidating. Our pieces are made
-                to be worn every day — to gather memories, marks, and meaning alongside
-                their shine.
-              </p>
+              <p>{t('about.aboutParagraph1')}</p>
+              <p>{t('about.aboutParagraph2')}</p>
             </div>
 
             {/* Pillars */}
             <div className="grid sm:grid-cols-2 gap-4 mt-8">
               {pillars.map((p) => (
-                <div key={p.title} className="flex gap-3 p-4 rounded-xl bg-secondary/40 hover:bg-secondary/70 transition-colors">
+                <div key={t(p.title)} className="flex gap-3 p-4 rounded-xl bg-secondary/40 hover:bg-secondary/70 transition-colors">
                   <div className="h-10 w-10 rounded-full bg-navy/5 border border-gold/20 flex items-center justify-center flex-shrink-0">
                     <p.icon className="h-4 w-4 text-gold" />
                   </div>
                   <div>
-                    <h4 className="font-display text-sm font-semibold text-navy mb-0.5">{p.title}</h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{p.desc}</p>
+                    <h4 className="font-display text-sm font-semibold text-navy mb-0.5">{t(p.title)}</h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{t(p.desc)}</p>
                   </div>
                 </div>
               ))}

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Clock, ArrowRight } from 'lucide-react'
 import type { Product } from '@/lib/types'
 import { useRecentlyViewed, useUI } from '@/lib/store'
+import { useTranslation } from '@/hooks/use-translation'
 import { useFormatPrice } from '@/hooks/use-format-price'
 import { useHydrated } from '@/hooks/use-hydrated'
 
@@ -12,6 +13,7 @@ export function RecentlyViewed({ allProducts }: { allProducts: Product[] }) {
   const hydrated = useHydrated()
   const { ids } = useRecentlyViewed()
   const { setProductModal } = useUI()
+  const { t } = useTranslation()
   const formatPrice = useFormatPrice()
   const [mounted, setMounted] = useState(false)
 
@@ -35,11 +37,11 @@ export function RecentlyViewed({ allProducts }: { allProducts: Product[] }) {
           <div className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-gold" />
             <h2 className="font-display text-2xl sm:text-3xl font-semibold text-navy">
-              Recently Viewed
+              {t('products.recentlyViewed')}
             </h2>
           </div>
           <span className="text-xs text-muted-foreground tracking-wide">
-            {products.length} pieces
+            {t('products.piecesCount', products.length.toString())}
           </span>
         </div>
 

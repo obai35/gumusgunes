@@ -3,21 +3,23 @@
 import { motion } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
 import type { Category } from '@/lib/types'
+import { useTranslation } from '@/hooks/use-translation'
 
 export function CategoryGrid({ categories }: { categories: Category[] }) {
+  const { t } = useTranslation()
   return (
     <section id="categories" className="py-20 sm:py-28 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="inline-block">
-            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">Shop by Category</span>
+            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">{t('categories.heading')} {t('categories.headingGold')}</span>
             <div className="h-px gold-line mt-2" />
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-semibold text-navy mt-4">
             Curated Collections
           </h2>
           <p className="text-muted-foreground mt-4 text-base leading-relaxed">
-            From statement rings to layered necklaces, find the perfect piece for every moment.
+            {t('categories.subheading')}
           </p>
         </div>
 

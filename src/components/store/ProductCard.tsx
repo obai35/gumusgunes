@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import type { Product } from '@/lib/types'
 import { parseTags, discountPercent, cn } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
+import { useTranslation } from '@/hooks/use-translation'
 import { useCart, useUI, useWishlist, useCompare } from '@/lib/store'
 import { toast } from 'sonner'
 
@@ -16,13 +17,14 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const formatPrice = useFormatPrice()
   const tags = parseTags(product.tags)
   const discount = discountPercent(product.price, product.compareAtPrice)
+  const { t } = useTranslation()
   const isWishlisted = wishlist.has(product.id)
   const isCompared = compare.has(product.id)
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.stopPropagation()
     addItem(product, 1)
-    toast.success(`${product.name} added to bag`, {
+    toast.success(t('products.addedToBag', product.name), {
       description: formatPrice(product.price),
     })
   }
@@ -58,12 +60,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {product.isNew && (
             <span className="px-2.5 py-1 rounded-full bg-navy text-silver text-[10px] font-semibold tracking-[0.15em] uppercase">
-              New
+              {t('products.new')}
             </span>
           )}
           {product.isBestseller && (
             <span className="px-2.5 py-1 rounded-full bg-gold text-navy-deep text-[10px] font-semibold tracking-[0.15em] uppercase">
-              Bestseller
+              {t('products.bestseller')}
             </span>
           )}
           {discount && (
@@ -83,7 +85,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
                 ? 'bg-gold text-navy-deep'
                 : 'bg-background/80 text-navy hover:bg-background hover:text-gold'
             )}
-            aria-label="Toggle wishlist"
+            aria-label={t('products.toggleWishlist')}
           >
             <Heart className={cn('h-4 w-4', isWishlisted && 'fill-current')} />
           </button>
@@ -91,11 +93,11 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
             onClick={(e) => {
               e.stopPropagation()
               if (!isCompared && compare.ids.length >= 3) {
-                toast.error('You can compare up to 3 pieces. Remove one first.')
+                toast.error(t('compare.maxError'))
                 return
               }
               compare.toggle(product.id)
-              toast(isCompared ? 'Removed from compare' : 'Added to compare', { description: product.name })
+              toast(isCompared ? t('general.delete') : t('general.save'), { description: product.name })
             }}
             className={cn(
               'h-9 w-9 rounded-full backdrop-blur-md flex items-center justify-center transition-all',
@@ -103,7 +105,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
                 ? 'bg-navy text-gold ring-2 ring-gold'
                 : 'bg-background/80 text-navy hover:bg-background hover:text-gold'
             )}
-            aria-label="Toggle compare"
+            aria-label={t('products.compare')}
           >
             <GitCompare className={cn('h-4 w-4', isCompared && 'scale-110')} />
           </button>
@@ -116,12 +118,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               onClick={handleQuickAdd}
               className="flex-1 h-10 rounded-full bg-navy text-silver text-xs font-semibold tracking-wide hover:bg-gold hover:text-navy-deep transition-colors"
             >
-              Quick Add
+              {t('products.quickAdd')}
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); handleOpen() }}
               className="h-10 w-10 rounded-full bg-background/90 backdrop-blur-md text-navy hover:bg-background hover:text-gold transition-colors flex items-center justify-center"
-              aria-label="View details"
+              aria-label={t('products.viewDetails')}
             >
               <Eye className="h-4 w-4" />
             </button>
@@ -161,7 +163,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               )}
             </div>
             <span className="text-[10px] text-gold font-medium tracking-wide mt-0.5">
-              +{Math.floor(product.price)} pts
+              +{Math.floor(product.price)} {t('products.points')}
             </span>
           </div>
           {tags[0] && (

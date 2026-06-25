@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Flame, Sparkles } from 'lucide-react'
 import { useCountdown } from '@/hooks/use-countdown'
 import { cn } from '@/lib/format'
+import { useTranslation } from '@/hooks/use-translation'
 
 // Sale ends 3 days from when the component first mounts (persists in sessionStorage)
 function getSaleEnd(): number {
@@ -35,6 +36,7 @@ function TimeBox({ value, label }: { value: number; label: string }) {
 }
 
 export function FlashSaleBanner() {
+  const { t } = useTranslation()
   const [saleEnd, setSaleEnd] = useState<number | null>(null)
 
   useEffect(() => {
@@ -77,9 +79,9 @@ export function FlashSaleBanner() {
               <Flame className="h-5 w-5 text-gold" />
             </motion.div>
             <div className="text-left">
-              <p className="text-[10px] tracking-[0.25em] uppercase text-gold-soft font-medium">Flash Sale</p>
+              <p className="text-[10px] tracking-[0.25em] uppercase text-gold-soft font-medium">{t('flashSale.title')}</p>
               <p className="font-display text-lg sm:text-xl font-semibold text-silver leading-tight">
-                <span className="gold-text">25% Off</span> Bestsellers
+                <span className="gold-text">{t('flashSale.description')}</span>
               </p>
             </div>
           </div>
@@ -89,13 +91,13 @@ export function FlashSaleBanner() {
 
           {/* Countdown */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <TimeBox value={days} label="Days" />
+            <TimeBox value={days} label={t('flashSale.days')} />
             <span className="font-display text-xl text-gold/60 -mt-3">:</span>
-            <TimeBox value={hours} label="Hrs" />
+            <TimeBox value={hours} label={t('flashSale.hrs')} />
             <span className="font-display text-xl text-gold/60 -mt-3">:</span>
-            <TimeBox value={minutes} label="Min" />
+            <TimeBox value={minutes} label={t('flashSale.min')} />
             <span className="font-display text-xl text-gold/60 -mt-3">:</span>
-            <TimeBox value={seconds} label="Sec" />
+            <TimeBox value={seconds} label={t('flashSale.sec')} />
           </div>
 
           {/* CTA */}
@@ -103,7 +105,7 @@ export function FlashSaleBanner() {
             href="#bestsellers"
             className="group inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow flex-shrink-0"
           >
-            Shop Now
+            {t('flashSale.shopNow')}
             <span className="group-hover:translate-x-0.5 transition-transform">→</span>
           </a>
         </div>

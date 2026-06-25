@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 const categories = [
@@ -350,8 +350,13 @@ const sampleReviews = [
   { rating: 5, title: 'Worth every lira', comment: 'The attention to detail is remarkable. Feels like a much more expensive piece. Will be buying from Gümüş Güneş again.', authorName: 'Can Ö.' },
 ]
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get('authorization')
+    const expectedToken = process.env.SEED_API_KEY
+    if (expectedToken && authHeader !== `Bearer ${expectedToken}`) {
+      return NextResponse.json({ ok: false, error: 'Unauthorized' }, { status: 401 })
+    }
     // Wipe existing data (idempotent seed)
     await db.orderItem.deleteMany()
     await db.order.deleteMany()

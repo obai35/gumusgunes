@@ -2,39 +2,41 @@
 
 import { motion } from 'framer-motion'
 import { PencilRuler, Flame, Sparkles, Gem } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 const steps = [
   {
     number: '01',
     icon: PencilRuler,
-    title: 'Sketch & Design',
-    desc: 'Each piece begins as a hand-drawn sketch in our Istanbul atelier, inspired by the sun, moon, and Bosphorus light.',
-    duration: '2–3 days',
+    title: 'craftsmanship.step1Title',
+    desc: 'craftsmanship.step1Desc',
+    duration: 'craftsmanship.step1Duration',
   },
   {
     number: '02',
     icon: Gem,
-    title: 'Stone Selection',
-    desc: 'Conflict-free diamonds and ethically sourced gemstones are hand-selected and inspected under loupe by our master gemologist.',
-    duration: '1 day',
+    title: 'craftsmanship.step2Title',
+    desc: 'craftsmanship.step2Desc',
+    duration: 'craftsmanship.step2Duration',
   },
   {
     number: '03',
     icon: Flame,
-    title: 'Casting & Forging',
-    desc: '925 sterling silver is cast, forged, and shaped using techniques passed down through three generations of silversmiths.',
-    duration: '3–5 days',
+    title: 'craftsmanship.step3Title',
+    desc: 'craftsmanship.step3Desc',
+    duration: 'craftsmanship.step3Duration',
   },
   {
     number: '04',
     icon: Sparkles,
-    title: 'Hand Finishing',
-    desc: 'Every surface is hand-polished to a mirror shine, hallmarked with our sun seal, and inspected before it reaches you.',
-    duration: '2 days',
+    title: 'craftsmanship.step4Title',
+    desc: 'craftsmanship.step4Desc',
+    duration: 'craftsmanship.step4Duration',
   },
 ]
 
 export function CraftsmanshipTimeline() {
+  const { t } = useTranslation()
   return (
     <section className="py-20 sm:py-28 bg-background relative overflow-hidden">
       {/* Decorative sun rays */}
@@ -43,15 +45,14 @@ export function CraftsmanshipTimeline() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <div className="inline-block">
-            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">The Atelier</span>
+            <span className="text-xs tracking-[0.3em] uppercase text-gold font-medium">{t('craftsmanship.theAtelier')}</span>
             <div className="h-px gold-line mt-2" />
           </div>
           <h2 className="font-display text-4xl sm:text-5xl font-semibold text-navy mt-4">
-            From Sketch to Shine
+            {t('craftsmanship.heading')}
           </h2>
           <p className="text-muted-foreground mt-4 text-base leading-relaxed">
-            Every Gümüş Güneş piece passes through four careful stages of craftsmanship —
-            a process that takes up to two weeks and a lifetime of skill.
+            {t('craftsmanship.craftsmanshipDesc')}
           </p>
         </div>
 
@@ -86,14 +87,14 @@ export function CraftsmanshipTimeline() {
                 </div>
 
                 <h3 className="font-display text-xl font-semibold text-navy mb-2">
-                  {step.title}
+                  {t(step.title)}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3 max-w-xs">
-                  {step.desc}
+                  {t(step.desc)}
                 </p>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-xs text-navy font-medium tracking-wide">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-                  {step.duration}
+                  {t(step.duration)}
                 </span>
               </motion.div>
             ))}
@@ -109,10 +110,10 @@ export function CraftsmanshipTimeline() {
           className="mt-16 text-center"
         >
           <p className="font-display text-lg text-navy italic mb-1">
-            &ldquo;We do not make jewelry to be worn once. We make it to be lived in.&rdquo;
+            &ldquo;{t('craftsmanship.quote')}&rdquo;
           </p>
           <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground">
-            — The Gümüş Güneš Atelier
+            {t('craftsmanship.attribution')}
           </p>
         </motion.div>
       </div>

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
+import { useTranslation } from '@/hooks/use-translation'
 
 type TimelineStep = {
   label: string
@@ -50,6 +51,7 @@ type OrderResult = {
 const STEP_ICONS = [Check, Clock, Check, Truck, Home]
 
 export function OrderTrackingModal() {
+  const { t } = useTranslation()
   const { orderTrackingOpen, setOrderTrackingOpen } = useUI()
   const formatPrice = useFormatPrice()
   const [orderNumber, setOrderNumber] = useState('')
@@ -89,12 +91,12 @@ export function OrderTrackingModal() {
         setOrder(data.order)
         setTimeline(data.timeline)
       } else {
-        setError(data.error || 'Order not found')
-        toast.error(data.error || 'Order not found')
+        setError(data.error || t('orderTracking.orderNotFound'))
+        toast.error(data.error || t('orderTracking.orderNotFound'))
       }
     } catch {
-      setError('Lookup failed. Please try again.')
-      toast.error('Lookup failed')
+      setError(t('orderTracking.lookupFailed'))
+      toast.error(t('orderTracking.lookupFailed'))
     } finally {
       setLoading(false)
     }
@@ -122,7 +124,7 @@ export function OrderTrackingModal() {
             <div className="flex items-center justify-between p-5 border-b border-border bg-navy text-silver">
               <div className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-gold" />
-                <h2 className="font-display text-2xl font-semibold">Track Your Order</h2>
+                <h2 className="font-display text-2xl font-semibold">{t('orderTracking.title')}</h2>
               </div>
               <button
                 onClick={handleClose}
@@ -141,33 +143,33 @@ export function OrderTrackingModal() {
                       <Search className="h-7 w-7 text-gold" />
                     </div>
                     <h3 className="font-display text-xl font-semibold text-navy mb-1">
-                      Where is my order?
+                      {t('orderTracking.searchHeading')}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Enter your order number and the email you used at checkout.
+                      {t('orderTracking.searchDesc')}
                     </p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="trackOrderNumber">Order Number</Label>
+                    <Label htmlFor="trackOrderNumber">{t('orderTracking.orderNumber')}</Label>
                     <Input
                       id="trackOrderNumber"
                       value={orderNumber}
                       onChange={(e) => setOrderNumber(e.target.value)}
-                      placeholder="GG-12345678-001"
+                      placeholder={t('orderTracking.orderPlaceholder')}
                       className="rounded-xl font-mono uppercase"
                       required
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="trackEmail">Email Address</Label>
+                    <Label htmlFor="trackEmail">{t('orderTracking.email')}</Label>
                     <Input
                       id="trackEmail"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder={t('orderTracking.emailPlaceholder')}
                       className="rounded-xl"
                       required
                     />
@@ -185,14 +187,14 @@ export function OrderTrackingModal() {
                     className="w-full h-12 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep font-semibold tracking-wide"
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Searching…</>
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t('orderTracking.searching')}</>
                     ) : (
-                      <><Search className="h-4 w-4 mr-2" /> Find My Order</>
+                      <><Search className="h-4 w-4 mr-2" /> {t('orderTracking.lookup')}</>
                     )}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    Your order number was in your confirmation email.
+                    {t('orderTracking.helpText')}
                   </p>
                 </form>
               ) : (
@@ -201,18 +203,18 @@ export function OrderTrackingModal() {
                   {/* Order header */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-secondary/40">
                     <div>
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Order</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t('orderTracking.orderLabel')}</p>
                       <p className="font-mono font-semibold text-navy text-lg">{order.orderNumber}</p>
                     </div>
                     <div className="sm:text-right">
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">Placed on</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground">{t('orderTracking.placedOn')}</p>
                       <p className="text-sm font-medium text-navy">{formatDate(order.createdAt)}</p>
                     </div>
                   </div>
 
                   {/* Timeline */}
                   <div>
-                    <h3 className="font-display text-lg font-semibold text-navy mb-4">Order Status</h3>
+                    <h3 className="font-display text-lg font-semibold text-navy mb-4">{t('orderTracking.statusHeading')}</h3>
                     <div className="relative pl-8">
                       {/* Vertical line */}
                       <div className="absolute left-3 top-2 bottom-2 w-px bg-border" />
@@ -249,7 +251,7 @@ export function OrderTrackingModal() {
                               {!step.completed && i === (timeline?.findIndex((s) => !s.completed) ?? -1) && (
                                 <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-gold">
                                   <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
-                                  In progress
+                                  {t('orderTracking.inProgress')}
                                 </span>
                               )}
                             </div>
@@ -261,7 +263,7 @@ export function OrderTrackingModal() {
 
                   {/* Items */}
                   <div>
-                    <h3 className="font-display text-lg font-semibold text-navy mb-3">Items ({order.items.length})</h3>
+                    <h3 className="font-display text-lg font-semibold text-navy mb-3">{t('orderTracking.itemsHeading')} ({order.items.length})</h3>
                     <div className="space-y-2">
                       {order.items.map((item) => (
                         <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl bg-secondary/30">
@@ -271,7 +273,7 @@ export function OrderTrackingModal() {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-navy line-clamp-1">{item.product.name}</p>
                             <p className="text-xs text-muted-foreground">
-                              {item.product.category} · Qty {item.quantity}
+                              {item.product.category} · {t('orderTracking.qty')} {item.quantity}
                             </p>
                           </div>
                           <span className="text-sm font-semibold text-navy">
@@ -285,26 +287,26 @@ export function OrderTrackingModal() {
                   {/* Shipping + totals */}
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="p-4 rounded-2xl bg-secondary/30">
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">Shipping To</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-muted-foreground mb-2">{t('orderTracking.shippingTo')}</p>
                       <p className="text-sm font-medium text-navy">{order.fullName}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{order.address}</p>
                       <p className="text-xs text-muted-foreground">{order.city}, {order.country}</p>
                     </div>
                     <div className="p-4 rounded-2xl bg-secondary/30 space-y-1.5 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Subtotal</span>
+                        <span className="text-muted-foreground">{t('orderTracking.subtotal')}</span>
                         <span className="font-medium text-navy">{formatPrice(order.subtotal)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Shipping</span>
-                        <span className="font-medium text-navy">{order.shipping === 0 ? 'Free' : formatPrice(order.shipping)}</span>
+                        <span className="text-muted-foreground">{t('orderTracking.shipping')}</span>
+                        <span className="font-medium text-navy">{order.shipping === 0 ? t('orderTracking.free') : formatPrice(order.shipping)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Tax</span>
+                        <span className="text-muted-foreground">{t('orderTracking.tax')}</span>
                         <span className="font-medium text-navy">{formatPrice(order.tax)}</span>
                       </div>
                       <div className="border-t border-border pt-1.5 flex justify-between">
-                        <span className="font-semibold text-navy">Total</span>
+                        <span className="font-semibold text-navy">{t('orderTracking.total')}</span>
                         <span className="font-display font-semibold gold-text">{formatPrice(order.totalAmount)}</span>
                       </div>
                     </div>
@@ -312,14 +314,14 @@ export function OrderTrackingModal() {
 
                   {order.notes && (
                     <div className="p-3 rounded-xl bg-gold/5 border border-gold/20">
-                      <p className="text-[10px] tracking-[0.2em] uppercase text-gold-soft mb-1">Order Notes</p>
+                      <p className="text-[10px] tracking-[0.2em] uppercase text-gold-soft mb-1">{t('orderTracking.orderNotes')}</p>
                       <p className="text-xs text-navy whitespace-pre-wrap">{order.notes}</p>
                     </div>
                   )}
 
                   <div className="text-center pt-2">
                     <p className="text-xs text-muted-foreground">
-                      Questions? Email <a href="mailto:concierge@gumusgunes.com" className="text-gold hover:underline">concierge@gumusgunes.com</a>
+                      {t('orderTracking.contactText')}
                     </p>
                   </div>
                 </div>

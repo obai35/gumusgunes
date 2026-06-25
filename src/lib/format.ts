@@ -1,9 +1,10 @@
-export type Currency = 'USD' | 'EUR' | 'TRY'
+export type Currency = 'USD' | 'EUR' | 'TRY' | 'EGP'
 
 export const CURRENCIES: { code: Currency; symbol: string; rate: number; locale: string; label: string }[] = [
   { code: 'USD', symbol: '$', rate: 1, locale: 'en-US', label: 'USD $' },
   { code: 'EUR', symbol: '€', rate: 0.92, locale: 'de-DE', label: 'EUR €' },
   { code: 'TRY', symbol: '₺', rate: 34.5, locale: 'tr-TR', label: 'TRY ₺' },
+  { code: 'EGP', symbol: 'E£', rate: 48, locale: 'ar-EG', label: 'EGP E£' },
 ]
 
 export function getCurrencyMeta(code: Currency) {
@@ -61,7 +62,7 @@ export function getSessionId(): string {
   const KEY = 'gg_session_id'
   let id = window.localStorage.getItem(KEY)
   if (!id) {
-    id = 'sess_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
+    id = 'sess_' + crypto.randomUUID().replace(/-/g, '').slice(0, 16) + Date.now().toString(36)
     window.localStorage.setItem(KEY, id)
   }
   return id

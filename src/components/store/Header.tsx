@@ -3,26 +3,29 @@
 import { useState, useEffect } from 'react'
 import { useCart, useUI, useWishlist } from '@/lib/store'
 import { useHydrated } from '@/hooks/use-hydrated'
+import { useTranslation } from '@/hooks/use-translation'
 import { Search, Heart, ShoppingBag, Menu, X, Sun } from 'lucide-react'
 import { cn } from '@/lib/format'
 import { CurrencySelector } from './CurrencySelector'
+import { LanguageSelector } from './LanguageSelector'
 import { LoyaltyBadge } from './LoyaltyBadge'
 
-const navLinks = [
-  { label: 'Collections', href: '#collections' },
-  { label: 'Categories', href: '#categories' },
-  { label: 'New Arrivals', href: '#new' },
-  { label: 'Bestsellers', href: '#bestsellers' },
-  { label: 'Gift Finder', href: '#gift-finder' },
-  { label: 'Our Story', href: '#about' },
-]
-
 export function Header() {
+  const { t } = useTranslation()
   const [scrolled, setScrolled] = useState(false)
   const hydrated = useHydrated()
   const { openCart, count } = useCart()
   const { setSearchOpen, setWishlistOpen, setMobileMenuOpen, mobileMenuOpen } = useUI()
   const wishlist = useWishlist()
+
+  const navLinks = [
+    { label: t('nav.collections'), href: '#collections' },
+    { label: t('nav.categories'), href: '#categories' },
+    { label: t('nav.newArrivals'), href: '#new' },
+    { label: t('nav.bestsellers'), href: '#bestsellers' },
+    { label: t('nav.giftFinder'), href: '#gift-finder' },
+    { label: t('nav.ourStory'), href: '#about' },
+  ]
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -40,8 +43,8 @@ export function Header() {
       <div className="bg-navy-deep text-silver text-xs tracking-[0.2em] uppercase">
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2 text-center">
           <Sun className="h-3 w-3 text-gold animate-pulse" />
-          <span className="hidden sm:inline">Complimentary shipping on orders over $250 · Lifetime warranty on every piece</span>
-          <span className="sm:hidden">Free shipping over $250</span>
+          <span className="hidden sm:inline">{t('announcement.text')}</span>
+          <span className="sm:hidden">{t('announcement.textMobile')}</span>
         </div>
       </div>
 
@@ -57,11 +60,11 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-20">
             {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 -ml-2 text-navy hover:text-gold transition-colors"
-              aria-label="Open menu"
-            >
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden p-2 -ml-2 text-navy hover:text-gold transition-colors"
+                aria-label={t('nav.openMenu')}
+              >
               <Menu className="h-6 w-6" />
             </button>
 
@@ -79,7 +82,7 @@ export function Header() {
                   Gümüş <span className="gold-text">Güneş</span>
                 </span>
                 <span className="text-[10px] tracking-[0.35em] uppercase text-muted-foreground mt-0.5">
-                  Silver Sun · Est. 2019
+                  {t('brand.tagline')}
                 </span>
               </div>
             </a>
@@ -106,17 +109,20 @@ export function Header() {
               <div className="hidden sm:block">
                 <CurrencySelector />
               </div>
+              <div className="hidden sm:block">
+                <LanguageSelector />
+              </div>
               <button
                 onClick={() => setSearchOpen(true)}
                 className="p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors"
-                aria-label="Search"
+                aria-label={t('nav.search')}
               >
                 <Search className="h-5 w-5" />
               </button>
               <button
                 onClick={() => setWishlistOpen(true)}
                 className="relative p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors"
-                aria-label="Wishlist"
+                aria-label={t('nav.wishlist')}
               >
                 <Heart className="h-5 w-5" />
                 {wishlistCount > 0 && (
@@ -128,7 +134,7 @@ export function Header() {
               <button
                 onClick={openCart}
                 className="relative p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors"
-                aria-label="Shopping bag"
+                aria-label={t('nav.cart')}
               >
                 <ShoppingBag className="h-5 w-5" />
                 {cartCount > 0 && (
@@ -171,7 +177,7 @@ export function Header() {
               ))}
             </nav>
             <div className="mt-auto pt-6 text-xs text-muted-foreground">
-              <p className="font-display text-base text-navy mb-2">Need help?</p>
+              <p className="font-display text-base text-navy mb-2">{t('footer.needHelp')}</p>
               <p>concierge@gumusgunes.com</p>
               <p className="mt-1">+90 212 000 00 00</p>
             </div>
