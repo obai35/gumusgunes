@@ -58,6 +58,9 @@ export const translations: Translations = {
       openMenu: 'Open menu',
       selectLanguage: 'Select language',
       selectCurrency: 'Select currency',
+      login: 'Sign In',
+      account: 'My Account',
+      signOut: 'Sign Out',
     },
     hero: {
       heading1: 'Where the Sun Meets',
@@ -648,6 +651,9 @@ export const translations: Translations = {
       openMenu: 'فتح القائمة',
       selectLanguage: 'اختر اللغة',
       selectCurrency: 'اختر العملة',
+      login: 'تسجيل الدخول',
+      account: 'حسابي',
+      signOut: 'تسجيل الخروج',
     },
     hero: {
       heading1: 'حيث تلتقي الشمس',

@@ -151,6 +151,7 @@ export default function POSPage() {
                 {p.imageUrl && <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" />}
               </div>
               <p className="text-sm font-medium text-navy truncate">{p.name}</p>
+              <p className="text-xs text-muted-foreground font-mono mt-0.5">{p.sku}</p>
               <div className="flex items-center justify-between mt-1">
                 <span className="text-sm font-bold text-navy">${p.price.toFixed(2)}</span>
                 <span className={`text-xs ${p.stock < 5 ? 'text-red-500' : 'text-green-600'}`}>{p.stock} left</span>
@@ -198,7 +199,7 @@ export default function POSPage() {
             </div>
           ) : (
             <div className="flex gap-2">
-              <input value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())} placeholder="Discount code" className="flex-1 px-3 py-2 border border-border rounded-lg text-sm" onKeyDown={(e) => e.key === 'Enter' && applyDiscount()} />
+              <input value={discountCode} onChange={(e) => setDiscountCode(e.target.value.toUpperCase())} placeholder="Promo or employee code" className="flex-1 px-3 py-2 border border-border rounded-lg text-sm" onKeyDown={(e) => e.key === 'Enter' && applyDiscount()} />
               <button onClick={applyDiscount} className="px-3 py-2 bg-gray-100 text-navy rounded-lg text-sm hover:bg-gray-200 transition-colors">Apply</button>
             </div>
           )}

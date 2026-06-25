@@ -130,6 +130,15 @@ model BackInStock {
   @@unique([email, productId])
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+}
+
 model Admin {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -145,9 +154,8 @@ model InventoryLog {
   productId String
   product   Product  @relation(fields: [productId], references: [id])
   type      String
-  quantity  Int
+  change    Int
   note      String?
-  orderId   String?
   createdAt DateTime @default(now())
 }
 

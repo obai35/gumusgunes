@@ -1,6 +1,6 @@
 import { withAuth } from 'next-auth/middleware'
 
-export default withAuth(function middleware() {}, {
+export default withAuth(function proxy() {}, {
   callbacks: {
     authorized: ({ req, token }) => {
       if (req.nextUrl.pathname === '/api/admin/seed') return true

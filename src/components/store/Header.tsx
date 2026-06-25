@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useCart, useUI, useWishlist } from '@/lib/store'
+import { useAuth } from '@/lib/auth-store'
 import { useHydrated } from '@/hooks/use-hydrated'
 import { useTranslation } from '@/hooks/use-translation'
-import { Search, Heart, ShoppingBag, Menu, X, Sun } from 'lucide-react'
+import { Search, Heart, ShoppingBag, Menu, X, Sun, User, LogOut } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/format'
 import { CurrencySelector } from './CurrencySelector'
 import { LanguageSelector } from './LanguageSelector'
@@ -36,6 +38,8 @@ export function Header() {
 
   const cartCount = hydrated ? count() : 0
   const wishlistCount = hydrated ? wishlist.ids.length : 0
+  const { user, logout, isAuthenticated } = useAuth()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
     <>
@@ -112,6 +116,30 @@ export function Header() {
               <div className="hidden sm:block">
                 <LanguageSelector />
               </div>
+              <div className="relative">
+                {isAuthenticated() && user ? (
+                  <>
+                    <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors" aria-label={t('nav.account')}>
+                      <User className="h-5 w-5" />
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-border shadow-lg py-2 z-50">
+                        <div className="px-4 py-2 border-b border-border/50">
+                          <p className="text-sm font-medium text-navy truncate">{user.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                        <button onClick={() => { logout(); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                          <LogOut className="h-4 w-4" /> {t('nav.signOut')}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link href="/login" className="p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors inline-flex" aria-label={t('nav.login')}>
+                    <User className="h-5 w-5" />
+                  </Link>
+                )}
+              </div>
               <button
                 onClick={() => setSearchOpen(true)}
                 className="p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors"
@@ -147,6 +175,9 @@ export function Header() {
           </div>
         </div>
       </header>
+
+      {/* Close user menu on outside click */}
+      {userMenuOpen && <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />}
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
