@@ -58,7 +58,6 @@ export function CheckoutContent() {
   const [stripePaymentIntentId, setStripePaymentIntentId] = useState('')
   const [paypalOrderId, setPaypalOrderId] = useState('')
   const [paymentReference, setPaymentReference] = useState('')
-  const [duplicateWarning, setDuplicateWarning] = useState<Order | null>(null)
   const [form, setForm] = useState({
     email: '',
     fullName: '',
@@ -116,7 +115,6 @@ export function CheckoutContent() {
       })
       const data = await res.json()
       if (data.duplicateItems) {
-        setDuplicateWarning(data.existingOrder)
         setStep('payment')
         toast.warning('You already have a pending order with the same items')
         return
@@ -140,16 +138,8 @@ export function CheckoutContent() {
     submitOrder({ paypalOrderId: id })
   }, [submitOrder])
 
-  const handleClose = () => {
-    setCheckoutOpen(false)
-    if (step === 'done') {
-      clearCart()
-      setStep('details')
-      setOrder(null)
-    }
-  }
-
   const handleContinueShopping = () => {
+    clearCart()
     setCheckoutOpen(false)
     router.push('/')
   }
@@ -172,10 +162,10 @@ export function CheckoutContent() {
         toast.error('Please enter the transaction reference')
         return
       }
-      submitOrder({ paymentReference, walletProvider: form.paymentMethod === 'instapay' ? null : form.paymentMethod })
+      await submitOrder({ paymentReference, walletProvider: form.paymentMethod === 'instapay' ? null : form.paymentMethod }).catch(() => {})
       return
     }
-    submitOrder()
+    await submitOrder().catch(() => {})
   }
 
   const renderPaymentForm = () => {

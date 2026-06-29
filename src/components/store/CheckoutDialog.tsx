@@ -2,15 +2,17 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-import { useUI } from '@/lib/store'
+import { useUI, useCart } from '@/lib/store'
 import { useTranslation } from '@/hooks/use-translation'
 import { CheckoutContent } from './CheckoutContent'
 
 export function CheckoutDialog() {
   const { checkoutOpen, setCheckoutOpen } = useUI()
+  const { clearCart } = useCart()
   const { t } = useTranslation()
 
   const handleClose = () => {
+    clearCart()
     setCheckoutOpen(false)
   }
 
@@ -33,14 +35,9 @@ export function CheckoutDialog() {
             className="relative bg-background rounded-t-3xl sm:rounded-3xl w-full max-w-3xl max-h-[92vh] overflow-hidden shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between p-5 border-b border-border">
-              <div>
-                <h2 className="font-display text-2xl font-semibold text-navy">
-                  {t('checkout.title')}
-                </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {t('checkout.step1')}
-                </p>
-              </div>
+              <h2 className="font-display text-2xl font-semibold text-navy">
+                {t('checkout.title')}
+              </h2>
               <button
                 onClick={handleClose}
                 className="h-9 w-9 rounded-full hover:bg-secondary flex items-center justify-center"
