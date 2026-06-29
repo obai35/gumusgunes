@@ -68,40 +68,40 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
   if (selectedOrder) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
-          <h2 className="font-display text-lg font-semibold text-navy">
+        <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+          <h2 className="font-display text-lg font-semibold text-silver-soft">
             Order #{selectedOrder.receiptNumber || selectedOrder.orderNumber}
           </h2>
-          <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-navy rounded-lg transition-colors border border-border">
+          <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/50 hover:text-silver-soft rounded-lg transition-all border border-white/10">
             <X className="h-4 w-4" /> Back
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto space-y-4">
-          <div className="bg-white rounded-xl border border-border p-4">
+        <div className="flex-1 overflow-y-auto space-y-4 scroll-luxury">
+          <div className="pos-glass rounded-xl p-4">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Customer</p>
-                <p className="font-medium text-navy">{selectedOrder.fullName}</p>
+                <p className="text-white/40">Customer</p>
+                <p className="font-medium text-silver-soft">{selectedOrder.fullName}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Payment</p>
-                <p className="font-medium text-navy">{paymentLabels[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}</p>
+                <p className="text-white/40">Payment</p>
+                <p className="font-medium text-silver-soft">{paymentLabels[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Date</p>
-                <p className="font-medium text-navy">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                <p className="text-white/40">Date</p>
+                <p className="font-medium text-silver-soft">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Total</p>
-                <p className="font-medium text-navy">${selectedOrder.totalAmount.toFixed(2)}</p>
+                <p className="text-white/40">Total</p>
+                <p className="font-medium text-gold">${selectedOrder.totalAmount.toFixed(2)}</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-border p-4">
-            <h3 className="text-sm font-semibold text-navy mb-3">Items</h3>
+          <div className="pos-glass rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-silver-soft mb-3">Items</h3>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
+                <tr className="border-b border-white/10 text-left text-white/40">
                   <th className="pb-2 font-medium">Product</th>
                   <th className="pb-2 font-medium text-right">Qty</th>
                   <th className="pb-2 font-medium text-right">Price</th>
@@ -110,11 +110,11 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
               </thead>
               <tbody>
                 {selectedOrder.items.map((item) => (
-                  <tr key={item.id} className="border-b border-border/50">
-                    <td className="py-2 text-navy font-medium">{item.product.name}</td>
-                    <td className="py-2 text-right text-muted-foreground">{item.quantity}</td>
-                    <td className="py-2 text-right text-muted-foreground">${item.price.toFixed(2)}</td>
-                    <td className="py-2 text-right text-navy font-medium">${(item.quantity * item.price).toFixed(2)}</td>
+                  <tr key={item.id} className="border-b border-white/5">
+                    <td className="py-2 text-silver-soft font-medium">{item.product.name}</td>
+                    <td className="py-2 text-right text-white/50">{item.quantity}</td>
+                    <td className="py-2 text-right text-white/50">${item.price.toFixed(2)}</td>
+                    <td className="py-2 text-right text-silver-soft font-medium">${(item.quantity * item.price).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -129,58 +129,58 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
     <div className="flex flex-col h-full">
       <div className="mb-4 space-y-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by order number, receipt, or customer name..."
-            className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           />
         </div>
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="text-xs text-muted-foreground block mb-1">From</label>
+            <label className="text-xs text-white/40 block mb-1">From</label>
             <input
               type="date"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
-              className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+              className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
             />
           </div>
           <div className="flex-1">
-            <label className="text-xs text-muted-foreground block mb-1">To</label>
+            <label className="text-xs text-white/40 block mb-1">To</label>
             <input
               type="date"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+              className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
             />
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">Searching...</div>
+        <div className="flex items-center justify-center flex-1 text-sm text-white/50">Searching...</div>
       ) : results ? (
-        <div className="flex-1 overflow-y-auto">
-          <p className="text-xs text-muted-foreground mb-2">{results.total} order{results.total !== 1 ? 's' : ''} found</p>
+        <div className="flex-1 overflow-y-auto scroll-luxury">
+          <p className="text-xs text-white/40 mb-2">{results.total} order{results.total !== 1 ? 's' : ''} found</p>
           <div className="space-y-2">
             {results.orders.map((order) => (
               <button
                 key={order.id}
                 onClick={() => setSelectedOrder(order)}
-                className="w-full flex items-center justify-between p-3 bg-white rounded-lg border border-border hover:border-gold/40 transition-colors text-left"
+                className="w-full flex items-center justify-between p-3 pos-glass rounded-lg hover:border-gold/30 transition-all text-left"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-navy truncate">
+                  <p className="text-sm font-medium text-silver-soft truncate">
                     #{order.receiptNumber || order.orderNumber}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">{order.fullName}</p>
+                  <p className="text-xs text-white/40 truncate">{order.fullName}</p>
                 </div>
                 <div className="text-right shrink-0 ml-3">
-                  <p className="text-sm font-medium text-navy">${order.totalAmount.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium text-gold">${order.totalAmount.toFixed(2)}</p>
+                  <p className="text-xs text-white/40">
                     {paymentLabels[order.paymentMethod] || order.paymentMethod}
                     {' · '}{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
@@ -195,8 +195,8 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
                 <button
                   key={p}
                   onClick={() => handleSearch(p)}
-                  className={`px-3 py-1 text-sm rounded-lg border transition-colors ${
-                    p === results.page ? 'bg-navy text-silver border-navy' : 'border-border text-muted-foreground hover:text-navy'
+                  className={`px-3 py-1 text-sm rounded-lg border transition-all ${
+                    p === results.page ? 'bg-gold/20 text-gold border-gold/40' : 'border-white/10 text-white/40 hover:text-silver-soft hover:border-gold/20'
                   }`}
                 >
                   {p}
@@ -206,7 +206,7 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
           )}
         </div>
       ) : (
-        <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
+        <div className="flex items-center justify-center flex-1 text-sm text-white/40">
           Enter a search term or select a date range
         </div>
       )}

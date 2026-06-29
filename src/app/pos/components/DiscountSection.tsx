@@ -18,14 +18,14 @@ export default function DiscountSection({
 }: Props) {
   if (appliedDiscount) {
     return (
-      <div className="flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg text-sm">
+      <div className="flex items-center justify-between bg-emerald-500/10 px-3 py-2 rounded-lg text-sm border border-emerald-500/20">
         <div>
-          <span className="text-green-700 font-medium">Discount: -${discountAmount.toFixed(2)}</span>
+          <span className="text-emerald-400 font-medium">Discount: -${discountAmount.toFixed(2)}</span>
           {appliedDiscount.appliesTo && appliedDiscount.appliesTo !== 'all' && (
-            <span className="text-green-600 text-xs ml-2">({appliedDiscount.targetValue})</span>
+            <span className="text-emerald-400/60 text-xs ml-2">({appliedDiscount.targetValue})</span>
           )}
         </div>
-        <button onClick={onRemoveDiscount} className="text-green-500 hover:text-green-700"><X className="h-4 w-4" /></button>
+        <button onClick={onRemoveDiscount} className="text-emerald-400/60 hover:text-emerald-400"><X className="h-4 w-4" /></button>
       </div>
     )
   }
@@ -36,10 +36,10 @@ export default function DiscountSection({
         value={discountCode}
         onChange={(e) => onDiscountCodeChange(e.target.value.toUpperCase())}
         placeholder="Promo or employee code"
-        className="flex-1 px-3 py-2 border border-border rounded-lg text-sm"
+        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
         onKeyDown={(e) => e.key === 'Enter' && onApplyDiscount()}
       />
-      <button onClick={onApplyDiscount} className="px-3 py-2 bg-gray-100 text-navy rounded-lg text-sm hover:bg-gray-200 transition-colors">Apply</button>
+      <button onClick={onApplyDiscount} className="px-3 py-2 bg-gold/15 text-gold rounded-lg text-sm font-medium hover:bg-gold/25 transition-all border border-gold/20">Apply</button>
     </div>
   )
 }

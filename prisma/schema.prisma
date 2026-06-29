@@ -93,6 +93,8 @@ model Order {
   discount       Discount?  @relation(fields: [discountId], references: [id])
   discountAmount Float?
   paymentStatus        String     @default("pending")
+  fulfilledAt          DateTime?
+  reconciledAt         DateTime?
   stripePaymentIntentId String?   @unique
   paypalOrderId         String?   @unique
   idempotencyKey        String?   @unique

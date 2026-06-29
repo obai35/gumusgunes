@@ -26,20 +26,20 @@ const tabs: { id: TabId; label: string; icon: typeof ShoppingCart }[] = [
 
 export default function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, children }: Props) {
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+    <div className="flex flex-col h-full pos-interface navy-radial">
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/30">
+            <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/40">
               <img src="/gumusgunes-logo.jpeg" alt="" className="h-full w-full object-cover" />
             </div>
-            <span className="font-display text-lg font-semibold text-navy">Gümüş <span className="gold-text">Güneş</span></span>
+            <span className="font-display text-lg font-semibold text-silver-soft">Gümüş <span className="gold-text">Güneş</span></span>
           </div>
-          <span className="text-muted-foreground">|</span>
-          <h1 className="font-display text-lg font-semibold text-navy">{branchName}</h1>
+          <span className="text-white/20">|</span>
+          <h1 className="font-display text-lg font-semibold text-silver-soft">{branchName}</h1>
           {shift && (
-            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-medium rounded-full border border-emerald-500/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               Open since {new Date(shift.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           )}
@@ -47,29 +47,29 @@ export default function PosLayout({ branchName, shift, activeTab, onTabChange, o
         <div className="flex items-center gap-2">
           {shift && (
             <>
-              <button onClick={onAssessment} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-navy hover:bg-gold/10 rounded-lg transition-colors border border-border">
+              <button onClick={onAssessment} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-silver-soft hover:bg-gold/10 hover:text-gold rounded-lg transition-all border border-white/10">
                 <ClipboardList className="h-4 w-4" /> Assessment
               </button>
-              <button onClick={onCloseShift} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-border">
+              <button onClick={onCloseShift} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-all border border-white/10">
                 <Clock className="h-4 w-4" /> Close Shift
               </button>
             </>
           )}
-          <button onClick={onLogout} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <button onClick={onLogout} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
             <LogOut className="h-4 w-4" /> Logout
           </button>
         </div>
       </div>
 
-      <div className="flex gap-1 mb-4 pb-0.5 border-b border-border">
+      <div className="flex gap-1 mb-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
               activeTab === tab.id
-                ? 'text-navy border-b-2 border-navy bg-navy/5'
-                : 'text-muted-foreground hover:text-navy hover:bg-navy/5'
+                ? 'text-gold bg-gold/10 shadow-[inset_0_0_0_1px_rgba(212,175,55,0.2)]'
+                : 'text-white/40 hover:text-silver-soft hover:bg-white/5'
             }`}
           >
             <tab.icon className="h-4 w-4" />

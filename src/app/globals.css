@@ -183,20 +183,59 @@
   .scroll-luxury::-webkit-scrollbar-thumb:hover {
     background: var(--color-gold);
   }
-  .no-scrollbar::-webkit-scrollbar { display: none; }
-  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  .press {
-    transition: transform 0.1s ease;
-  }
-  .press:active {
-    transform: scale(0.95);
-  }
-  .tab-press {
-    transition: transform 0.1s ease;
-  }
-  .tab-press:active {
-    transform: scale(0.95);
-  }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.press {
+  transition: transform 0.1s ease;
+}
+.press:active {
+  transform: scale(0.95);
+}
+.tab-press {
+  transition: transform 0.1s ease;
+}
+.tab-press:active {
+  transform: scale(0.95);
+}
+.pos-interface {
+  --background: oklch(0.12 0.035 255);
+  --foreground: oklch(0.92 0.008 255);
+  --card: oklch(0.16 0.04 255 / 0.6);
+  --card-foreground: oklch(0.92 0.008 255);
+  --popover: oklch(0.16 0.04 255);
+  --popover-foreground: oklch(0.92 0.008 255);
+  --primary: var(--color-gold);
+  --primary-foreground: oklch(0.12 0.035 255);
+  --secondary: oklch(0.22 0.04 255);
+  --secondary-foreground: oklch(0.92 0.008 255);
+  --muted: oklch(0.22 0.04 255);
+  --muted-foreground: oklch(0.65 0.015 255);
+  --accent: var(--color-gold);
+  --accent-foreground: oklch(0.12 0.035 255);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 10%);
+  --ring: var(--color-gold);
+}
+.pos-interface input,
+.pos-interface select,
+.pos-interface textarea {
+  color-scheme: dark;
+}
+.pos-glass {
+  background: rgba(16, 30, 55, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.08);
+}
+.pos-glass-strong {
+  background: rgba(16, 30, 55, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+}
+.pos-glow {
+  box-shadow: 0 0 30px -8px rgba(212, 175, 55, 0.25), 0 8px 24px -6px rgba(11, 31, 58, 0.4);
+}
 }
 
 /* Smooth scrolling */

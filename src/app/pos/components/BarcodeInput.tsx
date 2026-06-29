@@ -46,9 +46,9 @@ export default function BarcodeInput({ onProductFound, onFocusSearch }: Props) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Scan or type SKU..."
-        className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border text-sm font-mono"
+        className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-silver-soft text-sm font-mono placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
       />
-      {loading && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">Searching...</span>}
+      {loading && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-white/40">Searching...</span>}
     </form>
   )
 }

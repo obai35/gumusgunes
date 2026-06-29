@@ -23,7 +23,7 @@ export default function CheckoutButton({ total, paymentMethod, disabled, loading
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full px-6 py-3 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="w-full px-6 py-3 bg-gradient-to-r from-gold/90 to-gold text-navy-deep rounded-lg text-sm font-bold hover:from-gold hover:to-gold/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-gold/20 active:scale-[0.98]"
     >
       {label}
     </button>

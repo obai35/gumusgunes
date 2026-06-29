@@ -47,11 +47,11 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
   }, [shiftId])
 
   if (loading) {
-    return <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">Loading...</div>
+    return <div className="flex items-center justify-center flex-1 text-sm text-white/50">Loading...</div>
   }
 
   if (!data) {
-    return <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">No data available</div>
+    return <div className="flex items-center justify-center flex-1 text-sm text-white/50">No data available</div>
   }
 
   const incomeMethods = Object.entries(data.incomeByMethod).filter(([, v]) => v > 0)
@@ -100,123 +100,123 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
         <div>
-          <h2 className="font-display text-lg font-semibold text-navy">Hall Sale</h2>
-          <p className="text-xs text-muted-foreground">
+          <h2 className="font-display text-lg font-semibold text-silver-soft">Hall Sale</h2>
+          <p className="text-xs text-white/40">
             {new Date(data.shift.startedAt).toLocaleString()}
             {data.shift.closedAt && ` — ${new Date(data.shift.closedAt).toLocaleString()}`}
-            <span className="ml-2 px-1.5 py-0.5 rounded text-xs font-medium {data.shift.isOpen ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-muted-foreground'}">
+            <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${data.shift.isOpen ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/40'}`}>
               {data.shift.isOpen ? 'Open' : 'Closed'}
             </span>
           </p>
         </div>
-        <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-navy hover:bg-gold/10 rounded-lg transition-colors border border-border">
+        <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-silver-soft hover:bg-gold/10 hover:text-gold rounded-lg transition-all border border-white/10">
           <Printer className="h-4 w-4" /> Print
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-5">
+      <div className="flex-1 overflow-y-auto space-y-5 scroll-luxury">
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-xl border border-border p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Income</p>
-            <p className="text-2xl font-bold text-green-600">${data.totalIncome.toFixed(2)}</p>
+          <div className="pos-glass rounded-xl p-4 text-center">
+            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Total Income</p>
+            <p className="text-2xl font-bold text-emerald-400">${data.totalIncome.toFixed(2)}</p>
           </div>
-          <div className="bg-white rounded-xl border border-border p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Expenses</p>
-            <p className="text-2xl font-bold text-red-600">-${data.totalExpenses.toFixed(2)}</p>
+          <div className="pos-glass rounded-xl p-4 text-center">
+            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Total Expenses</p>
+            <p className="text-2xl font-bold text-red-400">-${data.totalExpenses.toFixed(2)}</p>
           </div>
-          <div className="bg-white rounded-xl border border-border p-4 text-center">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Net</p>
-            <p className={`text-2xl font-bold ${data.netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+          <div className="pos-glass rounded-xl p-4 text-center">
+            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Net</p>
+            <p className={`text-2xl font-bold ${data.netTotal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               ${data.netTotal.toFixed(2)}
             </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold text-navy mb-3">Income Breakdown</h3>
+        <div className="pos-glass rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-silver-soft mb-3">Income Breakdown</h3>
           {incomeMethods.length > 0 ? (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
+                <tr className="border-b border-white/10 text-left text-white/40">
                   <th className="pb-2 font-medium">Method</th>
                   <th className="pb-2 font-medium text-right">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {incomeMethods.map(([method, amount]) => (
-                  <tr key={method} className="border-b border-border/50">
-                    <td className="py-2 text-navy font-medium">{PAYMENT_LABELS[method] || method}</td>
-                    <td className="py-2 text-right text-green-600 font-medium">${amount.toFixed(2)}</td>
+                  <tr key={method} className="border-b border-white/5">
+                    <td className="py-2 text-silver-soft font-medium">{PAYMENT_LABELS[method] || method}</td>
+                    <td className="py-2 text-right text-emerald-400 font-medium">${amount.toFixed(2)}</td>
                   </tr>
                 ))}
                 <tr className="font-bold">
-                  <td className="py-2 text-navy">Total</td>
-                  <td className="py-2 text-right text-green-600">${data.totalIncome.toFixed(2)}</td>
+                  <td className="py-2 text-silver-soft">Total</td>
+                  <td className="py-2 text-right text-emerald-400">${data.totalIncome.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
           ) : (
-            <p className="text-sm text-muted-foreground">No income recorded</p>
+            <p className="text-sm text-white/40">No income recorded</p>
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold text-navy mb-3">Expenses Breakdown</h3>
+        <div className="pos-glass rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-silver-soft mb-3">Expenses Breakdown</h3>
           {expenseMethods.length > 0 ? (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border text-left text-muted-foreground">
+                <tr className="border-b border-white/10 text-left text-white/40">
                   <th className="pb-2 font-medium">Method</th>
                   <th className="pb-2 font-medium text-right">Amount</th>
                 </tr>
               </thead>
               <tbody>
                 {expenseMethods.map(([method, amount]) => (
-                  <tr key={method} className="border-b border-border/50">
-                    <td className="py-2 text-navy font-medium">{PAYMENT_LABELS[method] || method}</td>
-                    <td className="py-2 text-right text-red-600 font-medium">-${amount.toFixed(2)}</td>
+                  <tr key={method} className="border-b border-white/5">
+                    <td className="py-2 text-silver-soft font-medium">{PAYMENT_LABELS[method] || method}</td>
+                    <td className="py-2 text-right text-red-400 font-medium">-${amount.toFixed(2)}</td>
                   </tr>
                 ))}
                 <tr className="font-bold">
-                  <td className="py-2 text-navy">Total</td>
-                  <td className="py-2 text-right text-red-600">-${data.totalExpenses.toFixed(2)}</td>
+                  <td className="py-2 text-silver-soft">Total</td>
+                  <td className="py-2 text-right text-red-400">-${data.totalExpenses.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
           ) : (
-            <p className="text-sm text-muted-foreground">No expenses recorded</p>
+            <p className="text-sm text-white/40">No expenses recorded</p>
           )}
         </div>
 
-        <div className="bg-white rounded-xl border border-gold/30 p-4">
-          <h3 className="text-sm font-semibold text-navy mb-3">Cash Position</h3>
+        <div className="pos-glass-strong rounded-xl p-4">
+          <h3 className="text-sm font-semibold text-silver-soft mb-3">Cash Position</h3>
           <table className="w-full text-sm">
             <tbody>
-              <tr className="border-b border-border/50">
-                <td className="py-2 text-muted-foreground">Starting Cash</td>
-                <td className="py-2 text-right font-medium text-navy">${data.shift.startingCash.toFixed(2)}</td>
+              <tr className="border-b border-white/10">
+                <td className="py-2 text-white/50">Starting Cash</td>
+                <td className="py-2 text-right font-medium text-silver-soft">${data.shift.startingCash.toFixed(2)}</td>
               </tr>
-              <tr className="border-b border-border/50">
-                <td className="py-2 text-muted-foreground">+ Cash Income</td>
-                <td className="py-2 text-right font-medium text-green-600">+${(data.incomeByMethod.cash || 0).toFixed(2)}</td>
+              <tr className="border-b border-white/10">
+                <td className="py-2 text-white/50">+ Cash Income</td>
+                <td className="py-2 text-right font-medium text-emerald-400">+${(data.incomeByMethod.cash || 0).toFixed(2)}</td>
               </tr>
-              <tr className="border-b border-border/50">
-                <td className="py-2 text-muted-foreground">- Cash Expenses</td>
-                <td className="py-2 text-right font-medium text-red-600">-${(data.expensesByMethod.cash || 0).toFixed(2)}</td>
+              <tr className="border-b border-white/10">
+                <td className="py-2 text-white/50">- Cash Expenses</td>
+                <td className="py-2 text-right font-medium text-red-400">-${(data.expensesByMethod.cash || 0).toFixed(2)}</td>
               </tr>
-              <tr className="border-b border-border font-bold">
-                <td className="py-2 text-navy">Expected Cash</td>
-                <td className="py-2 text-right text-navy">${data.expectedCash.toFixed(2)}</td>
+              <tr className="border-b border-white/10 font-bold">
+                <td className="py-2 text-silver-soft">Expected Cash</td>
+                <td className="py-2 text-right text-gold">${data.expectedCash.toFixed(2)}</td>
               </tr>
-              <tr className="border-b border-border/50">
-                <td className="py-2 text-muted-foreground">Actual Ending Cash</td>
-                <td className="py-2 text-right font-medium text-navy">${data.actualEndingCash.toFixed(2)}</td>
+              <tr className="border-b border-white/10">
+                <td className="py-2 text-white/50">Actual Ending Cash</td>
+                <td className="py-2 text-right font-medium text-silver-soft">${data.actualEndingCash.toFixed(2)}</td>
               </tr>
               <tr className="font-bold">
-                <td className="py-2 text-navy">Difference</td>
-                <td className={`py-2 text-right ${data.difference >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <td className="py-2 text-silver-soft">Difference</td>
+                <td className={`py-2 text-right ${data.difference >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   ${data.difference >= 0 ? '+' : ''}{data.difference.toFixed(2)}
                 </td>
               </tr>

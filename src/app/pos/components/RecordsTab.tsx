@@ -102,24 +102,24 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
   return (
     <div className="space-y-4">
       <div className="relative">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
         <input
           type="text"
           value={productSearch}
           onChange={(e) => setProductSearch(e.target.value)}
           placeholder="Search products to add..."
-          className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+          className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
         />
         {products.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-[#0f1a2e] border border-white/10 rounded-lg shadow-2xl z-10 max-h-48 overflow-y-auto">
             {products.map((p) => (
               <button
                 key={p.id}
                 onClick={() => addItem(p)}
-                className="w-full flex items-center justify-between px-3 py-2 hover:bg-navy/5 text-sm text-left"
+                className="w-full flex items-center justify-between px-3 py-2 hover:bg-gold/10 text-sm text-left"
               >
-                <span className="font-medium text-navy">{p.name}</span>
-                <span className="text-muted-foreground">${p.price.toFixed(2)} ({p.stock} left)</span>
+                <span className="font-medium text-silver-soft">{p.name}</span>
+                <span className="text-white/40">${p.price.toFixed(2)} ({p.stock} left)</span>
               </button>
             ))}
           </div>
@@ -127,16 +127,16 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
       </div>
 
       {items.length > 0 && (
-        <div className="bg-white rounded-xl border border-border p-3 space-y-2">
+        <div className="pos-glass rounded-xl p-3 space-y-2">
           {items.map((item) => (
             <div key={item.productId} className="flex items-center gap-2">
-              <span className="flex-1 text-sm font-medium text-navy truncate">{item.name}</span>
+              <span className="flex-1 text-sm font-medium text-silver-soft truncate">{item.name}</span>
               <input
                 type="number"
                 min={1}
                 value={item.quantity}
                 onChange={(e) => updateItem(item.productId, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
-                className="w-16 px-2 py-1 border border-border rounded text-sm text-center"
+                className="w-16 px-2 py-1 bg-white/5 border border-white/10 rounded text-sm text-center text-silver-soft"
               />
               <input
                 type="number"
@@ -144,10 +144,10 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
                 min={0}
                 value={item.price}
                 onChange={(e) => updateItem(item.productId, 'price', parseFloat(e.target.value) || 0)}
-                className="w-20 px-2 py-1 border border-border rounded text-sm text-right"
+                className="w-20 px-2 py-1 bg-white/5 border border-white/10 rounded text-sm text-right text-silver-soft"
               />
-              <span className="text-sm font-medium text-navy w-20 text-right">${(item.quantity * item.price).toFixed(2)}</span>
-              <button onClick={() => removeItem(item.productId)} className="p-1 text-muted-foreground hover:text-red-600">
+              <span className="text-sm font-medium text-gold w-20 text-right">${(item.quantity * item.price).toFixed(2)}</span>
+              <button onClick={() => removeItem(item.productId)} className="p-1 text-white/40 hover:text-red-400">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -157,21 +157,21 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Customer Name (optional)</label>
+          <label className="text-xs text-white/40 block mb-1">Customer Name (optional)</label>
           <input
             type="text"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Walk-in Customer"
-            className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Payment Method</label>
+          <label className="text-xs text-white/40 block mb-1">Payment Method</label>
           <select
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           >
             {PAYMENT_METHODS.map((pm) => (
               <option key={pm.value} value={pm.value}>{pm.label}</option>
@@ -183,45 +183,45 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
       {paymentMethod === 'split' && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">Cash Amount</label>
+            <label className="text-xs text-white/40 block mb-1">Cash Amount</label>
             <input
               type="number"
               step="0.01"
               value={cashAmount}
               onChange={(e) => setCashAmount(e.target.value)}
-              className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+              className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
             />
           </div>
           <div>
-            <label className="text-xs text-muted-foreground block mb-1">Card Amount</label>
+            <label className="text-xs text-white/40 block mb-1">Card Amount</label>
             <input
               type="number"
               step="0.01"
               value={cardAmount}
               onChange={(e) => setCardAmount(e.target.value)}
-              className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+              className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
             />
           </div>
         </div>
       )}
 
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">Notes (optional)</label>
+        <label className="text-xs text-white/40 block mb-1">Notes (optional)</label>
         <input
           type="text"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Any notes..."
-          className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+          className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
         />
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-border">
-        <span className="text-lg font-bold text-navy">Total: ${totalAmount.toFixed(2)}</span>
+      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+        <span className="text-lg font-bold text-gold">Total: ${totalAmount.toFixed(2)}</span>
         <button
           onClick={handleSubmit}
           disabled={submitting || items.length === 0}
-          className="px-6 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors"
+          className="px-6 py-2 bg-gradient-to-r from-gold/90 to-gold text-navy-deep rounded-lg text-sm font-bold hover:from-gold hover:to-gold/90 disabled:opacity-40 transition-all shadow-lg shadow-gold/20"
         >
           {submitting ? 'Creating...' : 'Create Order'}
         </button>
@@ -320,53 +320,53 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">Supplier</label>
+        <label className="text-xs text-white/40 block mb-1">Supplier</label>
         {selectedSupplier ? (
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-navy/5 rounded-lg border border-border">
-            <span className="flex-1 text-sm font-medium text-navy">{selectedSupplier.name}</span>
-            <button onClick={() => { setSelectedSupplier(null); setSupplierSearch('') }} className="text-muted-foreground hover:text-red-600">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gold/5 rounded-lg border border-gold/20">
+            <span className="flex-1 text-sm font-medium text-silver-soft">{selectedSupplier.name}</span>
+            <button onClick={() => { setSelectedSupplier(null); setSupplierSearch('') }} className="text-white/40 hover:text-red-400">
               <X className="h-4 w-4" />
             </button>
           </div>
         ) : (
           <div className="space-y-2">
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
               <input
                 type="text"
                 value={supplierSearch}
                 onChange={(e) => setSupplierSearch(e.target.value)}
                 placeholder="Search supplier or create new..."
-                className="w-full pl-9 pr-4 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+                className="w-full pl-9 pr-4 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
               />
               {suppliers.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-10 max-h-40 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-[#0f1a2e] border border-white/10 rounded-lg shadow-2xl z-10 max-h-40 overflow-y-auto">
                   {suppliers.map((s) => (
                     <button
                       key={s.id}
                       onClick={() => { setSelectedSupplier(s); setSuppliers([]); setSupplierSearch('') }}
-                      className="w-full text-left px-3 py-2 hover:bg-navy/5 text-sm"
+                      className="w-full text-left px-3 py-2 hover:bg-gold/10 text-sm"
                     >
-                      <span className="font-medium text-navy">{s.name}</span>
-                      {s.phone && <span className="text-muted-foreground ml-2">{s.phone}</span>}
+                      <span className="font-medium text-silver-soft">{s.name}</span>
+                      {s.phone && <span className="text-white/40 ml-2">{s.phone}</span>}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <button onClick={() => setShowNewSupplier(!showNewSupplier)} className="text-xs text-navy hover:text-gold transition-colors">
+            <button onClick={() => setShowNewSupplier(!showNewSupplier)} className="text-xs text-gold hover:text-gold/80 transition-colors">
               + Create new supplier
             </button>
           </div>
         )}
         {showNewSupplier && (
-          <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-border space-y-2">
+          <div className="mt-2 p-3 bg-white/5 rounded-lg border border-white/10 space-y-2">
             <input
               type="text"
               value={newSupplierName}
               onChange={(e) => setNewSupplierName(e.target.value)}
               placeholder="Supplier name *"
-              className="w-full px-3 py-1.5 border border-border rounded text-sm"
+              className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-silver-soft placeholder:text-white/20"
             />
             <div className="grid grid-cols-2 gap-2">
               <input
@@ -374,17 +374,17 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
                 value={newSupplierPhone}
                 onChange={(e) => setNewSupplierPhone(e.target.value)}
                 placeholder="Phone"
-                className="w-full px-3 py-1.5 border border-border rounded text-sm"
+                className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-silver-soft placeholder:text-white/20"
               />
               <input
                 type="email"
                 value={newSupplierEmail}
                 onChange={(e) => setNewSupplierEmail(e.target.value)}
                 placeholder="Email"
-                className="w-full px-3 py-1.5 border border-border rounded text-sm"
+                className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded text-sm text-silver-soft placeholder:text-white/20"
               />
             </div>
-            <button onClick={handleCreateSupplier} className="px-4 py-1.5 bg-navy text-silver rounded text-sm hover:bg-navy/90 transition-colors">
+            <button onClick={handleCreateSupplier} className="px-4 py-1.5 bg-gold/15 text-gold rounded text-sm font-medium hover:bg-gold/25 transition-all border border-gold/20">
               Save Supplier
             </button>
           </div>
@@ -392,19 +392,19 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
       </div>
 
       <div>
-        <label className="text-xs text-muted-foreground block mb-1">Description *</label>
+        <label className="text-xs text-white/40 block mb-1">Description *</label>
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What was purchased?"
-          className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+          className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Amount *</label>
+          <label className="text-xs text-white/40 block mb-1">Amount *</label>
           <input
             type="number"
             step="0.01"
@@ -412,15 +412,15 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Payment Method</label>
+          <label className="text-xs text-white/40 block mb-1">Payment Method</label>
           <select
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           >
             {PAYMENT_METHODS.filter((pm) => pm.value !== 'split').map((pm) => (
               <option key={pm.value} value={pm.value}>{pm.label}</option>
@@ -431,23 +431,23 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Invoice Number (optional)</label>
+          <label className="text-xs text-white/40 block mb-1">Invoice Number (optional)</label>
           <input
             type="text"
             value={invoiceNumber}
             onChange={(e) => setInvoiceNumber(e.target.value)}
             placeholder="INV-001"
-            className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground block mb-1">Notes (optional)</label>
+          <label className="text-xs text-white/40 block mb-1">Notes (optional)</label>
           <input
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Any notes..."
-            className="w-full px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gold/40 bg-white"
+            className="w-full px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
           />
         </div>
       </div>
@@ -455,7 +455,7 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
       <button
         onClick={handleSubmit}
         disabled={submitting || !description.trim() || !amount || parseFloat(amount) <= 0}
-        className="w-full px-6 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors"
+        className="w-full px-6 py-2 bg-gradient-to-r from-gold/90 to-gold text-navy-deep rounded-lg text-sm font-bold hover:from-gold hover:to-gold/90 disabled:opacity-40 transition-all shadow-lg shadow-gold/20"
       >
         {submitting ? 'Recording...' : 'Record Expense'}
       </button>
@@ -471,16 +471,16 @@ export default function RecordsTab({ shiftId }: { shiftId: string }) {
       <div className="flex gap-1 mb-4">
         <button
           onClick={() => setSubTab('order')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            subTab === 'order' ? 'bg-navy text-silver' : 'text-muted-foreground hover:text-navy bg-white border border-border'
+          className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+            subTab === 'order' ? 'bg-gold/20 text-gold border border-gold/30' : 'text-white/40 hover:text-silver-soft border border-white/10 hover:border-gold/20 bg-white/5'
           }`}
         >
           Manual Order
         </button>
         <button
           onClick={() => setSubTab('expense')}
-          className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-            subTab === 'expense' ? 'bg-navy text-silver' : 'text-muted-foreground hover:text-navy bg-white border border-border'
+          className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-all ${
+            subTab === 'expense' ? 'bg-gold/20 text-gold border border-gold/30' : 'text-white/40 hover:text-silver-soft border border-white/10 hover:border-gold/20 bg-white/5'
           }`}
         >
           Expense

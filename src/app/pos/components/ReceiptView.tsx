@@ -75,66 +75,66 @@ export default function ReceiptView({ receipt, onNewSale }: Props) {
 
   return (
     <div className="flex items-start justify-center min-h-[60vh] pt-8" id="pos-receipt">
-      <div className="bg-white rounded-xl border border-border shadow-sm w-full max-w-sm">
-        <div className="text-center p-6 border-b border-dashed border-border">
+      <div className="pos-glass-strong rounded-xl w-full max-w-sm">
+        <div className="text-center p-6 border-b border-dashed border-white/10">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/30">
+            <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/40">
               <img src="/gumusgunes-logo.jpeg" alt="" className="h-full w-full object-cover" />
             </div>
-            <span className="font-display text-lg font-semibold text-navy">Gümüş <span className="gold-text">Güneş</span></span>
+            <span className="font-display text-lg font-semibold text-silver-soft">Gümüş <span className="gold-text">Güneş</span></span>
           </div>
-          <p className="text-xs text-muted-foreground">In-store Purchase</p>
-          <p className="text-sm font-bold text-navy font-mono mt-2 tracking-wider">{receipt.receiptNumber}</p>
-          <p className="text-xs text-muted-foreground">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          <p className="text-xs text-white/50">In-store Purchase</p>
+          <p className="text-sm font-bold text-gold font-mono mt-2 tracking-wider">{receipt.receiptNumber}</p>
+          <p className="text-xs text-white/40">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
         </div>
-        <div className="p-4 space-y-2 border-b border-dashed border-border">
+        <div className="p-4 space-y-2 border-b border-dashed border-white/10">
           {receipt.items.map((item, i) => (
             <div key={item.id || i} className="flex items-center justify-between text-sm">
               <div className="flex-1 min-w-0 mr-2">
-                <p className="font-medium text-navy truncate">{item.product.name}</p>
-                <p className="text-xs text-muted-foreground font-mono">{item.product.sku} × {item.quantity}</p>
+                <p className="font-medium text-silver-soft truncate">{item.product.name}</p>
+                <p className="text-xs text-white/40 font-mono">{item.product.sku} × {item.quantity}</p>
               </div>
-              <span className="font-medium text-navy whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
+              <span className="font-medium text-silver-soft whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
         </div>
-        <div className="p-4 space-y-1 border-b border-dashed border-border">
-          <div className="flex justify-between text-sm text-muted-foreground"><span>Subtotal</span><span>${receipt.subtotal.toFixed(2)}</span></div>
-          {receipt.discount > 0 && <div className="flex justify-between text-sm text-green-600"><span>Discount</span><span>-${receipt.discount.toFixed(2)}</span></div>}
-          <div className="flex justify-between text-lg font-bold text-navy pt-1 border-t border-border"><span>Total</span><span>${receipt.total.toFixed(2)}</span></div>
+        <div className="p-4 space-y-1 border-b border-dashed border-white/10">
+          <div className="flex justify-between text-sm text-white/40"><span>Subtotal</span><span>${receipt.subtotal.toFixed(2)}</span></div>
+          {receipt.discount > 0 && <div className="flex justify-between text-sm text-emerald-400"><span>Discount</span><span>-${receipt.discount.toFixed(2)}</span></div>}
+          <div className="flex justify-between text-lg font-bold text-gold pt-1 border-t border-white/10"><span>Total</span><span>${receipt.total.toFixed(2)}</span></div>
         </div>
-        <div className="p-4 space-y-1 border-b border-dashed border-border bg-gray-50/50">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Payment</p>
+        <div className="p-4 space-y-1 border-b border-dashed border-white/10 bg-white/5">
+          <p className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-2">Payment</p>
           {receipt.paymentMethod === 'cash' && (
             <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-green-600" /> Cash</span>
-              <span className="font-medium text-navy">${receipt.total.toFixed(2)}</span>
+              <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-emerald-400" /> Cash</span>
+              <span className="font-medium text-silver-soft">${receipt.total.toFixed(2)}</span>
             </div>
           )}
           {receipt.paymentMethod === 'card' && (
             <div className="flex justify-between text-sm">
-              <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-blue-600" /> Card</span>
-              <span className="font-medium text-navy">${receipt.total.toFixed(2)}</span>
+              <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-blue-400" /> Card</span>
+              <span className="font-medium text-silver-soft">${receipt.total.toFixed(2)}</span>
             </div>
           )}
           {receipt.paymentMethod === 'split' && (
             <>
               <div className="flex justify-between text-sm">
-                <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-green-600" /> Cash</span>
-                <span className="font-medium text-navy">${(receipt.cashAmount || 0).toFixed(2)}</span>
+                <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-emerald-400" /> Cash</span>
+                <span className="font-medium text-silver-soft">${(receipt.cashAmount || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-blue-600" /> Card</span>
-                <span className="font-medium text-navy">${(receipt.cardAmount || 0).toFixed(2)}</span>
+                <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-blue-400" /> Card</span>
+                <span className="font-medium text-silver-soft">${(receipt.cardAmount || 0).toFixed(2)}</span>
               </div>
             </>
           )}
         </div>
         <div className="p-4 space-y-2">
-          <button onClick={printReceipt} className="w-full px-6 py-2.5 border border-border rounded-lg text-sm text-navy font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+          <button onClick={printReceipt} className="w-full px-6 py-2.5 border border-white/10 rounded-lg text-sm text-silver-soft font-medium hover:bg-white/5 transition-all flex items-center justify-center gap-2">
             <Printer className="h-4 w-4" /> Print Receipt
           </button>
-          <button onClick={onNewSale} className="w-full px-6 py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">New Sale</button>
+          <button onClick={onNewSale} className="w-full px-6 py-2.5 bg-gradient-to-r from-gold/90 to-gold text-navy-deep rounded-lg text-sm font-bold hover:from-gold hover:to-gold/90 transition-all shadow-lg shadow-gold/20">New Sale</button>
         </div>
       </div>
     </div>

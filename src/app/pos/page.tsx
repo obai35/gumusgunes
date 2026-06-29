@@ -224,36 +224,40 @@ export default function POSPage() {
 
   if (!hydrated || !token) return null
 
-  if (pos.receipt) return <ReceiptView receipt={pos.receipt} onNewSale={pos.newSale} />
+  if (pos.receipt) return (
+    <div className="navy-radial min-h-screen">
+      <ReceiptView receipt={pos.receipt} onNewSale={pos.newSale} />
+    </div>
+  )
 
   if (shiftSummary) {
     return (
-      <div className="flex items-start justify-center min-h-[60vh] pt-8">
-        <div className="bg-white rounded-xl border border-shadow w-full max-w-md p-6 text-center">
-          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl text-green-600">✓</span>
+      <div className="navy-radial min-h-screen flex items-start justify-center pt-8">
+        <div className="pos-glass-strong rounded-xl w-full max-w-md p-6 text-center">
+          <div className="w-14 h-14 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl text-emerald-400">✓</span>
           </div>
-          <h2 className="text-xl font-bold text-navy mb-2">Shift Closed</h2>
-          <p className="text-sm text-muted-foreground mb-6">Shift has been closed successfully</p>
-          <div className="space-y-2 text-sm text-left bg-gray-50 rounded-lg p-4 mb-6">
+          <h2 className="text-xl font-bold text-silver-soft mb-2">Shift Closed</h2>
+          <p className="text-sm text-white/50 mb-6">Shift has been closed successfully</p>
+          <div className="space-y-2 text-sm text-left bg-white/5 rounded-lg p-4 mb-6">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Starting Cash</span>
-              <span className="font-medium text-navy">${(shiftSummary.startingCash || 0).toFixed(2)}</span>
+              <span className="text-white/50">Starting Cash</span>
+              <span className="font-medium text-silver-soft">${(shiftSummary.startingCash || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Ending Cash</span>
-              <span className="font-medium text-navy">${(shiftSummary.endingCash || 0).toFixed(2)}</span>
+              <span className="text-white/50">Ending Cash</span>
+              <span className="font-medium text-silver-soft">${(shiftSummary.endingCash || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Total Sales</span>
-              <span className="font-medium text-navy">${(shiftSummary.totalSales || 0).toFixed(2)}</span>
+              <span className="text-white/50">Total Sales</span>
+              <span className="font-medium text-silver-soft">${(shiftSummary.totalSales || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Order Count</span>
-              <span className="font-medium text-navy">{shiftSummary.orderCount || 0}</span>
+              <span className="text-white/50">Order Count</span>
+              <span className="font-medium text-silver-soft">{shiftSummary.orderCount || 0}</span>
             </div>
           </div>
-          <button onClick={() => { setShiftSummary(null); setView('pos') }} className="w-full px-6 py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">
+          <button onClick={() => { setShiftSummary(null); setView('pos') }} className="w-full px-6 py-2.5 bg-gold text-navy-deep rounded-lg text-sm font-medium hover:bg-gold/90 transition-all font-semibold">
             Start New Shift
           </button>
         </div>
@@ -263,29 +267,33 @@ export default function POSPage() {
 
   if (!shift && view === 'pos') {
     return (
-      <ShiftStartModal
-        startingCash={startingCash}
-        onStartingCashChange={setStartingCash}
-        onStartShift={handleStartShift}
-      />
+      <div className="navy-radial min-h-screen">
+        <ShiftStartModal
+          startingCash={startingCash}
+          onStartingCashChange={setStartingCash}
+          onStartShift={handleStartShift}
+        />
+      </div>
     )
   }
 
   if (!shift) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-sm text-muted-foreground">
-        Start a shift to access this section
+      <div className="navy-radial min-h-screen flex items-center justify-center">
+        <div className="text-white/50 text-sm">Start a shift to access this section</div>
       </div>
     )
   }
 
   if (view === 'assessment') {
     return (
-      <AssessmentView
-        assessmentData={assessmentData}
-        loading={assessmentLoading}
-        onBack={() => setView('pos')}
-      />
+      <div className="navy-radial min-h-screen p-6">
+        <AssessmentView
+          assessmentData={assessmentData}
+          loading={assessmentLoading}
+          onBack={() => setView('pos')}
+        />
+      </div>
     )
   }
 
