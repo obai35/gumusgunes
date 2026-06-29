@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
         } : {}),
       },
       select: { id: true, name: true, price: true, stock: true, imageUrl: true, sku: true },
-      take: 50,
+      take: 20,
       orderBy: { name: 'asc' },
     })
     return NextResponse.json(products)

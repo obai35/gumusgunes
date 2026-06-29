@@ -17,11 +17,10 @@ export async function POST(req: Request) {
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!paymentMethod) return NextResponse.json({ error: 'Payment method is required' }, { status: 400 })
 
-    if (shiftId) {
-      const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
-      if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
-      if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
-    }
+    if (!shiftId) return NextResponse.json({ error: 'An open shift is required to process sales' }, { status: 400 })
+    const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+    if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
+    if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
 
     const products = await prisma.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
@@ -30,7 +29,7 @@ export async function POST(req: Request) {
     for (const item of items) {
       const product = productMap.get(item.productId)
       if (!product) return NextResponse.json({ error: `Product ${item.productId} not found` }, { status: 400 })
-      if (product.stock < item.quantity) return NextResponse.json({ error: `Insufficient stock for ${product.name}` }, { status: 400 })
+      if (product.stock < item.quantity) return NextResponse.json({ error: `Insufficient stock for ${product.name}. Available: ${product.stock}, requested: ${item.quantity}` }, { status: 400 })
       subtotal += product.price * item.quantity
     }
 
