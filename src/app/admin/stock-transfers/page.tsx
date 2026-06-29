@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { ArrowLeftRight, Building2, History, Search, Plus, X } from 'lucide-react'
+import { useAdminAuth } from '@/lib/admin-auth-store'
 
 type Tab = 'transfer' | 'view' | 'history'
 
@@ -37,6 +38,7 @@ export default function StockTransfersPage() {
 }
 
 function NewTransfer() {
+  const { user } = useAdminAuth()
   const [branches, setBranches] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [fromType, setFromType] = useState('warehouse')
@@ -49,8 +51,8 @@ function NewTransfer() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetch('/api/admin/branches').then((r) => r.json()).then(setBranches).catch(() => {})
-    fetch('/api/admin/products').then((r) => r.json()).then((data) => setProducts(data.products || data)).catch(() => {})
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
+    fetch('/api/admin/products').then((r) => r.json()).then((data) => setProducts(data.products || [])).catch(() => {})
   }, [])
 
   function addItem(productId: string) {
@@ -84,7 +86,7 @@ function NewTransfer() {
           toType, toId: toType === 'branch' ? toId : undefined,
           items: transferItems.map((i) => ({ productId: i.productId, quantity: i.quantity })),
           note: note || undefined,
-          createdById: document.cookie.split('adminId=')[1]?.split(';')[0] || '',
+          createdById: user?.id || '',
         }),
       })
       if (res.ok) { toast.success('Transfer completed'); setTransferItems([]); setNote('') }
@@ -189,7 +191,7 @@ function BranchStockView() {
   const [allData, setAllData] = useState<any>(null)
 
   useEffect(() => {
-    fetch('/api/admin/branches').then((r) => r.json()).then(setBranches).catch(() => {})
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -268,7 +270,7 @@ function TransferHistory() {
   const [branchFilter, setBranchFilter] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/branches').then((r) => r.json()).then(setBranches).catch(() => {})
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
   }, [])
 
   useEffect(() => {
