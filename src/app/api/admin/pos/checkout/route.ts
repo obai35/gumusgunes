@@ -25,15 +25,20 @@ export async function POST(req: Request) {
     const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
+    const branchId = shift.branchId
 
-    const products = await prisma.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
+    const products = await prisma.product.findMany({ where: { id: { in: items.map((i: any) => i.productId ) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
+
+    const branchStocks = await prisma.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let subtotal = 0
     for (const item of items) {
       const product = productMap.get(item.productId)
       if (!product) return NextResponse.json({ error: `Product ${item.productId} not found` }, { status: 400 })
-      if (product.stock < item.quantity) return NextResponse.json({ error: `Insufficient stock for ${product.name}. Available: ${product.stock}, requested: ${item.quantity}` }, { status: 400 })
+      const branchQty = branchStockMap.get(item.productId) || 0
+      if (branchQty < item.quantity) return NextResponse.json({ error: `Insufficient stock at branch for ${product.name}. Branch: ${branchQty}, requested: ${item.quantity}` }, { status: 400 })
       subtotal += product.price * item.quantity
     }
 
@@ -85,10 +90,13 @@ export async function POST(req: Request) {
 
     const order = await prisma.$transaction(async (tx) => {
       for (const item of items) {
-        const product = productMap.get(item.productId)!
-        await tx.product.update({ where: { id: item.productId }, data: { stock: { decrement: item.quantity } } })
+        await tx.branchStock.upsert({
+          where: { branchId_productId: { branchId, productId: item.productId } },
+          create: { branchId, productId: item.productId, quantity: 0 },
+          update: { quantity: { decrement: item.quantity } },
+        })
         await tx.inventoryLog.create({
-          data: { productId: item.productId, change: -item.quantity, type: 'SALE', note: 'POS sale' },
+          data: { productId: item.productId, change: -item.quantity, type: 'SALE', note: `POS sale - Branch ${branchId}` },
         })
       }
 

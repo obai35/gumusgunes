@@ -25,15 +25,21 @@ export async function POST(req: Request) {
     const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
+    const branchId = shift.branchId
 
     const products = await prisma.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
+
+    const branchStocks = await prisma.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let totalAmount = 0
     for (const item of items) {
       const product = productMap.get(item.productId)
       if (!product) return NextResponse.json({ error: `Product ${item.productId} not found` }, { status: 400 })
       const qty = item.quantity || 1
+      const branchQty = branchStockMap.get(item.productId) || 0
+      if (branchQty < qty) return NextResponse.json({ error: `Insufficient stock at branch for ${product.name}. Branch: ${branchQty}, requested: ${qty}` }, { status: 400 })
       const price = item.price || product.price
       totalAmount += price * qty
     }
@@ -51,11 +57,14 @@ export async function POST(req: Request) {
 
     const order = await prisma.$transaction(async (tx) => {
       for (const item of items) {
-        const product = productMap.get(item.productId)!
         const qty = item.quantity || 1
-        await tx.product.update({ where: { id: item.productId }, data: { stock: { decrement: qty } } })
+        await tx.branchStock.upsert({
+          where: { branchId_productId: { branchId, productId: item.productId } },
+          create: { branchId, productId: item.productId, quantity: 0 },
+          update: { quantity: { decrement: qty } },
+        })
         await tx.inventoryLog.create({
-          data: { productId: item.productId, change: -qty, type: 'SALE', note: 'Manual POS order' },
+          data: { productId: item.productId, change: -qty, type: 'SALE', note: `Manual POS order - Branch ${branchId}` },
         })
       }
 

@@ -6,7 +6,7 @@ import { useAdminAuth } from '@/lib/admin-auth-store'
 import { AdminChat } from './AdminChat'
 import {
   LayoutDashboard, ShoppingBag, Package, Warehouse, ShoppingCart, Tag, LogOut, Sun, Receipt, Settings,
-  Store, Users, Shield, Calculator,
+  Store, Users, Shield, Calculator, ArrowLeftRight,
 } from 'lucide-react'
 
 const links = [
@@ -19,6 +19,7 @@ const links = [
   { href: '/admin/discounts', label: 'Discounts', icon: Tag },
   { href: '/admin/editor', label: 'Site Editor', icon: Store },
   { href: '/admin/branches', label: 'Branches', icon: Users },
+  { href: '/admin/stock-transfers', label: 'Stock Transfers', icon: ArrowLeftRight },
   { href: '/admin/pos', label: 'POS', icon: ShoppingCart },
   { href: '/admin/security', label: 'Security', icon: Shield },
   { href: '/admin/settings', label: 'Settings', icon: Settings },

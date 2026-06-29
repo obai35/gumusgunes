@@ -39,6 +39,8 @@ model Product {
   backInStock    BackInStock[]
   inventoryLogs  InventoryLog[]
   returnItems    ReturnItem[]
+  stocks         BranchStock[]
+  transfers      StockTransfer[]
 }
 
 model Category {
@@ -220,6 +222,34 @@ model SavedCard {
   createdAt  DateTime @default(now())
 }
 
+model BranchStock {
+  id        String   @id @default(cuid())
+  branchId  String
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([branchId, productId])
+}
+
+model StockTransfer {
+  id          String   @id @default(cuid())
+  fromType    String   // warehouse, branch
+  fromId      String?  // branchId if fromType=branch
+  toType      String   // warehouse, branch
+  toId        String?  // branchId if toType=branch
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  note        String?
+  createdById String
+  createdBy   Admin    @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+}
+
 model Admin {
   id             String   @id @default(cuid())
   email          String   @unique
@@ -231,6 +261,7 @@ model Admin {
   createdAt      DateTime @default(now())
   processedOrders Order[]
   processedReturns Return[]
+  stockTransfers   StockTransfer[]
 }
 
 model InventoryLog {
@@ -313,13 +344,14 @@ model Shift {
 }
 
 model Branch {
-  id        String   @id @default(cuid())
+  id        String        @id @default(cuid())
   name      String
-  email     String   @unique
+  email     String        @unique
   password  String
   phone     String?
   address   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
   shifts    Shift[]
+  stocks    BranchStock[]
 }

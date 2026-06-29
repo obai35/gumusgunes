@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { PrismaClient } from '@prisma/client'
 import { ProductForm } from '../../ProductForm'
+import StockHistory from '../StockHistory'
 
 const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
@@ -26,6 +27,7 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
           isFeatured: product.isFeatured, isNew: product.isNew, isBestseller: product.isBestseller,
         }}
       />
+      <StockHistory productId={product.id} />
     </div>
   )
 }
