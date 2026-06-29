@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const { email, password, totpToken } = await req.json()
     if (!email || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-    const admin = await db.admin.findUnique({ where: { email } })
+    const admin = await db.admin.findUnique({ where: { email }, include: { roleRel: true } })
     if (!admin) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
 
     const valid = await verifyPassword(password, admin.password)
@@ -20,7 +20,8 @@ export async function POST(req: Request) {
     }
 
     const token = signAdminToken({ adminId: admin.id, email: admin.email })
-    return NextResponse.json({ token, user: { id: admin.id, email: admin.email, name: admin.name } })
+    const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) : []
+    return NextResponse.json({ token, user: { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions } })
   } catch {
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }

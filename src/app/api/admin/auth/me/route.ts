@@ -14,12 +14,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
 
-  const admin = await db.admin.findUnique({ where: { id: payload.adminId } })
+  const admin = await db.admin.findUnique({ where: { id: payload.adminId }, include: { roleRel: true } })
   if (!admin) {
     return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
   }
 
-  const { password: _, ...safeAdmin } = admin
+  const { password: _, roleRel, ...safeAdmin } = admin
+  const permissions = roleRel ? JSON.parse(roleRel.permissions) : []
 
-  return NextResponse.json({ admin: safeAdmin })
+  return NextResponse.json({ admin: { ...safeAdmin, role: roleRel?.name || 'admin', permissions } })
 }

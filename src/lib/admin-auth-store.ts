@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-type AdminUser = { id: string; email: string; name: string }
+type AdminUser = { id: string; email: string; name: string; role?: string; permissions?: string[] }
 type AdminAuthState = {
   token: string | null
   user: AdminUser | null

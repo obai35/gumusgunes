@@ -250,12 +250,22 @@ model StockTransfer {
   createdAt   DateTime @default(now())
 }
 
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  permissions String   @default("[]")
+  createdAt   DateTime @default(now())
+  admins      Admin[]
+}
+
 model Admin {
   id             String   @id @default(cuid())
   email          String   @unique
   name           String
   password       String
   role           String   @default("admin")
+  roleId         String?
+  roleRel        Role?    @relation(fields: [roleId], references: [id])
   totpSecret     String?
   totpEnabled    Boolean  @default(false)
   createdAt      DateTime @default(now())

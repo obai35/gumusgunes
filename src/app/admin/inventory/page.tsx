@@ -43,7 +43,7 @@ export default async function InventoryPage() {
           </thead>
           <tbody>
             {products.map((p) => (
-              <tr key={p.id} className="border-b border-border/50 hover:bg-gray-50/50">
+              <tr key={p.id} className="border-b border-border/50 hover:bg-gray-50/50 cursor-pointer" onClick={() => window.location.href = `/admin/products/${p.id}/edit`}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
@@ -53,7 +53,7 @@ export default async function InventoryPage() {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{p.sku}</td>
-                <td className="px-4 py-3 text-muted-foreground">{p.category.name}</td>
+                <td className="px-4 py-3 text-muted-foreground">{p.category?.name}</td>
                 <td className="px-4 py-3 font-medium text-navy">{p.stock}</td>
                 <td className="px-4 py-3">
                   {p.stock === 0 ? (
