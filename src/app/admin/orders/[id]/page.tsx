@@ -1,7 +1,11 @@
 import { notFound } from 'next/navigation'
 import { PrismaClient } from '@prisma/client'
+import { cookies } from 'next/headers'
 import { OrderStatusUpdater } from './OrderStatusUpdater'
 import { PaymentVerification } from './PaymentVerification'
+import ReturnsSection from './ReturnsSection'
+import EditHistory from './EditHistory'
+import OrderDetailActions from './OrderDetailActions'
 
 const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
@@ -13,6 +17,17 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
     include: { items: { include: { product: true } }, discount: true },
   })
   if (!order) notFound()
+
+  const cookieStore = await cookies()
+  const adminId = cookieStore.get('adminId')?.value || ''
+
+  const items = order.items.map((i) => ({
+    id: i.id,
+    productId: i.productId,
+    product: { name: i.product.name },
+    quantity: i.quantity,
+    price: i.price,
+  }))
 
   return (
     <div>
@@ -54,12 +69,16 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
             </dl>
           </div>
 
+          <EditHistory editHistory={order.editHistory} />
+
           {order.notes && (
             <div className="bg-white rounded-xl border border-border p-5">
               <h2 className="font-display font-semibold text-navy mb-4">Notes</h2>
               <p className="text-sm text-muted-foreground">{order.notes}</p>
             </div>
           )}
+
+          <ReturnsSection orderId={order.id} />
         </div>
 
         <div className="space-y-4">
@@ -73,6 +92,9 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
               )}
               <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="text-navy">${order.tax.toFixed(2)}</dd></div>
               <div className="flex justify-between pt-2 border-t border-border font-semibold"><dt className="text-navy">Total</dt><dd className="text-navy">${order.totalAmount.toFixed(2)}</dd></div>
+              {order.refundedAmount > 0 && (
+                <div className="flex justify-between pt-1"><dt className="text-red-600">Refunded</dt><dd className="text-red-600">-${order.refundedAmount.toFixed(2)}</dd></div>
+              )}
             </dl>
           </div>
           <div className="bg-white rounded-xl border border-border p-5 space-y-2">
@@ -104,6 +126,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
             )}
             <PaymentVerification orderId={order.id} paymentStatus={order.paymentStatus} />
           </div>
+          <OrderDetailActions orderId={order.id} items={items} customer={{ fullName: order.fullName, phone: order.phone, address: order.address, city: order.city, postalCode: order.postalCode, notes: order.notes }} adminId={adminId} />
         </div>
       </div>
     </div>
