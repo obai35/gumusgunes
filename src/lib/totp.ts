@@ -1,10 +1,10 @@
-import { TOTP } from 'otplib'
+import { authenticator, totp } from 'otplib'
 import qrcode from 'qrcode'
 
-const totp = new TOTP({ step: 30, window: 1 })
+authenticator.options = { step: 30, window: 1 }
 
 export function generateTotpSecret(): string {
-  return totp.generateSecret()
+  return authenticator.generateSecret()
 }
 
 export function generateTotpQrCode(secret: string, email: string): Promise<string> {
