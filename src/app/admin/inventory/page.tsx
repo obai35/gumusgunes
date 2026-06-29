@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PrismaClient } from '@prisma/client'
 import { Package, ArrowUpDown } from 'lucide-react'
+import ClickableRow from './ClickableRow'
 
 const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
@@ -43,7 +44,7 @@ export default async function InventoryPage() {
           </thead>
           <tbody>
             {products.map((p) => (
-              <tr key={p.id} className="border-b border-border/50 hover:bg-gray-50/50 cursor-pointer" onClick={() => window.location.href = `/admin/products/${p.id}/edit`}>
+              <ClickableRow key={p.id} href={`/admin/products/${p.id}/edit`}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
@@ -64,7 +65,7 @@ export default async function InventoryPage() {
                     <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">In Stock</span>
                   )}
                 </td>
-              </tr>
+              </ClickableRow>
             ))}
           </tbody>
         </table>
