@@ -11,6 +11,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (!editedById) return NextResponse.json({ error: 'Edited by is required' }, { status: 400 })
 
+    const admin = await prisma.admin.findUnique({ where: { id: editedById } })
+    if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
+
     const order = await prisma.order.findUnique({
       where: { id },
       include: { items: true },

@@ -94,7 +94,9 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
                     className="w-16 px-2 py-1 border border-border rounded text-sm text-center"
                   />
                 )}
-                <span className="text-sm text-muted-foreground w-20 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="text-sm text-muted-foreground w-20 text-right">
+                  ${(item.price * (selectedItems[item.productId] || item.quantity)).toFixed(2)}
+                </span>
               </div>
             ))}
           </div>

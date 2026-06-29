@@ -14,6 +14,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (!refundMethod) return NextResponse.json({ error: 'Refund method is required' }, { status: 400 })
     if (!processedById) return NextResponse.json({ error: 'Processed by is required' }, { status: 400 })
 
+    const admin = await prisma.admin.findUnique({ where: { id: processedById } })
+    if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
+
     const order = await prisma.order.findUnique({ where: { id }, include: { items: true } })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 

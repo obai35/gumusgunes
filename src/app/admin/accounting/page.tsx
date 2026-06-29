@@ -61,7 +61,7 @@ function OverviewTab() {
           { label: "Today's Orders", value: data.todayOrders, color: 'text-navy' },
           { label: 'Pending Orders', value: data.pendingOrders, color: 'text-yellow-600' },
           { label: 'Unreconciled Payments', value: data.unreconciledOrders, color: 'text-red-600' },
-          { label: 'Pending Refunds', value: data.pendingRefunds ?? 0, color: 'text-red-600' },
+          { label: "Today's Refunds", value: data.pendingRefunds ?? 0, color: 'text-red-600' },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl border border-border p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{s.label}</p>
