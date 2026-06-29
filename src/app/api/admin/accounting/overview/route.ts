@@ -14,12 +14,16 @@ export async function GET() {
       unreconciledOrders,
       openShifts,
       totalRevenue,
+      pendingRefunds,
     ] = await Promise.all([
       prisma.order.count({ where: { createdAt: { gte: today } } }),
       prisma.order.count({ where: { status: { notIn: ['delivered', 'cancelled'] } } }),
       prisma.order.count({ where: { reconciledAt: null, paymentStatus: 'paid' } }),
       prisma.shift.count({ where: { isOpen: true } }),
       prisma.order.aggregate({ where: { createdAt: { gte: today } }, _sum: { totalAmount: true } }),
+      prisma.return.count({
+        where: { refundMethod: { not: 'no_refund' }, createdAt: { gte: today } },
+      }),
     ])
 
     const openShiftsList = await prisma.shift.findMany({
@@ -32,6 +36,7 @@ export async function GET() {
       todayRevenue: totalRevenue._sum.totalAmount || 0,
       pendingOrders,
       unreconciledOrders,
+      pendingRefunds,
       openShifts: openShiftsList.length,
       openShiftBranches: openShiftsList.map((s: any) => s.branch.name),
     })
