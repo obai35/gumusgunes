@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { DollarSign, CreditCard, SplitSquareVertical } from 'lucide-react'
 import type { PaymentMethod } from '../types'
 
@@ -14,7 +15,7 @@ type Props = {
   change: number
 }
 
-export default function PaymentSection({
+function PaymentSection({
   paymentMethod, onPaymentMethodChange,
   cashAmount, onCashChange,
   cardAmount, onCardChange,
@@ -94,3 +95,5 @@ export default function PaymentSection({
     </div>
   )
 }
+
+export default memo(PaymentSection)

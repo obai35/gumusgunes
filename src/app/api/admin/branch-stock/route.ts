@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
       const stocks = await prisma.branchStock.findMany({
         include: { branch: { select: { name: true } }, product: { select: { name: true, sku: true, stock: true } } },
         orderBy: { branchId: 'asc' },
+        take: 200,
       })
       const grouped: Record<string, any> = {}
       for (const s of stocks) {
@@ -27,6 +28,7 @@ export async function GET(req: NextRequest) {
       where: { branchId },
       include: { product: { select: { name: true, sku: true, price: true, stock: true } } },
       orderBy: { product: { name: 'asc' } },
+      take: 200,
     })
 
     return NextResponse.json(stocks.map((s) => ({

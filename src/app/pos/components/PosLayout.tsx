@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { ReactNode } from 'react'
 import { LogOut, ClipboardList, Clock, ShoppingCart, Search, FileText, BarChart3 } from 'lucide-react'
 import type { Shift } from '../types'
@@ -24,7 +25,7 @@ const tabs: { id: TabId; label: string; icon: typeof ShoppingCart }[] = [
   { id: 'hall-sale', label: 'Hall Sale', icon: BarChart3 },
 ]
 
-export default function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, children }: Props) {
+function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, children }: Props) {
   return (
     <div className="flex flex-col h-full pos-interface navy-radial">
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
@@ -82,3 +83,5 @@ export default function PosLayout({ branchName, shift, activeTab, onTabChange, o
     </div>
   )
 }
+
+export default memo(PosLayout)

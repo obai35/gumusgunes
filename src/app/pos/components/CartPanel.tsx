@@ -1,7 +1,8 @@
 'use client'
 
+import { memo } from 'react'
 import { ShoppingCart } from 'lucide-react'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { CartItem as CartItemType } from '../types'
 import CartItemComponent from './CartItem'
 
@@ -15,7 +16,7 @@ type Props = {
   checkoutButton: ReactNode
 }
 
-export default function CartPanel({ cart, onUpdateQuantity, onRemove, discountSection, paymentSection, totalsDisplay, checkoutButton }: Props) {
+function CartPanel({ cart, onUpdateQuantity, onRemove, discountSection, paymentSection, totalsDisplay, checkoutButton }: Props) {
   return (
     <div className="w-[380px] flex flex-col pos-glass-strong rounded-xl shrink-0 self-start sticky top-0 max-h-[calc(100dvh-3rem)]">
       <div className="p-4 flex flex-col h-full">
@@ -47,3 +48,5 @@ export default function CartPanel({ cart, onUpdateQuantity, onRemove, discountSe
     </div>
   )
 }
+
+export default memo(CartPanel)

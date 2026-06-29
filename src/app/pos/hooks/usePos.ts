@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 import type { Product, CartItem, PaymentMethod, AppliedDiscount, ReceiptData } from '../types'
 
@@ -14,12 +14,12 @@ export function usePos() {
   const [cardAmount, setCardAmount] = useState('')
   const [receipt, setReceipt] = useState<ReceiptData | null>(null)
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const discountAmount = appliedDiscount?.amount || 0
-  const total = Math.max(0, subtotal - discountAmount)
-  const parsedCash = parseFloat(cashAmount) || 0
-  const parsedCard = parseFloat(cardAmount) || 0
-  const change = paymentMethod === 'cash' ? Math.max(0, parsedCash - total) : 0
+  const total = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount])
+  const parsedCash = useMemo(() => parseFloat(cashAmount) || 0, [cashAmount])
+  const parsedCard = useMemo(() => parseFloat(cardAmount) || 0, [cardAmount])
+  const change = useMemo(() => paymentMethod === 'cash' ? Math.max(0, parsedCash - total) : 0, [paymentMethod, parsedCash, total])
 
   const addToCart = useCallback((product: Product) => {
     if (product.stock < 1) { toast.error('Out of stock'); return }

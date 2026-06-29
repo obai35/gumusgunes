@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/lib/admin-auth-store'
@@ -25,7 +26,7 @@ const links = [
   { href: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
-export function Sidebar() {
+export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { logout } = useAdminAuth()
@@ -67,4 +68,4 @@ export function Sidebar() {
       </div>
     </aside>
   )
-}
+})

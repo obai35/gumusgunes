@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import type { PaymentMethod } from '../types'
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
   onClick: () => void
 }
 
-export default function CheckoutButton({ total, paymentMethod, disabled, loading, onClick }: Props) {
+function CheckoutButton({ total, paymentMethod, disabled, loading, onClick }: Props) {
   const label = loading
     ? 'Processing...'
     : paymentMethod === 'cash'
@@ -29,3 +30,5 @@ export default function CheckoutButton({ total, paymentMethod, disabled, loading
     </button>
   )
 }
+
+export default memo(CheckoutButton)

@@ -1,12 +1,14 @@
 'use client'
 
+import { memo } from 'react'
+
 type Props = {
   subtotal: number
   discountAmount: number
   total: number
 }
 
-export default function TotalsDisplay({ subtotal, discountAmount, total }: Props) {
+function TotalsDisplay({ subtotal, discountAmount, total }: Props) {
   return (
     <div className="border-t border-white/10 pt-3 space-y-1">
       <div className="flex justify-between text-sm text-white/40">
@@ -26,3 +28,5 @@ export default function TotalsDisplay({ subtotal, discountAmount, total }: Props
     </div>
   )
 }
+
+export default memo(TotalsDisplay)

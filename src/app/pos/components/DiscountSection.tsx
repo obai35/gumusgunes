@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { X } from 'lucide-react'
 import type { AppliedDiscount } from '../types'
 
@@ -12,9 +13,11 @@ type Props = {
   discountAmount: number
 }
 
-export default function DiscountSection({
-  discountCode, onDiscountCodeChange, onApplyDiscount,
-  appliedDiscount, onRemoveDiscount, discountAmount,
+function DiscountSection({
+  discountCode, onDiscountCodeChange,
+  onApplyDiscount,
+  appliedDiscount, onRemoveDiscount,
+  discountAmount,
 }: Props) {
   if (appliedDiscount) {
     return (
@@ -43,3 +46,5 @@ export default function DiscountSection({
     </div>
   )
 }
+
+export default memo(DiscountSection)

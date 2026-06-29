@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { usePosAuth } from '@/lib/pos-auth-store'
@@ -71,16 +71,17 @@ export default function POSPage() {
   }, [view, shift?.id])
 
   useEffect(() => {
+    const controller = new AbortController()
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(pos.search)}`)
+        const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(pos.search)}`, { signal: controller.signal })
         if (res.ok) pos.setProducts(await res.json())
       } catch {}
     }, pos.search.length < 1 ? 0 : 300)
-    return () => clearTimeout(timer)
+    return () => { clearTimeout(timer); controller.abort() }
   }, [pos.search])
 
-  async function handleStartShift() {
+  const handleStartShift = useCallback(async () => {
     if (!user?.branchId) return
     try {
       const res = await fetch('/api/admin/pos/shifts/start', {
@@ -99,9 +100,9 @@ export default function POSPage() {
         toast.error(err.error || 'Failed to start shift')
       }
     } catch { toast.error('Failed to start shift') }
-  }
+  }, [user?.branchId, startingCash])
 
-  async function handleCloseShift() {
+  const handleCloseShift = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/pos/shifts/close', {
         method: 'POST',
@@ -121,9 +122,9 @@ export default function POSPage() {
         toast.error(err.error || 'Failed to close shift')
       }
     } catch { toast.error('Failed to close shift') }
-  }
+  }, [shift?.id, endingCash, shiftNotes])
 
-  async function handleApplyDiscount() {
+  const handleApplyDiscount = useCallback(async () => {
     if (!pos.discountCode.trim()) return
     try {
       const res = await fetch('/api/admin/pos/validate-discount', {
@@ -145,9 +146,9 @@ export default function POSPage() {
         pos.setAppliedDiscount(null)
       }
     } catch { toast.error('Failed to apply discount') }
-  }
+  }, [pos.discountCode, pos.subtotal, pos.cart])
 
-  async function handleCheckout() {
+  const handleCheckout = useCallback(async () => {
     if (pos.cart.length === 0) return
     const validationError = validatePayment()
     if (validationError) { toast.error(validationError); return }
@@ -183,7 +184,7 @@ export default function POSPage() {
       }
     } catch { toast.error('Checkout failed') }
     pos.setCheckoutLoading(false)
-  }
+  }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, shift?.id])
 
   function validatePayment(): string | null {
     if (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total) {
@@ -196,21 +197,22 @@ export default function POSPage() {
     return null
   }
 
-  function handleLogout() { logout(); router.replace('/pos/login') }
+  const handleLogout = useCallback(() => { logout(); router.replace('/pos/login') }, [logout, router])
 
-  function handleTabChange(tab: View) {
+  const handleTabChange = useCallback((tab: View) => {
     if (tab !== 'pos' && !shift) {
       toast.error('Start a shift first')
       return
     }
     setView(tab)
-  }
+  }, [shift])
 
-  const checkoutDisabled =
+  const checkoutDisabled = useMemo(() =>
     pos.cart.length === 0 ||
     pos.checkoutLoading ||
     (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total && pos.parsedCash > 0) ||
     (pos.paymentMethod === 'split' && (pos.parsedCash <= 0 || pos.parsedCard <= 0 || Math.abs(pos.parsedCash + pos.parsedCard - pos.total) > 0.01))
+  , [pos.cart.length, pos.checkoutLoading, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.total])
 
   useKeyboardShortcuts({
     onF1: () => pos.setPaymentMethod('cash'),

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Search } from 'lucide-react'
 import type { Product } from '../types'
 
@@ -10,7 +11,7 @@ type Props = {
   onAddToCart: (product: Product) => void
 }
 
-export default function ProductGrid({ products, search, onSearchChange, onAddToCart }: Props) {
+function ProductGrid({ products, search, onSearchChange, onAddToCart }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="relative mb-4 flex-shrink-0">
@@ -63,3 +64,5 @@ export default function ProductGrid({ products, search, onSearchChange, onAddToC
     </div>
   )
 }
+
+export default memo(ProductGrid)

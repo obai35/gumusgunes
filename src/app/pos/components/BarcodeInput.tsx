@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { memo, useState, useRef } from 'react'
 import { toast } from 'sonner'
 import type { Product } from '../types'
 
@@ -9,7 +9,7 @@ type Props = {
   onFocusSearch?: () => void
 }
 
-export default function BarcodeInput({ onProductFound, onFocusSearch }: Props) {
+function BarcodeInput({ onProductFound, onFocusSearch }: Props) {
   const [value, setValue] = useState('')
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -52,3 +52,5 @@ export default function BarcodeInput({ onProductFound, onFocusSearch }: Props) {
     </form>
   )
 }
+
+export default memo(BarcodeInput)
