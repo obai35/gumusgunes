@@ -43,7 +43,7 @@ export function BundleConfigurator() {
   }, [])
 
   const getProductsForStep = (stepKey: string) =>
-    products.filter((p) => p.category?.slug === stepKey && p.isActive)
+    products.filter((p) => p.category?.slug?.includes(stepKey) && p.isActive)
 
   const requiredStepsFilled = BUNDLE_STEPS.filter((s) => s.required).every(
     (s) => selections[s.key] !== null

@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { verifyPassword, signToken } from '@/lib/customer-auth'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
     const { email, password, totpToken } = await req.json()
     if (!email || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-    const user = await prisma.user.findUnique({ where: { email } })
+    const user = await db.user.findUnique({ where: { email } })
     if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
 
     const valid = await verifyPassword(password, user.password)

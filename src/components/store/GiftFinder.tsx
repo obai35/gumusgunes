@@ -105,8 +105,8 @@ function scoreProduct(product: Product, answers: Answers): number {
 
   // Recipient scoring
   if (answers.recipient) {
-    if (answers.recipient === 'him' && (tags.includes('signet') || tags.includes('unisex') || product.category?.slug === 'bracelets')) score += 15
-    else if (answers.recipient === 'her' && (product.category?.slug === 'necklaces' || product.category?.slug === 'earrings')) score += 15
+    if (answers.recipient === 'him' && (tags.includes('signet') || tags.includes('unisex') || product.category?.slug?.includes('bracelet'))) score += 15
+    else if (answers.recipient === 'her' && (product.category?.slug?.includes('necklace') || product.category?.slug?.includes('earring'))) score += 15
     else if (answers.recipient === 'couple' && tags.includes('set')) score += 25
     else if (answers.recipient === 'self') score += 10
   }

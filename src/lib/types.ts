@@ -5,6 +5,9 @@ export type Category = {
   description: string | null
   imageUrl: string | null
   icon: string | null
+  parentId: string | null
+  parent?: { id: string; name: string; slug: string } | null
+  children?: Category[]
   _count?: { products: number }
 }
 

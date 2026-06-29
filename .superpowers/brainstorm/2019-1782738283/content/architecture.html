@@ -1,0 +1,70 @@
+<h2>Proposed POS Architecture</h2>
+<p class="subtitle">Consolidate duplicate pages into shared components</p>
+
+<div class="section">
+  <h3>Before: Two silos</h3>
+  <div style="display:flex;gap:2rem;margin-top:1rem">
+    <div style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+      <div style="font-weight:600;margin-bottom:0.5rem;color:#6366f1">Standalone POS <code style="font-size:0.8rem">/pos/</code></div>
+      <div style="font-size:0.85rem;color:#64748b">
+        <div>✓ ProductSearch (inline)</div>
+        <div>✓ Cart (inline)</div>
+        <div>✓ Checkout (inline)</div>
+        <div>✓ Receipt (inline)</div>
+        <div>✓ ShiftPanel (inline)</div>
+        <div>✓ ShiftAssessment (inline)</div>
+        <div style="margin-top:0.5rem;font-weight:500">892 lines</div>
+      </div>
+    </div>
+    <div style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+      <div style="font-weight:600;margin-bottom:0.5rem;color:#6366f1">Admin POS <code style="font-size:0.8rem">/admin/pos</code></div>
+      <div style="font-size:0.85rem;color:#64748b">
+        <div>✓ ProductSearch (inline)</div>
+        <div>✗ Cart (inline, simpler)</div>
+        <div>✓ Checkout (inline)</div>
+        <div>✓ Receipt (inline)</div>
+        <div>✗ No shift mgmt</div>
+        <div>✗ No assessment</div>
+        <div style="margin-top:0.5rem;font-weight:500">545 lines</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>After: Shared component library</h3>
+  <div style="margin-top:1rem">
+    <div style="border:1px solid #e2e8f0;border-radius:8px;padding:1rem;margin-bottom:0.5rem">
+      <div style="font-weight:600;color:#059669">src/components/pos/</div>
+      <div style="font-size:0.85rem;display:grid;grid-template-columns:1fr 1fr;gap:0.25rem;margin-top:0.5rem">
+        <div>📦 ProductSearch.tsx</div>
+        <div>📦 Cart.tsx</div>
+        <div>📦 CheckoutForm.tsx</div>
+        <div>📦 Receipt.tsx</div>
+        <div>📦 ShiftPanel.tsx</div>
+        <div>📦 ShiftAssessment.tsx</div>
+        <div>📦 DiscountInput.tsx</div>
+        <div>📦 PaymentMethodSelector.tsx</div>
+        <div>📄 pos.types.ts</div>
+        <div>📄 pos.utils.ts</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:2rem">
+      <div style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+        <div style="font-weight:600;margin-bottom:0.5rem;color:#059669">/pos/page.tsx</div>
+        <div style="font-size:0.85rem;color:#64748b">
+          <div>~30 lines — composition only</div>
+          <div>+ ShiftPanel wrapper</div>
+          <div>+ ShiftAssessment</div>
+        </div>
+      </div>
+      <div style="flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:1rem">
+        <div style="font-weight:600;margin-bottom:0.5rem;color:#059669">/admin/pos/page.tsx</div>
+        <div style="font-size:0.85rem;color:#64748b">
+          <div>~20 lines — composition only</div>
+          <div>No shift components</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { PrismaClient } from '@prisma/client'
 import { OrderStatusUpdater } from './OrderStatusUpdater'
+import { PaymentVerification } from './PaymentVerification'
 
 const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
@@ -74,10 +75,34 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
               <div className="flex justify-between pt-2 border-t border-border font-semibold"><dt className="text-navy">Total</dt><dd className="text-navy">${order.totalAmount.toFixed(2)}</dd></div>
             </dl>
           </div>
-          <div className="bg-white rounded-xl border border-border p-5">
-            <h2 className="font-display font-semibold text-navy mb-4">Payment</h2>
-            <p className="text-sm text-muted-foreground">Method: {order.paymentMethod}</p>
-            <p className="text-sm text-muted-foreground">Status: {order.paymentStatus}</p>
+          <div className="bg-white rounded-xl border border-border p-5 space-y-2">
+            <h2 className="font-display font-semibold text-navy mb-3">Payment</h2>
+            <p className="text-sm text-muted-foreground">Method: <span className="font-medium text-navy">{order.paymentMethod}</span></p>
+            <p className="text-sm text-muted-foreground">Status: <span className={`font-medium ${order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'awaiting_verification' ? 'text-orange-600' : 'text-navy'}`}>{order.paymentStatus}</span></p>
+            {order.paymentMethod === 'card' && order.stripePaymentIntentId && (
+              <p className="text-xs text-muted-foreground">Stripe ID: <span className="font-mono">{order.stripePaymentIntentId}</span></p>
+            )}
+            {order.paymentMethod === 'paypal' && order.paypalOrderId && (
+              <p className="text-xs text-muted-foreground">PayPal ID: <span className="font-mono">{order.paypalOrderId}</span></p>
+            )}
+            {order.walletProvider && (
+              <p className="text-xs text-muted-foreground">Wallet: <span className="font-medium text-navy">{order.walletProvider}</span></p>
+            )}
+            {order.paymentReference && (
+              <p className="text-xs text-muted-foreground">Reference: <span className="font-mono font-medium text-navy">{order.paymentReference}</span></p>
+            )}
+            {order.paymentProofUrl && (
+              <div className="mt-2">
+                <p className="text-xs text-muted-foreground mb-1">Payment Proof:</p>
+                <a href={order.paymentProofUrl} target="_blank" rel="noopener noreferrer">
+                  <img src={order.paymentProofUrl} alt="Payment proof" className="w-full rounded-lg border border-border max-h-40 object-cover" />
+                </a>
+              </div>
+            )}
+            {order.paymentVerifiedAt && (
+              <p className="text-xs text-muted-foreground">Verified: {new Date(order.paymentVerifiedAt).toLocaleString()}</p>
+            )}
+            <PaymentVerification orderId={order.id} paymentStatus={order.paymentStatus} />
           </div>
         </div>
       </div>

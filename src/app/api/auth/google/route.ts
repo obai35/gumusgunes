@@ -1,13 +1,18 @@
-import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
 import { hashPassword, signToken } from '@/lib/customer-auth'
 
 const prisma = new PrismaClient()
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
+
+export async function GET() {
+  const clientId = process.env.GOOGLE_CLIENT_ID
+  return NextResponse.json({ enabled: !!clientId, clientId: clientId || null })
+}
 
 export async function POST(req: Request) {
   try {
+    const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
     if (!GOOGLE_CLIENT_ID) return NextResponse.json({ error: 'Google login not configured' }, { status: 501 })
 
     const { credential } = await req.json()
@@ -20,7 +25,7 @@ export async function POST(req: Request) {
     if (payload.aud !== GOOGLE_CLIENT_ID) return NextResponse.json({ error: 'Invalid audience' }, { status: 401 })
 
     const email = payload.email
-    const name = payload.name || email.split('@')[0]
+    const name = payload.name || email?.split('@')[0] || 'User'
     const googleId = payload.sub
 
     let user = await prisma.user.findUnique({ where: { email } })
@@ -33,7 +38,7 @@ export async function POST(req: Request) {
     }
 
     if (user.totpEnabled) {
-      return NextResponse.json({ totpRequired: true, userId: user.id })
+      return NextResponse.json({ totpRequired: true, userId: user.id, email: user.email })
     }
 
     const token = signToken({ userId: user.id, email: user.email })

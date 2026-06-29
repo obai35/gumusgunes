@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 export default async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const product = await prisma.product.findUnique({ where: { id } })
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' } })
+  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' }, include: { parent: { select: { id: true, name: true } } } })
   if (!product) notFound()
 
   return (

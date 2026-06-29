@@ -41,14 +41,17 @@ model Product {
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
   description String?
   imageUrl    String?
   icon        String?
+  parentId    String?
+  parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[]   @relation("CategoryHierarchy")
   products    Product[]
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime     @default(now())
 }
 
 model Review {
@@ -67,6 +70,9 @@ model Review {
 model Order {
   id            String      @id @default(cuid())
   orderNumber   String      @unique
+  receiptNumber String?     @unique
+  userId        String?
+  user          User?       @relation(fields: [userId], references: [id])
   email         String
   fullName      String
   phone         String?
@@ -79,14 +85,25 @@ model Order {
   shipping      Float
   tax           Float
   status        String      @default("pending") // pending, processing, shipped, delivered, cancelled
-  paymentMethod String      @default("card")
+  paymentMethod String      @default("card") // cash, card, split
+  cashAmount    Float?
+  cardAmount    Float?
   notes          String?
   discountId     String?
   discount       Discount?  @relation(fields: [discountId], references: [id])
   discountAmount Float?
-  paymentStatus  String     @default("pending")
-  processedById  String?
+  paymentStatus        String     @default("pending")
+  stripePaymentIntentId String?   @unique
+  paypalOrderId         String?   @unique
+  idempotencyKey        String?   @unique
+  walletProvider        String?
+  paymentProofUrl       String?
+  paymentReference      String?
+  paymentVerifiedAt     DateTime?
+  processedById         String?
   processedBy    Admin?     @relation(fields: [processedById], references: [id])
+  shiftId        String?
+  shift          Shift?     @relation(fields: [shiftId], references: [id])
   items          OrderItem[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -131,25 +148,56 @@ model BackInStock {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
+  id          String      @id @default(cuid())
+  email       String      @unique
   password    String
   name        String
   phone       String?
-  googleId    String?  @unique
+  googleId    String?     @unique
   totpSecret  String?
-  totpEnabled Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  totpEnabled Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  addresses   Address[]
+  savedCards  SavedCard[]
+  orders      Order[]
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName   String
+  phone      String?
+  street     String
+  city       String
+  state      String?
+  postalCode String
+  country    String   @default("EG")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model SavedCard {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nickname   String?
+  lastFour   String
+  expiryMonth Int
+  expiryYear  Int
+  createdAt  DateTime @default(now())
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role             String   @default("admin")
-  createdAt        DateTime @default(now())
-  processedOrders  Order[]
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String
+  password       String
+  role           String   @default("admin")
+  totpSecret     String?
+  totpEnabled    Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  processedOrders Order[]
 }
 
 model InventoryLog {
@@ -163,15 +211,52 @@ model InventoryLog {
 }
 
 model Discount {
-  id         String   @id @default(cuid())
-  code       String   @unique
-  type       String
-  value      Float
-  minOrder   Float?
-  maxUses    Int?
-  usedCount  Int      @default(0)
-  isActive   Boolean  @default(true)
-  expiresAt  DateTime?
-  createdAt  DateTime @default(now())
-  orders     Order[]
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String
+  value       Float
+  appliesTo   String   @default("all")  // all, category, tag
+  targetValue String?                    // category name or tag keyword
+  minOrder    Float?
+  maxUses     Int?
+  usedCount   Int      @default(0)
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  orders      Order[]
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model Shift {
+  id            String   @id @default(cuid())
+  branchId      String
+  branch        Branch   @relation(fields: [branchId], references: [id])
+  startedAt     DateTime @default(now())
+  closedAt      DateTime?
+  startingCash  Float    @default(0)
+  endingCash    Float?
+  totalCash     Float    @default(0)
+  totalCard     Float    @default(0)
+  totalSales    Float    @default(0)
+  orderCount    Int      @default(0)
+  notes         String?
+  isOpen        Boolean  @default(true)
+  orders        Order[]
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String?
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  shifts    Shift[]
 }

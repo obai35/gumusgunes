@@ -40,9 +40,8 @@ export function ProductModal() {
   const [engraving, setEngraving] = useState({ enabled: false, text: '', font: 'serif' })
   const imageRef = useRef<HTMLDivElement>(null)
 
-  // Which products support engraving (rings, pendants, bracelets — items with a flat surface)
   const supportsEngraving = (categorySlug?: string) =>
-    categorySlug === 'rings' || categorySlug === 'pendants' || categorySlug === 'bracelets'
+    categorySlug?.includes('ring') || categorySlug?.includes('pendant') || categorySlug?.includes('bracelet')
 
   useEffect(() => {
     if (!productModalId) return
@@ -96,7 +95,7 @@ export function ProductModal() {
   const handleAdd = () => {
     if (!product) return
     addItem(product, qty)
-    const sizeNote = ringSize && product.category?.slug === 'rings' ? ` · Size ${ringSize}` : ''
+    const sizeNote = ringSize && product.category?.slug?.includes('ring') ? ` · Size ${ringSize}` : ''
     const engraveNote = engraving.enabled && engraving.text ? ` · Engraved: "${engraving.text}"` : ''
     toast.success(t('products.addedToBag', product.name))
     setProductModal(null)
@@ -282,7 +281,7 @@ export function ProductModal() {
                   </div>
 
                   {/* Ring size selector (only for rings) */}
-                  {product.category?.slug === 'rings' && (
+                  {product.category?.slug?.includes('ring') && (
                     <div className="mb-5">
                       <RingSizeSelector value={ringSize} onChange={setRingSize} />
                     </div>

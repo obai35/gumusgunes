@@ -1,21 +1,96 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Sun } from 'lucide-react'
+import { useAdminAuth } from '@/lib/admin-auth-store'
+import { toast } from 'sonner'
 
 export default function AdminLogin() {
+  const router = useRouter()
+  const { login, totpPending, setTotpPending } = useAdminAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [totpCode, setTotpCode] = useState('')
   const [error, setError] = useState('')
-  const router = useRouter()
+  const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const result = await signIn('credentials', { email, password, redirect: false })
-    if (result?.error) setError('Invalid credentials')
-    else router.push('/admin')
+    setLoading(true)
+    setError('')
+
+    const body: any = { email, password }
+    if (totpPending) {
+      body.totpToken = totpCode
+      body.email = email || totpPending.email
+    }
+
+    const res = await fetch('/api/admin/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    const data = await res.json()
+
+    if (res.ok) {
+      if (data.totpRequired) {
+        setTotpPending({ adminId: data.adminId, email })
+        setLoading(false)
+        return
+      }
+      login(data.token, data.user)
+      toast.success('Welcome back!')
+      router.push('/admin')
+    } else {
+      setError(data.error || 'Invalid credentials')
+    }
+    setLoading(false)
+  }
+
+  if (totpPending) {
+    return (
+      <div className="min-h-screen bg-navy-deep flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-8">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Sun className="h-8 w-8 text-gold" />
+              <span className="font-display text-xl text-navy">Admin</span>
+            </div>
+            <h1 className="text-2xl font-display font-semibold text-navy">Two-Factor Auth</h1>
+            <p className="text-sm text-muted-foreground mt-1">Enter the code from your authenticator app</p>
+            <p className="text-xs text-muted-foreground mt-2">{email || totpPending.email}</p>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              inputMode="numeric"
+              autoFocus
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="w-full px-4 py-3 rounded-lg border border-border text-center text-2xl tracking-[0.3em] font-mono focus:outline-none focus:ring-2 focus:ring-gold"
+              placeholder="000000"
+              maxLength={6}
+            />
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            <button
+              type="submit"
+              disabled={loading || totpCode.length !== 6}
+              className="w-full py-2.5 bg-navy text-silver rounded-lg font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Verifying...' : 'Verify'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTotpPending(null); setTotpCode('') }}
+              className="w-full py-2 text-xs text-muted-foreground hover:text-navy transition-colors"
+            >
+              Back to sign in
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -42,9 +117,10 @@ export default function AdminLogin() {
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
           <button
             type="submit"
-            className="w-full py-2.5 bg-navy text-silver rounded-lg font-medium hover:bg-navy/90 transition-colors"
+            disabled={loading}
+            className="press w-full py-2.5 bg-navy text-silver rounded-lg font-medium hover:bg-navy/90 transition-colors"
           >
-            Sign In
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
       </div>

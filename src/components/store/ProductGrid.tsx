@@ -66,6 +66,8 @@ export function ProductGrid({ categories, initialProducts, initialCategory = 'al
     setActiveCategory(slug)
   }
 
+  const flatSubcategories = categories.flatMap(c => c.children || [])
+
   return (
     <section id="collections" className="py-20 sm:py-28 bg-secondary/30 scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -114,7 +116,7 @@ export function ProductGrid({ categories, initialProducts, initialCategory = 'al
             >
               {t('products.all')}
             </button>
-            {categories.map((cat) => (
+            {flatSubcategories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => handleCategoryChange(cat.slug)}

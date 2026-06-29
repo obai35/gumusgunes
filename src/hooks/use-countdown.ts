@@ -2,15 +2,12 @@
 
 import { useState, useEffect } from 'react'
 
-/**
- * Returns a live countdown to a target date.
- * SSR-safe: returns zeros on server, updates after hydration.
- */
 export function useCountdown(target: Date | number) {
   const targetTime = typeof target === 'number' ? target : target.getTime()
-  const [now, setNow] = useState<number>(() => Date.now())
+  const [now, setNow] = useState<number>(0)
 
   useEffect(() => {
+    setNow(Date.now())
     const interval = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(interval)
   }, [])

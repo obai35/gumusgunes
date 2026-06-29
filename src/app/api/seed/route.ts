@@ -3,46 +3,45 @@ import { db } from '@/lib/db'
 
 const categories = [
   {
-    name: 'Rings',
-    slug: 'rings',
-    description: 'Sterling silver rings crafted with precision — from solitaire diamonds to engraved celestial bands.',
-    imageUrl: '/products/cat-rings.jpg',
-    icon: 'ring',
+    name: 'Women', slug: 'women', icon: 'female', imageUrl: '/products/cat-women.jpg',
+    description: 'Elegant sterling silver jewelry for women',
+    children: [
+      { name: 'Rings', slug: 'women-rings', icon: 'ring', imageUrl: '/products/cat-rings.jpg', description: 'Sterling silver rings for women' },
+      { name: 'Necklaces', slug: 'women-necklaces', icon: 'necklace', imageUrl: '/products/cat-necklaces.jpg', description: 'Silver chains and pendants for women' },
+      { name: 'Earrings', slug: 'women-earrings', icon: 'earring', imageUrl: '/products/cat-earrings.jpg', description: 'Silver earrings for women' },
+      { name: 'Bracelets', slug: 'women-bracelets', icon: 'bracelet', imageUrl: '/products/cat-bracelets.jpg', description: 'Silver bracelets for women' },
+      { name: 'Pendants', slug: 'women-pendants', icon: 'pendant', imageUrl: '/products/cat-pendants.jpg', description: 'Statement pendants for women' },
+      { name: 'Sets', slug: 'women-sets', icon: 'set', imageUrl: '/products/cat-sets.jpg', description: 'Coordinated jewelry sets for women' },
+      { name: 'Watches', slug: 'women-watches', icon: 'watch', imageUrl: '/products/cat-watches.jpg', description: 'Elegant watches for women' },
+      { name: 'Belts', slug: 'women-belts', icon: 'belt', imageUrl: '/products/cat-belts.jpg', description: 'Stylish belts for women' },
+      { name: 'Bags', slug: 'women-bags', icon: 'bag', imageUrl: '/products/cat-bags.jpg', description: 'Handbags and clutches for women' },
+    ],
   },
   {
-    name: 'Necklaces',
-    slug: 'necklaces',
-    description: 'Silver chains and pendants inspired by the sun, moon, and stars — designed to be worn every day.',
-    imageUrl: '/products/cat-necklaces.jpg',
-    icon: 'necklace',
+    name: 'Men', slug: 'men', icon: 'male', imageUrl: '/products/cat-men.jpg',
+    description: 'Bold sterling silver accessories for men',
+    children: [
+
+      { name: 'Pendants', slug: 'men-pendants', icon: 'pendant', imageUrl: '/products/cat-men-pendants.jpg', description: 'Silver pendants for men' },
+      { name: 'Watches', slug: 'men-watches', icon: 'watch', imageUrl: '/products/cat-men-watches.jpg', description: 'Bold watches for men' },
+      { name: 'Belts', slug: 'men-belts', icon: 'belt', imageUrl: '/products/cat-men-belts.jpg', description: 'Leather and silver belts for men' },
+      { name: 'Bags', slug: 'men-bags', icon: 'bag', imageUrl: '/products/cat-men-bags.jpg', description: 'Bags and wallets for men' },
+    ],
   },
   {
-    name: 'Earrings',
-    slug: 'earrings',
-    description: 'Silver hoops, drops, and studs — each pair finished by hand for a flawless shine.',
-    imageUrl: '/products/cat-earrings.jpg',
-    icon: 'earring',
-  },
-  {
-    name: 'Bracelets',
-    slug: 'bracelets',
-    description: 'Charm bracelets and bangles in 925 sterling silver — light on the wrist, rich in detail.',
-    imageUrl: '/products/cat-bracelets.jpg',
-    icon: 'bracelet',
-  },
-  {
-    name: 'Pendants',
-    slug: 'pendants',
-    description: 'Statement pendants featuring our signature sun motif and ethically sourced diamonds.',
-    imageUrl: '/products/cat-pendants.jpg',
-    icon: 'pendant',
-  },
-  {
-    name: 'Sets',
-    slug: 'sets',
-    description: 'Coordinated jewelry sets — necklaces and earrings designed to be worn together.',
-    imageUrl: '/products/cat-sets.jpg',
-    icon: 'set',
+    name: 'Children', slug: 'children', icon: 'child', imageUrl: '/products/cat-children.jpg',
+    description: 'Adorable silver jewelry for kids and girls',
+    children: [
+      { name: 'Rings', slug: 'children-rings', icon: 'ring', imageUrl: '/products/cat-children-rings.jpg', description: 'Silver rings for children' },
+      { name: 'Necklaces', slug: 'children-necklaces', icon: 'necklace', imageUrl: '/products/cat-children-necklaces.jpg', description: 'Silver necklaces for children' },
+      { name: 'Earrings', slug: 'children-earrings', icon: 'earring', imageUrl: '/products/cat-children-earrings.jpg', description: 'Silver earrings for children' },
+      { name: 'Bracelets', slug: 'children-bracelets', icon: 'bracelet', imageUrl: '/products/cat-children-bracelets.jpg', description: 'Silver bracelets for children' },
+      { name: 'Pendants', slug: 'children-pendants', icon: 'pendant', imageUrl: '/products/cat-children-pendants.jpg', description: 'Silver pendants for children' },
+      { name: 'Sets', slug: 'children-sets', icon: 'set', imageUrl: '/products/cat-children-sets.jpg', description: 'Jewelry sets for children' },
+      { name: 'Watches', slug: 'children-watches', icon: 'watch', imageUrl: '/products/cat-children-watches.jpg', description: 'Fun watches for children' },
+      { name: 'Belts', slug: 'children-belts', icon: 'belt', imageUrl: '/products/cat-children-belts.jpg', description: 'Belts for children' },
+      { name: 'Bags', slug: 'children-bags', icon: 'bag', imageUrl: '/products/cat-children-bags.jpg', description: 'Bags for children' },
+    ],
   },
 ]
 
@@ -74,7 +73,7 @@ const products: SeedProduct[] = [
     price: 289.0,
     compareAtPrice: 340.0,
     sku: 'GG-R-001',
-    categorySlug: 'rings',
+    categorySlug: 'women-rings',
     imageUrl: '/products/prod-ring-1.jpg',
     material: '925 Sterling Silver · 0.10ct Diamond (SI2, H)',
     weight: '3.2 g',
@@ -90,7 +89,7 @@ const products: SeedProduct[] = [
       'Inspired by the rays of the güneş (sun), this hand-engraved band wraps the finger in a continuous pattern of light. A subtle nod to our brand motif, designed to be stacked or worn alone.',
     price: 145.0,
     sku: 'GG-R-002',
-    categorySlug: 'rings',
+    categorySlug: 'women-rings',
     imageUrl: '/products/prod-ring-2.jpg',
     material: '925 Sterling Silver · Oxidized engraving',
     weight: '4.1 g',
@@ -106,7 +105,7 @@ const products: SeedProduct[] = [
     price: 425.0,
     compareAtPrice: 495.0,
     sku: 'GG-R-003',
-    categorySlug: 'rings',
+    categorySlug: 'women-rings',
     imageUrl: '/products/prod-ring-3.jpg',
     material: '925 Sterling Silver · 0.30ct Sapphire · 0.06ct Diamonds',
     weight: '3.8 g',
@@ -123,7 +122,7 @@ const products: SeedProduct[] = [
     price: 199.0,
     compareAtPrice: 240.0,
     sku: 'GG-N-001',
-    categorySlug: 'necklaces',
+    categorySlug: 'women-necklaces',
     imageUrl: '/products/prod-necklace-1.jpg',
     material: '925 Sterling Silver · 45cm cable chain',
     weight: '5.6 g',
@@ -139,7 +138,7 @@ const products: SeedProduct[] = [
       'A slender crescent cradles a single star — an homage to the Turkish night sky. Adjustable chain length lets you layer it with other favorites.',
     price: 165.0,
     sku: 'GG-N-002',
-    categorySlug: 'necklaces',
+    categorySlug: 'women-necklaces',
     imageUrl: '/products/prod-necklace-2.jpg',
     material: '925 Sterling Silver · 40–45cm adjustable chain',
     weight: '4.8 g',
@@ -155,7 +154,7 @@ const products: SeedProduct[] = [
       'Slim silver hoops with a textured sun-ray finish along the outer edge. Lightweight enough for all-day wear, distinctive enough to be noticed.',
     price: 128.0,
     sku: 'GG-E-001',
-    categorySlug: 'earrings',
+    categorySlug: 'women-earrings',
     imageUrl: '/products/prod-earring-1.jpg',
     material: '925 Sterling Silver · Hinged hoop closure',
     weight: '2.9 g (pair)',
@@ -171,7 +170,7 @@ const products: SeedProduct[] = [
     price: 175.0,
     compareAtPrice: 210.0,
     sku: 'GG-E-002',
-    categorySlug: 'earrings',
+    categorySlug: 'women-earrings',
     imageUrl: '/products/prod-earring-2.jpg',
     material: '925 Sterling Silver · Freshwater Pearl · 0.02ct Diamond',
     weight: '3.4 g (pair)',
@@ -187,7 +186,7 @@ const products: SeedProduct[] = [
       'A delicate silver chain carrying sun, moon, and star charms — each one a small reminder of the sky above. The lobster clasp keeps it secure on the wrist.',
     price: 158.0,
     sku: 'GG-B-001',
-    categorySlug: 'bracelets',
+    categorySlug: 'women-bracelets',
     imageUrl: '/products/prod-bracelet-1.jpg',
     material: '925 Sterling Silver · 18cm chain · 3 charms',
     weight: '6.2 g',
@@ -204,7 +203,7 @@ const products: SeedProduct[] = [
     price: 245.0,
     compareAtPrice: 290.0,
     sku: 'GG-B-002',
-    categorySlug: 'bracelets',
+    categorySlug: 'women-bracelets',
     imageUrl: '/products/prod-bracelet-2.jpg',
     material: '925 Sterling Silver · 0.05ct Diamond',
     weight: '11.4 g',
@@ -221,7 +220,7 @@ const products: SeedProduct[] = [
     price: 315.0,
     compareAtPrice: 375.0,
     sku: 'GG-P-001',
-    categorySlug: 'pendants',
+    categorySlug: 'women-pendants',
     imageUrl: '/products/prod-pendant-1.jpg',
     material: '925 Sterling Silver · 0.08ct Diamond · 50cm chain',
     weight: '6.9 g',
@@ -239,7 +238,7 @@ const products: SeedProduct[] = [
     price: 410.0,
     compareAtPrice: 495.0,
     sku: 'GG-S-001',
-    categorySlug: 'sets',
+    categorySlug: 'women-sets',
     imageUrl: '/products/prod-set-1.jpg',
     material: '925 Sterling Silver · Necklace + Earrings',
     weight: '12.3 g (set)',
@@ -256,7 +255,7 @@ const products: SeedProduct[] = [
       'A polished silver signet with a flat face ready to be engraved with your initials. Substantial weight, refined silhouette — a piece that grows more personal with time.',
     price: 135.0,
     sku: 'GG-R-004',
-    categorySlug: 'rings',
+    categorySlug: 'women-rings',
     imageUrl: '/products/cat-rings.jpg',
     material: '925 Sterling Silver · Engravable face',
     weight: '5.8 g',
@@ -271,7 +270,7 @@ const products: SeedProduct[] = [
     price: 95.0,
     compareAtPrice: 115.0,
     sku: 'GG-N-003',
-    categorySlug: 'necklaces',
+    categorySlug: 'women-necklaces',
     imageUrl: '/products/cat-necklaces.jpg',
     material: '925 Sterling Silver · 45cm cable chain',
     weight: '4.2 g',
@@ -286,7 +285,7 @@ const products: SeedProduct[] = [
       'Three pairs of silver studs in one set — a classic ball, a tiny star, and a sun motif. Mix, match, or share with someone you love.',
     price: 89.0,
     sku: 'GG-E-003',
-    categorySlug: 'earrings',
+    categorySlug: 'women-earrings',
     imageUrl: '/products/cat-earrings.jpg',
     material: '925 Sterling Silver · 3 pairs',
     weight: '2.1 g (total)',
@@ -302,7 +301,7 @@ const products: SeedProduct[] = [
     price: 119.0,
     compareAtPrice: 145.0,
     sku: 'GG-B-003',
-    categorySlug: 'bracelets',
+    categorySlug: 'women-bracelets',
     imageUrl: '/products/cat-bracelets.jpg',
     material: '925 Sterling Silver · 19cm curb chain',
     weight: '8.7 g',
@@ -316,7 +315,7 @@ const products: SeedProduct[] = [
       'A heart-shaped silver locket that opens to hold a small photo or keepsake. Suspended from a 50cm chain — a piece that carries what matters most.',
     price: 189.0,
     sku: 'GG-P-002',
-    categorySlug: 'pendants',
+    categorySlug: 'women-pendants',
     imageUrl: '/products/cat-pendants.jpg',
     material: '925 Sterling Silver · 50cm chain',
     weight: '7.1 g',
@@ -332,7 +331,7 @@ const products: SeedProduct[] = [
     price: 295.0,
     compareAtPrice: 360.0,
     sku: 'GG-S-002',
-    categorySlug: 'sets',
+    categorySlug: 'women-sets',
     imageUrl: '/products/cat-sets.jpg',
     material: '925 Sterling Silver · Necklace + Bracelet · Gift box',
     weight: '14.8 g (set)',
@@ -340,6 +339,21 @@ const products: SeedProduct[] = [
     isBestseller: true,
     stock: 19,
   },
+  // ── Men ──
+  { name: 'Men\'s Silver Pendant Chain', slug: 'mens-silver-pendant-chain', description: 'A bold silver pendant chain for men. Thick curb chain with a polished silver dog tag pendant.', price: 179, compareAtPrice: 215, sku: 'GG-MP-001', categorySlug: 'men-pendants', imageUrl: '/products/cat-men-pendants.jpg', material: '925 Sterling Silver · 55cm chain', weight: '12.5 g', tags: ['pendant', 'chain', 'bold', 'everyday'], isNew: true, stock: 25 },
+  { name: 'Men\'s Silver Watch', slug: 'mens-silver-watch', description: 'A classic silver-tone watch with a minimalist white dial and genuine leather strap. Quartz movement.', price: 245, compareAtPrice: 295, sku: 'GG-MW-001', categorySlug: 'men-watches', imageUrl: '/products/cat-men-watches.jpg', material: '925 Sterling Silver case · Leather strap', weight: '65 g', tags: ['watch', 'classic', 'leather', 'everyday'], isBestseller: true, stock: 15 },
+  { name: 'Men\'s Silver Belt Buckle', slug: 'mens-silver-belt-buckle', description: 'A handcrafted silver belt buckle with a brushed matte finish. Fits belts up to 1.5 inches wide.', price: 129, sku: 'GG-MB-001', categorySlug: 'men-belts', imageUrl: '/products/cat-men-belts.jpg', material: '925 Sterling Silver buckle', weight: '35 g', tags: ['belt', 'buckle', 'classic', 'matte'], stock: 30 },
+  { name: 'Men\'s Leather Crossbody Bag', slug: 'mens-leather-crossbody-bag', description: 'A premium genuine leather crossbody bag with a silver zip closure and adjustable strap.', price: 289, compareAtPrice: 350, sku: 'GG-MBA-001', categorySlug: 'men-bags', imageUrl: '/products/cat-men-bags.jpg', material: 'Genuine leather · Silver hardware', weight: '320 g', tags: ['bag', 'leather', 'crossbody', 'everyday'], isFeatured: true, stock: 12 },
+  // ── Children ──
+  { name: 'Kids Silver Butterfly Ring', slug: 'kids-silver-butterfly-ring', description: 'An adorable silver ring with a tiny butterfly charm. Adjustable band fits most children.', price: 49, sku: 'GG-CR-001', categorySlug: 'children-rings', imageUrl: '/products/cat-children-rings.jpg', material: '925 Sterling Silver · Adjustable', weight: '1.5 g', tags: ['ring', 'butterfly', 'kids', 'cute'], isNew: true, stock: 40 },
+  { name: 'Kids Silver Heart Necklace', slug: 'kids-silver-heart-necklace', description: 'A sweet silver heart pendant on a short chain, perfect for young girls. Hypoallergenic and gentle on skin.', price: 59, sku: 'GG-CN-001', categorySlug: 'children-necklaces', imageUrl: '/products/cat-children-necklaces.jpg', material: '925 Sterling Silver · 38cm chain', weight: '2.8 g', tags: ['necklace', 'heart', 'kids', 'cute'], isNew: true, stock: 35 },
+  { name: 'Kids Silver Star Studs', slug: 'kids-silver-star-studs', description: 'Tiny star-shaped silver stud earrings for children. Comfortable push-back closure for sensitive ears.', price: 39, sku: 'GG-CE-001', categorySlug: 'children-earrings', imageUrl: '/products/cat-children-earrings.jpg', material: '925 Sterling Silver · Push-back', weight: '1.2 g (pair)', tags: ['earring', 'star', 'kids', 'stud'], stock: 45 },
+  { name: 'Kids Silver Charm Bracelet', slug: 'kids-silver-charm-bracelet', description: 'A delicate charm bracelet with a heart, star, and butterfly charm. Adjustable to fit growing wrists.', price: 69, sku: 'GG-CB-001', categorySlug: 'children-bracelets', imageUrl: '/products/cat-children-bracelets.jpg', material: '925 Sterling Silver · 3 charms', weight: '4.1 g', tags: ['bracelet', 'charm', 'kids', 'gift'], isBestseller: true, stock: 28 },
+  { name: 'Kids Silver Flower Pendant', slug: 'kids-silver-flower-pendant', description: 'A pretty flower-shaped silver pendant on a fine chain. Perfect for little girls who love nature.', price: 55, sku: 'GG-CP-001', categorySlug: 'children-pendants', imageUrl: '/products/cat-children-pendants.jpg', material: '925 Sterling Silver · 40cm chain', weight: '3.2 g', tags: ['pendant', 'flower', 'kids', 'nature'], stock: 32 },
+  { name: 'Kids Silver Jewelry Set', slug: 'kids-silver-jewelry-set', description: 'A matching necklace and earring set for girls. Presented in a cute gift box.', price: 99, compareAtPrice: 125, sku: 'GG-CS-001', categorySlug: 'children-sets', imageUrl: '/products/cat-children-sets.jpg', material: '925 Sterling Silver · Set', weight: '6.5 g (set)', tags: ['set', 'kids', 'gift', 'boxed'], isFeatured: true, stock: 18 },
+  { name: 'Kids Silver Watch', slug: 'kids-silver-watch', description: 'A fun silver-toned watch with a colorful silicone strap and easy-to-read dial. Water resistant.', price: 89, sku: 'GG-CW-001', categorySlug: 'children-watches', imageUrl: '/products/cat-children-watches.jpg', material: '925 Sterling Silver case · Silicone strap', weight: '35 g', tags: ['watch', 'kids', 'colorful', 'everyday'], stock: 22 },
+  { name: 'Kids Silver Belt', slug: 'kids-silver-belt', description: 'A stylish adjustable belt for kids with a small silver buckle. Fits waist sizes 18–26 inches.', price: 45, sku: 'GG-CBE-001', categorySlug: 'children-belts', imageUrl: '/products/cat-children-belts.jpg', material: 'Genuine leather · Silver buckle', weight: '60 g', tags: ['belt', 'kids', 'adjustable'], stock: 34 },
+  { name: 'Kids Canvas Backpack', slug: 'kids-canvas-backpack', description: 'A cute canvas backpack with silver-toned zippers and adjustable straps. Perfect for school or outings.', price: 75, compareAtPrice: 90, sku: 'GG-CBA-001', categorySlug: 'children-bags', imageUrl: '/products/cat-children-bags.jpg', material: 'Canvas · Silver hardware', weight: '180 g', tags: ['bag', 'backpack', 'kids', 'school'], isNew: true, stock: 20 },
 ]
 
 const sampleReviews = [
@@ -366,11 +380,16 @@ export async function POST(req: NextRequest) {
     await db.category.deleteMany()
     await db.newsletter.deleteMany()
 
-    // Insert categories
+    // Insert hierarchical categories
     const categoryMap: Record<string, string> = {}
-    for (const cat of categories) {
-      const created = await db.category.create({ data: cat })
-      categoryMap[cat.slug] = created.id
+    for (const parent of categories) {
+      const { children, ...parentData } = parent
+      const createdParent = await db.category.create({ data: parentData })
+      categoryMap[parentData.slug] = createdParent.id
+      for (const child of children) {
+        const createdChild = await db.category.create({ data: { ...child, parentId: createdParent.id } })
+        categoryMap[child.slug] = createdChild.id
+      }
     }
 
     // Insert products with reviews

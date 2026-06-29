@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { hashPassword, signToken } from '@/lib/customer-auth'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
@@ -10,10 +8,10 @@ export async function POST(req: Request) {
     if (!email || !password || !name) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
     if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
 
-    const existing = await prisma.user.findUnique({ where: { email } })
+    const existing = await db.user.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
 
-    const user = await prisma.user.create({
+    const user = await db.user.create({
       data: { email, password: await hashPassword(password), name },
     })
 

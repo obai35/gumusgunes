@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { ArrowUp, ShoppingBag } from 'lucide-react'
+import { useHydrated } from '@/hooks/use-hydrated'
 import { Header } from '@/components/store/Header'
 import { Hero } from '@/components/store/Hero'
 import { TrustBadges } from '@/components/store/TrustBadges'
@@ -10,28 +11,34 @@ import { FeaturedProducts } from '@/components/store/FeaturedProducts'
 import { ProductGrid } from '@/components/store/ProductGrid'
 import { PromoBanner } from '@/components/store/PromoBanner'
 import { AboutSection } from '@/components/store/AboutSection'
-import { CraftsmanshipTimeline } from '@/components/store/CraftsmanshipTimeline'
-import { Testimonials } from '@/components/store/Testimonials'
-import { Newsletter } from '@/components/store/Newsletter'
-import { RecentlyViewed } from '@/components/store/RecentlyViewed'
 import { Footer } from '@/components/store/Footer'
-import { ProductModal } from '@/components/store/ProductModal'
-import { CartDrawer } from '@/components/store/CartDrawer'
-import { CheckoutDialog } from '@/components/store/CheckoutDialog'
-import { SearchDialog } from '@/components/store/SearchDialog'
-import { WishlistDrawer } from '@/components/store/WishlistDrawer'
-import { ConciergeChat } from '@/components/store/ConciergeChat'
-import { ExitIntentPopup } from '@/components/store/ExitIntentPopup'
-import { CompareModal } from '@/components/store/CompareModal'
-import { CompareTray } from '@/components/store/CompareTray'
-import { RewardsSection } from '@/components/store/RewardsSection'
-import { FlashSaleBanner } from '@/components/store/FlashSaleBanner'
-import { GiftFinder } from '@/components/store/GiftFinder'
-import { BundleConfigurator } from '@/components/store/BundleConfigurator'
-import { OrderTrackingModal } from '@/components/store/OrderTrackingModal'
+import { DiamondLoading } from '@/components/store/DiamondLoading'
 import { useCart, useWishlist, useUI } from '@/lib/store'
 import { useTranslation } from '@/hooks/use-translation'
 import type { Product, Category } from '@/lib/types'
+
+const CraftsmanshipTimeline = lazy(() => import('@/components/store/CraftsmanshipTimeline').then(m => ({ default: m.CraftsmanshipTimeline })))
+const Testimonials = lazy(() => import('@/components/store/Testimonials').then(m => ({ default: m.Testimonials })))
+const Newsletter = lazy(() => import('@/components/store/Newsletter').then(m => ({ default: m.Newsletter })))
+const RecentlyViewed = lazy(() => import('@/components/store/RecentlyViewed').then(m => ({ default: m.RecentlyViewed })))
+const RewardsSection = lazy(() => import('@/components/store/RewardsSection').then(m => ({ default: m.RewardsSection })))
+const GiftFinder = lazy(() => import('@/components/store/GiftFinder').then(m => ({ default: m.GiftFinder })))
+const BundleConfigurator = lazy(() => import('@/components/store/BundleConfigurator').then(m => ({ default: m.BundleConfigurator })))
+const FlashSaleBanner = lazy(() => import('@/components/store/FlashSaleBanner').then(m => ({ default: m.FlashSaleBanner })))
+const ProductModal = lazy(() => import('@/components/store/ProductModal').then(m => ({ default: m.ProductModal })))
+const CartDrawer = lazy(() => import('@/components/store/CartDrawer').then(m => ({ default: m.CartDrawer })))
+const CheckoutDialog = lazy(() => import('@/components/store/CheckoutDialog').then(m => ({ default: m.CheckoutDialog })))
+const SearchDialog = lazy(() => import('@/components/store/SearchDialog').then(m => ({ default: m.SearchDialog })))
+const WishlistDrawer = lazy(() => import('@/components/store/WishlistDrawer').then(m => ({ default: m.WishlistDrawer })))
+const ConciergeChat = lazy(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
+const ExitIntentPopup = lazy(() => import('@/components/store/ExitIntentPopup').then(m => ({ default: m.ExitIntentPopup })))
+const CompareModal = lazy(() => import('@/components/store/CompareModal').then(m => ({ default: m.CompareModal })))
+const CompareTray = lazy(() => import('@/components/store/CompareTray').then(m => ({ default: m.CompareTray })))
+const OrderTrackingModal = lazy(() => import('@/components/store/OrderTrackingModal').then(m => ({ default: m.OrderTrackingModal })))
+
+function SectionFallback() {
+  return <div className="h-32 bg-secondary/20 animate-pulse rounded-2xl mx-4 my-8" />
+}
 
 export default function Home() {
   const { t } = useTranslation()
@@ -42,6 +49,7 @@ export default function Home() {
 
   const { count, openCart } = useCart()
   const wishlist = useWishlist()
+  const hydrated = useHydrated()
 
   useEffect(() => {
     Promise.all([
@@ -54,21 +62,17 @@ export default function Home() {
       })
       .finally(() => setLoading(false))
 
-    // Load shared wishlist from URL (?wishlist=<base64-ids>)
     try {
       const params = new URLSearchParams(window.location.search)
       const shared = params.get('wishlist')
       if (shared) {
         const decoded = atob(shared)
         const ids = decoded.split(',').filter(Boolean)
-        // Merge with existing wishlist
         const existing = wishlist.ids
         const merged = Array.from(new Set([...existing, ...ids]))
-        // Set the wishlist (clear first then add each)
         merged.forEach((id) => {
           if (!wishlist.has(id)) wishlist.toggle(id)
         })
-        // Show a toast and open wishlist
         setTimeout(() => {
           import('sonner').then(({ toast }) => {
             toast.success(t('page.sharedWishlistLoaded', ids.length.toString()), {
@@ -77,16 +81,14 @@ export default function Home() {
           })
           useUI.getState().setWishlistOpen(true)
         }, 800)
-        // Clean the URL
         window.history.replaceState({}, '', window.location.pathname)
       }
-    } catch {
-      // ignore decode errors
-    }
+    } catch {}
 
     const onScroll = () => setShowTop(window.scrollY > 600)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const featured = products.filter((p) => p.isFeatured).slice(0, 4)
@@ -99,7 +101,7 @@ export default function Home() {
 
       <main className="flex-1">
         <Hero />
-        <FlashSaleBanner />
+        <Suspense fallback={<SectionFallback />}><FlashSaleBanner /></Suspense>
         <TrustBadges />
         <CategoryGrid categories={categories} />
 
@@ -116,7 +118,7 @@ export default function Home() {
 
         <PromoBanner />
 
-        <BundleConfigurator />
+        <Suspense fallback={<SectionFallback />}><BundleConfigurator /></Suspense>
 
         {newArrivals.length > 0 && (
           <FeaturedProducts
@@ -145,30 +147,31 @@ export default function Home() {
           />
         )}
 
-        <RecentlyViewed allProducts={products} />
-
-        <GiftFinder />
+        <Suspense fallback={<SectionFallback />}><RecentlyViewed allProducts={products} /></Suspense>
+        <Suspense fallback={<SectionFallback />}><GiftFinder /></Suspense>
 
         <AboutSection />
-        <CraftsmanshipTimeline />
-        <Testimonials />
-        <RewardsSection />
-        <Newsletter />
+        <Suspense fallback={<SectionFallback />}><CraftsmanshipTimeline /></Suspense>
+        <Suspense fallback={<SectionFallback />}><Testimonials /></Suspense>
+        <Suspense fallback={<SectionFallback />}><RewardsSection /></Suspense>
+        <Suspense fallback={<SectionFallback />}><Newsletter /></Suspense>
       </main>
 
       <Footer />
 
       {/* Overlays */}
-      <ProductModal />
-      <CartDrawer />
-      <CheckoutDialog />
-      <SearchDialog />
-      <WishlistDrawer />
-      <CompareModal />
-      <OrderTrackingModal />
-      <ConciergeChat />
-      <ExitIntentPopup />
-      <CompareTray />
+      <Suspense fallback={null}><ProductModal /></Suspense>
+      <Suspense fallback={null}><CartDrawer /></Suspense>
+      <Suspense fallback={null}><CheckoutDialog /></Suspense>
+      <Suspense fallback={null}><SearchDialog /></Suspense>
+      <Suspense fallback={null}><WishlistDrawer /></Suspense>
+      <Suspense fallback={null}><CompareModal /></Suspense>
+      <Suspense fallback={null}><OrderTrackingModal /></Suspense>
+      <Suspense fallback={null}><ConciergeChat /></Suspense>
+      <Suspense fallback={null}><ExitIntentPopup /></Suspense>
+      <Suspense fallback={null}><CompareTray /></Suspense>
+
+      {loading && <DiamondLoading text={t('page.loading')} />}
 
       {/* Floating action buttons */}
       <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
@@ -182,8 +185,7 @@ export default function Home() {
           <ArrowUp className="h-5 w-5" />
         </button>
 
-        {/* Mobile cart FAB */}
-        {count() > 0 && (
+        {hydrated && count() > 0 && (
           <button
             onClick={openCart}
             className="sm:hidden h-14 px-5 rounded-full bg-gold text-navy-deep shadow-xl flex items-center gap-2 font-semibold text-sm"
@@ -193,15 +195,6 @@ export default function Home() {
           </button>
         )}
       </div>
-
-      {loading && (
-        <div className="fixed inset-0 z-[100] bg-background flex items-center justify-center pointer-events-none">
-          <div className="text-center">
-            <div className="h-12 w-12 rounded-full border-2 border-gold border-t-transparent animate-spin mx-auto mb-3" />
-            <p className="font-display text-sm text-navy">{t('page.loading')}</p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

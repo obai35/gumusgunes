@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { verifyToken } from '@/lib/customer-auth'
 import { z } from 'zod'
 
 const OrderItemSchema = z.object({
@@ -17,12 +18,17 @@ const OrderSchema = z.object({
   postalCode: z.string().min(1).max(20),
   country: z.string().min(1).max(120),
   notes: z.string().max(1000).optional().or(z.literal('')),
-  paymentMethod: z.enum(['card', 'transfer', 'cod']).default('card'),
+  paymentMethod: z.enum(['card', 'paypal', 'transfer', 'cod', 'instapay', 'vodafone-cash', 'orange-cash', 'etisalat-wallet', 'fawry']).default('card'),
   items: z.array(OrderItemSchema).min(1),
   subtotal: z.number(),
   shipping: z.number(),
   tax: z.number(),
   totalAmount: z.number(),
+  idempotencyKey: z.string().optional(),
+  stripePaymentIntentId: z.string().optional(),
+  paypalOrderId: z.string().optional(),
+  walletProvider: z.string().optional(),
+  paymentReference: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -36,10 +42,53 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { items, ...rest } = parsed.data
+    const { items, idempotencyKey, stripePaymentIntentId, paypalOrderId, walletProvider, paymentReference, ...rest } = parsed.data
+
+    const auth = req.headers.get('authorization')
+    const authedUser = auth?.startsWith('Bearer ') ? verifyToken(auth.slice(7)) : null
+
+    // Idempotency check — prevent duplicate order creation
+    if (idempotencyKey) {
+      const existingOrder = await db.order.findUnique({ where: { idempotencyKey } })
+      if (existingOrder) {
+        return NextResponse.json({ ok: true, order: existingOrder, duplicate: true })
+      }
+    }
+
+    // Check if stripePaymentIntentId or paypalOrderId already used
+    if (stripePaymentIntentId) {
+      const existing = await db.order.findUnique({ where: { stripePaymentIntentId } })
+      if (existing) {
+        return NextResponse.json({ ok: true, order: existing, duplicate: true })
+      }
+    }
+    if (paypalOrderId) {
+      const existing = await db.order.findUnique({ where: { paypalOrderId } })
+      if (existing) {
+        return NextResponse.json({ ok: true, order: existing, duplicate: true })
+      }
+    }
+
+    // Pending order detection — same items in an existing pending order
+    const newProductIds = items.map((i: any) => i.productId).sort()
+    const pendingOrders = await db.order.findMany({
+      where: { email: rest.email.toLowerCase(), status: { in: ['pending', 'processing'] } },
+      include: { items: true },
+    })
+    for (const pending of pendingOrders) {
+      const pendingProductIds = pending.items.map(i => i.productId).sort()
+      if (JSON.stringify(pendingProductIds) === JSON.stringify(newProductIds)) {
+        return NextResponse.json({
+          ok: false,
+          warning: 'You already have a pending order with the same items',
+          existingOrder: pending,
+          duplicateItems: true,
+        })
+      }
+    }
 
     // Verify products exist and recompute prices to prevent tampering
-    const productIds = items.map((i) => i.productId)
+    const productIds = items.map((i: any) => i.productId)
     const dbProducts = await db.product.findMany({
       where: { id: { in: productIds }, isActive: true },
     })
@@ -71,15 +120,16 @@ export async function POST(req: NextRequest) {
     }
 
     const shipping = subtotal >= 250 ? 0 : 15
-    const tax = Math.round(subtotal * 0.18 * 100) / 100 // 18% VAT (Turkey)
+    const tax = Math.round(subtotal * 0.18 * 100) / 100
     const totalAmount = Math.round((subtotal + shipping + tax) * 100) / 100
 
     const orderNumber =
-      'GG-' + Date.now().toString().slice(-8) + '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+      'O-' + Date.now().toString().slice(-8) + '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
 
     const order = await db.order.create({
       data: {
         orderNumber,
+        userId: authedUser?.userId || null,
         email: rest.email.toLowerCase(),
         fullName: rest.fullName,
         phone: rest.phone || null,
@@ -89,11 +139,17 @@ export async function POST(req: NextRequest) {
         country: rest.country,
         notes: rest.notes || null,
         paymentMethod: rest.paymentMethod,
+        idempotencyKey: idempotencyKey || null,
+        stripePaymentIntentId: stripePaymentIntentId || null,
+        paypalOrderId: paypalOrderId || null,
+        walletProvider: walletProvider || null,
+        paymentReference: paymentReference || null,
         subtotal,
         shipping,
         tax,
         totalAmount,
-        status: 'processing',
+        status: rest.paymentMethod === 'cod' ? 'pending' : 'pending',
+        paymentStatus: rest.paymentMethod === 'card' || rest.paymentMethod === 'paypal' ? 'paid' : rest.paymentMethod === 'cod' ? 'pending' : 'awaiting_verification',
         items: { create: orderItemsData },
       },
       include: { items: { include: { product: true } } },

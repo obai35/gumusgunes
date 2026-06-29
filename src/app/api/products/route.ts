@@ -17,7 +17,13 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.ProductWhereInput = { isActive: true }
     if (category && category !== 'all') {
-      where.category = { slug: category }
+      const cat = await db.category.findUnique({ where: { slug: category }, include: { children: { select: { id: true } } } })
+      if (cat) {
+        const childIds = cat.children.map(c => c.id)
+        where.categoryId = childIds.length > 0 ? { in: [cat.id, ...childIds] } : cat.id
+      } else {
+        where.category = { slug: category }
+      }
     }
     if (featured === 'true') where.isFeatured = true
     if (isNew === 'true') where.isNew = true

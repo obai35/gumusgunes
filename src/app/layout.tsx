@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { DesignProvider } from "@/components/store/DesignProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,10 +53,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://js.stripe.com" />
+        <link rel="preconnect" href="https://www.paypal.com" />
+        <link rel="preconnect" href="https://accounts.google.com" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
       >
-        {children}
+        <DesignProvider>{children}</DesignProvider>
         <Toaster />
       </body>
     </html>

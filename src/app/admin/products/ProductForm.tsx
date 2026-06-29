@@ -12,10 +12,12 @@ type ProductData = {
 }
 
 export function ProductForm({ categories, initialData, productId }: {
-  categories: { id: string; name: string }[]
+  categories: { id: string; name: string; parentId: string | null; parent?: { id: string; name: string } | null }[]
   initialData?: ProductData
   productId?: string
 }) {
+  const parentCats = categories.filter(c => !c.parentId)
+  const subCats = categories.filter(c => c.parentId)
   const router = useRouter()
   const [form, setForm] = useState<ProductData>(initialData || {
     name: '', slug: '', description: '', price: 0, sku: '', categoryId: '',
@@ -49,7 +51,7 @@ export function ProductForm({ categories, initialData, productId }: {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div><label className="text-sm font-medium text-navy">SKU</label><input required value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-        <div><label className="text-sm font-medium text-navy">Category</label><select required value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1">{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+        <div><label className="text-sm font-medium text-navy">Category</label><select required value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1">{parentCats.map((p) => (<optgroup key={p.id} label={p.name}>{subCats.filter(c => c.parentId === p.id).map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}</optgroup>))}</select></div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div><label className="text-sm font-medium text-navy">Material</label><input value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>

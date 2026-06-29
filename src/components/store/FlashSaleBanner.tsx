@@ -43,7 +43,7 @@ export function FlashSaleBanner() {
     setSaleEnd(getSaleEnd())
   }, [])
 
-  const { days, hours, minutes, seconds, isExpired } = useCountdown(saleEnd ?? Date.now() + 3 * 86400000)
+  const { days, hours, minutes, seconds, isExpired } = useCountdown(saleEnd ?? 0)
 
   if (isExpired || saleEnd === null) return null
 
