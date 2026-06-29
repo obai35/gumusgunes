@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays } from 'lucide-react'
+import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download } from 'lucide-react'
 
 type Tab = 'overview' | 'orders' | 'branches' | 'reports'
 
@@ -61,6 +61,7 @@ function OverviewTab() {
           { label: "Today's Orders", value: data.todayOrders, color: 'text-navy' },
           { label: 'Pending Orders', value: data.pendingOrders, color: 'text-yellow-600' },
           { label: 'Unreconciled Payments', value: data.unreconciledOrders, color: 'text-red-600' },
+          { label: 'Pending Refunds', value: data.pendingRefunds ?? 0, color: 'text-red-600' },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl border border-border p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{s.label}</p>
@@ -213,6 +214,18 @@ function OrdersTab() {
           <option value="pending">Pending</option>
           <option value="paid">Paid</option>
         </select>
+        <button
+          onClick={() => {
+            const params = new URLSearchParams()
+            if (search) params.set('search', search)
+            if (statusFilter) params.set('status', statusFilter)
+            if (paymentFilter) params.set('paymentStatus', paymentFilter)
+            window.open(`/api/admin/accounting/export/orders?${params}`, '_blank')
+          }}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Export Excel
+        </button>
         <button onClick={fetchOrders} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">
           <Filter className="h-4 w-4 inline mr-1" /> Filter
         </button>
@@ -309,6 +322,12 @@ function BranchesTab() {
             {p.charAt(0).toUpperCase() + p.slice(1)}
           </button>
         ))}
+        <button
+          onClick={() => window.open(`/api/admin/accounting/export/branches?period=${period}`, '_blank')}
+          className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto"
+        >
+          <Download className="h-4 w-4" /> Export Excel
+        </button>
       </div>
       {!data ? (
         <div className="text-muted-foreground text-sm">Loading...</div>
@@ -365,6 +384,12 @@ function ReportsTab() {
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
+        <button
+          onClick={() => window.open(`/api/admin/accounting/export/reports?type=${type}`, '_blank')}
+          className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto"
+        >
+          <Download className="h-4 w-4" /> Export Excel
+        </button>
       </div>
       {!data ? (
         <div className="text-muted-foreground text-sm">Loading...</div>
