@@ -85,7 +85,7 @@ model Order {
   shipping      Float
   tax           Float
   status        String      @default("pending") // pending, processing, shipped, delivered, cancelled
-  paymentMethod String      @default("card") // cash, card, split
+  paymentMethod String      @default("card") // cash, card, split, bank_transfer, instapay, wallet
   cashAmount    Float?
   cardAmount    Float?
   notes          String?
@@ -232,21 +232,51 @@ model SiteSetting {
   value String
 }
 
-model Shift {
-  id            String   @id @default(cuid())
-  branchId      String
-  branch        Branch   @relation(fields: [branchId], references: [id])
-  startedAt     DateTime @default(now())
-  closedAt      DateTime?
-  startingCash  Float    @default(0)
-  endingCash    Float?
-  totalCash     Float    @default(0)
-  totalCard     Float    @default(0)
-  totalSales    Float    @default(0)
-  orderCount    Int      @default(0)
+model Supplier {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime  @default(now())
+  expenses  Expense[]
+}
+
+model Expense {
+  id            String    @id @default(cuid())
+  shiftId       String
+  shift         Shift     @relation(fields: [shiftId], references: [id])
+  supplierId    String?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id])
+  amount        Float
+  paymentMethod String
+  description   String
+  invoiceNumber String?
   notes         String?
-  isOpen        Boolean  @default(true)
-  orders        Order[]
+  createdAt     DateTime  @default(now())
+}
+
+model Shift {
+  id                String   @id @default(cuid())
+  branchId          String
+  branch            Branch   @relation(fields: [branchId], references: [id])
+  startedAt         DateTime @default(now())
+  closedAt          DateTime?
+  startingCash      Float    @default(0)
+  endingCash        Float?
+  totalCash         Float    @default(0)
+  totalCard         Float    @default(0)
+  totalBankTransfer Float    @default(0)
+  totalInstapay     Float    @default(0)
+  totalWallet       Float    @default(0)
+  totalSales        Float    @default(0)
+  totalExpenses     Float    @default(0)
+  orderCount        Int      @default(0)
+  notes             String?
+  isOpen            Boolean  @default(true)
+  orders            Order[]
+  expenses          Expense[]
 }
 
 model Branch {

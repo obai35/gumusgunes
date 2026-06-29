@@ -4,6 +4,8 @@ import crypto from 'crypto'
 
 const prisma = new PrismaClient()
 
+const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
+
 function generateReceiptNumber(): string {
   const now = new Date()
   const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
@@ -15,7 +17,9 @@ export async function POST(req: Request) {
   try {
     const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
-    if (!paymentMethod) return NextResponse.json({ error: 'Payment method is required' }, { status: 400 })
+    if (!paymentMethod || !VALID_PAYMENT_METHODS.includes(paymentMethod)) {
+      return NextResponse.json({ error: 'Valid payment method is required' }, { status: 400 })
+    }
 
     if (!shiftId) return NextResponse.json({ error: 'An open shift is required to process sales' }, { status: 400 })
     const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
@@ -96,7 +100,7 @@ export async function POST(req: Request) {
         data: {
           orderNumber,
           receiptNumber,
-          shiftId: shiftId || undefined,
+          shiftId,
           email: 'pos@gumusgunes.com',
           fullName: 'Walk-in Customer',
           address: 'In-store purchase',
@@ -111,8 +115,8 @@ export async function POST(req: Request) {
           discountId: appliedDiscount?.id || null,
           status: 'confirmed',
           paymentMethod,
-          cashAmount: cashAmount || null,
-          cardAmount: cardAmount || null,
+          cashAmount: paymentMethod === 'split' ? (cashAmount || 0) : (paymentMethod === 'cash' ? total : null),
+          cardAmount: paymentMethod === 'split' ? (cardAmount || 0) : (paymentMethod === 'card' ? total : null),
           paymentStatus: 'paid',
           items: {
             create: items.map((item: any) => {
@@ -133,7 +137,7 @@ export async function POST(req: Request) {
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })
     return NextResponse.json({ orderId: fullOrder!.id, total: fullOrder!.totalAmount, order: fullOrder })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
   }
 }

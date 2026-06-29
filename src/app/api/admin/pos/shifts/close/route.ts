@@ -17,8 +17,12 @@ export async function POST(req: Request) {
     const orders = await prisma.order.findMany({ where: { shiftId } })
 
     const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0)
-    const totalCash = orders.reduce((sum, o) => sum + (o.cashAmount || 0), 0)
-    const totalCard = orders.reduce((sum, o) => sum + (o.cardAmount || 0), 0)
+    const totalCash = orders.reduce((sum, o) => sum + (o.cashAmount || (o.paymentMethod === 'cash' ? o.totalAmount : 0)), 0)
+    const totalCard = orders.reduce((sum, o) => sum + (o.cardAmount || (o.paymentMethod === 'card' ? o.totalAmount : 0)), 0)
+    const totalBankTransfer = orders.filter((o) => o.paymentMethod === 'bank_transfer').reduce((sum, o) => sum + o.totalAmount, 0)
+    const totalInstapay = orders.filter((o) => o.paymentMethod === 'instapay').reduce((sum, o) => sum + o.totalAmount, 0)
+    const totalWallet = orders.filter((o) => o.paymentMethod === 'wallet').reduce((sum, o) => sum + o.totalAmount, 0)
+    const totalExpenses = await prisma.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
     const orderCount = orders.length
 
     const updated = await prisma.shift.update({
@@ -30,13 +34,17 @@ export async function POST(req: Request) {
         totalSales,
         totalCash,
         totalCard,
+        totalBankTransfer,
+        totalInstapay,
+        totalWallet,
+        totalExpenses,
         orderCount,
         notes: notes || null,
       },
     })
 
     return NextResponse.json({ ok: true, shift: updated })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to close shift' }, { status: 500 })
   }
 }

@@ -24,6 +24,9 @@ export async function GET(req: Request) {
     const cashRevenue = orders.filter((o) => o.paymentMethod === 'cash').reduce((sum, o) => sum + o.totalAmount, 0)
     const cardRevenue = orders.filter((o) => o.paymentMethod === 'card').reduce((sum, o) => sum + o.totalAmount, 0)
     const splitRevenue = orders.filter((o) => o.paymentMethod === 'split').reduce((sum, o) => sum + o.totalAmount, 0)
+    const bankTransferRevenue = orders.filter((o) => o.paymentMethod === 'bank_transfer').reduce((sum, o) => sum + o.totalAmount, 0)
+    const instapayRevenue = orders.filter((o) => o.paymentMethod === 'instapay').reduce((sum, o) => sum + o.totalAmount, 0)
+    const walletRevenue = orders.filter((o) => o.paymentMethod === 'wallet').reduce((sum, o) => sum + o.totalAmount, 0)
     const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0)
 
     const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {}
@@ -42,10 +45,16 @@ export async function GET(req: Request) {
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 10)
 
-    const paymentMethods = {
-      cash: orders.filter((o) => o.paymentMethod === 'cash').length,
-      card: orders.filter((o) => o.paymentMethod === 'card').length,
-      split: orders.filter((o) => o.paymentMethod === 'split').length,
+    const paymentMethods: Record<string, number> = {
+      cash: 0,
+      card: 0,
+      split: 0,
+      bank_transfer: 0,
+      instapay: 0,
+      wallet: 0,
+    }
+    for (const o of orders) {
+      if (paymentMethods[o.paymentMethod] !== undefined) paymentMethods[o.paymentMethod]++
     }
 
     return NextResponse.json({
@@ -59,6 +68,10 @@ export async function GET(req: Request) {
         totalSales: shift.totalSales,
         totalCash: shift.totalCash,
         totalCard: shift.totalCard,
+        totalBankTransfer: shift.totalBankTransfer,
+        totalInstapay: shift.totalInstapay,
+        totalWallet: shift.totalWallet,
+        totalExpenses: shift.totalExpenses,
         orderCount: shift.orderCount,
         notes: shift.notes,
         isOpen: shift.isOpen,
@@ -84,12 +97,15 @@ export async function GET(req: Request) {
         cashRevenue,
         cardRevenue,
         splitRevenue,
+        bankTransferRevenue,
+        instapayRevenue,
+        walletRevenue,
         averageOrder: orders.length > 0 ? totalRevenue / orders.length : 0,
         topProducts,
         paymentMethods,
       },
     })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch shift summary' }, { status: 500 })
   }
 }

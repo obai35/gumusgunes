@@ -1,22 +1,33 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { LogOut, ClipboardList, Clock } from 'lucide-react'
+import { LogOut, ClipboardList, Clock, ShoppingCart, Search, FileText, BarChart3 } from 'lucide-react'
 import type { Shift } from '../types'
+
+type TabId = 'pos' | 'orders' | 'records' | 'hall-sale'
 
 type Props = {
   branchName: string
   shift: Shift | null
+  activeTab: TabId
+  onTabChange: (tab: TabId) => void
   onAssessment: () => void
   onCloseShift: () => void
   onLogout: () => void
   children: ReactNode
 }
 
-export default function PosLayout({ branchName, shift, onAssessment, onCloseShift, onLogout, children }: Props) {
+const tabs: { id: TabId; label: string; icon: typeof ShoppingCart }[] = [
+  { id: 'pos', label: 'POS', icon: ShoppingCart },
+  { id: 'orders', label: 'Orders', icon: Search },
+  { id: 'records', label: 'Records', icon: FileText },
+  { id: 'hall-sale', label: 'Hall Sale', icon: BarChart3 },
+]
+
+export default function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, children }: Props) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
+      <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/30">
@@ -49,6 +60,24 @@ export default function PosLayout({ branchName, shift, onAssessment, onCloseShif
           </button>
         </div>
       </div>
+
+      <div className="flex gap-1 mb-4 pb-0.5 border-b border-border">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              activeTab === tab.id
+                ? 'text-navy border-b-2 border-navy bg-navy/5'
+                : 'text-muted-foreground hover:text-navy hover:bg-navy/5'
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {children}
     </div>
   )

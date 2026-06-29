@@ -1,0 +1,49 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
+
+export async function GET(req: NextRequest) {
+  try {
+    const searchParams = req.nextUrl.searchParams
+    const q = searchParams.get('q') || ''
+    const from = searchParams.get('from')
+    const to = searchParams.get('to')
+    const shiftId = searchParams.get('shiftId')
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
+
+    const where: any = {}
+    if (q) {
+      where.OR = [
+        { orderNumber: { contains: q } },
+        { receiptNumber: { contains: q } },
+        { fullName: { contains: q } },
+      ]
+    }
+    if (from || to) {
+      where.createdAt = {}
+      if (from) where.createdAt.gte = new Date(from)
+      if (to) where.createdAt.lte = new Date(to + 'T23:59:59.999Z')
+    }
+    if (shiftId) where.shiftId = shiftId
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: {
+          items: { include: { product: { select: { name: true, sku: true } } } },
+          shift: { select: { branchId: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.order.count({ where }),
+    ])
+
+    return NextResponse.json({ orders, total, page, totalPages: Math.ceil(total / limit) })
+  } catch {
+    return NextResponse.json({ error: 'Failed to search orders' }, { status: 500 })
+  }
+}

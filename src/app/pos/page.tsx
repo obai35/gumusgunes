@@ -18,8 +18,13 @@ import ReceiptView from './components/ReceiptView'
 import ShiftStartModal from './components/ShiftStartModal'
 import ShiftCloseModal from './components/ShiftCloseModal'
 import AssessmentView from './components/AssessmentView'
+import OrdersTab from './components/OrdersTab'
+import RecordsTab from './components/RecordsTab'
+import HallSaleTab from './components/HallSaleTab'
 import CustomerDisplay from './components/CustomerDisplay'
 import type { Shift, ShiftSummary } from './types'
+
+type View = 'pos' | 'orders' | 'records' | 'hall-sale' | 'assessment'
 
 export default function POSPage() {
   const router = useRouter()
@@ -41,7 +46,7 @@ export default function POSPage() {
   const [endingCash, setEndingCash] = useState('')
   const [shiftNotes, setShiftNotes] = useState('')
   const [shiftSummary, setShiftSummary] = useState<ShiftSummary | null>(null)
-  const [view, setView] = useState<'pos' | 'assessment'>('pos')
+  const [view, setView] = useState<View>('pos')
   const [assessmentData, setAssessmentData] = useState<any>(null)
   const [assessmentLoading, setAssessmentLoading] = useState(false)
 
@@ -193,6 +198,14 @@ export default function POSPage() {
 
   function handleLogout() { logout(); router.replace('/pos/login') }
 
+  function handleTabChange(tab: View) {
+    if (tab !== 'pos' && !shift) {
+      toast.error('Start a shift first')
+      return
+    }
+    setView(tab)
+  }
+
   const checkoutDisabled =
     pos.cart.length === 0 ||
     pos.checkoutLoading ||
@@ -216,7 +229,7 @@ export default function POSPage() {
   if (shiftSummary) {
     return (
       <div className="flex items-start justify-center min-h-[60vh] pt-8">
-        <div className="bg-white rounded-xl border border-border shadow-sm w-full max-w-md p-6 text-center">
+        <div className="bg-white rounded-xl border border-shadow w-full max-w-md p-6 text-center">
           <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl text-green-600">✓</span>
           </div>
@@ -258,6 +271,14 @@ export default function POSPage() {
     )
   }
 
+  if (!shift) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-sm text-muted-foreground">
+        Start a shift to access this section
+      </div>
+    )
+  }
+
   if (view === 'assessment') {
     return (
       <AssessmentView
@@ -272,62 +293,82 @@ export default function POSPage() {
     <PosLayout
       branchName={user?.name || 'Branch'}
       shift={shift}
+      activeTab={view}
+      onTabChange={handleTabChange}
       onAssessment={() => setView('assessment')}
       onCloseShift={() => setShowCloseShift(true)}
       onLogout={handleLogout}
     >
-      <div className="flex gap-6 flex-1 min-h-0">
-        <div className="flex-1 flex flex-col min-h-0">
-          <div className="mb-3">
-            <BarcodeInput
-              onProductFound={(p) => pos.addToCart(p)}
+      {view === 'pos' && (
+        <div className="flex gap-6 flex-1 min-h-0">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="mb-3">
+              <BarcodeInput onProductFound={(p) => pos.addToCart(p)} />
+            </div>
+            <ProductGrid
+              products={pos.products}
+              search={pos.search}
+              onSearchChange={pos.setSearch}
+              onAddToCart={pos.addToCart}
             />
           </div>
-          <ProductGrid
-            products={pos.products}
-            search={pos.search}
-            onSearchChange={pos.setSearch}
-            onAddToCart={pos.addToCart}
+          <CartPanel
+            cart={pos.cart}
+            onUpdateQuantity={pos.updateQuantity}
+            onRemove={pos.removeFromCart}
+            discountSection={
+              <DiscountSection
+                discountCode={pos.discountCode}
+                onDiscountCodeChange={pos.setDiscountCode}
+                onApplyDiscount={handleApplyDiscount}
+                appliedDiscount={pos.appliedDiscount}
+                onRemoveDiscount={() => { pos.setAppliedDiscount(null); pos.setDiscountCode('') }}
+                discountAmount={pos.discountAmount}
+              />
+            }
+            paymentSection={
+              <PaymentSection
+                paymentMethod={pos.paymentMethod}
+                onPaymentMethodChange={pos.setPaymentMethod}
+                cashAmount={pos.cashAmount}
+                onCashChange={pos.handleCashChange}
+                cardAmount={pos.cardAmount}
+                onCardChange={pos.handleCardChange}
+                total={pos.total}
+                change={pos.change}
+              />
+            }
+            totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} />}
+            checkoutButton={
+              <CheckoutButton
+                total={pos.total}
+                paymentMethod={pos.paymentMethod}
+                disabled={checkoutDisabled}
+                loading={pos.checkoutLoading}
+                onClick={handleCheckout}
+              />
+            }
           />
         </div>
-        <CartPanel
-          cart={pos.cart}
-          onUpdateQuantity={pos.updateQuantity}
-          onRemove={pos.removeFromCart}
-          discountSection={
-            <DiscountSection
-              discountCode={pos.discountCode}
-              onDiscountCodeChange={pos.setDiscountCode}
-              onApplyDiscount={handleApplyDiscount}
-              appliedDiscount={pos.appliedDiscount}
-              onRemoveDiscount={() => { pos.setAppliedDiscount(null); pos.setDiscountCode('') }}
-              discountAmount={pos.discountAmount}
-            />
-          }
-          paymentSection={
-            <PaymentSection
-              paymentMethod={pos.paymentMethod}
-              onPaymentMethodChange={pos.setPaymentMethod}
-              cashAmount={pos.cashAmount}
-              onCashChange={pos.handleCashChange}
-              cardAmount={pos.cardAmount}
-              onCardChange={pos.handleCardChange}
-              total={pos.total}
-              change={pos.change}
-            />
-          }
-          totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} />}
-          checkoutButton={
-            <CheckoutButton
-              total={pos.total}
-              paymentMethod={pos.paymentMethod}
-              disabled={checkoutDisabled}
-              loading={pos.checkoutLoading}
-              onClick={handleCheckout}
-            />
-          }
-        />
-      </div>
+      )}
+
+      {view === 'orders' && (
+        <div className="flex-1 min-h-0">
+          <OrdersTab shiftId={shift.id} />
+        </div>
+      )}
+
+      {view === 'records' && (
+        <div className="flex-1 min-h-0">
+          <RecordsTab shiftId={shift.id} />
+        </div>
+      )}
+
+      {view === 'hall-sale' && (
+        <div className="flex-1 min-h-0">
+          <HallSaleTab shiftId={shift.id} />
+        </div>
+      )}
 
       {showCloseShift && (
         <ShiftCloseModal
@@ -340,7 +381,7 @@ export default function POSPage() {
         />
       )}
 
-      {pos.cart.length > 0 && (
+      {pos.cart.length > 0 && view === 'pos' && (
         <CustomerDisplay itemCount={pos.cart.length} total={pos.total} />
       )}
     </PosLayout>
