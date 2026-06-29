@@ -25,16 +25,9 @@ const RewardsSection = lazy(() => import('@/components/store/RewardsSection').th
 const GiftFinder = lazy(() => import('@/components/store/GiftFinder').then(m => ({ default: m.GiftFinder })))
 const BundleConfigurator = lazy(() => import('@/components/store/BundleConfigurator').then(m => ({ default: m.BundleConfigurator })))
 const FlashSaleBanner = lazy(() => import('@/components/store/FlashSaleBanner').then(m => ({ default: m.FlashSaleBanner })))
-const ProductModal = lazy(() => import('@/components/store/ProductModal').then(m => ({ default: m.ProductModal })))
-const CartDrawer = lazy(() => import('@/components/store/CartDrawer').then(m => ({ default: m.CartDrawer })))
-const CheckoutDialog = lazy(() => import('@/components/store/CheckoutDialog').then(m => ({ default: m.CheckoutDialog })))
 const SearchDialog = lazy(() => import('@/components/store/SearchDialog').then(m => ({ default: m.SearchDialog })))
 const WishlistDrawer = lazy(() => import('@/components/store/WishlistDrawer').then(m => ({ default: m.WishlistDrawer })))
-const ConciergeChat = lazy(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 const ExitIntentPopup = lazy(() => import('@/components/store/ExitIntentPopup').then(m => ({ default: m.ExitIntentPopup })))
-const CompareModal = lazy(() => import('@/components/store/CompareModal').then(m => ({ default: m.CompareModal })))
-const CompareTray = lazy(() => import('@/components/store/CompareTray').then(m => ({ default: m.CompareTray })))
-const OrderTrackingModal = lazy(() => import('@/components/store/OrderTrackingModal').then(m => ({ default: m.OrderTrackingModal })))
 
 function SectionFallback() {
   return <div className="h-32 bg-secondary/20 animate-pulse rounded-2xl mx-4 my-8" />
@@ -159,17 +152,10 @@ export default function Home() {
 
       <Footer />
 
-      {/* Overlays */}
-      <Suspense fallback={null}><ProductModal /></Suspense>
-      <Suspense fallback={null}><CartDrawer /></Suspense>
-      <Suspense fallback={null}><CheckoutDialog /></Suspense>
+      {/* Utility Overlays */}
       <Suspense fallback={null}><SearchDialog /></Suspense>
       <Suspense fallback={null}><WishlistDrawer /></Suspense>
-      <Suspense fallback={null}><CompareModal /></Suspense>
-      <Suspense fallback={null}><OrderTrackingModal /></Suspense>
-      <Suspense fallback={null}><ConciergeChat /></Suspense>
       <Suspense fallback={null}><ExitIntentPopup /></Suspense>
-      <Suspense fallback={null}><CompareTray /></Suspense>
 
       {loading && <DiamondLoading text={t('page.loading')} />}
 
