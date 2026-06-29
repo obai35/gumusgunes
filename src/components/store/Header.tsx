@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useCart, useUI, useWishlist } from '@/lib/store'
 import { useAuth } from '@/lib/auth-store'
@@ -14,10 +15,11 @@ import { LoyaltyBadge } from './LoyaltyBadge'
 import type { Category } from '@/lib/types'
 
 export function Header() {
+  const router = useRouter()
   const { t } = useTranslation()
   const [scrolled, setScrolled] = useState(false)
   const hydrated = useHydrated()
-  const { openCart, count } = useCart()
+  const { count } = useCart()
   const { setSearchOpen, setWishlistOpen, setMobileMenuOpen, mobileMenuOpen } = useUI()
   const wishlist = useWishlist()
   const [categories, setCategories] = useState<Category[]>([])
@@ -201,7 +203,7 @@ export function Header() {
                   <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-gold text-[10px] font-bold text-navy-deep flex items-center justify-center">{wishlistCount}</span>
                 )}
               </button>
-              <button onClick={openCart} className="relative p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors" aria-label={t('nav.cart')}>
+              <button onClick={() => router.push('/cart')} className="relative p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors" aria-label={t('nav.cart')}>
                 <ShoppingBag className="h-5 w-5" />
                 {cartCount > 0 && (
                   <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-navy text-[10px] font-bold text-silver flex items-center justify-center">{cartCount}</span>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowUpRight } from 'lucide-react'
@@ -7,6 +8,7 @@ import type { Category } from '@/lib/types'
 import { useTranslation } from '@/hooks/use-translation'
 
 export function CategoryGrid({ categories }: { categories: Category[] }) {
+  const router = useRouter()
   const { t } = useTranslation()
   const [activeParent, setActiveParent] = useState<string>(categories[0]?.slug || '')
 
@@ -59,12 +61,10 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
             {children.map((cat, idx) => (
               <motion.a
                 key={cat.id}
-                href={`#collections`}
+                href="/products"
                 onClick={(e) => {
                   e.preventDefault()
-                  const evt = new CustomEvent('gg:select-category', { detail: cat.slug })
-                  window.dispatchEvent(evt)
-                  document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' })
+                  router.push(`/products?category=${cat.slug}`)
                 }}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}

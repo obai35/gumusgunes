@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { Heart, Star, Eye, GitCompare } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Product } from '@/lib/types'
@@ -10,6 +11,7 @@ import { useCart, useUI, useWishlist, useCompare } from '@/lib/store'
 import { toast } from 'sonner'
 
 export function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
+  const router = useRouter()
   const { addItem } = useCart()
   const { setProductModal } = useUI()
   const wishlist = useWishlist()
@@ -37,7 +39,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
     })
   }
 
-  const handleOpen = () => setProductModal(product.id)
+  const handleOpen = () => router.push(`/products/${product.id}`)
 
   return (
     <motion.div

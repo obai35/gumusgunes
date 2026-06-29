@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import type { Product } from '@/lib/types'
@@ -30,13 +31,13 @@ export function FeaturedProducts({ id, title, eyebrow, products, ctaLabel, ctaHr
             </h2>
           </div>
           {ctaLabel && ctaHref && (
-            <a
+            <Link
               href={ctaHref}
               className="group inline-flex items-center gap-2 text-sm font-medium text-navy hover:text-gold transition-colors"
             >
               {ctaLabel}
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </a>
+            </Link>
           )}
         </div>
 
