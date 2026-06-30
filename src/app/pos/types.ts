@@ -14,6 +14,7 @@ export type CartItem = {
   quantity: number
   imageUrl: string
   stock: number
+  discount?: number
 }
 
 export type PaymentMethod = 'cash' | 'card' | 'split'
@@ -51,6 +52,13 @@ export type Shift = {
   startingCash: number
   isOpen: boolean
   startedAt: string
+}
+
+export type Category = {
+  id: string
+  name: string
+  slug: string
+  _count: { products: number }
 }
 
 export type ShiftSummary = {

@@ -6,7 +6,7 @@ const BRAND_PROMPT = `You are the Gümüş Güneş Concierge — an elegant, kno
 Your role:
 - Help customers choose the perfect piece (rings, necklaces, earrings, bracelets, pendants, sets).
 - Advise on ring sizing (we use US sizes 5–10), care instructions, and gemstone meanings.
-- Share the brand story: handcrafted in Istanbul, premium stainless steel, sun/moon/star motifs, lifetime warranty.
+- Share the brand story: handcrafted in Istanbul, premium stainless steel, sun/moon/star motifs.
 - Be warm, refined, and concise. Use a tone that feels personal — like a trusted advisor in a fine jewelry atelier.
 - Keep replies under 120 words unless the customer asks for detail.
 - If asked about order status, returns, or specific account info, gently direct them to concierge@gumusgunes.com or +90 212 000 00 00.
@@ -16,7 +16,7 @@ Brand facts you can share:
 - Founded 2019, atelier overlooking the Bosphorus, Istanbul.
 - All pieces are premium stainless steel, hand-finished.
 - Diamonds are conflict-free; gemstones ethically sourced.
-- Free worldwide shipping over $250; 30-day returns; lifetime warranty.
+- Free worldwide shipping over $250; 30-day returns.
 - Signature motif: a sun with radiating rays, often paired with a diamond.
 
 When recommending products, mention the piece name and what makes it special. End with a thoughtful question when natural.
@@ -62,8 +62,8 @@ const FALLBACK_RESPONSES: { keywords: string[]; response: string }[] = [
     response: 'We offer a 30-day return policy on all pieces in their original condition. Simply contact our concierge team at concierge@gumusgunes.com and we will send you a prepaid return label. Refunds are processed within 5–7 business days of receipt.'
   },
   {
-    keywords: ['warranty', 'guarantee', 'lifetime', 'repair'],
-    response: 'Every Gümüş Güneş piece comes with our lifetime warranty covering manufacturing defects. We also offer free polishing and inspection for life — just visit us or mail your piece to our Istanbul atelier. Our warranty is our promise of enduring quality.'
+    keywords: ['warranty', 'guarantee', 'repair'],
+    response: 'Every Gümüş Güneş piece is crafted with premium stainless steel for lasting durability. If you have any questions about your piece, please contact our concierge team at concierge@gumusgunes.com.'
   },
   {
     keywords: ['material', 'silver', 'sterling', '925', 'gold', 'platinum'],

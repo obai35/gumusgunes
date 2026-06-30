@@ -2,6 +2,13 @@ import { useState, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
 import type { Product, CartItem, PaymentMethod, AppliedDiscount, ReceiptData } from '../types'
 
+export type HeldOrder = {
+  id: string
+  label: string
+  items: CartItem[]
+  heldAt: string
+}
+
 export function usePos() {
   const [search, setSearch] = useState('')
   const [products, setProducts] = useState<Product[]>([])
@@ -13,9 +20,11 @@ export function usePos() {
   const [cashAmount, setCashAmount] = useState('')
   const [cardAmount, setCardAmount] = useState('')
   const [receipt, setReceipt] = useState<ReceiptData | null>(null)
+  const [heldOrders, setHeldOrders] = useState<HeldOrder[]>([])
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
-  const discountAmount = appliedDiscount?.amount || 0
+  const itemDiscountTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.discount || 0), 0), [cart])
+  const discountAmount = (appliedDiscount?.amount || 0) + itemDiscountTotal
   const total = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount])
   const parsedCash = useMemo(() => parseFloat(cashAmount) || 0, [cashAmount])
   const parsedCard = useMemo(() => parseFloat(cardAmount) || 0, [cardAmount])
@@ -47,6 +56,10 @@ export function usePos() {
     setCart((prev) => prev.filter((i) => i.productId !== productId))
   }, [])
 
+  const setItemDiscount = useCallback((productId: string, discount: number) => {
+    setCart((prev) => prev.map((i) => i.productId === productId ? { ...i, discount } : i))
+  }, [])
+
   const handleCashChange = useCallback((value: string) => {
     setCashAmount(value)
     if (paymentMethod === 'split') {
@@ -64,6 +77,33 @@ export function usePos() {
       setCashAmount(remaining > 0 ? remaining.toFixed(2) : '0.00')
     }
   }, [paymentMethod, total])
+
+  const holdOrder = useCallback((label?: string) => {
+    if (cart.length === 0) return
+    const held: HeldOrder = {
+      id: Date.now().toString(36),
+      label: label || `Order #${heldOrders.length + 1}`,
+      items: JSON.parse(JSON.stringify(cart)),
+      heldAt: new Date().toISOString(),
+    }
+    setHeldOrders((prev) => [...prev, held])
+    setCart([])
+    setDiscountCode('')
+    setAppliedDiscount(null)
+    setCashAmount('')
+    setCardAmount('')
+    toast.success('Order held')
+  }, [cart, heldOrders])
+
+  const recallOrder = useCallback((held: HeldOrder) => {
+    setCart(held.items)
+    setHeldOrders((prev) => prev.filter((h) => h.id !== held.id))
+    toast.success('Order recalled')
+  }, [])
+
+  const removeHeldOrder = useCallback((id: string) => {
+    setHeldOrders((prev) => prev.filter((h) => h.id !== id))
+  }, [])
 
   const newSale = useCallback(() => {
     setCart([])
@@ -88,8 +128,10 @@ export function usePos() {
     cashAmount, cardAmount,
     handleCashChange, handleCardChange,
     receipt, setReceipt,
-    subtotal, discountAmount, total,
+    subtotal, discountAmount, total, itemDiscountTotal,
     parsedCash, parsedCard, change,
     newSale,
+    setItemDiscount,
+    heldOrders, holdOrder, recallOrder, removeHeldOrder,
   }
 }

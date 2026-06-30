@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const where: any = {}
     if (q) {
       where.OR = [
+        { id: q },
         { orderNumber: { contains: q } },
         { receiptNumber: { contains: q } },
         { fullName: { contains: q } },
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
       prisma.order.findMany({
         where,
         include: {
-          items: { include: { product: { select: { name: true, sku: true } } } },
+          items: { include: { product: { select: { id: true, name: true, sku: true } } } },
           shift: { select: { branchId: true } },
         },
         orderBy: { createdAt: 'desc' },

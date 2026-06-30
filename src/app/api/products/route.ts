@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
       take: Math.max(1, Math.min(100, parseInt(limit || '20'))),
     })
 
-    return NextResponse.json({ ok: true, products, count: products.length })
+    return NextResponse.json({ ok: true, products, count: products.length }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
   } catch (err) {
     console.error('GET /api/products error:', err)
     return NextResponse.json(

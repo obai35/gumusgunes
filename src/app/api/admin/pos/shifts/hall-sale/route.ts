@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
 
     const orders = await prisma.order.findMany({ where: { shiftId } })
     const expenses = await prisma.expense.findMany({ where: { shiftId } })
+    const returns = await prisma.return.findMany({ where: { shiftId } })
 
     const incomeByMethod: Record<string, number> = {
       cash: 0,
@@ -33,6 +34,12 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const refundsByMethod: Record<string, number> = {}
+    for (const ret of returns) {
+      const method = ret.refundMethod
+      refundsByMethod[method] = (refundsByMethod[method] || 0) + ret.refundAmount
+    }
+
     const expensesByMethod: Record<string, number> = {}
     for (const expense of expenses) {
       const method = expense.paymentMethod
@@ -40,8 +47,10 @@ export async function GET(req: NextRequest) {
     }
 
     const totalIncome = Object.values(incomeByMethod).reduce((s, v) => s + v, 0)
+    const totalRefunds = Object.values(refundsByMethod).reduce((s, v) => s + v, 0)
     const totalExpenses = Object.values(expensesByMethod).reduce((s, v) => s + v, 0)
-    const expectedCash = shift.startingCash + (incomeByMethod.cash || 0) - (expensesByMethod.cash || 0)
+    const netTotal = totalIncome - totalRefunds - totalExpenses
+    const expectedCash = shift.startingCash + (incomeByMethod.cash || 0) - (refundsByMethod.cash || 0) - (expensesByMethod.cash || 0)
     const actualEndingCash = shift.endingCash || 0
     const difference = actualEndingCash - expectedCash
 
@@ -56,10 +65,12 @@ export async function GET(req: NextRequest) {
         isOpen: shift.isOpen,
       },
       incomeByMethod,
+      refundsByMethod,
       expensesByMethod,
       totalIncome,
+      totalRefunds,
       totalExpenses,
-      netTotal: totalIncome - totalExpenses,
+      netTotal,
       expectedCash,
       actualEndingCash,
       difference,

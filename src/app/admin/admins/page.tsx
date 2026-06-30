@@ -14,7 +14,7 @@ type Role = { id: string; name: string; permissions: string[]; createdAt: string
 const PERMISSION_LABELS: Record<string, string> = {
   dashboard: 'Dashboard', accounting: 'Accounting', orders: 'Orders', receipts: 'Receipts',
   products: 'Products', inventory: 'Inventory', discounts: 'Discounts', stock_transfers: 'Stock Transfers',
-  branches: 'Branches', pos: 'POS', editor: 'Site Editor', settings: 'Settings',
+  branches: 'Branches', pos: 'POS', editor: 'Site Editor', categories: 'Categories', settings: 'Settings',
   security: 'Security', admins: 'Admins',
 }
 

@@ -103,7 +103,7 @@ export function WishlistDrawer() {
                       onClick={() => { setWishlistOpen(false); setProductModal(p.id) }}
                       className="h-20 w-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0"
                     >
-                      <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" />
+                      <img src={p.imageUrl} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
                     </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">

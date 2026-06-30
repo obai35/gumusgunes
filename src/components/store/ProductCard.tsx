@@ -55,6 +55,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
         <img
           src={product.imageUrl}
           alt={product.name}
+          loading="lazy"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
 

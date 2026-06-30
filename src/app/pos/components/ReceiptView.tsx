@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Printer, DollarSign, CreditCard } from 'lucide-react'
 import type { ReceiptData } from '../types'
 
@@ -9,6 +10,11 @@ type Props = {
 }
 
 export default function ReceiptView({ receipt, onNewSale }: Props) {
+  useEffect(() => {
+    const timer = setTimeout(() => printReceipt(), 500)
+    return () => clearTimeout(timer)
+  }, [])
+
   function printReceipt() {
     const printWindow = window.open('', '_blank')
     if (!printWindow) return

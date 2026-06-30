@@ -96,6 +96,7 @@ export function Header() {
                 <img
                   src={settings.logoUrl || '/gumusgunes-logo.jpeg'}
                   alt={settings.siteName || 'Gümüş Güneş'}
+                  loading="lazy"
                   className="h-full w-full object-cover"
                 />
               </div>

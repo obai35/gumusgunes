@@ -13,8 +13,8 @@ const DEFAULTS: Record<string, string> = {
   accentColor: '#c9a84c',
   bgColor: '#ffffff',
   textColor: '#1a1a2e',
-  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns · Lifetime Warranty',
-  announcementTextMobile: 'Free Shipping Over $250 · Lifetime Warranty',
+  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns',
+  announcementTextMobile: 'Free Shipping Over $250',
   navCollections: 'Collections',
   navNewArrivals: 'New Arrivals',
   navBestsellers: 'Bestsellers',
@@ -26,6 +26,10 @@ const DEFAULTS: Record<string, string> = {
   footerAddress: 'Istanbul, Turkey',
   heroTitle: 'Silver That Tells Your Story',
   heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
+  promoLimitedTime: 'Limited Time',
+  promoHeading1: 'The Summer',
+  promoHeading2: 'Solstice Collection',
+  promoDescription: 'Up to 25% off selected pieces that celebrate the longest days of the year. Each purchase arrives in our signature gift box.',
 }
 
 export async function GET() {

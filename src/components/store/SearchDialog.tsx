@@ -140,7 +140,7 @@ export function SearchDialog() {
                       className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary transition-colors text-left group cursor-pointer"
                     >
                       <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-                        <img src={p.imageUrl} alt={p.name} className="h-full w-full object-cover" />
+                        <img src={p.imageUrl} alt={p.name} loading="lazy" className="h-full w-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-medium text-navy group-hover:text-gold transition-colors line-clamp-1">

@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
     const flat = req.nextUrl.searchParams.get('flat') === 'true'
 
     const categories = await db.category.findMany({
+      where: { isVisible: true },
       orderBy: { name: 'asc' },
       include: {
         _count: { select: { products: { where: { isActive: true } } } },
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
     })
 
     if (flat) {
-      return NextResponse.json({ ok: true, categories })
+      return NextResponse.json({ ok: true, categories }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
     }
 
     const parents = categories.filter(c => !c.parentId)
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
       children: categories.filter(c => c.parentId === p.id),
     }))
 
-    return NextResponse.json({ ok: true, categories: withChildren })
+    return NextResponse.json({ ok: true, categories: withChildren }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
   } catch (err) {
     console.error('GET /api/categories error:', err)
     return NextResponse.json(

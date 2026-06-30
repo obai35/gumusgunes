@@ -31,7 +31,6 @@ export function Footer() {
       title: t('footer.care'),
       links: [
         { label: t('footer.shippingReturns'), href: '#' },
-        { label: t('footer.lifetimeWarranty'), href: '#' },
         { label: t('footer.ringSizing'), href: '#' },
         { label: t('footer.jewelryCare'), href: '#' },
         { label: t('footer.faqs'), href: '#' },
@@ -53,6 +52,7 @@ export function Footer() {
                   <img
                     src="/gumusgunes-logo.jpeg"
                     alt="Gümüş Güneş"
+                    loading="lazy"
                     className="h-full w-full object-cover"
                   />
                 </div>

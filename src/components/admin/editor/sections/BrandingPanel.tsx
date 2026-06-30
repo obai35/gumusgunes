@@ -1,6 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import { useEditor } from '../SectionPanel'
+import { ImageIcon, BrokenImageIcon } from '@/components/admin/editor/FieldIcons'
+
+function ImgPreview({ src }: { src: string }) {
+  const [error, setError] = useState(false)
+  if (error) return <div className="h-8 w-8 rounded border border-red-300 bg-red-50 flex items-center justify-center"><BrokenImageIcon /></div>
+  return <img src={src} alt="" className="h-8 w-8 rounded object-cover border" onError={() => setError(true)} />
+}
+
+function isValidHex(c: string) {
+  return /^#[0-9a-fA-F]{6}$/.test(c)
+}
 
 export function BrandingPanel() {
   const { settings, updateSetting } = useEditor()
@@ -20,12 +32,15 @@ export function BrandingPanel() {
         <label className="text-xs font-medium text-muted-foreground">Logo URL</label>
         <div className="flex gap-2 mt-1">
           <input value={g('logoUrl')} onChange={e => updateSetting('logoUrl', e.target.value)} className="flex-1 px-2 py-1.5 text-sm border border-border rounded" />
-          {g('logoUrl') && <img src={g('logoUrl')} alt="" className="h-8 w-8 rounded object-cover border" />}
+          {g('logoUrl') && <ImgPreview src={g('logoUrl')} />}
         </div>
       </div>
       <div>
         <label className="text-xs font-medium text-muted-foreground">Favicon URL</label>
-        <input value={g('favicon') || ''} onChange={e => updateSetting('favicon', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
+        <div className="flex gap-2 mt-1">
+          <input value={g('favicon') || ''} onChange={e => updateSetting('favicon', e.target.value)} className="flex-1 px-2 py-1.5 text-sm border border-border rounded" />
+          {g('favicon') && <ImgPreview src={g('favicon')} />}
+        </div>
       </div>
     </div>
   )

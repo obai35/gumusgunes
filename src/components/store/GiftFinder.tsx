@@ -312,6 +312,7 @@ export function GiftFinder() {
                       <img
                         src={p.imageUrl}
                         alt={p.name}
+                        loading="lazy"
                         className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                       />
                       {i === 0 && (

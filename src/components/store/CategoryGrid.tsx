@@ -76,6 +76,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
                   <img
                     src={cat.imageUrl}
                     alt={cat.name}
+                    loading="lazy"
                     className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:opacity-90 transition-opacity"
                   />
                 )}

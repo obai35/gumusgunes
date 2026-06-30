@@ -132,14 +132,6 @@ export function Hero() {
                 <p className="text-xs text-gold mt-0.5">{t('hero.badge3')}</p>
               </motion.div>
 
-              <motion.div
-                animate={{ y: [0, 8, 0] }}
-                transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="absolute -top-2 -right-2 sm:-right-4 bg-navy text-silver rounded-2xl shadow-xl p-4"
-              >
-                <div className="text-[10px] tracking-[0.2em] uppercase text-gold-soft mb-1">{t('hero.lifetime')}</div>
-                <p className="font-display text-sm font-semibold">{t('hero.badge3')}</p>
-              </motion.div>
             </div>
           </motion.div>
         </div>

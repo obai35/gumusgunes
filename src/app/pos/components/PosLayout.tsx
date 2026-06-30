@@ -2,10 +2,10 @@
 
 import { memo } from 'react'
 import type { ReactNode } from 'react'
-import { LogOut, ClipboardList, Clock, ShoppingCart, Search, FileText, BarChart3 } from 'lucide-react'
+import { LogOut, ClipboardList, Clock, ShoppingCart, Search, FileText, BarChart3, RotateCcw } from 'lucide-react'
 import type { Shift } from '../types'
 
-type TabId = 'pos' | 'orders' | 'records' | 'hall-sale'
+type TabId = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale'
 
 type Props = {
   branchName: string
@@ -22,6 +22,7 @@ const tabs: { id: TabId; label: string; icon: typeof ShoppingCart }[] = [
   { id: 'pos', label: 'POS', icon: ShoppingCart },
   { id: 'orders', label: 'Orders', icon: Search },
   { id: 'records', label: 'Records', icon: FileText },
+  { id: 'returns', label: 'Returns', icon: RotateCcw },
   { id: 'hall-sale', label: 'Hall Sale', icon: BarChart3 },
 ]
 

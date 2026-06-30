@@ -205,6 +205,7 @@ export function BundleConfigurator() {
                         <img
                           src={p.imageUrl}
                           alt={p.name}
+                          loading="lazy"
                           className="absolute inset-0 h-full w-full object-cover"
                         />
                         {isSelected && (

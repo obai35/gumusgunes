@@ -20,11 +20,7 @@ const pillars = [
     title: 'about.pillar3Title',
     desc: 'about.pillar3Desc',
   },
-  {
-    icon: Sparkles,
-    title: 'about.pillar4Title',
-    desc: 'about.pillar4Desc',
-  },
+
 ]
 
 export function AboutSection() {
@@ -45,6 +41,7 @@ export function AboutSection() {
               <img
                 src="/products/about-craft.jpg"
                 alt="Master artisan crafting stainless steel accessories"
+                loading="lazy"
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/60 via-transparent to-transparent" />

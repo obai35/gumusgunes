@@ -1,13 +1,25 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import { useTranslation } from '@/hooks/use-translation'
 
 export function PromoBanner() {
   const { t } = useTranslation()
+  const [settings, setSettings] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then(r => r.json())
+      .then(data => { if (data.ok) setSettings(data.settings) })
+      .catch(() => {})
+  }, [])
+
+  const s = (key: string, fallback: string) => settings[key] || fallback
+
   return (
-    <section className="py-12 sm:py-16">
+    <section data-editable="promo" className="py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -21,6 +33,7 @@ export function PromoBanner() {
             <img
               src="/products/promo-banner.jpg"
               alt="Gümüş Güneş collection"
+              loading="lazy"
               className="h-full w-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-navy-deep via-navy-deep/80 to-transparent" />
@@ -44,16 +57,16 @@ export function PromoBanner() {
           <div className="relative p-8 sm:p-12 lg:p-16 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-gold/30 bg-gold/10 mb-4">
               <Sparkles className="h-3 w-3 text-gold" />
-              <span className="text-[10px] tracking-[0.25em] uppercase text-gold-soft">{t('promo.limitedTime')}</span>
+              <span className="text-[10px] tracking-[0.25em] uppercase text-gold-soft">{s('promoLimitedTime', t('promo.limitedTime'))}</span>
             </div>
 
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight mb-3">
-              <span className="silver-text">{t('promo.heading1')}</span>
+              <span className="silver-text">{s('promoHeading1', t('promo.heading1'))}</span>
               <br />
-              <span className="gold-text">{t('promo.heading2')}</span>
+              <span className="gold-text">{s('promoHeading2', t('promo.heading2'))}</span>
             </h2>
             <p className="text-silver/70 text-base mb-6 max-w-md leading-relaxed">
-              {t('promo.description')}
+              {s('promoDescription', t('promo.description'))}
             </p>
 
             <div className="flex flex-wrap items-center gap-4">

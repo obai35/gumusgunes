@@ -59,6 +59,7 @@ export function RecentlyViewed({ allProducts }: { allProducts: Product[] }) {
                 <img
                   src={p.imageUrl}
                   alt={p.name}
+                  loading="lazy"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-navy-deep/0 group-hover:bg-navy-deep/20 transition-colors" />

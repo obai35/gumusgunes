@@ -34,12 +34,14 @@ export async function POST(req: Request) {
     const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let subtotal = 0
+    let totalItemDiscount = 0
     for (const item of items) {
       const product = productMap.get(item.productId)
       if (!product) return NextResponse.json({ error: `Product ${item.productId} not found` }, { status: 400 })
       const branchQty = branchStockMap.get(item.productId) || 0
       if (branchQty < item.quantity) return NextResponse.json({ error: `Insufficient stock at branch for ${product.name}. Branch: ${branchQty}, requested: ${item.quantity}` }, { status: 400 })
       subtotal += product.price * item.quantity
+      totalItemDiscount += (item.discount || 0)
     }
 
     let discountAmount = 0
@@ -75,7 +77,7 @@ export async function POST(req: Request) {
       discountAmount = appliedDiscount.type === 'PERCENTAGE' ? eligibleSubtotal * (appliedDiscount.value / 100) : Math.min(appliedDiscount.value, eligibleSubtotal)
     }
 
-    const total = Math.max(0, subtotal - discountAmount)
+    const total = Math.max(0, subtotal - totalItemDiscount - discountAmount)
 
     if (paymentMethod === 'split') {
       const cash = cashAmount || 0
@@ -119,7 +121,7 @@ export async function POST(req: Request) {
           subtotal,
           shipping: 0,
           tax: 0,
-          discountAmount: discountAmount || null,
+          discountAmount: (discountAmount + totalItemDiscount) || null,
           discountId: appliedDiscount?.id || null,
           status: 'confirmed',
           paymentMethod,

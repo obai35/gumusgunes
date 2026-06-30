@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { usePosAuth } from '@/lib/pos-auth-store'
@@ -21,10 +21,12 @@ import AssessmentView from './components/AssessmentView'
 import OrdersTab from './components/OrdersTab'
 import RecordsTab from './components/RecordsTab'
 import HallSaleTab from './components/HallSaleTab'
+import ReturnsTab from './components/ReturnsTab'
 import CustomerDisplay from './components/CustomerDisplay'
-import type { Shift, ShiftSummary } from './types'
+import ShortcutsCheatSheet from './components/ShortcutsCheatSheet'
+import type { Shift, ShiftSummary, Category } from './types'
 
-type View = 'pos' | 'orders' | 'records' | 'hall-sale' | 'assessment'
+type View = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale' | 'assessment'
 
 export default function POSPage() {
   const router = useRouter()
@@ -49,6 +51,13 @@ export default function POSPage() {
   const [view, setView] = useState<View>('pos')
   const [assessmentData, setAssessmentData] = useState<any>(null)
   const [assessmentLoading, setAssessmentLoading] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null)
+  const [showCustomPrice, setShowCustomPrice] = useState(false)
+  const [customPriceName, setCustomPriceName] = useState('')
+  const [customPriceAmount, setCustomPriceAmount] = useState('')
+  const customPriceRef = useRef<HTMLDivElement>(null)
+  const [returnOrderId, setReturnOrderId] = useState<string | null>(null)
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
@@ -71,15 +80,25 @@ export default function POSPage() {
   }, [view, shift?.id])
 
   useEffect(() => {
+    fetch('/api/categories?flat=true')
+      .then((res) => res.json())
+      .then((data) => { if (data.ok) setCategories(data.categories) })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
     const controller = new AbortController()
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(pos.search)}`, { signal: controller.signal })
+        const params = new URLSearchParams({ search: pos.search })
+        if (user?.branchId) params.set('branchId', user.branchId)
+        if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
+        const res = await fetch(`/api/admin/pos/products?${params}`, { signal: controller.signal })
         if (res.ok) pos.setProducts(await res.json())
       } catch {}
-    }, pos.search.length < 1 ? 0 : 300)
+    }, pos.search.length < 1 && !selectedCategoryId ? 0 : 300)
     return () => { clearTimeout(timer); controller.abort() }
-  }, [pos.search])
+  }, [pos.search, user?.branchId, selectedCategoryId])
 
   const handleStartShift = useCallback(async () => {
     if (!user?.branchId) return
@@ -186,6 +205,26 @@ export default function POSPage() {
     pos.setCheckoutLoading(false)
   }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, shift?.id])
 
+  const handleAddCustomPrice = useCallback(() => {
+    const name = customPriceName.trim() || 'Custom Item'
+    const price = parseFloat(customPriceAmount)
+    if (!price || price <= 0) { toast.error('Enter a valid price'); return }
+    pos.addToCart({ id: `custom-${Date.now()}`, name, price, stock: 999, imageUrl: '', sku: '' })
+    setShowCustomPrice(false)
+    setCustomPriceName('')
+    setCustomPriceAmount('')
+    toast.success(`Added ${name}`)
+  }, [customPriceName, customPriceAmount, pos])
+
+  const handleCategoryChange = useCallback((id: string | null) => {
+    setSelectedCategoryId(id)
+    if (id) pos.setSearch('')
+  }, [pos])
+
+  useEffect(() => {
+    if (showCustomPrice) customPriceRef.current?.querySelector('input')?.focus()
+  }, [showCustomPrice])
+
   function validatePayment(): string | null {
     if (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total) {
       return `Amount tendered ($${pos.parsedCash.toFixed(2)}) is less than total ($${pos.total.toFixed(2)})`
@@ -222,6 +261,10 @@ export default function POSPage() {
     onF6: () => document.querySelector<HTMLInputElement>('input[placeholder*="SKU"]')?.focus(),
     onEnter: () => { if (!checkoutDisabled) handleCheckout() },
     onEscape: () => { if (pos.cart.length > 0) pos.newSale() },
+    onCtrlNumber: (n) => {
+      const p = pos.products[n - 1]
+      if (p && p.stock > 0) pos.addToCart(p)
+    },
   })
 
   if (!hydrated || !token) return null
@@ -320,12 +363,26 @@ export default function POSPage() {
               search={pos.search}
               onSearchChange={pos.setSearch}
               onAddToCart={pos.addToCart}
+              categories={categories}
+              selectedCategoryId={selectedCategoryId}
+              onCategoryChange={handleCategoryChange}
             />
+            <button
+              onClick={() => setShowCustomPrice(true)}
+              className="mt-3 flex-shrink-0 w-full py-2 rounded-lg border border-dashed border-white/10 text-xs text-white/30 hover:text-white/50 hover:border-white/20 transition-all"
+            >
+              + Custom Price Item
+            </button>
           </div>
           <CartPanel
             cart={pos.cart}
             onUpdateQuantity={pos.updateQuantity}
             onRemove={pos.removeFromCart}
+            onSetDiscount={pos.setItemDiscount}
+            heldOrders={pos.heldOrders}
+            onHoldOrder={pos.holdOrder}
+            onRecallOrder={pos.recallOrder}
+            onRemoveHeldOrder={pos.removeHeldOrder}
             discountSection={
               <DiscountSection
                 discountCode={pos.discountCode}
@@ -348,7 +405,7 @@ export default function POSPage() {
                 change={pos.change}
               />
             }
-            totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} />}
+            totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} itemDiscountTotal={pos.itemDiscountTotal} couponDiscount={pos.appliedDiscount?.amount || 0} />}
             checkoutButton={
               <CheckoutButton
                 total={pos.total}
@@ -364,7 +421,7 @@ export default function POSPage() {
 
       {view === 'orders' && (
         <div className="flex-1 min-h-0">
-          <OrdersTab shiftId={shift.id} />
+          <OrdersTab shiftId={shift.id} onReturnOrder={(id) => { setReturnOrderId(id); setView('returns') }} />
         </div>
       )}
 
@@ -374,9 +431,44 @@ export default function POSPage() {
         </div>
       )}
 
+      {view === 'returns' && (
+        <div className="flex-1 min-h-0">
+          <ReturnsTab shiftId={shift.id} branchId={user?.branchId} returnOrderId={returnOrderId} onReturnOrderIdConsumed={() => setReturnOrderId(null)} />
+        </div>
+      )}
+
       {view === 'hall-sale' && (
         <div className="flex-1 min-h-0">
           <HallSaleTab shiftId={shift.id} />
+        </div>
+      )}
+
+      {showCustomPrice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCustomPrice(false)}>
+          <div ref={customPriceRef} className="pos-glass-strong rounded-xl p-6 w-80 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-medium text-silver-soft">Custom Price Item</h3>
+            <input
+              value={customPriceName}
+              onChange={(e) => setCustomPriceName(e.target.value)}
+              placeholder="Item name (optional)"
+              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-silver-soft text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddCustomPrice() }}
+            />
+            <input
+              value={customPriceAmount}
+              onChange={(e) => setCustomPriceAmount(e.target.value)}
+              placeholder="Price"
+              type="number"
+              step="0.01"
+              min="0"
+              className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-silver-soft text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all"
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddCustomPrice() }}
+            />
+            <div className="flex gap-2 pt-1">
+              <button onClick={() => setShowCustomPrice(false)} className="flex-1 py-2 rounded-lg bg-white/5 text-white/50 text-sm hover:bg-white/10 transition-all">Cancel</button>
+              <button onClick={handleAddCustomPrice} className="flex-1 py-2 rounded-lg bg-gold text-navy-deep text-sm font-semibold hover:bg-gold/90 transition-all">Add</button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -388,12 +480,15 @@ export default function POSPage() {
           onShiftNotesChange={setShiftNotes}
           onClose={handleCloseShift}
           onCancel={() => setShowCloseShift(false)}
+          shiftId={shift?.id}
         />
       )}
 
       {pos.cart.length > 0 && view === 'pos' && (
         <CustomerDisplay itemCount={pos.cart.length} total={pos.total} />
       )}
+
+      {view === 'pos' && <ShortcutsCheatSheet />}
     </PosLayout>
   )
 }

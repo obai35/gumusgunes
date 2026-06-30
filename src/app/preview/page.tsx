@@ -22,10 +22,14 @@ const DEFAULTS: Record<string, string> = {
   accentColor: '#c9a84c',
   bgColor: '#ffffff',
   textColor: '#1a1a2e',
-  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns · Lifetime Warranty',
-  announcementTextMobile: 'Free Shipping Over $250 · Lifetime Warranty',
+  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns',
+  announcementTextMobile: 'Free Shipping Over $250',
   heroTitle: 'Silver That Tells Your Story',
   heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon.',
+  promoLimitedTime: 'Limited Time',
+  promoHeading1: 'The Summer',
+  promoHeading2: 'Solstice Collection',
+  promoDescription: 'Up to 25% off selected pieces that celebrate the longest days of the year. Each purchase arrives in our signature gift box.',
 }
 
 export default async function PreviewPage() {
@@ -60,28 +64,24 @@ export default async function PreviewPage() {
   `
 
   return (
-    <html>
-      <head>
-        <style>{style}</style>
-      </head>
-      <body>
-        <div data-editable="announcement">
-          <Header />
-        </div>
-        <main>
-          <div data-editable="hero"><Hero /></div>
-          <div data-editable="trust-badges"><TrustBadges /></div>
-          <div data-editable="flash-sale"><FlashSaleBanner /></div>
-          <CategoryGrid categories={categories} />
-          {featured.length > 0 && <FeaturedProducts id="featured" eyebrow="Curated for You" title="Featured Pieces" products={featured} ctaLabel="View All" ctaHref="#collections" />}
-          <PromoBanner />
-          <ProductGrid categories={categories} initialProducts={products} />
-          {newArrivals.length > 0 && <FeaturedProducts id="new" eyebrow="Fresh from the Atelier" title="New Arrivals" products={newArrivals} ctaLabel="View All" ctaHref="#collections" />}
-          {bestsellers.length > 0 && <FeaturedProducts id="bestsellers" eyebrow="Customer Favorites" title="Bestsellers" products={bestsellers} ctaLabel="View All" ctaHref="#collections" />}
-          <AboutSection />
-        </main>
-        <div data-editable="footer"><Footer /></div>
-      </body>
-    </html>
+    <>
+      <style>{style}</style>
+      <div data-editable="announcement">
+        <Header />
+      </div>
+      <main>
+        <div data-editable="hero"><Hero /></div>
+        <div data-editable="trust-badges"><TrustBadges /></div>
+        <div data-editable="flash-sale"><FlashSaleBanner /></div>
+        <CategoryGrid categories={categories} />
+        {featured.length > 0 && <FeaturedProducts id="featured" eyebrow="Curated for You" title="Featured Pieces" products={featured} ctaLabel="View All" ctaHref="#collections" />}
+        <PromoBanner />
+        <ProductGrid categories={categories} initialProducts={products} />
+        {newArrivals.length > 0 && <FeaturedProducts id="new" eyebrow="Fresh from the Atelier" title="New Arrivals" products={newArrivals} ctaLabel="View All" ctaHref="#collections" />}
+        {bestsellers.length > 0 && <FeaturedProducts id="bestsellers" eyebrow="Customer Favorites" title="Bestsellers" products={bestsellers} ctaLabel="View All" ctaHref="#collections" />}
+        <AboutSection />
+      </main>
+      <div data-editable="footer"><Footer /></div>
+    </>
   )
 }

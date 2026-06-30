@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Search, X } from 'lucide-react'
+import { Search, X, Printer, Ban, AlertTriangle, Undo2 } from 'lucide-react'
 
 type Order = {
   id: string
@@ -11,6 +11,8 @@ type Order = {
   fullName: string
   totalAmount: number
   paymentMethod: string
+  status: string
+  paymentStatus: string
   createdAt: string
   items: { id: string; quantity: number; price: number; product: { name: string; sku: string } }[]
 }
@@ -22,13 +24,25 @@ type SearchResponse = {
   totalPages: number
 }
 
-export default function OrdersTab({ shiftId }: { shiftId?: string }) {
+const statusConfig: Record<string, { label: string; color: string }> = {
+  pending: { label: 'Pending', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
+  confirmed: { label: 'Confirmed', color: 'text-blue-400 bg-blue-500/10 border-blue-500/20' },
+  processing: { label: 'Processing', color: 'text-purple-400 bg-purple-500/10 border-purple-500/20' },
+  shipped: { label: 'Shipped', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  delivered: { label: 'Delivered', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
+  cancelled: { label: 'Voided', color: 'text-red-400 bg-red-500/10 border-red-500/20' },
+}
+
+export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string; onReturnOrder?: (orderId: string) => void }) {
   const [query, setQuery] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
   const [results, setResults] = useState<SearchResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [voidConfirmId, setVoidConfirmId] = useState<string | null>(null)
+  const [voidReason, setVoidReason] = useState('')
+  const [voiding, setVoiding] = useState(false)
 
   async function handleSearch(page = 1) {
     setLoading(true)
@@ -56,6 +70,131 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
     return () => clearTimeout(timer)
   }, [query, fromDate, toDate])
 
+  async function handleVoid(orderId: string) {
+    setVoiding(true)
+    try {
+      const res = await fetch('/api/admin/pos/orders/void', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, reason: voidReason }),
+      })
+      if (res.ok) {
+        toast.success('Order voided')
+        setVoidConfirmId(null)
+        setVoidReason('')
+        setSelectedOrder(null)
+        handleSearch()
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to void order')
+      }
+    } catch {
+      toast.error('Failed to void order')
+    }
+    setVoiding(false)
+  }
+
+  function handleGiftReceipt(order: Order) {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+    printWindow.document.write(`
+      <html>
+        <head><title>Gift Receipt — ${order.receiptNumber || order.orderNumber}</title>
+        <style>
+          body { font-family: monospace; padding: 20px; max-width: 320px; margin: 0 auto; }
+          .text-center { text-align: center; }
+          .flex { display: flex; }
+          .justify-between { justify-content: space-between; }
+          .border-b { border-bottom: 1px dashed #ccc; }
+          .border-t { border-top: 1px dashed #ccc; }
+          .p-4 { padding: 16px; }
+          .mb-2 { margin-bottom: 8px; }
+          .text-lg { font-size: 18px; }
+          .text-sm { font-size: 13px; }
+          .text-xs { font-size: 11px; }
+          .font-bold { font-weight: bold; }
+          img { width: 32px; height: 32px; border-radius: 50%; }
+          @media print { @page { margin: 8mm; } }
+        </style></head>
+        <body>
+          <div class="text-center">
+            <img src="/gumusgunes-logo.jpeg" alt="" style="margin:0 auto 8px" />
+            <p style="font-size:18px;font-weight:600">Gümüş Güneş</p>
+            <p class="text-xs">Gift Receipt</p>
+            <p class="text-sm font-bold mt-2">${order.receiptNumber || order.orderNumber}</p>
+            <p class="text-xs">${new Date(order.createdAt).toLocaleDateString()}</p>
+          </div>
+          <div class="border-b p-4">
+            ${order.items.map((item) => `
+              <div class="flex justify-between text-sm">
+                <div class="font-bold">${item.product.name}</div>
+              </div>
+            `).join('')}
+          </div>
+          <p class="text-center text-xs" style="margin-top:16px">Thank you! No refund without original receipt.</p>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.print()
+  }
+
+  function handleReprint(order: Order) {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+    printWindow.document.write(`
+      <html>
+        <head><title>Receipt — ${order.receiptNumber || order.orderNumber}</title>
+        <style>
+          body { font-family: monospace; padding: 20px; max-width: 320px; margin: 0 auto; }
+          .text-center { text-align: center; }
+          .flex { display: flex; }
+          .justify-between { justify-content: space-between; }
+          .border-b { border-bottom: 1px dashed #ccc; }
+          .border-t { border-top: 1px dashed #ccc; }
+          .p-4 { padding: 16px; }
+          .mb-2 { margin-bottom: 8px; }
+          .text-lg { font-size: 18px; }
+          .text-sm { font-size: 13px; }
+          .text-xs { font-size: 11px; }
+          .font-bold { font-weight: bold; }
+          .mt-2 { margin-top: 8px; }
+          img { width: 32px; height: 32px; border-radius: 50%; }
+          .text-red { color: #ef4444; }
+          @media print { @page { margin: 8mm; } }
+        </style></head>
+        <body>
+          <div class="text-center">
+            <img src="/gumusgunes-logo.jpeg" alt="" style="margin:0 auto 8px" />
+            <p style="font-size:18px;font-weight:600">Gümüş Güneş</p>
+            <p class="text-xs">In-store Purchase</p>
+            <p class="text-sm font-bold mt-2">${order.receiptNumber || order.orderNumber}</p>
+            <p class="text-xs">${new Date(order.createdAt).toLocaleDateString()} ${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            ${order.status === 'cancelled' ? '<p class="text-red font-bold" style="margin-top:8px">** VOIDED **</p>' : ''}
+            <p class="text-xs" style="margin-top:4px">Reprinted: ${new Date().toLocaleString()}</p>
+          </div>
+          <div class="border-b p-4">
+            ${order.items.map((item) => `
+              <div class="flex justify-between text-sm">
+                <div>
+                  <p class="font-bold">${item.product.name}</p>
+                  <p class="text-xs">${item.product.sku} × ${item.quantity}</p>
+                </div>
+                <span class="font-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between text-sm"><span>Total</span><span class="font-bold">$${order.totalAmount.toFixed(2)}</span></div>
+          </div>
+          <p class="text-center text-xs" style="margin-top:16px">Thank you for your purchase!</p>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.print()
+  }
+
   const paymentLabels: Record<string, string> = {
     cash: 'Cash',
     card: 'Card',
@@ -66,12 +205,16 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
   }
 
   if (selectedOrder) {
+    const statusCfg = statusConfig[selectedOrder.status] || { label: selectedOrder.status, color: 'text-white/40' }
     return (
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
-          <h2 className="font-display text-lg font-semibold text-silver-soft">
-            Order #{selectedOrder.receiptNumber || selectedOrder.orderNumber}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-display text-lg font-semibold text-silver-soft">
+              Order #{selectedOrder.receiptNumber || selectedOrder.orderNumber}
+            </h2>
+            <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${statusCfg.color}`}>{statusCfg.label}</span>
+          </div>
           <button onClick={() => setSelectedOrder(null)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/50 hover:text-silver-soft rounded-lg transition-all border border-white/10">
             <X className="h-4 w-4" /> Back
           </button>
@@ -120,7 +263,59 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
               </tbody>
             </table>
           </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <button onClick={() => handleReprint(selectedOrder)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-white/10 text-sm text-silver-soft font-medium hover:bg-white/5 transition-all">
+                <Printer className="h-4 w-4" /> Receipt
+              </button>
+              <button onClick={() => handleGiftReceipt(selectedOrder)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-white/10 text-sm text-silver-soft font-medium hover:bg-white/5 transition-all">
+                <Printer className="h-4 w-4" /> Gift Receipt
+              </button>
+            </div>
+            <div className="flex gap-2">
+              {selectedOrder.status !== 'cancelled' && (
+                <button onClick={() => onReturnOrder?.(selectedOrder.id)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-amber-500/20 text-sm text-amber-400 font-medium hover:bg-amber-500/10 transition-all">
+                  <Undo2 className="h-4 w-4" /> Return Items
+                </button>
+              )}
+              {selectedOrder.status !== 'cancelled' && (
+                <button onClick={() => setVoidConfirmId(selectedOrder.id)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border border-red-500/20 text-sm text-red-400 font-medium hover:bg-red-500/10 transition-all">
+                  <Ban className="h-4 w-4" /> Void
+                </button>
+              )}
+            </div>
+          </div>
         </div>
+
+        {voidConfirmId === selectedOrder.id && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setVoidConfirmId(null)}>
+            <div className="pos-glass-strong rounded-xl p-6 w-80 space-y-4" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-silver-soft">Void Order</h3>
+                  <p className="text-xs text-white/40">This will return stock to inventory</p>
+                </div>
+              </div>
+              <textarea
+                value={voidReason}
+                onChange={(e) => setVoidReason(e.target.value)}
+                placeholder="Reason for voiding (optional)"
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-silver-soft text-sm placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-gold/30 focus:border-gold/40 transition-all resize-none"
+              />
+              <div className="flex gap-2">
+                <button onClick={() => { setVoidConfirmId(null); setVoidReason('') }} className="flex-1 py-2.5 rounded-lg bg-white/5 text-white/50 text-sm hover:bg-white/10 transition-all">Cancel</button>
+                <button onClick={() => handleVoid(selectedOrder.id)} disabled={voiding} className="flex-1 py-2.5 rounded-lg bg-red-500/80 text-white text-sm font-semibold hover:bg-red-500 transition-all disabled:opacity-50">
+                  {voiding ? 'Voiding...' : 'Confirm Void'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -172,14 +367,23 @@ export default function OrdersTab({ shiftId }: { shiftId?: string }) {
                 onClick={() => setSelectedOrder(order)}
                 className="w-full flex items-center justify-between p-3 pos-glass rounded-lg hover:border-gold/30 transition-all text-left"
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-silver-soft truncate">
-                    #{order.receiptNumber || order.orderNumber}
-                  </p>
-                  <p className="text-xs text-white/40 truncate">{order.fullName}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-silver-soft truncate">
+                      #{order.receiptNumber || order.orderNumber}
+                    </p>
+                    {order.status !== 'confirmed' && (
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border flex-shrink-0 ${(statusConfig[order.status]?.color) || 'text-white/40'}`}>
+                        {statusConfig[order.status]?.label || order.status}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-white/40 truncate mt-0.5">{order.fullName}</p>
                 </div>
                 <div className="text-right shrink-0 ml-3">
-                  <p className="text-sm font-medium text-gold">${order.totalAmount.toFixed(2)}</p>
+                  <p className={`text-sm font-bold ${order.status === 'cancelled' ? 'text-red-400 line-through' : 'text-gold'}`}>
+                    ${order.totalAmount.toFixed(2)}
+                  </p>
                   <p className="text-xs text-white/40">
                     {paymentLabels[order.paymentMethod] || order.paymentMethod}
                     {' · '}{new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

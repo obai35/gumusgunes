@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -50,6 +50,7 @@ model Category {
   description String?
   imageUrl    String?
   icon        String?
+  isVisible   Boolean      @default(true)
   parentId    String?
   parent      Category?    @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[]   @relation("CategoryHierarchy")
@@ -128,19 +129,22 @@ model OrderItem {
 }
 
 model Return {
-  id            String       @id @default(cuid())
-  orderId       String
-  order         Order        @relation(fields: [orderId], references: [id])
-  returnNumber  String       @unique
-  reason        String       // customer_change, defective, wrong_item, damaged, other
-  refundMethod  String       // cash, store_credit, no_refund
-  refundAmount  Float
-  notes         String?
-  restocked     Boolean      @default(false)
-  processedById String
-  processedBy   Admin        @relation(fields: [processedById], references: [id])
-  createdAt     DateTime     @default(now())
-  items         ReturnItem[]
+  id              String       @id @default(cuid())
+  orderId         String
+  order           Order        @relation(fields: [orderId], references: [id])
+  shiftId         String?
+  shift           Shift?       @relation(fields: [shiftId], references: [id])
+  returnNumber    String       @unique
+  reason          String       // customer_change, defective, wrong_item, damaged, other
+  refundMethod    String       // cash, card, store_credit, bank_transfer, instapay, wallet, no_refund
+  refundAmount    Float
+  notes           String?
+  restocked       Boolean      @default(true)
+  processedById   String?
+  processedBy     Admin?       @relation(fields: [processedById], references: [id])
+  processedByName String?
+  createdAt       DateTime     @default(now())
+  items           ReturnItem[]
 }
 
 model ReturnItem {
@@ -351,6 +355,7 @@ model Shift {
   isOpen            Boolean  @default(true)
   orders            Order[]
   expenses          Expense[]
+  returns           Return[]
 }
 
 model Branch {

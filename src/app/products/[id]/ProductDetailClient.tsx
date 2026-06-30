@@ -68,6 +68,7 @@ export default function ProductDetailClient({ product, related }: Props) {
           <img
             src={product.imageUrl}
             alt={product.name}
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-200"
             style={zoom ? { transform: 'scale(2.2)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : undefined}
           />
@@ -95,7 +96,7 @@ export default function ProductDetailClient({ product, related }: Props) {
               onClick={() => setActiveImage(i)}
               className={cn('h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors', activeImage === i ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100')}
             >
-              <img src={img} alt="" className="h-full w-full object-cover" />
+              <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -226,7 +227,7 @@ export default function ProductDetailClient({ product, related }: Props) {
                   href={`/products/${rp.id}`}
                   className="group relative aspect-square rounded-lg overflow-hidden bg-secondary"
                 >
-                  <img src={rp.imageUrl} alt={rp.name} className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                  <img src={rp.imageUrl} alt={rp.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform" />
                   <div className="absolute inset-0 bg-navy-deep/0 group-hover:bg-navy-deep/30 transition-colors" />
                 </Link>
               ))}

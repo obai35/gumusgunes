@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 
 const categories = [
   {
-    name: 'Women', slug: 'women', icon: 'female', imageUrl: '/products/cat-women.jpg',
+    name: 'Women', slug: 'women', icon: 'female',
     description: 'Elegant stainless steel accessories for women',
     children: [
       { name: 'Rings', slug: 'women-rings', icon: 'ring', imageUrl: '/products/cat-rings.jpg', description: 'Stainless steel rings for women' },
@@ -12,35 +12,34 @@ const categories = [
       { name: 'Bracelets', slug: 'women-bracelets', icon: 'bracelet', imageUrl: '/products/cat-bracelets.jpg', description: 'Steel bracelets for women' },
       { name: 'Pendants', slug: 'women-pendants', icon: 'pendant', imageUrl: '/products/cat-pendants.jpg', description: 'Statement pendants for women' },
       { name: 'Sets', slug: 'women-sets', icon: 'set', imageUrl: '/products/cat-sets.jpg', description: 'Coordinated jewelry sets for women' },
-      { name: 'Watches', slug: 'women-watches', icon: 'watch', imageUrl: '/products/cat-watches.jpg', description: 'Elegant watches for women' },
-      { name: 'Belts', slug: 'women-belts', icon: 'belt', imageUrl: '/products/cat-belts.jpg', description: 'Stylish belts for women' },
-      { name: 'Bags', slug: 'women-bags', icon: 'bag', imageUrl: '/products/cat-bags.jpg', description: 'Handbags and clutches for women' },
+      { name: 'Watches', slug: 'women-watches', icon: 'watch', description: 'Elegant watches for women' },
+      { name: 'Belts', slug: 'women-belts', icon: 'belt', description: 'Stylish belts for women' },
+      { name: 'Bags', slug: 'women-bags', icon: 'bag', description: 'Handbags and clutches for women' },
     ],
   },
   {
-    name: 'Men', slug: 'men', icon: 'male', imageUrl: '/products/cat-men.jpg',
+    name: 'Men', slug: 'men', icon: 'male',
     description: 'Bold stainless steel accessories for men',
     children: [
-
-      { name: 'Pendants', slug: 'men-pendants', icon: 'pendant', imageUrl: '/products/cat-men-pendants.jpg', description: 'Stainless steel pendants for men' },
-      { name: 'Watches', slug: 'men-watches', icon: 'watch', imageUrl: '/products/cat-men-watches.jpg', description: 'Bold watches for men' },
-      { name: 'Belts', slug: 'men-belts', icon: 'belt', imageUrl: '/products/cat-men-belts.jpg', description: 'Leather and steel belts for men' },
-      { name: 'Bags', slug: 'men-bags', icon: 'bag', imageUrl: '/products/cat-men-bags.jpg', description: 'Bags and wallets for men' },
+      { name: 'Pendants', slug: 'men-pendants', icon: 'pendant', description: 'Stainless steel pendants for men' },
+      { name: 'Watches', slug: 'men-watches', icon: 'watch', description: 'Bold watches for men' },
+      { name: 'Belts', slug: 'men-belts', icon: 'belt', description: 'Leather and steel belts for men' },
+      { name: 'Bags', slug: 'men-bags', icon: 'bag', description: 'Bags and wallets for men' },
     ],
   },
   {
-    name: 'Children', slug: 'children', icon: 'child', imageUrl: '/products/cat-children.jpg',
+    name: 'Children', slug: 'children', icon: 'child',
     description: 'Adorable stainless steel accessories for kids and girls',
     children: [
-      { name: 'Rings', slug: 'children-rings', icon: 'ring', imageUrl: '/products/cat-children-rings.jpg', description: 'Stainless steel rings for children' },
-      { name: 'Necklaces', slug: 'children-necklaces', icon: 'necklace', imageUrl: '/products/cat-children-necklaces.jpg', description: 'Stainless steel necklaces for children' },
-      { name: 'Earrings', slug: 'children-earrings', icon: 'earring', imageUrl: '/products/cat-children-earrings.jpg', description: 'Stainless steel earrings for children' },
-      { name: 'Bracelets', slug: 'children-bracelets', icon: 'bracelet', imageUrl: '/products/cat-children-bracelets.jpg', description: 'Stainless steel bracelets for children' },
-      { name: 'Pendants', slug: 'children-pendants', icon: 'pendant', imageUrl: '/products/cat-children-pendants.jpg', description: 'Stainless steel pendants for children' },
-      { name: 'Sets', slug: 'children-sets', icon: 'set', imageUrl: '/products/cat-children-sets.jpg', description: 'Jewelry sets for children' },
-      { name: 'Watches', slug: 'children-watches', icon: 'watch', imageUrl: '/products/cat-children-watches.jpg', description: 'Fun watches for children' },
-      { name: 'Belts', slug: 'children-belts', icon: 'belt', imageUrl: '/products/cat-children-belts.jpg', description: 'Belts for children' },
-      { name: 'Bags', slug: 'children-bags', icon: 'bag', imageUrl: '/products/cat-children-bags.jpg', description: 'Bags for children' },
+      { name: 'Rings', slug: 'children-rings', icon: 'ring', description: 'Stainless steel rings for children' },
+      { name: 'Necklaces', slug: 'children-necklaces', icon: 'necklace', description: 'Stainless steel necklaces for children' },
+      { name: 'Earrings', slug: 'children-earrings', icon: 'earring', description: 'Stainless steel earrings for children' },
+      { name: 'Bracelets', slug: 'children-bracelets', icon: 'bracelet', description: 'Stainless steel bracelets for children' },
+      { name: 'Pendants', slug: 'children-pendants', icon: 'pendant', description: 'Stainless steel pendants for children' },
+      { name: 'Sets', slug: 'children-sets', icon: 'set', description: 'Jewelry sets for children' },
+      { name: 'Watches', slug: 'children-watches', icon: 'watch', description: 'Fun watches for children' },
+      { name: 'Belts', slug: 'children-belts', icon: 'belt', description: 'Belts for children' },
+      { name: 'Bags', slug: 'children-bags', icon: 'bag', description: 'Bags for children' },
     ],
   },
 ]
@@ -427,10 +426,29 @@ export async function POST(req: NextRequest) {
       reviewIdx += numReviews
     }
 
+    // Seed branch stock for POS — auto-create a default branch if none exists
+    let branch = await db.branch.findFirst()
+    if (!branch) {
+      branch = await db.branch.create({
+        data: { name: 'Main Branch', email: 'main@gumusgunes.com', password: 'seed' },
+      })
+    }
+    for (const p of products) {
+      const created = await db.product.findFirst({ where: { slug: p.slug } })
+      if (created) {
+        await db.branchStock.upsert({
+          where: { branchId_productId: { branchId: branch.id, productId: created.id } },
+          create: { branchId: branch.id, productId: created.id, quantity: p.stock },
+          update: {},
+        })
+      }
+    }
+
     const counts = {
       categories: await db.category.count(),
       products: await db.product.count(),
       reviews: await db.review.count(),
+      branches: 1,
     }
 
     return NextResponse.json({ ok: true, seeded: counts })

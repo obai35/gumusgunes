@@ -11,10 +11,14 @@ const DEFAULTS: Record<string, string> = {
   accentColor: '#c9a84c',
   bgColor: '#ffffff',
   textColor: '#1a1a2e',
-  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns · Lifetime Warranty',
-  announcementTextMobile: 'Free Shipping Over $250 · Lifetime Warranty',
+  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns',
+  announcementTextMobile: 'Free Shipping Over $250',
   heroTitle: 'Silver That Tells Your Story',
   heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
+  promoLimitedTime: 'Limited Time',
+  promoHeading1: 'The Summer',
+  promoHeading2: 'Solstice Collection',
+  promoDescription: 'Up to 25% off selected pieces that celebrate the longest days of the year. Each purchase arrives in our signature gift box.',
   footerEmail: 'concierge@gumusgunes.com',
   footerPhone: '+90 212 000 00 00',
   footerAbout: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon.',
@@ -28,8 +32,8 @@ export async function GET() {
     })
     const map: Record<string, string> = { ...DEFAULTS }
     for (const s of settings) map[s.key] = s.value
-    return NextResponse.json({ ok: true, settings: map })
+    return NextResponse.json({ ok: true, settings: map }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
   } catch {
-    return NextResponse.json({ ok: true, settings: DEFAULTS })
+    return NextResponse.json({ ok: true, settings: DEFAULTS }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
   }
 }

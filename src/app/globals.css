@@ -144,7 +144,7 @@
     background:
       radial-gradient(ellipse at top, rgba(192,197,206,0.12) 0%, transparent 50%),
       radial-gradient(ellipse at bottom, rgba(212,175,55,0.08) 0%, transparent 60%),
-      var(--color-navy-deep);
+      #0a1628;
   }
   .luxury-shadow {
     box-shadow: 0 10px 40px -10px rgba(11, 31, 58, 0.25), 0 4px 12px -4px rgba(11, 31, 58, 0.15);
@@ -198,7 +198,7 @@
   transform: scale(0.95);
 }
 .pos-interface {
-  --background: oklch(0.12 0.035 255);
+  --background: #0a1628;
   --foreground: oklch(0.92 0.008 255);
   --card: oklch(0.16 0.04 255 / 0.6);
   --card-foreground: oklch(0.92 0.008 255);
@@ -222,13 +222,13 @@
   color-scheme: dark;
 }
 .pos-glass {
-  background: rgba(16, 30, 55, 0.55);
+  background: rgba(10, 22, 40, 0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(212, 175, 55, 0.08);
 }
 .pos-glass-strong {
-  background: rgba(16, 30, 55, 0.75);
+  background: rgba(10, 22, 40, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(212, 175, 55, 0.12);

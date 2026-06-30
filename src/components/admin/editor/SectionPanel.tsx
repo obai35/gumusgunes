@@ -5,7 +5,9 @@ import { ThemePanel } from './sections/ThemePanel'
 import { BrandingPanel } from './sections/BrandingPanel'
 import { HeroPanel } from './sections/HeroPanel'
 import { AnnouncementPanel } from './sections/AnnouncementPanel'
+import { PromoPanel } from './sections/PromoPanel'
 import { NavigationPanel } from './sections/NavigationPanel'
+import { CategoriesPanel } from './sections/CategoriesPanel'
 import { FooterPanel } from './sections/FooterPanel'
 import { LayoutPanel } from './sections/LayoutPanel'
 import { SEOPanel } from './sections/SEOPanel'
@@ -25,7 +27,9 @@ const PANELS: Record<SectionKey, ComponentType> = {
   branding: BrandingPanel,
   hero: HeroPanel,
   announcement: AnnouncementPanel,
+  promo: PromoPanel,
   navigation: NavigationPanel,
+  categories: CategoriesPanel,
   footer: FooterPanel,
   layout: LayoutPanel,
   seo: SEOPanel,

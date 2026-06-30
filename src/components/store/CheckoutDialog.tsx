@@ -12,7 +12,6 @@ export function CheckoutDialog() {
   const { t } = useTranslation()
 
   const handleClose = () => {
-    clearCart()
     setCheckoutOpen(false)
   }
 

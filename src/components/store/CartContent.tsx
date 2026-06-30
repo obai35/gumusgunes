@@ -103,6 +103,7 @@ export function CartContent() {
               <img
                 src={item.product.imageUrl}
                 alt={item.product.name}
+                loading="lazy"
                 className="h-full w-full object-cover"
               />
             </div>
@@ -159,11 +160,12 @@ export function CartContent() {
                   className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
                 >
                   <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-                    <img
-                      src={rec.imageUrl}
-                      alt={rec.name}
-                      className="h-full w-full object-cover"
-                    />
+              <img
+                src={rec.imageUrl}
+                alt={rec.name}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-navy line-clamp-1">{rec.name}</p>

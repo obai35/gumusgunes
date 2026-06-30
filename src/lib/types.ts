@@ -5,6 +5,7 @@ export type Category = {
   description: string | null
   imageUrl: string | null
   icon: string | null
+  isVisible: boolean
   parentId: string | null
   parent?: { id: string; name: string; slug: string } | null
   children?: Category[]

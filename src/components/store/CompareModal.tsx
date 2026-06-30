@@ -153,7 +153,7 @@ export function CompareModal() {
                     {products.map((p) => (
                       <div key={p.id} className="p-4 border-b border-l border-border">
                         <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary mb-3 image-zoom">
-                          <img src={p.imageUrl} alt={p.name} className="absolute inset-0 h-full w-full object-cover" />
+                          <img src={p.imageUrl} alt={p.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
                           <button
                             onClick={() => toggle(p.id)}
                             className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/90 backdrop-blur-md flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"

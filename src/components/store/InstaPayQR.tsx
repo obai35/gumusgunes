@@ -11,6 +11,7 @@ export default function InstaPayQR({ onReference }: { onReference: (ref: string)
         <img
           src={process.env.NEXT_PUBLIC_INSTAPAY_QR_URL || '/images/instapay-qr.png'}
           alt="InstaPay QR"
+          loading="lazy"
           className="mx-auto w-48 h-48 object-contain"
         />
         <p className="text-sm text-muted-foreground mt-2">Scan with your banking app</p>

@@ -4,7 +4,7 @@ import { db } from './db'
 
 export const ALL_PERMISSIONS = [
   'dashboard', 'accounting', 'orders', 'receipts', 'products', 'inventory',
-  'discounts', 'stock_transfers', 'branches', 'pos', 'editor', 'settings', 'security', 'admins',
+  'discounts', 'stock_transfers', 'branches', 'pos', 'editor', 'categories', 'settings', 'security', 'admins',
 ] as const
 
 export type Permission = typeof ALL_PERMISSIONS[number]

@@ -1,4 +1,4 @@
-export type SectionKey = 'theme' | 'branding' | 'hero' | 'announcement' | 'navigation' | 'footer' | 'layout' | 'seo' | 'customCode'
+export type SectionKey = 'theme' | 'branding' | 'hero' | 'announcement' | 'promo' | 'navigation' | 'categories' | 'footer' | 'layout' | 'seo' | 'customCode'
 
 export type NavItem = {
   id: string
@@ -29,7 +29,9 @@ export const EDITOR_SECTIONS: SectionConfig[] = [
   { key: 'branding', label: 'Branding', icon: 'Tag' },
   { key: 'hero', label: 'Hero', icon: 'Layout' },
   { key: 'announcement', label: 'Announcement', icon: 'ShoppingBag' },
+  { key: 'promo', label: 'Promo Banner', icon: 'Tag' },
   { key: 'navigation', label: 'Navigation', icon: 'Globe' },
+  { key: 'categories', label: 'Categories', icon: 'FolderTree' },
   { key: 'footer', label: 'Footer', icon: 'Text' },
   { key: 'layout', label: 'Layout', icon: 'Grid3x3' },
   { key: 'seo', label: 'SEO', icon: 'Search' },

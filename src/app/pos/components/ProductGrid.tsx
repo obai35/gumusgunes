@@ -1,19 +1,42 @@
 'use client'
 
 import { memo } from 'react'
-import { Search } from 'lucide-react'
-import type { Product } from '../types'
+import { Search, X } from 'lucide-react'
+import type { Product, Category } from '../types'
 
 type Props = {
   products: Product[]
   search: string
   onSearchChange: (value: string) => void
   onAddToCart: (product: Product) => void
+  categories?: Category[]
+  selectedCategoryId?: string | null
+  onCategoryChange?: (id: string | null) => void
 }
 
-function ProductGrid({ products, search, onSearchChange, onAddToCart }: Props) {
+function ProductGrid({ products, search, onSearchChange, onAddToCart, categories, selectedCategoryId, onCategoryChange }: Props) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
+      {categories && categories.length > 0 && (
+        <div className="flex gap-1.5 mb-3 flex-shrink-0 overflow-x-auto scrollbar-none pb-1">
+          <button
+            onClick={() => onCategoryChange?.(null)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${!selectedCategoryId ? 'bg-gold text-navy-deep' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'}`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => onCategoryChange?.(cat.id)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${selectedCategoryId === cat.id ? 'bg-gold text-navy-deep' : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'}`}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="relative mb-4 flex-shrink-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
         <input
@@ -25,11 +48,10 @@ function ProductGrid({ products, search, onSearchChange, onAddToCart }: Props) {
         />
       </div>
       <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-3 content-start min-h-0 scroll-luxury">
-        {products.length === 0 && search && (
-          <p className="text-white/30 text-sm col-span-2 text-center pt-4">No products found</p>
-        )}
-        {products.length === 0 && !search && (
-          <p className="text-white/30 text-sm col-span-2 text-center pt-4">Start typing to search products</p>
+        {products.length === 0 && (
+          <p className="text-white/30 text-sm col-span-2 text-center pt-4">
+            {search || selectedCategoryId ? 'No products found' : 'Start typing to search products'}
+          </p>
         )}
         {products.map((p) => (
           <button
