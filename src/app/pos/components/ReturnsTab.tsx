@@ -26,14 +26,16 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/admin/pos/orders/search?branchId=${branchId}&status=cancelled&returned`)
+    const params = new URLSearchParams({ branchId: branchId || '', shiftId })
+    if (returnOrderId) params.set('q', returnOrderId)
+    fetch(`/api/admin/pos/orders/search?${params}`)
       .then(r => r.json())
       .then(data => {
         if (data.orders) setReturns(data.orders)
       })
-      .catch(() => toast.error('Failed to load returns'))
+      .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false))
-  }, [shiftId, branchId])
+  }, [shiftId, branchId, returnOrderId])
 
   useEffect(() => {
     if (returnOrderId && onReturnOrderIdConsumed) {

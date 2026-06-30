@@ -10,6 +10,8 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get('from')
     const to = searchParams.get('to')
     const shiftId = searchParams.get('shiftId')
+    const branchId = searchParams.get('branchId')
+    const status = searchParams.get('status')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
 
@@ -28,6 +30,8 @@ export async function GET(req: NextRequest) {
       if (to) where.createdAt.lte = new Date(to + 'T23:59:59.999Z')
     }
     if (shiftId) where.shiftId = shiftId
+    if (status) where.status = status
+    if (branchId) where.shift = { branchId }
 
     const [orders, total] = await Promise.all([
       prisma.order.findMany({

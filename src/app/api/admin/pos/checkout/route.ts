@@ -151,3 +151,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const { orderId, action } = await req.json()
+    if (!orderId || action !== 'return') return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+
+    const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } })
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+
+    const result = await prisma.$transaction(async (tx) => {
+      for (const item of order.items) {
+        const branchStock = await tx.branchStock.findFirst({
+          where: { productId: item.productId },
+          orderBy: { quantity: 'desc' },
+        })
+        if (branchStock) {
+          await tx.branchStock.update({
+            where: { id: branchStock.id },
+            data: { quantity: { increment: item.quantity } },
+          })
+        } else {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          })
+        }
+        await tx.inventoryLog.create({
+          data: {
+            productId: item.productId,
+            type: 'RETURN',
+            change: item.quantity,
+            note: `POS return - Order ${order.orderNumber}`,
+          },
+        })
+      }
+
+      return tx.order.update({
+        where: { id: orderId },
+        data: { status: 'cancelled', refundedAmount: order.totalAmount },
+      })
+    })
+
+    return NextResponse.json({ ok: true, order: result })
+  } catch {
+    return NextResponse.json({ error: 'Failed to return order' }, { status: 500 })
+  }
+}
