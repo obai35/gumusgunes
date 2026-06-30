@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { ReviewForm, RingSizeSelector } from './ReviewForm'
 import { EngravingOption, ENGRAVING_PRICE } from './EngravingOption'
 import { BackInStockSignup } from './BackInStockSignup'
+import { Sparkles } from 'lucide-react'
 
 type DetailData = {
   product: Product
@@ -23,7 +24,7 @@ type DetailData = {
 }
 
 export function ProductModal() {
-  const { productModalId, setProductModal, setConciergeProduct } = useUI()
+  const { productModalId, setProductModal, setConciergeProduct, setVirtualTryOnProduct } = useUI()
   const { addItem } = useCart()
   const wishlist = useWishlist()
   const recentlyViewed = useRecentlyViewed()
@@ -158,6 +159,7 @@ export function ProductModal() {
                     <img
                       src={product.imageUrl}
                       alt={product.name}
+                      loading="lazy"
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-200"
                       style={zoom ? {
                         transform: `scale(2.2)`,
@@ -197,7 +199,7 @@ export function ProductModal() {
                           activeImage === i ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100'
                         )}
                       >
-                        <img src={img} alt="" className="h-full w-full object-cover" />
+                        <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -285,6 +287,23 @@ export function ProductModal() {
                     <div className="mb-5">
                       <RingSizeSelector value={ringSize} onChange={setRingSize} />
                     </div>
+                  )}
+
+                  {/* Virtual Try-On (only for rings) */}
+                  {product.category?.slug?.includes('ring') && (
+                    <button
+                      onClick={() =>
+                        setVirtualTryOnProduct({
+                          id: product.id,
+                          name: product.name,
+                          imageUrl: product.imageUrl,
+                        })
+                      }
+                      className="w-full mb-5 h-11 rounded-full border border-gold/30 bg-gold/5 text-gold hover:bg-gold hover:text-navy-deep transition-all text-sm font-semibold tracking-wide flex items-center justify-center gap-2 group"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      {t('products.tryOnVirtually')}
+                    </button>
                   )}
 
                   {/* Custom engraving (rings, pendants, bracelets) */}
@@ -437,6 +456,7 @@ export function ProductModal() {
                             <img
                               src={rp.imageUrl}
                               alt={rp.name}
+                              loading="lazy"
                               className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform"
                             />
                             <div className="absolute inset-0 bg-navy-deep/0 group-hover:bg-navy-deep/30 transition-colors" />

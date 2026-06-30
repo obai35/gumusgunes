@@ -13,6 +13,7 @@ import { PromoBanner } from '@/components/store/PromoBanner'
 import { AboutSection } from '@/components/store/AboutSection'
 import { Footer } from '@/components/store/Footer'
 import { DiamondLoading } from '@/components/store/DiamondLoading'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useCart, useWishlist, useUI } from '@/lib/store'
 import { useTranslation } from '@/hooks/use-translation'
 import type { Product, Category } from '@/lib/types'
@@ -29,6 +30,7 @@ const SearchDialog = lazy(() => import('@/components/store/SearchDialog').then(m
 const WishlistDrawer = lazy(() => import('@/components/store/WishlistDrawer').then(m => ({ default: m.WishlistDrawer })))
 const ExitIntentPopup = lazy(() => import('@/components/store/ExitIntentPopup').then(m => ({ default: m.ExitIntentPopup })))
 const ConciergeChat = lazy(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
+const VirtualTryOnModal = lazy(() => import('@/components/store/VirtualTryOnModal').then(m => ({ default: m.VirtualTryOnModal })))
 
 function SectionFallback() {
   return <div className="h-32 bg-secondary/20 animate-pulse rounded-2xl mx-4 my-8" />
@@ -94,57 +96,65 @@ export default function Home() {
       <Header />
 
       <main className="flex-1">
-        <Hero />
+        <ErrorBoundary><Hero /></ErrorBoundary>
         <Suspense fallback={<SectionFallback />}><FlashSaleBanner /></Suspense>
-        <TrustBadges />
-        <CategoryGrid categories={categories} />
+        <ErrorBoundary><TrustBadges /></ErrorBoundary>
+        <ErrorBoundary><CategoryGrid categories={categories} /></ErrorBoundary>
 
         {featured.length > 0 && (
-          <FeaturedProducts
-            id="featured"
-            eyebrow={t('page.featured.eyebrow')}
-            title={t('page.featured.title')}
-            products={featured}
-            ctaLabel={t('page.featured.cta')}
-            ctaHref="#collections"
-          />
+          <ErrorBoundary>
+            <FeaturedProducts
+              id="featured"
+              eyebrow={t('page.featured.eyebrow')}
+              title={t('page.featured.title')}
+              products={featured}
+              ctaLabel={t('page.featured.cta')}
+              ctaHref="#collections"
+            />
+          </ErrorBoundary>
         )}
 
-        <PromoBanner />
+        <ErrorBoundary><PromoBanner /></ErrorBoundary>
 
         <Suspense fallback={<SectionFallback />}><BundleConfigurator /></Suspense>
 
         {newArrivals.length > 0 && (
-          <FeaturedProducts
-            id="new"
-            eyebrow={t('page.newArrivals.eyebrow')}
-            title={t('page.newArrivals.title')}
-            products={newArrivals}
-            ctaLabel={t('page.newArrivals.cta')}
-            ctaHref="#collections"
-          />
+          <ErrorBoundary>
+            <FeaturedProducts
+              id="new"
+              eyebrow={t('page.newArrivals.eyebrow')}
+              title={t('page.newArrivals.title')}
+              products={newArrivals}
+              ctaLabel={t('page.newArrivals.cta')}
+              ctaHref="#collections"
+            />
+          </ErrorBoundary>
         )}
 
-        <ProductGrid
-          categories={categories}
-          initialProducts={products}
-        />
+        <ErrorBoundary>
+          <ProductGrid
+            categories={categories}
+            initialProducts={products}
+          />
+        </ErrorBoundary>
 
         {bestsellers.length > 0 && (
-          <FeaturedProducts
-            id="bestsellers"
-            eyebrow={t('page.bestsellers.eyebrow')}
-            title={t('page.bestsellers.title')}
-            products={bestsellers}
-            ctaLabel={t('page.bestsellers.cta')}
-            ctaHref="#collections"
-          />
+          <ErrorBoundary>
+            <FeaturedProducts
+              id="bestsellers"
+              eyebrow={t('page.bestsellers.eyebrow')}
+              title={t('page.bestsellers.title')}
+              products={bestsellers}
+              ctaLabel={t('page.bestsellers.cta')}
+              ctaHref="#collections"
+            />
+          </ErrorBoundary>
         )}
 
         <Suspense fallback={<SectionFallback />}><RecentlyViewed allProducts={products} /></Suspense>
         <Suspense fallback={<SectionFallback />}><GiftFinder /></Suspense>
 
-        <AboutSection />
+        <ErrorBoundary><AboutSection /></ErrorBoundary>
         <Suspense fallback={<SectionFallback />}><CraftsmanshipTimeline /></Suspense>
         <Suspense fallback={<SectionFallback />}><Testimonials /></Suspense>
         <Suspense fallback={<SectionFallback />}><RewardsSection /></Suspense>
@@ -158,6 +168,7 @@ export default function Home() {
       <Suspense fallback={null}><WishlistDrawer /></Suspense>
       <Suspense fallback={null}><ExitIntentPopup /></Suspense>
       <Suspense fallback={null}><ConciergeChat /></Suspense>
+      <Suspense fallback={null}><VirtualTryOnModal /></Suspense>
 
       {loading && <DiamondLoading text={t('page.loading')} />}
 

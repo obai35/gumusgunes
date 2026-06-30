@@ -79,6 +79,7 @@ type UIState = {
   mobileMenuOpen: boolean
   orderTrackingOpen: boolean
   conciergeProduct: { id: string; name: string; price: number; material: string } | null
+  virtualTryOnProduct: { id: string; name: string; imageUrl: string } | null
   setProductModal: (id: string | null) => void
   setSearchOpen: (open: boolean) => void
   setWishlistOpen: (open: boolean) => void
@@ -86,6 +87,7 @@ type UIState = {
   setMobileMenuOpen: (open: boolean) => void
   setOrderTrackingOpen: (open: boolean) => void
   setConciergeProduct: (p: { id: string; name: string; price: number; material: string } | null) => void
+  setVirtualTryOnProduct: (p: { id: string; name: string; imageUrl: string } | null) => void
 }
 
 export const useUI = create<UIState>((set) => ({
@@ -96,6 +98,7 @@ export const useUI = create<UIState>((set) => ({
   mobileMenuOpen: false,
   orderTrackingOpen: false,
   conciergeProduct: null,
+  virtualTryOnProduct: null,
   setProductModal: (id) => set({ productModalId: id }),
   setSearchOpen: (open) => set({ searchOpen: open }),
   setWishlistOpen: (open) => set({ wishlistOpen: open }),
@@ -103,6 +106,7 @@ export const useUI = create<UIState>((set) => ({
   setMobileMenuOpen: (open) => set({ mobileMenuOpen: open }),
   setOrderTrackingOpen: (open) => set({ orderTrackingOpen: open }),
   setConciergeProduct: (p) => set({ conciergeProduct: p }),
+  setVirtualTryOnProduct: (p) => set({ virtualTryOnProduct: p }),
 }))
 
 type WishlistState = {

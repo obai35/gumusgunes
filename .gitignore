@@ -50,5 +50,15 @@ test
 prompt
 
 server.log
+
 # Skills directory
 /skills/
+
+# Capacitor
+/capacitor.config.json
+android/.gradle/
+android/build/
+android/local.properties
+ios/App/Pods/
+ios/*.xcworkspace
+*.xcuserdata
