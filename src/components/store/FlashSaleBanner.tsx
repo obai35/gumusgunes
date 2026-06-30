@@ -48,7 +48,7 @@ export function FlashSaleBanner() {
   if (isExpired || saleEnd === null) return null
 
   return (
-    <section className="py-6 sm:py-8 bg-navy-deep relative overflow-hidden">
+    <section data-editable="flash-sale" className="py-6 sm:py-8 bg-navy-deep relative overflow-hidden">
       {/* Animated sparkles */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(10)].map((_, i) => (

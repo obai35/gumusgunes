@@ -30,7 +30,7 @@ export function TrustBadges() {
   ]
 
   return (
-    <section className="bg-background border-y border-border">
+    <section data-editable="trust-badges" className="bg-background border-y border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {badges.map((b) => (

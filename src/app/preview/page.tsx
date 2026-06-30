@@ -1,6 +1,7 @@
 import { Header } from '@/components/store/Header'
 import { Hero } from '@/components/store/Hero'
 import { TrustBadges } from '@/components/store/TrustBadges'
+import { FlashSaleBanner } from '@/components/store/FlashSaleBanner'
 import { CategoryGrid } from '@/components/store/CategoryGrid'
 import { FeaturedProducts } from '@/components/store/FeaturedProducts'
 import { PromoBanner } from '@/components/store/PromoBanner'
@@ -69,7 +70,8 @@ export default async function PreviewPage() {
         </div>
         <main>
           <div data-editable="hero"><Hero /></div>
-          <TrustBadges />
+          <div data-editable="trust-badges"><TrustBadges /></div>
+          <div data-editable="flash-sale"><FlashSaleBanner /></div>
           <CategoryGrid categories={categories} />
           {featured.length > 0 && <FeaturedProducts id="featured" eyebrow="Curated for You" title="Featured Pieces" products={featured} ctaLabel="View All" ctaHref="#collections" />}
           <PromoBanner />

@@ -2,7 +2,7 @@
 
 import { useEditor } from '../SectionPanel'
 
-const ALL_SECTIONS = ['hero', 'trustBadges', 'categoryGrid', 'featuredProducts', 'promoBanner', 'bundleConfigurator', 'newArrivals', 'productGrid', 'bestsellers', 'recentlyViewed', 'giftFinder', 'aboutSection', 'craftsmanshipTimeline', 'testimonials', 'rewardsSection', 'newsletter']
+const ALL_SECTIONS = ['hero', 'trustBadges', 'flashSale', 'categoryGrid', 'featuredProducts', 'promoBanner', 'bundleConfigurator', 'newArrivals', 'productGrid', 'bestsellers', 'recentlyViewed', 'giftFinder', 'aboutSection', 'craftsmanshipTimeline', 'testimonials', 'rewardsSection', 'newsletter']
 
 export function LayoutPanel() {
   const { settings, updateSetting } = useEditor()
