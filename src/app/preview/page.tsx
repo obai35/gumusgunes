@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 const DEFAULTS: Record<string, string> = {
   siteName: 'Gümüş Güneş',
-  tagline: 'Silver Sun — Handcrafted in Istanbul',
+  tagline: 'Silver Sun — Premium Stainless Steel Accessories',
   logoUrl: '/gumusgunes-logo.jpeg',
   primaryFont: "'Inter', sans-serif",
   headingFont: "'Playfair Display', serif",
@@ -24,7 +24,7 @@ const DEFAULTS: Record<string, string> = {
   announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns · Lifetime Warranty',
   announcementTextMobile: 'Free Shipping Over $250 · Lifetime Warranty',
   heroTitle: 'Silver That Tells Your Story',
-  heroSubtitle: 'Handcrafted 925 sterling silver jewelry, inspired by the sun and the moon.',
+  heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon.',
 }
 
 export default async function PreviewPage() {

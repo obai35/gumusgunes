@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-const BRAND_PROMPT = `You are the Gümüş Güneş Concierge — an elegant, knowledgeable assistant for a luxury Turkish sterling silver jewelry brand (Gümüş Güneş means "Silver Sun").
+const BRAND_PROMPT = `You are the Gümüş Güneş Concierge — an elegant, knowledgeable assistant for a luxury Turkish stainless steel accessories brand (Gümüş Güneş means "Silver Sun").
 
 Your role:
 - Help customers choose the perfect piece (rings, necklaces, earrings, bracelets, pendants, sets).
-- Advise on ring sizing (we use US sizes 5–10), silver care, and gemstone meanings.
-- Share the brand story: handcrafted in Istanbul, 925 sterling silver, sun/moon/star motifs, lifetime warranty.
+- Advise on ring sizing (we use US sizes 5–10), care instructions, and gemstone meanings.
+- Share the brand story: handcrafted in Istanbul, premium stainless steel, sun/moon/star motifs, lifetime warranty.
 - Be warm, refined, and concise. Use a tone that feels personal — like a trusted advisor in a fine jewelry atelier.
 - Keep replies under 120 words unless the customer asks for detail.
 - If asked about order status, returns, or specific account info, gently direct them to concierge@gumusgunes.com or +90 212 000 00 00.
@@ -14,7 +14,7 @@ Your role:
 
 Brand facts you can share:
 - Founded 2019, atelier overlooking the Bosphorus, Istanbul.
-- All pieces are 925 sterling silver, hand-finished.
+- All pieces are premium stainless steel, hand-finished.
 - Diamonds are conflict-free; gemstones ethically sourced.
 - Free worldwide shipping over $250; 30-day returns; lifetime warranty.
 - Signature motif: a sun with radiating rays, often paired with a diamond.
@@ -51,7 +51,7 @@ const FALLBACK_RESPONSES: { keywords: string[]; response: string }[] = [
   },
   {
     keywords: ['care', 'clean', 'tarnish', 'maintenance', 'polish'],
-    response: 'To keep your Gümüş Güneş jewelry radiant: store pieces separately in a soft pouch, avoid contact with perfumes and lotions, and gently polish with a silver cloth. All our pieces are 925 sterling silver with anti-tarnish treatment for lasting shine. Do you have a specific piece you need care advice for?'
+    response: 'To keep your Gümüş Güneş jewelry radiant: store pieces separately in a soft pouch, avoid contact with perfumes and lotions, and gently polish with a soft cloth. All our pieces are premium stainless steel with anti-fingerprint coating for lasting shine. Do you have a specific piece you need care advice for?'
   },
   {
     keywords: ['shipping', 'delivery', 'ship', 'deliver', 'dispatch'],
@@ -67,15 +67,15 @@ const FALLBACK_RESPONSES: { keywords: string[]; response: string }[] = [
   },
   {
     keywords: ['material', 'silver', 'sterling', '925', 'gold', 'platinum'],
-    response: 'All Gümüş Güneş jewelry is crafted from 925 sterling silver — 92.5% pure silver alloyed with 7.5% copper for strength and durability. Our diamonds are conflict-free (SI clarity, H color or better), and all gemstones are ethically sourced. Every piece is hand-finished in our Istanbul atelier.'
+    response: 'All Gümüş Güneş accessories are crafted from premium stainless steel — surgical-grade 316L alloy for strength and durability. Our diamonds are conflict-free (SI clarity, H color or better), and all gemstones are ethically sourced. Every piece is hand-finished in our Istanbul atelier.'
   },
   {
     keywords: ['hello', 'hi', 'hey', 'greetings', 'good morning', 'good evening', 'good day'],
-    response: 'Welcome to Gümüş Güneş! I am your personal concierge. How may I assist you today? You can ask me about our silver jewelry, ring sizing, care tips, or browse our latest collection. What brings you to our atelier?'
+    response: 'Welcome to Gümüş Güneş! I am your personal concierge. How may I assist you today? You can ask me about our stainless steel accessories, ring sizing, care tips, or browse our latest collection. What brings you to our atelier?'
   },
   {
     keywords: ['price', 'cost', 'how much', 'pricing', 'expensive', 'cheap', 'budget', 'afford'],
-    response: 'Our collection ranges from $89 for sterling silver stud earrings to $425 for sapphire and diamond rings. Most pieces fall between $120 and $315. We believe in accessible luxury — exceptional quality at honest prices. Is there a particular piece or category you are interested in?'
+    response: 'Our collection ranges from $89 for stainless steel stud earrings to $425 for sapphire and diamond rings. Most pieces fall between $120 and $315. We believe in accessible luxury — exceptional quality at honest prices. Is there a particular piece or category you are interested in?'
   },
   {
     keywords: ['gift', 'present', 'birthday', 'anniversary', 'surprise', 'occasion'],
@@ -91,11 +91,11 @@ const FALLBACK_RESPONSES: { keywords: string[]; response: string }[] = [
   },
   {
     keywords: ['earring', 'stud', 'hoop', 'dangle'],
-    response: 'Our earring collection includes studs, hoops, and dangle designs featuring silver, diamonds, and gemstones. Prices range from $89 to $285. The Diamond Star Studs ($199) and Celestial Hoops ($158) are client favorites. Are you shopping for yourself or as a gift?'
+    response: 'Our earring collection includes studs, hoops, and dangle designs featuring stainless steel, diamonds, and gemstones. Prices range from $89 to $285. The Diamond Star Studs ($199) and Celestial Hoops ($158) are client favorites. Are you shopping for yourself or as a gift?'
   },
   {
     keywords: ['bracelet', 'bangle', 'charm'],
-    response: 'Our bracelet collection ranges from delicate chain designs to bold cuffs. Prices start at $89 and go up to $315. The Celestial Charm Bracelet ($158) is a bestseller — it combines a silver chain with a sun charm. What style are you drawn to?'
+    response: 'Our bracelet collection ranges from delicate chain designs to bold cuffs. Prices start at $89 and go up to $315. The Celestial Charm Bracelet ($158) is a bestseller — it combines a steel chain with a sun charm. What style are you drawn to?'
   },
   {
     keywords: ['diamond', 'gemstone', 'sapphire', 'emerald', 'ruby'],

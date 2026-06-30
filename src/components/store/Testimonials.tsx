@@ -25,7 +25,7 @@ const testimonials = [
     name: 'Sofia Rossi',
     location: 'Milan, IT',
     rating: 5,
-    text: 'As someone who owns a lot of fine jewelry, I was skeptical of silver. Gümüş Güneş changed my mind — the weight, the polish, the design. It feels like a much more expensive piece.',
+    text: 'As someone who owns a lot of fine jewelry, I was skeptical of stainless steel pieces. Gümüş Güneş changed my mind — the weight, the polish, the design. It feels like a much more expensive piece.',
     piece: 'Diamond Accent Silver Bangle',
     avatar: 'SR',
   },

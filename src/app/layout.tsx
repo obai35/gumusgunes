@@ -26,26 +26,26 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Gümüş Güneş — Silver Sun Jewelry | Handcrafted Sterling Silver",
+  title: "Gümüş Güneş — Silver Sun Accessories | Handcrafted Stainless Steel",
   description:
-    "Gümüş Güneş (Silver Sun) — handcrafted 925 sterling silver jewelry. Rings, necklaces, earrings, bracelets and pendants inspired by the sun, moon, and stars.",
+    "Gümüş Güneş (Silver Sun) — handcrafted premium stainless steel accessories. Rings, necklaces, earrings, bracelets and pendants inspired by the sun, moon, and stars.",
   keywords: [
     "Gümüş Güneş",
     "Silver Sun",
-    "sterling silver jewelry",
-    "silver rings",
-    "silver necklaces",
-    "diamond jewelry",
+    "stainless steel accessories",
+    "steel rings",
+    "steel necklaces",
+    "diamond accessories",
     "Turkish jewelry",
-    "luxury jewelry",
+    "luxury accessories",
   ],
   authors: [{ name: "Gümüş Güneş" }],
   icons: {
     icon: "/gumusgunes-logo.jpeg",
   },
   openGraph: {
-    title: "Gümüş Güneş — Silver Sun Jewelry",
-    description: "Handcrafted 925 sterling silver jewelry inspired by the sun, moon, and stars.",
+    title: "Gümüş Güneş — Silver Sun Accessories",
+    description: "Handcrafted premium stainless steel accessories inspired by the sun, moon, and stars.",
     siteName: "Gümüş Güneş",
     type: "website",
   },

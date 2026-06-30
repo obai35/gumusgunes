@@ -44,7 +44,7 @@ export function AboutSection() {
             <div className="relative aspect-[4/5] rounded-3xl overflow-hidden luxury-shadow">
               <img
                 src="/products/about-craft.jpg"
-                alt="Master artisan crafting silver jewelry"
+                alt="Master artisan crafting stainless steel accessories"
                 className="absolute inset-0 h-full w-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/60 via-transparent to-transparent" />

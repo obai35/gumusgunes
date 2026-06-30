@@ -14,10 +14,10 @@ const DEFAULTS: Record<string, string> = {
   announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns · Lifetime Warranty',
   announcementTextMobile: 'Free Shipping Over $250 · Lifetime Warranty',
   heroTitle: 'Silver That Tells Your Story',
-  heroSubtitle: 'Handcrafted 925 sterling silver jewelry, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
+  heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
   footerEmail: 'concierge@gumusgunes.com',
   footerPhone: '+90 212 000 00 00',
-  footerAbout: 'Handcrafted 925 sterling silver jewelry, inspired by the sun and the moon.',
+  footerAbout: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon.',
   footerAddress: 'Istanbul, Turkey',
 }
 

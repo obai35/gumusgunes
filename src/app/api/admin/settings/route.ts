@@ -22,10 +22,10 @@ const DEFAULTS: Record<string, string> = {
   navOurStory: 'Our Story',
   footerEmail: 'concierge@gumusgunes.com',
   footerPhone: '+90 212 000 00 00',
-  footerAbout: 'Handcrafted 925 sterling silver jewelry, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
+  footerAbout: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
   footerAddress: 'Istanbul, Turkey',
   heroTitle: 'Silver That Tells Your Story',
-  heroSubtitle: 'Handcrafted 925 sterling silver jewelry, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
+  heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon. Each piece finished in our Istanbul atelier.',
 }
 
 export async function GET() {
