@@ -3,8 +3,9 @@
 import { useEditor } from '../SectionPanel'
 
 const FONT_OPTIONS = ['Inter', 'Playfair Display', 'Poppins', 'Montserrat', 'Lora', 'Roboto', 'DM Serif Display', 'Raleway', 'Merriweather']
+function fontFamily(name: string, isHeading: boolean) { return `'${name}', ${isHeading ? 'serif' : 'sans-serif'}` }
 
-export default function ThemePanel() {
+export function ThemePanel() {
   const { settings, updateSetting } = useEditor()
   const g = (k: string) => settings[k] ?? ''
 
@@ -25,7 +26,7 @@ export default function ThemePanel() {
         <div key={key}>
           <label className="text-xs font-medium text-muted-foreground capitalize">{key.replace('Font', ' Font')}</label>
           <select value={g(key)} onChange={e => updateSetting(key, e.target.value)} className="w-full px-2 py-1.5 text-xs border border-border rounded mt-1">
-            {FONT_OPTIONS.map(f => <option key={f} value={`'${f}', ${key === 'headingFont' ? 'serif' : 'sans-serif'}`}>{f}</option>)}
+            {FONT_OPTIONS.map(f => <option key={f} value={fontFamily(f, key === 'headingFont')}>{f}</option>)}
           </select>
         </div>
       ))}

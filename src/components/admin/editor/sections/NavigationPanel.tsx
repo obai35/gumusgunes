@@ -8,7 +8,7 @@ import type { NavItem } from '../types'
 let navIdCounter = 0
 function newId() { return `nav_${++navIdCounter}` }
 
-export default function NavigationPanel() {
+export function NavigationPanel() {
   const { settings, updateSetting } = useEditor()
   const [items, setItems] = useState<NavItem[]>(() => {
     try { return JSON.parse(settings.navigation || '[]') } catch { return [] }

@@ -4,7 +4,7 @@ import { useEditor } from '../SectionPanel'
 
 const ALL_SECTIONS = ['hero', 'trustBadges', 'categoryGrid', 'featuredProducts', 'promoBanner', 'bundleConfigurator', 'newArrivals', 'productGrid', 'bestsellers', 'recentlyViewed', 'giftFinder', 'aboutSection', 'craftsmanshipTimeline', 'testimonials', 'rewardsSection', 'newsletter']
 
-export default function LayoutPanel() {
+export function LayoutPanel() {
   const { settings, updateSetting } = useEditor()
   const g = (k: string) => settings[k] ?? ''
   const visible = (section: string) => g(`section_${section}`) !== 'hidden'

@@ -2,7 +2,7 @@
 
 import { useEditor } from '../SectionPanel'
 
-export default function SEOPanel() {
+export function SEOPanel() {
   const { settings, updateSetting } = useEditor()
   const g = (k: string) => settings[k] ?? ''
 

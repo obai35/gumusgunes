@@ -2,7 +2,7 @@
 
 import { useEditor } from '../SectionPanel'
 
-export default function AnnouncementPanel() {
+export function AnnouncementPanel() {
   const { settings, updateSetting } = useEditor()
   const g = (k: string) => settings[k] ?? ''
 

@@ -2,7 +2,7 @@
 
 import { useEditor } from '../SectionPanel'
 
-export default function HeroPanel() {
+export function HeroPanel() {
   const { settings, updateSetting } = useEditor()
   const g = (k: string) => settings[k] ?? ''
 
