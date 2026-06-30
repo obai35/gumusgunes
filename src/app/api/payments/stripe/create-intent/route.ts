@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server'
-import stripe from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 
 export async function POST(req: Request) {
   try {
     const { amount, currency, idempotencyKey } = await req.json()
-    const paymentIntent = await stripe.paymentIntents.create({
+    const paymentIntent = await getStripe().paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: currency?.toLowerCase() || 'usd',
       automatic_payment_methods: { enabled: true },
