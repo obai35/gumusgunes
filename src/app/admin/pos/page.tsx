@@ -12,6 +12,9 @@ type PaymentMethod = 'cash' | 'card' | 'split'
 export default function POSPage() {
   const [search, setSearch] = useState('')
   const [products, setProducts] = useState<Product[]>([])
+  const [branches, setBranches] = useState<any[]>([])
+  const [selectedBranchId, setSelectedBranchId] = useState('')
+  const [shift, setShift] = useState<any>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [discountCode, setDiscountCode] = useState('')
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: string; amount: number; type: string; value: number; appliesTo?: string; targetValue?: string } | null>(null)
@@ -19,16 +22,39 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [cashAmount, setCashAmount] = useState('')
   const [cardAmount, setCardAmount] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!selectedBranchId) { setShift(null); return }
+    fetch(`/api/admin/pos/shifts/active?branchId=${selectedBranchId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.shift) { setShift(data.shift) }
+        else {
+          fetch('/api/admin/pos/shifts/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ branchId: selectedBranchId, startingCash: 0 }),
+          }).then((r) => r.json()).then((data2) => { if (data2.shift) setShift(data2.shift) })
+        }
+      })
+      .catch(() => {})
+  }, [selectedBranchId])
   type OrderItemDetail = { id: string; quantity: number; price: number; product: { name: string; sku: string } }
   const [receipt, setReceipt] = useState<{ orderId: string; receiptNumber: string; total: number; items: OrderItemDetail[]; subtotal: number; discount: number; paymentMethod: string; cashAmount: number | null; cardAmount: number | null } | null>(null)
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(search)}`)
+      const params = new URLSearchParams({ search })
+      if (selectedBranchId) params.set('branchId', selectedBranchId)
+      const res = await fetch(`/api/admin/pos/products?${params}`)
       if (res.ok) setProducts(await res.json())
     }, search.length < 1 ? 0 : 200)
     return () => clearTimeout(timer)
-  }, [search])
+  }, [search, selectedBranchId])
 
   function addToCart(product: Product) {
     if (product.stock < 1) { toast.error('Out of stock'); return }
@@ -120,10 +146,12 @@ export default function POSPage() {
     if (validationError) { toast.error(validationError); return }
     setCheckoutLoading(true)
     try {
+      if (!shift) { toast.error('No active shift. Select a branch first.'); setCheckoutLoading(false); return }
       const body: any = {
         items: cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         discountCode: appliedDiscount?.code,
         paymentMethod,
+        shiftId: shift.id,
       }
       if (paymentMethod === 'cash' || paymentMethod === 'split') body.cashAmount = parsedCash
       if (paymentMethod === 'split') body.cardAmount = parsedCard
@@ -370,15 +398,27 @@ export default function POSPage() {
     <div className="flex gap-6">
       {/* Products Panel */}
       <div className="flex-1 flex flex-col min-h-0">
-        <div className="relative mb-4 flex-shrink-0">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search products by name or SKU..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border text-sm"
-            autoFocus
-          />
+        <div className="flex gap-2 mb-4 flex-shrink-0">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search products by name or SKU..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border text-sm"
+              autoFocus
+            />
+          </div>
+          <select
+            value={selectedBranchId}
+            onChange={(e) => setSelectedBranchId(e.target.value)}
+            className="px-3 py-2.5 rounded-lg border border-border text-sm bg-white min-w-[160px]"
+          >
+            <option value="">All Warehouse Stock</option>
+            {branches.map((b: any) => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
         </div>
         <div className="flex-1 overflow-y-auto grid grid-cols-2 gap-3 content-start min-h-0">
           {products.map((p) => (
