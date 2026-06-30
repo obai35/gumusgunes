@@ -98,7 +98,8 @@ export default function POSPage() {
     const timer = setTimeout(async () => {
       try {
         const params = new URLSearchParams({ search: pos.search })
-        if (user?.branchId) params.set('branchId', user.branchId)
+        const branchId = user?.branchId || usePosAuth.getState().user?.branchId
+        if (branchId) params.set('branchId', branchId)
         if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
         const res = await fetch(`/api/admin/pos/products?${params}`, { signal: controller.signal })
         if (res.ok) pos.setProducts(await res.json())
