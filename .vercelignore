@@ -1,0 +1,6 @@
+android/
+ios/
+www/
+*.db
+*.db-journal
+.next/

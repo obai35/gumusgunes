@@ -62,3 +62,4 @@ android/local.properties
 ios/App/Pods/
 ios/*.xcworkspace
 *.xcuserdata
+.vercel
