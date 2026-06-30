@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext } from 'react'
+import { createContext, useContext, type ComponentType } from 'react'
 import { ThemePanel } from './sections/ThemePanel'
 import { BrandingPanel } from './sections/BrandingPanel'
 import { HeroPanel } from './sections/HeroPanel'
@@ -20,7 +20,7 @@ type EditorCtx = {
 const EditorContext = createContext<EditorCtx>({ settings: {}, updateSetting: () => {} })
 export const useEditor = () => useContext(EditorContext)
 
-const PANELS: Record<SectionKey, () => JSX.Element> = {
+const PANELS: Record<SectionKey, ComponentType> = {
   theme: ThemePanel,
   branding: BrandingPanel,
   hero: HeroPanel,
