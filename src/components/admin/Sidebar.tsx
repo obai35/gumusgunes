@@ -36,7 +36,8 @@ export const Sidebar = memo(function Sidebar({ open, onClose }: SidebarProps) {
   const router = useRouter()
   const { logout, user } = useAdminAuth()
 
-  const visibleLinks = links.filter((l) => !l.permission || user?.permissions?.includes(l.permission))
+  const isFullAccess = user?.role === 'superadmin' || user?.role === 'admin'
+  const visibleLinks = links.filter((l) => !l.permission || isFullAccess || user?.permissions?.includes(l.permission))
 
   return (
     <>

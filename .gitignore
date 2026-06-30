@@ -63,3 +63,4 @@ ios/App/Pods/
 ios/*.xcworkspace
 *.xcuserdata
 .vercel
+.env*
