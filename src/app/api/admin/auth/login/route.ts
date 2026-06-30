@@ -22,7 +22,8 @@ export async function POST(req: Request) {
     const token = signAdminToken({ adminId: admin.id, email: admin.email })
     const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) : []
     return NextResponse.json({ token, user: { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions } })
-  } catch {
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 })
+  } catch (e) {
+    console.error('Login error:', e)
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Login failed' }, { status: 500 })
   }
 }
