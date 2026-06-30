@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
-import { ALL_PERMISSIONS } from '@/lib/admin-permissions'
+import { ALL_PERMISSIONS } from '@/lib/permissions'
 import { Shield, Users, Plus, Pencil, Trash2, X } from 'lucide-react'
 
 type Tab = 'admins' | 'roles'
