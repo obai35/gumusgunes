@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { DesignProvider } from "@/components/store/DesignProvider";
+import EditModeGate from "@/components/store/EditModeGate";
 
 
 const geistSans = Geist({
@@ -66,6 +67,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
       >
         <DesignProvider>{children}</DesignProvider>
+        <EditModeGate />
         <Toaster />
       </body>
     </html>
