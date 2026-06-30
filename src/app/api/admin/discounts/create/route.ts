@@ -13,6 +13,9 @@ export async function POST(req: Request) {
         value: data.value,
         maxUses: data.maxUses || null,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        appliesTo: data.appliesTo || 'all',
+        targetValue: data.targetValue || null,
+        minOrder: data.minOrder ? parseFloat(data.minOrder) : null,
       },
     })
     return NextResponse.json(discount)

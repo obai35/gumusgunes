@@ -1,8 +1,12 @@
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import ProductDetailClient from './ProductDetailClient'
+
+const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 interface Props {
   params: Promise<{ id: string }>
@@ -47,6 +51,7 @@ export default async function ProductDetailPage({ params }: Props) {
         </div>
       </main>
       <Footer />
+      <Suspense fallback={null}><ConciergeChat /></Suspense>
     </>
   )
 }

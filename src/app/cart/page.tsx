@@ -1,6 +1,10 @@
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { CartContent } from '@/components/store/CartContent'
+
+const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 export default function CartPage() {
   return (
@@ -18,6 +22,7 @@ export default function CartPage() {
         <CartContent />
       </main>
       <Footer />
+      <Suspense fallback={null}><ConciergeChat /></Suspense>
     </>
   )
 }

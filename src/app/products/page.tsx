@@ -1,6 +1,10 @@
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
+import { Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import ProductsPageClient from './ProductsPageClient'
+
+const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 export default async function ProductsPage() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -33,6 +37,6 @@ export default async function ProductsPage() {
         </div>
       </main>
       <Footer />
-    </>
-  )
+      <Suspense fallback={null}><ConciergeChat /></Suspense>
+    </>)
 }

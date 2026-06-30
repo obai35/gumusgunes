@@ -78,9 +78,7 @@ export default function SiteEditor() {
   useEffect(() => {
     fetch('/api/admin/settings').then(r => r.json()).then(data => {
       if (data.ok && data.settings) {
-        const map: Settings = {}
-        data.settings.forEach((s: any) => { map[s.key] = s.value })
-        setSettings(map)
+        setSettings(data.settings)
       }
     }).finally(() => setLoading(false))
   }, [])

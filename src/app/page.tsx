@@ -28,6 +28,7 @@ const FlashSaleBanner = lazy(() => import('@/components/store/FlashSaleBanner').
 const SearchDialog = lazy(() => import('@/components/store/SearchDialog').then(m => ({ default: m.SearchDialog })))
 const WishlistDrawer = lazy(() => import('@/components/store/WishlistDrawer').then(m => ({ default: m.WishlistDrawer })))
 const ExitIntentPopup = lazy(() => import('@/components/store/ExitIntentPopup').then(m => ({ default: m.ExitIntentPopup })))
+const ConciergeChat = lazy(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 function SectionFallback() {
   return <div className="h-32 bg-secondary/20 animate-pulse rounded-2xl mx-4 my-8" />
@@ -156,6 +157,7 @@ export default function Home() {
       <Suspense fallback={null}><SearchDialog /></Suspense>
       <Suspense fallback={null}><WishlistDrawer /></Suspense>
       <Suspense fallback={null}><ExitIntentPopup /></Suspense>
+      <Suspense fallback={null}><ConciergeChat /></Suspense>
 
       {loading && <DiamondLoading text={t('page.loading')} />}
 

@@ -21,12 +21,12 @@ export function DesignProvider({ children }: { children: React.ReactNode }) {
         if (!d.ok) return
         const s = d.settings
         const root = document.documentElement
-        root.style.setProperty('--font-body', s.primaryFont || DEFAULTS.primaryFont)
-        root.style.setProperty('--font-heading', s.headingFont || DEFAULTS.headingFont)
-        root.style.setProperty('--color-primary', s.primaryColor || DEFAULTS.primaryColor)
-        root.style.setProperty('--color-accent', s.accentColor || DEFAULTS.accentColor)
-        root.style.setProperty('--color-bg', s.bgColor || DEFAULTS.bgColor)
-        root.style.setProperty('--color-text', s.textColor || DEFAULTS.textColor)
+        root.style.setProperty('--font-sans', s.primaryFont || DEFAULTS.primaryFont)
+        root.style.setProperty('--font-display', s.headingFont || DEFAULTS.headingFont)
+        root.style.setProperty('--color-navy', s.primaryColor || DEFAULTS.primaryColor)
+        root.style.setProperty('--color-gold', s.accentColor || DEFAULTS.accentColor)
+        root.style.setProperty('--color-background', s.bgColor || DEFAULTS.bgColor)
+        root.style.setProperty('--color-foreground', s.textColor || DEFAULTS.textColor)
       })
       .finally(() => setReady(true))
   }, [])

@@ -29,6 +29,7 @@ export default async function AdminDiscounts() {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Value</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Scope</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Usage</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Expires</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Active</th>
@@ -48,6 +49,12 @@ export default async function AdminDiscounts() {
                 </td>
                 <td className="px-4 py-3 font-medium text-navy">
                   {d.type === 'PERCENTAGE' ? `${d.value}%` : `$${d.value.toFixed(2)}`}
+                </td>
+                <td className="px-4 py-3">
+                  <span className="text-xs text-muted-foreground">
+                    {d.appliesTo === 'all' ? 'All' : d.appliesTo === 'category' ? `Category: ${d.targetValue}` : d.appliesTo === 'tag' ? `Tag: ${d.targetValue}` : 'All'}
+                    {d.minOrder ? ` (min $${d.minOrder.toFixed(2)})` : ''}
+                  </span>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {d.usedCount}{d.maxUses ? ` / ${d.maxUses}` : ''}
