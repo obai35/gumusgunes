@@ -361,9 +361,9 @@ export default function POSPage() {
       onLogout={handleLogout}
     >
       {view === 'pos' && (
-        <div className="flex gap-6 flex-1 min-h-0">
-          <div className="flex-1 flex flex-col min-h-0">
-            <div className="mb-3">
+        <div className="flex gap-3 flex-1 min-h-0 min-w-0">
+          <div className="flex-1 flex flex-col min-h-0 min-w-0">
+            <div className="mb-2 flex-shrink-0">
               <BarcodeInput onProductFound={(p) => pos.addToCart(p)} />
             </div>
             <ProductGrid
@@ -377,9 +377,9 @@ export default function POSPage() {
             />
             <button
               onClick={() => setShowCustomPrice(true)}
-              className="mt-3 flex-shrink-0 w-full py-2 rounded-lg border border-dashed border-white/10 text-xs text-white/30 hover:text-white/50 hover:border-white/20 transition-all"
+              className="mt-2 flex-shrink-0 w-full py-1.5 rounded-lg border border-dashed border-white/10 text-[11px] text-white/30 hover:text-white/50 hover:border-white/20 transition-all"
             >
-              + Custom Price Item
+              + Custom Price
             </button>
           </div>
           <CartPanel

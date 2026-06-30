@@ -444,7 +444,7 @@ export default function POSPage() {
       </div>
 
       {/* Cart Panel — sticky to right side, always visible */}
-      <div className="w-[380px] flex flex-col bg-white rounded-xl border border-border shrink-0 self-start sticky top-0 max-h-[calc(100dvh-3rem)]">
+      <div className="w-[320px] min-w-[320px] flex flex-col bg-white rounded-xl border border-border shrink-0 self-start sticky top-0 max-h-[calc(100dvh-3rem)]">
         <div className="p-4 flex flex-col h-full">
           <div className="flex items-center justify-between mb-3 flex-shrink-0">
             <h2 className="font-semibold text-navy flex items-center gap-2"><ShoppingCart className="h-4 w-4" /> Cart ({cart.length})</h2>
