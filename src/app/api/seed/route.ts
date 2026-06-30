@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { hashPassword } from '@/lib/admin-auth'
 
 const categories = [
   {
@@ -444,11 +445,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Seed default admin account
+    const existingAdmin = await db.admin.findUnique({ where: { email: 'admin@gumusgunes.com' } })
+    if (!existingAdmin) {
+      await db.admin.create({
+        data: {
+          email: 'admin@gumusgunes.com',
+          name: 'Admin',
+          password: await hashPassword('admin123'),
+          role: 'superadmin',
+        },
+      })
+    }
+
     const counts = {
       categories: await db.category.count(),
       products: await db.product.count(),
       reviews: await db.review.count(),
       branches: 1,
+      admins: await db.admin.count(),
     }
 
     return NextResponse.json({ ok: true, seeded: counts })
