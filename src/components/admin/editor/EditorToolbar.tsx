@@ -3,11 +3,13 @@
 import { ChevronDown, Monitor, Tablet, Smartphone, Save, LogOut } from 'lucide-react'
 import { EDITOR_SECTIONS, type SectionKey } from './types'
 
+type Device = 'desktop' | 'tablet' | 'mobile'
+
 type Props = {
   activeSection: SectionKey
   onSectionChange: (key: SectionKey) => void
-  device: 'desktop' | 'tablet' | 'mobile'
-  onDeviceChange: (d: 'desktop' | 'tablet' | 'mobile') => void
+  device: Device
+  onDeviceChange: (device: Device) => void
   onSave: () => void
   saving: boolean
 }
@@ -18,7 +20,7 @@ const DEVICES = [
   { key: 'mobile' as const, icon: Smartphone, label: 'Mobile' },
 ]
 
-export default function EditorToolbar({ activeSection, onSectionChange, device, onDeviceChange, onSave, saving }: Props) {
+export function EditorToolbar({ activeSection, onSectionChange, device, onDeviceChange, onSave, saving }: Props) {
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-border shrink-0 gap-2">
       <div className="flex items-center gap-2">

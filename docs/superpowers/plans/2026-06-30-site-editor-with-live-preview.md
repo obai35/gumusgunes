@@ -778,7 +778,7 @@ export default async function PreviewPage() {
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
-import EditorToolbar from '@/components/admin/editor/EditorToolbar'
+import { EditorToolbar } from '@/components/admin/editor/EditorToolbar'
 import SectionPanel from '@/components/admin/editor/SectionPanel'
 import type { SectionKey } from '@/components/admin/editor/types'
 
