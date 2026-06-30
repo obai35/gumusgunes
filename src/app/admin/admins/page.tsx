@@ -22,7 +22,8 @@ export default function AdminsPage() {
   const { user } = useAdminAuth()
   const [tab, setTab] = useState<Tab>('admins')
 
-  if (!user?.permissions?.includes('admins')) {
+  const isFullAccess = user?.role === 'superadmin' || user?.role === 'admin'
+  if (!isFullAccess && !user?.permissions?.includes('admins')) {
     return <div className="p-8 text-center text-muted-foreground">You do not have permission to access this page.</div>
   }
 
