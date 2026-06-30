@@ -41,6 +41,8 @@ function NewTransfer() {
   const { user } = useAdminAuth()
   const [branches, setBranches] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [categoryFilter, setCategoryFilter] = useState('')
   const [fromType, setFromType] = useState('warehouse')
   const [fromId, setFromId] = useState('')
   const [toType, setToType] = useState('branch')
@@ -52,8 +54,14 @@ function NewTransfer() {
 
   useEffect(() => {
     fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
-    fetch('/api/admin/products').then((r) => r.json()).then((data) => setProducts(data.products || [])).catch(() => {})
+    fetch('/api/admin/categories').then((r) => r.json()).then(setCategories).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (categoryFilter) params.set('categoryId', categoryFilter)
+    fetch(`/api/admin/products?${params}`).then((r) => r.json()).then((data) => setProducts(data.products || [])).catch(() => {})
+  }, [categoryFilter])
 
   function addItem(productId: string) {
     const p = products.find((p: any) => p.id === productId)
@@ -140,15 +148,24 @@ function NewTransfer() {
 
         <div className="bg-white rounded-xl border border-border p-5">
           <h2 className="font-semibold text-navy mb-4">Transfer Items</h2>
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search products..." className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm" />
+          <div className="flex gap-2 mb-4">
+            <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm min-w-[160px]">
+              <option value="">All Categories</option>
+              {categories.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search products..." className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm" />
+            </div>
           </div>
           {searchTerm && (
             <div className="max-h-40 overflow-y-auto border border-border rounded-lg mb-4">
               {filteredProducts.slice(0, 10).map((p: any) => (
                 <button key={p.id} onClick={() => addItem(p.id)} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 border-b border-border/50 last:border-0">
                   {p.name} <span className="text-muted-foreground">({p.sku})</span>
+                  {p.category && <span className="text-xs text-muted-foreground ml-2">— {p.category.name}</span>}
                 </button>
               ))}
               {filteredProducts.length === 0 && <p className="p-3 text-sm text-muted-foreground">No products found</p>}
