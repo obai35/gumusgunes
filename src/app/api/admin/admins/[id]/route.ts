@@ -6,7 +6,7 @@ import { getAdminFromToken } from '@/lib/admin-permissions'
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getAdminFromToken(req)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
   const { name, email, password, roleId } = await req.json()
@@ -27,7 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getAdminFromToken(req)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await params
   if (id === admin.id) return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 })

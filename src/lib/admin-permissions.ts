@@ -9,7 +9,16 @@ export const ALL_PERMISSIONS = [
 
 export type Permission = typeof ALL_PERMISSIONS[number]
 
-export async function getAdminFromToken(req: NextRequest) {
+export type AdminInfo = {
+  id: string
+  email: string
+  name: string
+  role: string
+  permissions: string[]
+  isSuperAdmin: boolean
+}
+
+export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | null> {
   const authHeader = req.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) return null
   const payload = verifyAdminToken(authHeader.slice(7))
@@ -19,15 +28,17 @@ export async function getAdminFromToken(req: NextRequest) {
     include: { roleRel: true },
   })
   if (!admin) return null
+  const role = admin.roleRel?.name || admin.role
   const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) as string[] : []
-  return { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions }
+  const isSuperAdmin = role === 'superadmin' || role === 'admin'
+  return { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin }
 }
 
 export function requirePermission(permission: Permission) {
   return async (req: NextRequest): Promise<Response | null> => {
     const admin = await getAdminFromToken(req)
     if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    if (!admin.permissions.includes(permission)) {
+    if (!admin.isSuperAdmin && !admin.permissions.includes(permission)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
     return null

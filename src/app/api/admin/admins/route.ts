@@ -6,7 +6,7 @@ import { getAdminFromToken } from '@/lib/admin-permissions'
 export async function GET(req: NextRequest) {
   const admin = await getAdminFromToken(req)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const admins = await db.admin.findMany({
     include: { roleRel: { select: { name: true } } },
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const admin = await getAdminFromToken(req)
   if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { name, email, password, roleId } = await req.json()
   if (!name || !email || !password || !roleId) return NextResponse.json({ error: 'Name, email, password, and roleId required' }, { status: 400 })
