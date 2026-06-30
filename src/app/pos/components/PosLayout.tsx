@@ -28,7 +28,7 @@ const tabs: { id: TabId; label: string; icon: typeof ShoppingCart }[] = [
 
 function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, children }: Props) {
   return (
-    <div className="flex flex-col h-full pos-interface navy-radial">
+    <div className="flex flex-col min-h-screen pos-interface navy-radial">
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">

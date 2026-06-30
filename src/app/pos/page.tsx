@@ -33,7 +33,14 @@ export default function POSPage() {
   const { token, user, logout } = usePosAuth()
   const [hydrated, setHydrated] = useState(false)
 
-  useEffect(() => { setHydrated(true) }, [])
+  useEffect(() => {
+    if (usePosAuth.persist.hasHydrated()) {
+      setHydrated(true)
+    } else {
+      const unsub = usePosAuth.persist.onFinishHydration(() => setHydrated(true))
+      return () => unsub()
+    }
+  }, [])
 
   useEffect(() => {
     if (hydrated && !token) router.replace('/pos/login')
