@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2, RefreshCw } from 'lucide-react'
+import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
@@ -189,11 +190,13 @@ export default function AccountingPage() {
         ))}
       </div>
 
-      {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} compareEnabled={false} />}
-      {tab === 'orders' && <OrdersTab />}
-      {tab === 'branches' && <BranchesTab />}
-      {tab === 'expenses' && <ExpensesTab refreshKey={refreshKey} />}
-      {tab === 'reports' && <ReportsTab />}
+      <ErrorBoundary>
+        {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} compareEnabled={false} />}
+        {tab === 'orders' && <OrdersTab />}
+        {tab === 'branches' && <BranchesTab />}
+        {tab === 'expenses' && <ExpensesTab refreshKey={refreshKey} />}
+        {tab === 'reports' && <ReportsTab />}
+      </ErrorBoundary>
     </div>
   )
 }
