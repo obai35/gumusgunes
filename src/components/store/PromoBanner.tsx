@@ -61,12 +61,12 @@ export function PromoBanner() {
             </div>
 
             <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight mb-3">
-              <span className="silver-text">{s('promoHeading1', t('promo.heading1'))}</span>
+              <span className="silver-text" data-setting="promoHeading1">{s('promoHeading1', t('promo.heading1'))}</span>
               <br />
-              <span className="gold-text">{s('promoHeading2', t('promo.heading2'))}</span>
+              <span className="gold-text" data-setting="promoHeading2">{s('promoHeading2', t('promo.heading2'))}</span>
             </h2>
             <p className="text-silver/70 text-base mb-6 max-w-md leading-relaxed">
-              {s('promoDescription', t('promo.description'))}
+              <span data-setting="promoDescription">{s('promoDescription', t('promo.description'))}</span>
             </p>
 
             <div className="flex flex-wrap items-center gap-4">

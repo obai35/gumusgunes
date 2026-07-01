@@ -71,7 +71,18 @@ export default function SiteEditor() {
   }, [settings])
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const messageHandler = (event: MessageEvent) => {
+      if (event.data?.type === 'section-clicked') {
+        setActiveSection(event.data.section as SectionKey)
+        setShowPanel(true)
+      }
+      if (event.data?.type === 'inline-update') {
+        updateSetting(event.data.key, event.data.value)
+      }
+    }
+    window.addEventListener('message', messageHandler)
+
+    const keyHandler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault()
         handleSave()
@@ -81,9 +92,12 @@ export default function SiteEditor() {
         setShowPanel(p => !p)
       }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [handleSave])
+    window.addEventListener('keydown', keyHandler)
+    return () => {
+      window.removeEventListener('message', messageHandler)
+      window.removeEventListener('keydown', keyHandler)
+    }
+  }, [handleSave, updateSetting])
 
   const previewUrl = useMemo(() => `/preview?t=${Date.now()}`, [])
 

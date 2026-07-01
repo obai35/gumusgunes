@@ -68,8 +68,8 @@ export function Header() {
       <div className="bg-navy-deep text-silver text-xs tracking-[0.2em] uppercase">
         <div className="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2 text-center">
           <Sun className="h-3 w-3 text-gold animate-pulse" />
-          <span className="hidden sm:inline">{settings.announcementText || t('announcement.text')}</span>
-          <span className="sm:hidden">{settings.announcementTextMobile || t('announcement.textMobile')}</span>
+          <span className="hidden sm:inline" data-setting="announcementText">{settings.announcementText || t('announcement.text')}</span>
+          <span className="sm:hidden" data-setting="announcementTextMobile">{settings.announcementTextMobile || t('announcement.textMobile')}</span>
         </div>
       </div>
 

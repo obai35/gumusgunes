@@ -70,22 +70,22 @@ export default async function PreviewPage() {
     <>
       <PreviewListener />
       <style>{style}</style>
-      <div data-editable="announcement">
+      <div data-editable="announcement" data-editable-label="Announcement Bar">
         <Header />
       </div>
       <main>
-        <div data-editable="hero"><Hero /></div>
-        <div data-editable="trust-badges"><TrustBadges /></div>
-        <div data-editable="flash-sale"><FlashSaleBanner /></div>
-        <CategoryGrid categories={categories} />
-        {featured.length > 0 && <FeaturedProducts id="featured" eyebrow="Curated for You" title="Featured Pieces" products={featured} ctaLabel="View All" ctaHref="#collections" />}
-        <PromoBanner />
-        <ProductGrid categories={categories} initialProducts={products} />
-        {newArrivals.length > 0 && <FeaturedProducts id="new" eyebrow="Fresh from the Atelier" title="New Arrivals" products={newArrivals} ctaLabel="View All" ctaHref="#collections" />}
-        {bestsellers.length > 0 && <FeaturedProducts id="bestsellers" eyebrow="Customer Favorites" title="Bestsellers" products={bestsellers} ctaLabel="View All" ctaHref="#collections" />}
-        <AboutSection />
+        <div data-editable="hero" data-editable-label="Hero Section"><Hero /></div>
+        <div data-editable="trust-badges" data-editable-label="Trust Badges"><TrustBadges /></div>
+        <div data-editable="flash-sale" data-editable-label="Flash Sale"><FlashSaleBanner /></div>
+        <div data-editable="category-grid" data-editable-label="Categories"><CategoryGrid categories={categories} /></div>
+        {featured.length > 0 && <div data-editable="featured-products" data-editable-label="Featured Products"><FeaturedProducts id="featured" eyebrow="Curated for You" title="Featured Pieces" products={featured} ctaLabel="View All" ctaHref="#collections" /></div>}
+        <div data-editable="promo-banner" data-editable-label="Promo Banner"><PromoBanner /></div>
+        <div data-editable="product-grid"><ProductGrid categories={categories} initialProducts={products} /></div>
+        {newArrivals.length > 0 && <div data-editable="new-arrivals" data-editable-label="New Arrivals"><FeaturedProducts id="new" eyebrow="Fresh from the Atelier" title="New Arrivals" products={newArrivals} ctaLabel="View All" ctaHref="#collections" /></div>}
+        {bestsellers.length > 0 && <div data-editable="bestsellers" data-editable-label="Bestsellers"><FeaturedProducts id="bestsellers" eyebrow="Customer Favorites" title="Bestsellers" products={bestsellers} ctaLabel="View All" ctaHref="#collections" /></div>}
+        <div data-editable="about-section" data-editable-label="About"><AboutSection /></div>
       </main>
-      <div data-editable="footer"><Footer /></div>
+      <div data-editable="footer" data-editable-label="Footer"><Footer /></div>
     </>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { ArrowRight, Sparkles, Sun } from 'lucide-react'
 import { useUI } from '@/lib/store'
 import { useTranslation } from '@/hooks/use-translation'
@@ -8,6 +9,16 @@ import { useTranslation } from '@/hooks/use-translation'
 export function Hero() {
   const { setSearchOpen } = useUI()
   const { t } = useTranslation()
+  const [settings, setSettings] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then(r => r.json())
+      .then(data => { if (data.ok) setSettings(data.settings) })
+      .catch(() => {})
+  }, [])
+
+  const s = (key: string, fallback: string) => settings[key] || fallback
 
   return (
     <section id="top" className="relative overflow-hidden navy-radial text-silver">
@@ -53,13 +64,13 @@ export function Hero() {
             </div>
 
             <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.05] mb-6">
-              <span className="silver-text">{t('hero.heading1')}</span>
+              <span className="silver-text" data-setting="heroTitle">{s('heroTitle', t('hero.heading1'))}</span>
               <br />
-              <span className="gold-text">{t('hero.heading2')}</span>
+              <span className="gold-text" data-setting="heroSubtitle">{s('heroSubtitle', t('hero.heading2'))}</span>
             </h1>
 
             <p className="text-base sm:text-lg text-silver/70 max-w-lg mx-auto lg:mx-0 mb-8 leading-relaxed">
-              {t('hero.heroDescription')}
+              <span data-setting="heroDescription">{s('heroDescription', t('hero.heroDescription'))}</span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
