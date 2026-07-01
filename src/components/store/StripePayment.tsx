@@ -2,9 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
-import { getStripe } from '@/lib/stripe-client'
+import { loadStripe } from '@stripe/stripe-js'
 
-function StripeForm({ amount, currency, onSuccess }: any) {
+let stripePromise: Promise<any> | null = null
+
+function getStripe(publishableKey: string) {
+  if (!stripePromise) {
+    stripePromise = loadStripe(publishableKey)
+  }
+  return stripePromise
+}
+
+type StripeFormProps = {
+  amount: number
+  currency: string
+  onSuccess: (paymentIntentId: string) => void
+}
+
+function StripeForm({ amount, currency, onSuccess }: StripeFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [error, setError] = useState('')
@@ -39,7 +54,14 @@ function StripeForm({ amount, currency, onSuccess }: any) {
   )
 }
 
-export default function StripePayment({ amount, currency, onSuccess }: any) {
+type Props = {
+  amount: number
+  currency: string
+  onSuccess: (paymentIntentId: string) => void
+  publishableKey: string
+}
+
+export default function StripePayment({ amount, currency, onSuccess, publishableKey }: Props) {
   const [clientSecret, setClientSecret] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -59,7 +81,7 @@ export default function StripePayment({ amount, currency, onSuccess }: any) {
   if (loading) return <div className="animate-pulse h-32 bg-gray-100 rounded-lg" />
 
   return (
-    <Elements stripe={getStripe()} clientSecret={clientSecret} options={{ locale: 'en' }}>
+    <Elements stripe={getStripe(publishableKey)} clientSecret={clientSecret} options={{ locale: 'en' }}>
       <StripeForm amount={amount} currency={currency} onSuccess={onSuccess} />
     </Elements>
   )
