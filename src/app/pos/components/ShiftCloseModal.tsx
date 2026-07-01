@@ -98,33 +98,33 @@ export default function ShiftCloseModal({ endingCash, onEndingCashChange, shiftN
         ) : summary ? (
           <div className="space-y-4">
             <div className="pos-glass rounded-lg p-3 space-y-1.5 text-sm">
-              <div className="flex justify-between"><span className="text-white/50">Total Sales</span><span className="text-silver-soft font-medium">${summary.totalSales.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-white/50">Total Sales</span><span className="text-silver-soft font-medium">E£{summary.totalSales.toFixed(2)}</span></div>
               <div className="flex justify-between"><span className="text-white/50">Order Count</span><span className="text-silver-soft font-medium">{summary.orderCount}</span></div>
               <div className="border-t border-white/10 pt-1.5 space-y-1">
-                <div className="flex justify-between"><span className="text-white/40">Cash Sales</span><span className="text-emerald-400 font-medium">${summary.totalCash.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/40">Card Sales</span><span className="text-blue-400 font-medium">${summary.totalCard.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/40">Bank Transfer</span><span className="text-purple-400 font-medium">${summary.totalBankTransfer.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/40">InstaPay</span><span className="text-amber-400 font-medium">${summary.totalInstapay.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/40">Wallet</span><span className="text-cyan-400 font-medium">${summary.totalWallet.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/40">Cash Sales</span><span className="text-emerald-400 font-medium">E£{summary.totalCash.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/40">Card Sales</span><span className="text-blue-400 font-medium">E£{summary.totalCard.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/40">Bank Transfer</span><span className="text-purple-400 font-medium">E£{summary.totalBankTransfer.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/40">InstaPay</span><span className="text-amber-400 font-medium">E£{summary.totalInstapay.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/40">Wallet</span><span className="text-cyan-400 font-medium">E£{summary.totalWallet.toFixed(2)}</span></div>
               </div>
               {summary.totalRefunds > 0 && (
-                <div className="flex justify-between border-t border-white/10 pt-1.5"><span className="text-white/40">Total Refunds</span><span className="text-red-400 font-medium">-${summary.totalRefunds.toFixed(2)}</span></div>
+                <div className="flex justify-between border-t border-white/10 pt-1.5"><span className="text-white/40">Total Refunds</span><span className="text-red-400 font-medium">-E£{summary.totalRefunds.toFixed(2)}</span></div>
               )}
               {summary.totalExpenses > 0 && (
-                <div className="flex justify-between"><span className="text-white/40">Expenses</span><span className="text-red-400 font-medium">-${summary.totalExpenses.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/40">Expenses</span><span className="text-red-400 font-medium">-E£{summary.totalExpenses.toFixed(2)}</span></div>
               )}
             </div>
 
             <div className="pos-glass rounded-lg p-3">
               <p className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-2">Cash Reconciliation</p>
               <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between"><span className="text-white/50">Starting Cash</span><span className="text-silver-soft font-medium">${summary.startingCash.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/50">+ Cash Sales</span><span className="text-emerald-400 font-medium">+${summary.totalCash.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/50">- Cash Refunds</span><span className="text-red-400 font-medium">-${summary.cashRefunds.toFixed(2)}</span></div>
-                <div className="flex justify-between"><span className="text-white/50">- Cash Expenses</span><span className="text-red-400 font-medium">-${summary.cashExpenses.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/50">Starting Cash</span><span className="text-silver-soft font-medium">E£{summary.startingCash.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/50">+ Cash Sales</span><span className="text-emerald-400 font-medium">+E£{summary.totalCash.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/50">- Cash Refunds</span><span className="text-red-400 font-medium">-E£{summary.cashRefunds.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-white/50">- Cash Expenses</span><span className="text-red-400 font-medium">-E£{summary.cashExpenses.toFixed(2)}</span></div>
                 <div className="border-t border-white/10 pt-1.5 flex justify-between font-semibold">
                   <span className="text-silver-soft">Expected Cash</span>
-                  <span className="text-gold">${expectedCash.toFixed(2)}</span>
+                  <span className="text-gold">E£{expectedCash.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -140,7 +140,7 @@ export default function ShiftCloseModal({ endingCash, onEndingCashChange, shiftN
                 </button>
               </div>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">E£</span>
                 <input
                   type="number"
                   step="0.01"
@@ -167,12 +167,12 @@ export default function ShiftCloseModal({ endingCash, onEndingCashChange, shiftN
                         placeholder="0"
                         className="w-16 px-2 py-1 rounded bg-white/5 border border-white/10 text-silver-soft text-xs text-center placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-gold/30"
                       />
-                      <span className="text-xs text-white/30">= ${((parseFloat(counts[d.value] || '0') || 0) * d.value).toFixed(2)}</span>
+                      <span className="text-xs text-white/30">= E£{((parseFloat(counts[d.value] || '0') || 0) * d.value).toFixed(2)}</span>
                     </div>
                   ))}
                   <div className="border-t border-white/10 pt-1.5 flex justify-between text-sm font-semibold">
                     <span className="text-silver-soft">Counted Total</span>
-                    <span className="text-gold">${countedTotal.toFixed(2)}</span>
+                    <span className="text-gold">E£{countedTotal.toFixed(2)}</span>
                   </div>
                 </div>
               )}
@@ -184,10 +184,10 @@ export default function ShiftCloseModal({ endingCash, onEndingCashChange, shiftN
                   <span className={difference >= 0 ? 'text-emerald-400 font-medium' : 'text-red-400 font-medium'}>
                     {difference >= 0 ? 'Over' : 'Short'}
                   </span>
-                  <span className="text-white/40 text-xs ml-2">(${expectedCash.toFixed(2)} expected)</span>
+                  <span className="text-white/40 text-xs ml-2">(E£{expectedCash.toFixed(2)} expected)</span>
                 </div>
                 <span className={`font-bold text-lg ${difference >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {difference >= 0 ? '+' : ''}${difference.toFixed(2)}
+                  {difference >= 0 ? '+' : ''}E£{difference.toFixed(2)}
                 </span>
               </div>
             )}

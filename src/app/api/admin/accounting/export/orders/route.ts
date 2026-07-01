@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
       })
     })
 
-    ws.getColumn('totalAmount').numFmt = '$#,##0.00'
+    ws.getColumn('totalAmount').numFmt = '#,##0.00'
     ws.getColumn('totalAmount').alignment = { horizontal: 'right' }
 
     const buf = await wb.xlsx.writeBuffer()

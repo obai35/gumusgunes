@@ -29,6 +29,7 @@ const FIELDS: { key: string; label: string; type?: string; group: string }[] = [
   { key: 'footerPhone', label: 'Footer Phone', group: 'Footer' },
   { key: 'footerAbout', label: 'Footer About Text', group: 'Footer' },
   { key: 'footerAddress', label: 'Footer Address', group: 'Footer' },
+  { key: 'loyaltyPointsRate', label: 'Loyalty Points Rate (EGP per point)', group: 'Loyalty', type: 'number' },
 ]
 
 export default function AdminSettings() {

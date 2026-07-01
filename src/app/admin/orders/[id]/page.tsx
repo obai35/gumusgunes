@@ -52,7 +52,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
                       <p className="text-xs text-muted-foreground">SKU: {item.product.sku} · Qty: {item.quantity}</p>
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-navy">${(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="text-sm font-medium text-navy">E£{(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               ))}
             </div>
@@ -84,22 +84,22 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
           <div className="bg-white rounded-xl border border-border p-5">
             <h2 className="font-display font-semibold text-navy mb-4">Summary</h2>
             <dl className="space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="text-navy">${order.subtotal.toFixed(2)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="text-navy">{order.shipping === 0 ? 'Free' : `$${order.shipping.toFixed(2)}`}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="text-navy">E£{order.subtotal.toFixed(2)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="text-navy">{order.shipping === 0 ? 'Free' : `E£${order.shipping.toFixed(2)}`}</dd></div>
               {order.discountAmount && order.discountAmount > 0 && (
-                <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="text-green-600">-${order.discountAmount.toFixed(2)}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="text-green-600">-E£{order.discountAmount.toFixed(2)}</dd></div>
               )}
-              <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="text-navy">${order.tax.toFixed(2)}</dd></div>
-              <div className="flex justify-between pt-2 border-t border-border font-semibold"><dt className="text-navy">Total</dt><dd className="text-navy">${order.totalAmount.toFixed(2)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="text-navy">E£{order.tax.toFixed(2)}</dd></div>
+              <div className="flex justify-between pt-2 border-t border-border font-semibold"><dt className="text-navy">Total</dt><dd className="text-navy">E£{order.totalAmount.toFixed(2)}</dd></div>
               {order.refundedAmount > 0 && (
-                <div className="flex justify-between pt-1"><dt className="text-red-600">Refunded</dt><dd className="text-red-600">-${order.refundedAmount.toFixed(2)}</dd></div>
+                <div className="flex justify-between pt-1"><dt className="text-red-600">Refunded</dt><dd className="text-red-600">-E£{order.refundedAmount.toFixed(2)}</dd></div>
               )}
             </dl>
           </div>
           <div className="bg-white rounded-xl border border-border p-5 space-y-2">
             <h2 className="font-display font-semibold text-navy mb-3">Payment</h2>
             <p className="text-sm text-muted-foreground">Method: <span className="font-medium text-navy">{order.paymentMethod}</span></p>
-            <p className="text-sm text-muted-foreground">Status: <span className={`font-medium ${order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'awaiting_verification' ? 'text-orange-600' : 'text-navy'}`}>{order.paymentStatus}</span></p>
+            <p className="text-sm text-muted-foreground">Status: <span className={`font-medium E£{order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'awaiting_verification' ? 'text-orange-600' : 'text-navy'}`}>{order.paymentStatus}</span></p>
             {order.paymentMethod === 'card' && order.stripePaymentIntentId && (
               <p className="text-xs text-muted-foreground">Stripe ID: <span className="font-mono">{order.stripePaymentIntentId}</span></p>
             )}

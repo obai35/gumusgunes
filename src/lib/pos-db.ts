@@ -67,7 +67,14 @@ export async function getUnsyncedOrders(): Promise<any[]> {
 export async function markOrderSynced(id: number) {
   const db = await openDB()
   const tx = db.transaction('orders', 'readwrite')
-  tx.objectStore('orders').put({ id, synced: true })
+  const existing = await new Promise<any>((resolve) => {
+    const req = tx.objectStore('orders').get(id)
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => resolve(null)
+  })
+  if (existing) {
+    tx.objectStore('orders').put({ ...existing, synced: true })
+  }
   await new Promise(r => tx.oncomplete = r)
   db.close()
 }

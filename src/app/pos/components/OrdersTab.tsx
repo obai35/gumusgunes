@@ -64,6 +64,10 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
   }
 
   useEffect(() => {
+    handleSearch()
+  }, [])
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       if (query || fromDate || toDate) handleSearch()
     }, 300)
@@ -180,12 +184,12 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
                   <p class="font-bold">${item.product.name}</p>
                   <p class="text-xs">${item.product.sku} × ${item.quantity}</p>
                 </div>
-                <span class="font-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                <span class="font-bold">E£${(item.price * item.quantity).toFixed(2)}</span>
               </div>
             `).join('')}
           </div>
           <div class="p-4">
-            <div class="flex justify-between text-sm"><span>Total</span><span class="font-bold">$${order.totalAmount.toFixed(2)}</span></div>
+            <div class="flex justify-between text-sm"><span>Total</span><span class="font-bold">E£${order.totalAmount.toFixed(2)}</span></div>
           </div>
           <p class="text-center text-xs" style="margin-top:16px">Thank you for your purchase!</p>
         </body>
@@ -236,7 +240,7 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
               </div>
               <div>
                 <p className="text-white/40">Total</p>
-                <p className="font-medium text-gold">${selectedOrder.totalAmount.toFixed(2)}</p>
+                <p className="font-medium text-gold">E£{selectedOrder.totalAmount.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -256,8 +260,8 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
                   <tr key={item.id} className="border-b border-white/5">
                     <td className="py-2 text-silver-soft font-medium">{item.product.name}</td>
                     <td className="py-2 text-right text-white/50">{item.quantity}</td>
-                    <td className="py-2 text-right text-white/50">${item.price.toFixed(2)}</td>
-                    <td className="py-2 text-right text-silver-soft font-medium">${(item.quantity * item.price).toFixed(2)}</td>
+                    <td className="py-2 text-right text-white/50">E£{item.price.toFixed(2)}</td>
+                    <td className="py-2 text-right text-silver-soft font-medium">E£{(item.quantity * item.price).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -382,7 +386,7 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
                 </div>
                 <div className="text-right shrink-0 ml-3">
                   <p className={`text-sm font-bold ${order.status === 'cancelled' ? 'text-red-400 line-through' : 'text-gold'}`}>
-                    ${order.totalAmount.toFixed(2)}
+E£{order.totalAmount.toFixed(2)}
                   </p>
                   <p className="text-xs text-white/40">
                     {paymentLabels[order.paymentMethod] || order.paymentMethod}

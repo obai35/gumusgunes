@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 const DEFAULTS: Record<string, string> = {
   siteName: 'Gümüş Güneş',
@@ -13,8 +11,8 @@ const DEFAULTS: Record<string, string> = {
   accentColor: '#c9a84c',
   bgColor: '#ffffff',
   textColor: '#1a1a2e',
-  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns',
-  announcementTextMobile: 'Free Shipping Over $250',
+  announcementText: 'Free Worldwide Shipping on Orders Over 250 EGP · 30-Day Returns',
+  announcementTextMobile: 'Free Shipping Over 250 EGP',
   navCollections: 'Collections',
   navNewArrivals: 'New Arrivals',
   navBestsellers: 'Bestsellers',
@@ -36,11 +34,12 @@ const DEFAULTS: Record<string, string> = {
   promoHeading1: 'The Summer',
   promoHeading2: 'Solstice Collection',
   promoDescription: 'Up to 25% off selected pieces that celebrate the longest days of the year. Each purchase arrives in our signature gift box.',
+  loyaltyPointsRate: '100',
 }
 
 export async function GET() {
   try {
-    const settings = await prisma.siteSetting.findMany()
+    const settings = await db.siteSetting.findMany()
     const map: Record<string, string> = { ...DEFAULTS }
     for (const s of settings) map[s.key] = s.value
     return NextResponse.json({ ok: true, settings: map })
@@ -55,7 +54,7 @@ export async function PUT(req: NextRequest) {
     const body = await req.json()
     const entries = Object.entries(body) as [string, string][]
     for (const [key, value] of entries) {
-      await prisma.siteSetting.upsert({
+      await db.siteSetting.upsert({
         where: { key },
         update: { value: String(value) },
         create: { key, value: String(value) },

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     let branchStockMap: Map<string, number> | null = null
     if (branchId) {
-      const branchStockProducts = await prisma.branchStock.findMany({
+      const branchStockProducts = await db.branchStock.findMany({
         where: { branchId, quantity: { gt: 0 } },
         select: { productId: true, quantity: true },
       })
@@ -28,7 +26,7 @@ export async function GET(req: NextRequest) {
       where.id = { in: [...branchStockMap.keys()] }
     }
 
-    const products = await prisma.product.findMany({
+    const products = await db.product.findMany({
       where,
       select: { id: true, name: true, price: true, stock: true, imageUrl: true, sku: true },
       take: 20,

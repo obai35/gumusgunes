@@ -93,9 +93,12 @@ model Order {
   cashAmount    Float?
   cardAmount    Float?
   notes          String?
-  discountId     String?
-  discount       Discount?  @relation(fields: [discountId], references: [id])
-  discountAmount Float?
+  discountId       String?
+  discount         Discount?    @relation(fields: [discountId], references: [id])
+  discountAmount   Float?
+  shippingMethodId String?
+  shippingMethod   ShippingMethod? @relation(fields: [shippingMethodId], references: [id])
+  shipment         Shipment?
   paymentStatus        String     @default("pending")
   fulfilledAt          DateTime?
   reconciledAt         DateTime?
@@ -126,6 +129,7 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
   price     Float
+  discount  Float?
 }
 
 model Return {
@@ -155,6 +159,71 @@ model ReturnItem {
   product      Product  @relation(fields: [productId], references: [id])
   quantity     Int
   refundAmount Float
+}
+
+model Governorate {
+  id            String         @id @default(cuid())
+  name          String         @unique
+  nameAr        String
+  shippingRates ShippingRate[]
+  shippingRules ShippingRule[]
+  discounts     Discount[]
+}
+
+model ShippingMethod {
+  id            String        @id @default(cuid())
+  name          String
+  estimatedDays String
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  rates         ShippingRate[]
+  shipments     Shipment[]
+  rules         ShippingRule[]
+  orders        Order[]
+}
+
+model ShippingRate {
+  id            String         @id @default(cuid())
+  methodId      String
+  method        ShippingMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
+  governorateId String
+  governorate   Governorate    @relation(fields: [governorateId], references: [id])
+  price         Float
+
+  @@unique([methodId, governorateId])
+}
+
+model ShippingRule {
+  id            String         @id @default(cuid())
+  name          String
+  methodId      String?
+  method        ShippingMethod? @relation(fields: [methodId], references: [id], onDelete: SetNull)
+  minAmount     Float?
+  governorateId String?
+  governorate   Governorate?   @relation(fields: [governorateId], references: [id])
+  discountType  String         // 'free' | 'percentage' | 'fixed'
+  discountValue Float?
+  isActive      Boolean        @default(true)
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime       @default(now())
+}
+
+model Shipment {
+  id                  String         @id @default(cuid())
+  orderId             String         @unique
+  order               Order          @relation(fields: [orderId], references: [id])
+  methodId            String
+  method              ShippingMethod @relation(fields: [methodId], references: [id])
+  trackingNumber      String
+  status              String         @default("shipped")
+  shippedAt           DateTime?
+  estimatedDeliveryAt DateTime?
+  deliveredAt         DateTime?
+  addressSnapshot     String
+  notes               String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 }
 
 model Newsletter {
@@ -289,19 +358,21 @@ model InventoryLog {
 }
 
 model Discount {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  type        String
-  value       Float
-  appliesTo   String   @default("all")  // all, category, tag
-  targetValue String?                    // category name or tag keyword
-  minOrder    Float?
-  maxUses     Int?
-  usedCount   Int      @default(0)
-  isActive    Boolean  @default(true)
-  expiresAt   DateTime?
-  createdAt   DateTime @default(now())
-  orders      Order[]
+  id            String       @id @default(cuid())
+  code          String       @unique
+  type          String
+  value         Float
+  appliesTo     String       @default("all")  // all, category, tag
+  targetValue   String?                    // category name or tag keyword
+  minOrder      Float?
+  maxUses       Int?
+  usedCount     Int          @default(0)
+  isActive      Boolean      @default(true)
+  expiresAt     DateTime?
+  governorateId String?
+  governorate   Governorate? @relation(fields: [governorateId], references: [id])
+  createdAt     DateTime     @default(now())
+  orders        Order[]
 }
 
 model SiteSetting {

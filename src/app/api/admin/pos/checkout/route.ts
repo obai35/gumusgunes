@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
 
@@ -22,15 +20,15 @@ export async function POST(req: Request) {
     }
 
     if (!shiftId) return NextResponse.json({ error: 'An open shift is required to process sales' }, { status: 400 })
-    const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+    const shift = await db.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
     const branchId = shift.branchId
 
-    const products = await prisma.product.findMany({ where: { id: { in: items.map((i: any) => i.productId ) } } })
+    const products = await db.product.findMany({ where: { id: { in: items.map((i: any) => i.productId ) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
-    const branchStocks = await prisma.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStocks = await db.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
     const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let subtotal = 0
@@ -47,7 +45,7 @@ export async function POST(req: Request) {
     let discountAmount = 0
     let appliedDiscount: any = null
     if (discountCode) {
-      appliedDiscount = await prisma.discount.findUnique({ where: { code: discountCode } })
+      appliedDiscount = await db.discount.findUnique({ where: { code: discountCode } })
       if (!appliedDiscount || !appliedDiscount.isActive) return NextResponse.json({ error: 'Invalid discount code' }, { status: 400 })
       if (appliedDiscount.expiresAt && new Date(appliedDiscount.expiresAt) < new Date()) return NextResponse.json({ error: 'Discount code expired' }, { status: 400 })
       if (appliedDiscount.maxUses && appliedDiscount.usedCount >= appliedDiscount.maxUses) return NextResponse.json({ error: 'Discount code usage limit reached' }, { status: 400 })
@@ -55,7 +53,7 @@ export async function POST(req: Request) {
       let eligibleSubtotal = subtotal
       if (appliedDiscount.appliesTo !== 'all' && appliedDiscount.targetValue && items?.length) {
         const target = appliedDiscount.targetValue.toLowerCase()
-        const productsWithCat = await prisma.product.findMany({
+        const productsWithCat = await db.product.findMany({
           where: { id: { in: items.map((i: any) => i.productId) } },
           include: { category: { select: { name: true, parent: { select: { name: true } } } } },
         })
@@ -93,7 +91,7 @@ export async function POST(req: Request) {
     let resolvedUserId: string | null = null
 
     if (customerId) {
-      const user = await prisma.user.findUnique({ where: { id: customerId } })
+      const user = await db.user.findUnique({ where: { id: customerId } })
       if (user) {
         resolvedName = user.name
         resolvedEmail = user.email
@@ -109,7 +107,7 @@ export async function POST(req: Request) {
     const orderNumber = `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
     const receiptNumber = generateReceiptNumber()
 
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await db.$transaction(async (tx) => {
       for (const item of items) {
         await tx.branchStock.upsert({
           where: { branchId_productId: { branchId, productId: item.productId } },
@@ -150,13 +148,14 @@ export async function POST(req: Request) {
           cardAmount: paymentMethod === 'split' ? (cardAmount || 0) : (paymentMethod === 'card' ? total : null),
           notes: notes || null,
           paymentStatus: 'paid',
-          items: {
+            items: {
             create: items.map((item: any) => {
               const product = productMap.get(item.productId)!
               return {
                 productId: item.productId,
                 quantity: item.quantity,
                 price: product.price,
+                discount: item.discount || 0,
               }
             }),
           },
@@ -164,7 +163,7 @@ export async function POST(req: Request) {
       })
     })
 
-    const fullOrder = await prisma.order.findUnique({
+    const fullOrder = await db.order.findUnique({
       where: { id: order.id },
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })
@@ -179,7 +178,7 @@ export async function PUT(req: Request) {
     const { orderId, action, items: returnItems, fullReturn, reason, refundMethod, cashRefundAmount, cardRefundAmount } = await req.json()
     if (!orderId || action !== 'return') return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
-    const order = await prisma.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id: orderId },
       include: { items: { include: { product: { select: { id: true, name: true, sku: true } } } }, shift: { select: { branchId: true } } },
     })
@@ -190,16 +189,17 @@ export async function PUT(req: Request) {
     let totalRefund = 0
     const returnedItems: Array<{ productId: string; productName: string; quantity: number; refundAmount: number }> = []
 
-    const branch = branchId ? await prisma.branch.findUnique({ where: { id: branchId }, select: { name: true } }) : null
+    const branch = branchId ? await db.branch.findUnique({ where: { id: branchId }, select: { name: true } }) : null
 
-    const returnRecord = await prisma.$transaction(async (tx) => {
+    const returnRecord = await db.$transaction(async (tx) => {
       for (const ri of returnItems || []) {
         const orderItem = order.items.find(i => i.id === ri.itemId)
         if (!orderItem) continue
         const returnQty = Math.min(ri.quantity, orderItem.quantity)
         if (returnQty <= 0) continue
 
-        const refundForItem = orderItem.price * returnQty
+        const priceAfterDiscount = orderItem.price - (orderItem.discount ?? 0)
+        const refundForItem = priceAfterDiscount * returnQty
         totalRefund += refundForItem
 
         if (branchId) {
@@ -241,7 +241,7 @@ export async function PUT(req: Request) {
         where: { orderId },
         include: { product: { select: { id: true, name: true, sku: true } } },
       })
-      const newTotal = updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      const newTotal = updatedItems.reduce((sum, i) => sum + (i.price - (i.discount ?? 0)) * i.quantity, 0)
       const newRefunded = (order.refundedAmount || 0) + totalRefund
 
       const data: any = { refundedAmount: newRefunded }

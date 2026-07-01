@@ -4,17 +4,14 @@ import { useState, useEffect } from 'react'
 import { Keyboard } from 'lucide-react'
 
 const shortcuts = [
-  { key: 'Ctrl+K', action: 'Search products' },
-  { key: 'F1', action: 'Toggle shortcuts' },
+  { key: 'F1', action: 'Set payment to Cash' },
+  { key: 'F2', action: 'Set payment to Card' },
+  { key: 'F3', action: 'Set payment to Split' },
+  { key: 'F4', action: 'Focus search input' },
+  { key: 'F6', action: 'Focus SKU / barcode input' },
+  { key: 'Enter', action: 'Quick checkout (no input focused)' },
+  { key: 'Ctrl+1-9', action: 'Add product by grid position' },
   { key: 'Escape', action: 'Close modal / clear search' },
-  { key: 'F2', action: 'Focus barcode input' },
-  { key: 'F3', action: 'Toggle cart panel' },
-  { key: 'F4', action: 'Quick checkout' },
-  { key: 'F5', action: 'Refresh product grid' },
-  { key: 'F6', action: 'Toggle orders view' },
-  { key: 'F7', action: 'Toggle returns view' },
-  { key: 'F8', action: 'Toggle records view' },
-  { key: 'F9', action: 'Toggle hall sale view' },
 ]
 
 export default function ShortcutsCheatSheet() {

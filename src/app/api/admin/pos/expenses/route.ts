@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   const shiftId = req.nextUrl.searchParams.get('shiftId')
   if (!shiftId) return NextResponse.json({ error: 'shiftId required' }, { status: 400 })
-  const expenses = await prisma.expense.findMany({
+  const expenses = await db.expense.findMany({
     where: { shiftId },
     include: { supplier: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
@@ -20,7 +18,7 @@ export async function POST(req: Request) {
     if (!shiftId || !amount || !paymentMethod || !description) {
       return NextResponse.json({ error: 'shiftId, amount, paymentMethod, description required' }, { status: 400 })
     }
-    const expense = await prisma.$transaction(async (tx) => {
+    const expense = await db.$transaction(async (tx) => {
       const e = await tx.expense.create({
         data: { shiftId, supplierId, amount, paymentMethod, description, invoiceNumber, notes },
       })

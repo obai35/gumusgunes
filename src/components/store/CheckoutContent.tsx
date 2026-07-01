@@ -170,10 +170,10 @@ export function CheckoutContent() {
 
   const renderPaymentForm = () => {
     if (form.paymentMethod === 'card') {
-      return <StripePayment amount={grandTotal} currency="USD" onSuccess={handleStripeSuccess} />
+      return <StripePayment amount={grandTotal} currency="EGP" onSuccess={handleStripeSuccess} />
     }
     if (form.paymentMethod === 'paypal') {
-      return <PayPalPayment amount={grandTotal} currency="USD" onSuccess={handlePayPalSuccess} />
+      return <PayPalPayment amount={grandTotal} currency="EGP" onSuccess={handlePayPalSuccess} />
     }
     if (form.paymentMethod === 'transfer') {
       return (

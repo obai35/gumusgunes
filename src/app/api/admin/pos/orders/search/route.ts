@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,7 +32,7 @@ export async function GET(req: NextRequest) {
     if (branchId) where.shift = { branchId }
 
     const [orders, total] = await Promise.all([
-      prisma.order.findMany({
+      db.order.findMany({
         where,
         include: {
           items: { include: { product: { select: { id: true, name: true, sku: true } } } },
@@ -44,7 +42,7 @@ export async function GET(req: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.order.count({ where }),
+      db.order.count({ where }),
     ])
 
     return NextResponse.json({ orders, total, page, totalPages: Math.ceil(total / limit) })

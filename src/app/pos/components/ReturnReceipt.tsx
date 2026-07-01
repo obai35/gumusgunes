@@ -65,14 +65,14 @@ export default function ReturnReceipt({ returnData, branchName, onClose }: Retur
               <tr key={i} className="border-b border-gray-200">
                 <td className="py-1">{item.product.name}</td>
                 <td className="text-center py-1">{item.quantity}</td>
-                <td className="text-right py-1">${item.refundAmount.toFixed(2)}</td>
+                <td className="text-right py-1">E£{item.refundAmount.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         <div className="text-right text-sm font-bold border-t border-gray-300 pt-2 mb-6">
-          Total Refund: ${returnData.refundAmount.toFixed(2)}
+          Total Refund: E£{returnData.refundAmount.toFixed(2)}
           <p className="text-xs font-normal text-gray-500">
             Method: {returnData.refundMethod.replace(/_/g, ' ')}
             {returnData.notes && <span className="block text-gray-400 mt-0.5">{returnData.notes}</span>}

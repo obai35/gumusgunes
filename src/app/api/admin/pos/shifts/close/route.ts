@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
@@ -10,11 +8,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'shiftId and endingCash are required' }, { status: 400 })
     }
 
-    const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+    const shift = await db.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is already closed' }, { status: 400 })
 
-    const orders = await prisma.order.findMany({ where: { shiftId } })
+    const orders = await db.order.findMany({ where: { shiftId } })
 
     const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0)
     const totalCash = orders.reduce((sum, o) => sum + (o.cashAmount || (o.paymentMethod === 'cash' ? o.totalAmount : 0)), 0)
@@ -22,10 +20,10 @@ export async function POST(req: Request) {
     const totalBankTransfer = orders.filter((o) => o.paymentMethod === 'bank_transfer').reduce((sum, o) => sum + o.totalAmount, 0)
     const totalInstapay = orders.filter((o) => o.paymentMethod === 'instapay').reduce((sum, o) => sum + o.totalAmount, 0)
     const totalWallet = orders.filter((o) => o.paymentMethod === 'wallet').reduce((sum, o) => sum + o.totalAmount, 0)
-    const totalExpenses = await prisma.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
+    const totalExpenses = await db.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
     const orderCount = orders.length
 
-    const updated = await prisma.shift.update({
+    const updated = await db.shift.update({
       where: { id: shiftId },
       data: {
         isOpen: false,

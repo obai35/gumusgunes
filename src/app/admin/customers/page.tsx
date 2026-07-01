@@ -24,7 +24,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 function formatCurrency(amount: number): string {
-  return '$' + amount.toFixed(2)
+  return 'E£' + amount.toFixed(2)
 }
 
 export default function CustomersPage() {

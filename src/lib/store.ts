@@ -171,7 +171,7 @@ type CurrencyState = {
 export const useCurrency = create<CurrencyState>()(
   persist(
     (set) => ({
-      currency: 'USD',
+      currency: 'EGP',
       setCurrency: (currency) => set({ currency }),
     }),
     {
@@ -235,7 +235,7 @@ export const useLocale = create<LocaleState>()(
   )
 )
 
-// Loyalty points (earned from purchases; 1 point per $1 spent)
+      // Loyalty points (earned from purchases; 1 point per 100 EGP spent)
 type LoyaltyState = {
   points: number
   addPoints: (n: number) => void

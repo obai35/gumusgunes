@@ -12,7 +12,7 @@ export default function PayPalPayment({ amount, currency, onSuccess }: any) {
     if (rendered.current || !btnRef.current) return
 
     const script = document.createElement('script')
-    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=${currency || 'USD'}`
+    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=${currency || 'EGP'}`
     script.onload = () => {
       if (!window.paypal || rendered.current) return
       rendered.current = true

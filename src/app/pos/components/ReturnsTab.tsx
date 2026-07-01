@@ -216,7 +216,7 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
                   {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-white/30" /> : <ChevronRight className="h-3.5 w-3.5 text-white/30" />}
                   <div>
                     <p className="text-sm text-silver-soft font-medium">{r.orderNumber}</p>
-                    <p className="text-xs text-white/50">{r.fullName} — ${r.totalAmount.toFixed(2)}</p>
+                    <p className="text-xs text-white/50">{r.fullName} — E£{r.totalAmount.toFixed(2)}</p>
                   </div>
                 </div>
                 <div className="flex gap-2 items-center">
@@ -270,7 +270,7 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
                             </div>
                           )}
                           <span className="text-white/40 w-12 text-right">/ {item.quantity}</span>
-                          <span className="text-silver-soft w-16 text-right">${(item.price * qty).toFixed(2)}</span>
+                          <span className="text-silver-soft w-16 text-right">E£{(item.price * qty).toFixed(2)}</span>
                         </div>
                       </div>
                     )

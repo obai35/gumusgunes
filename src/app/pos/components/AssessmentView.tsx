@@ -35,9 +35,9 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'Total Orders', value: summary?.totalOrders || orders.length || 0, color: 'text-gold' },
-            { label: 'Total Revenue', value: summary ? `$${(summary.totalRevenue || 0).toFixed(2)}` : '$0.00', color: 'text-gold' },
-            { label: 'Cash Revenue', value: summary ? `$${(summary.cashRevenue || 0).toFixed(2)}` : '$0.00', color: 'text-emerald-400' },
-            { label: 'Card Revenue', value: summary ? `$${(summary.cardRevenue || 0).toFixed(2)}` : '$0.00', color: 'text-blue-400' },
+            { label: 'Total Revenue', value: summary ? `E£${(summary.totalRevenue || 0).toFixed(2)}` : 'E£0.00', color: 'text-gold' },
+            { label: 'Cash Revenue', value: summary ? `E£${(summary.cashRevenue || 0).toFixed(2)}` : 'E£0.00', color: 'text-emerald-400' },
+            { label: 'Card Revenue', value: summary ? `E£${(summary.cardRevenue || 0).toFixed(2)}` : 'E£0.00', color: 'text-blue-400' },
           ].map((stat) => (
             <div key={stat.label} className="pos-glass rounded-xl p-4">
               <p className="text-xs text-white/40 uppercase tracking-wide mb-1">{stat.label}</p>
@@ -50,19 +50,19 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
           {summary?.splitRevenue !== undefined && (
             <div className="pos-glass rounded-xl p-4">
               <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Split Revenue</p>
-              <p className="text-2xl font-bold text-gold">${summary.splitRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-gold">E£{summary.splitRevenue.toFixed(2)}</p>
             </div>
           )}
           {summary?.totalReturns !== undefined && (
             <div className="pos-glass rounded-xl p-4">
               <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Returns</p>
-              <p className="text-2xl font-bold text-red-400">-${summary.totalReturns.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-red-400">-E£{summary.totalReturns.toFixed(2)}</p>
             </div>
           )}
           {summary?.netRevenue !== undefined && (
             <div className="pos-glass rounded-xl p-4">
               <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Net Revenue</p>
-              <p className="text-2xl font-bold text-emerald-400">${summary.netRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-emerald-400">E£{summary.netRevenue.toFixed(2)}</p>
             </div>
           )}
         </div>
@@ -70,7 +70,7 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
         {summary?.averageOrder !== undefined && (
           <div className="pos-glass rounded-xl p-4">
             <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Average Order Value</p>
-            <p className="text-2xl font-bold text-gold">${summary.averageOrder.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-gold">E£{summary.averageOrder.toFixed(2)}</p>
           </div>
         )}
 
@@ -85,7 +85,7 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
                     <p className="text-xs text-white/40">{r.reason.replace(/_/g, ' ')} — {r.refundMethod.replace(/_/g, ' ')}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-red-400">-${r.refundAmount.toFixed(2)}</p>
+                    <p className="font-medium text-red-400">-E£{r.refundAmount.toFixed(2)}</p>
                     <p className="text-xs text-white/40">{r.createdAt ? new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</p>
                   </div>
                 </div>
@@ -110,7 +110,7 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
                   <tr key={i} className="border-b border-white/5">
                     <td className="py-2 text-silver-soft font-medium">{p.name || p.productName}</td>
                     <td className="py-2 text-right text-white/50">{p.quantity || p.qty}</td>
-                    <td className="py-2 text-right text-silver-soft font-medium">${(p.revenue || p.total || 0).toFixed(2)}</td>
+                    <td className="py-2 text-right text-silver-soft font-medium">E£{(p.revenue || p.total || 0).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -129,7 +129,7 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
                     <p className="text-xs text-white/40">{order.paymentMethod}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-silver-soft">${(order.total || 0).toFixed(2)}</p>
+                    <p className="font-medium text-silver-soft">E£{(order.total || 0).toFixed(2)}</p>
                     <p className="text-xs text-white/40">{order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</p>
                   </div>
                 </div>

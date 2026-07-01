@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
     const shiftId = req.nextUrl.searchParams.get('shiftId')
     if (!shiftId) return NextResponse.json({ error: 'shiftId required' }, { status: 400 })
 
-    const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+    const shift = await db.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
 
-    const orders = await prisma.order.findMany({ where: { shiftId } })
-    const expenses = await prisma.expense.findMany({ where: { shiftId } })
-    const returns = await prisma.return.findMany({ where: { shiftId } })
+    const orders = await db.order.findMany({ where: { shiftId } })
+    const expenses = await db.expense.findMany({ where: { shiftId } })
+    const returns = await db.return.findMany({ where: { shiftId } })
 
     const incomeByMethod: Record<string, number> = {
       cash: 0,

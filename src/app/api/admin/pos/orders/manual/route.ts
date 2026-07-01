@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import crypto from 'crypto'
-
-const prisma = new PrismaClient()
 
 function generateReceiptNumber(): string {
   const now = new Date()
@@ -22,15 +20,15 @@ export async function POST(req: Request) {
     }
     if (!shiftId) return NextResponse.json({ error: 'Shift ID is required' }, { status: 400 })
 
-    const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
+    const shift = await db.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
     const branchId = shift.branchId
 
-    const products = await prisma.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
+    const products = await db.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
-    const branchStocks = await prisma.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStocks = await db.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
     const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let totalAmount = 0
@@ -55,7 +53,7 @@ export async function POST(req: Request) {
     const orderNumber = `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
     const receiptNumber = generateReceiptNumber()
 
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await db.$transaction(async (tx) => {
       for (const item of items) {
         const qty = item.quantity || 1
         await tx.branchStock.upsert({
@@ -101,7 +99,7 @@ export async function POST(req: Request) {
       })
     })
 
-    const fullOrder = await prisma.order.findUnique({
+    const fullOrder = await db.order.findUnique({
       where: { id: order.id },
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })

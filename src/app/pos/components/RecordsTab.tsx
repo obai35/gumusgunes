@@ -119,7 +119,7 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
                 className="w-full flex items-center justify-between px-3 py-2 hover:bg-gold/10 text-sm text-left"
               >
                 <span className="font-medium text-silver-soft">{p.name}</span>
-                <span className="text-white/40">${p.price.toFixed(2)} ({p.stock} left)</span>
+                <span className="text-white/40">E£{p.price.toFixed(2)} ({p.stock} left)</span>
               </button>
             ))}
           </div>
@@ -146,7 +146,7 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
                 onChange={(e) => updateItem(item.productId, 'price', parseFloat(e.target.value) || 0)}
                 className="w-20 px-2 py-1 bg-white/5 border border-white/10 rounded text-sm text-right text-silver-soft"
               />
-              <span className="text-sm font-medium text-gold w-20 text-right">${(item.quantity * item.price).toFixed(2)}</span>
+              <span className="text-sm font-medium text-gold w-20 text-right">E£{(item.quantity * item.price).toFixed(2)}</span>
               <button onClick={() => removeItem(item.productId)} className="p-1 text-white/40 hover:text-red-400">
                 <X className="h-4 w-4" />
               </button>
@@ -217,7 +217,7 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-white/10">
-        <span className="text-lg font-bold text-gold">Total: ${totalAmount.toFixed(2)}</span>
+        <span className="text-lg font-bold text-gold">Total: E£{totalAmount.toFixed(2)}</span>
         <button
           onClick={handleSubmit}
           disabled={submitting || items.length === 0}

@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import type { Product } from '@/lib/types'
 import { parseTags, discountPercent, cn } from '@/lib/format'
 import { useFormatPrice } from '@/hooks/use-format-price'
+import { useLoyaltyRate } from '@/hooks/use-loyalty-rate'
 import { useTranslation } from '@/hooks/use-translation'
 import { useCart, useUI, useWishlist, useCompare } from '@/lib/store'
 import { toast } from 'sonner'
@@ -17,6 +18,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
   const wishlist = useWishlist()
   const compare = useCompare()
   const formatPrice = useFormatPrice()
+  const loyaltyRate = useLoyaltyRate()
   const tags = parseTags(product.tags)
   const discount = discountPercent(product.price, product.compareAtPrice)
   const { t } = useTranslation()
@@ -166,7 +168,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
               )}
             </div>
             <span className="text-[10px] text-gold font-medium tracking-wide mt-0.5">
-              +{Math.floor(product.price)} {t('products.points')}
+              +{Math.floor(product.price / loyaltyRate)} {t('products.points')}
             </span>
           </div>
           {tags[0] && (

@@ -45,12 +45,12 @@ export async function GET(req: NextRequest) {
     headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D2D50' } }
     ws.views = [{ state: 'frozen', ySplit: 1 }]
 
-    ws.getColumn('totalRevenue').numFmt = '$#,##0.00'
-    ws.getColumn('cashTotal').numFmt = '$#,##0.00'
-    ws.getColumn('cardTotal').numFmt = '$#,##0.00'
-    ws.getColumn('bankTotal').numFmt = '$#,##0.00'
-    ws.getColumn('instapayTotal').numFmt = '$#,##0.00'
-    ws.getColumn('walletTotal').numFmt = '$#,##0.00'
+    ws.getColumn('totalRevenue').numFmt = '#,##0.00'
+    ws.getColumn('cashTotal').numFmt = '#,##0.00'
+    ws.getColumn('cardTotal').numFmt = '#,##0.00'
+    ws.getColumn('bankTotal').numFmt = '#,##0.00'
+    ws.getColumn('instapayTotal').numFmt = '#,##0.00'
+    ws.getColumn('walletTotal').numFmt = '#,##0.00'
 
     branches.forEach((branch) => {
       const orders = branch.shifts.flatMap((s: any) => s.orders).filter((o: any) => o.status !== 'cancelled')

@@ -7,7 +7,7 @@ import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
-function formatCurrency(v: number | undefined | null) { return v != null ? `$${v.toFixed(2)}` : '$0.00' }
+function formatCurrency(v: number | undefined | null) { return v != null ? `E£${v.toFixed(2)}` : 'E£0.00' }
 
 function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? (value / max) * 100 : 0

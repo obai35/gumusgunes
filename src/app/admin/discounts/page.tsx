@@ -47,7 +47,7 @@ export default async function AdminDiscounts() {
                   </span>
                 </td>
                 <td className="px-4 py-3 font-medium text-navy">
-                  {d.type === 'PERCENTAGE' ? `${d.value}%` : `$${d.value.toFixed(2)}`}
+                  {d.type === 'PERCENTAGE' ? `${d.value}%` : `E£${d.value.toFixed(2)}`}
                 </td>
                 <td className="px-4 py-3">
                   <span className="text-xs text-muted-foreground">

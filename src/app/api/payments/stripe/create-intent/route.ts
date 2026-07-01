@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     const { amount, currency, idempotencyKey } = await req.json()
     const paymentIntent = await getStripe().paymentIntents.create({
       amount: Math.round(amount * 100),
-      currency: currency?.toLowerCase() || 'usd',
+      currency: currency?.toLowerCase() || 'egp',
       automatic_payment_methods: { enabled: true },
       metadata: { idempotencyKey },
     }, { idempotencyKey })

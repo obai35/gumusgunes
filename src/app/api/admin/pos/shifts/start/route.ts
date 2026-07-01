@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
@@ -10,12 +8,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'branchId and startingCash are required' }, { status: 400 })
     }
 
-    const existing = await prisma.shift.findFirst({ where: { branchId, isOpen: true } })
+    const existing = await db.shift.findFirst({ where: { branchId, isOpen: true } })
     if (existing) {
       return NextResponse.json({ error: 'An open shift already exists for this branch' }, { status: 400 })
     }
 
-    const shift = await prisma.shift.create({
+    const shift = await db.shift.create({
       data: { branchId, startingCash, isOpen: true },
     })
 

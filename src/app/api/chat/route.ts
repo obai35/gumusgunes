@@ -22,7 +22,7 @@ Brand facts:
 - Founded 2019, atelier overlooking the Bosphorus, Istanbul
 - All pieces are premium stainless steel (surgical-grade 316L), hand-finished
 - Diamonds are conflict-free (SI clarity, H color); gemstones ethically sourced
-- Free worldwide shipping over $250; 30-day returns
+- Free worldwide shipping over 250 EGP; 30-day returns
 - Signature motif: a sun with radiating rays, often paired with a diamond
 
 When recommending products, mention the piece name, what makes it special, AND add a personal touch ("This one is a personal favorite" or "Our clients absolutely love this piece"). End with a thoughtful question.
@@ -59,7 +59,7 @@ const FALLBACK_RESPONSES: { keywords: string[]; response: string }[] = [
   },
   {
     keywords: ['shipping', 'delivery', 'ship', 'deliver', 'dispatch'],
-    response: 'We offer free worldwide shipping on orders over $250. Standard shipping takes 3–7 business days; express is available for an additional fee. Each piece arrives in our signature gift box with a certificate of authenticity. All orders are fully insured and tracked.'
+    response: 'We offer free worldwide shipping on orders over 250 EGP. Standard shipping takes 3–7 business days; express is available for an additional fee. Each piece arrives in our signature gift box with a certificate of authenticity. All orders are fully insured and tracked.'
   },
   {
     keywords: ['return', 'refund', 'exchange', 'money back', 'cancel'],
@@ -123,7 +123,7 @@ function getFallbackResponse(message: string, productContext?: { name: string; p
     }
   }
   if (productContext) {
-    return `The ${productContext.name} is one of our signature pieces — crafted from ${productContext.material} and priced at $${productContext.price.toFixed(2)}. It is hand-finished in our Istanbul atelier. Is there anything specific you would like to know about it?`
+    return `The ${productContext.name} is one of our signature pieces — crafted from ${productContext.material} and priced at E£${productContext.price.toFixed(2)}. It is hand-finished in our Istanbul atelier. Is there anything specific you would like to know about it?`
   }
   return 'Thank you for reaching out to Gümüş Güneş! I would be happy to help you with product recommendations, sizing advice, or any questions about our collection. Could you please tell me a bit more about what you are looking for?'
 }
@@ -248,7 +248,7 @@ export async function POST(req: NextRequest) {
           }
 
           if (productContext) {
-            systemContent += `\n\nThe customer is currently viewing: "${productContext.name}" — ${productContext.material}, priced at $${productContext.price.toFixed(2)}. Tailor advice to this piece when relevant.`
+            systemContent += `\n\nThe customer is currently viewing: "${productContext.name}" — ${productContext.material}, priced at E£${productContext.price.toFixed(2)}. Tailor advice to this piece when relevant.`
           }
           const messages = [
             { role: 'system', content: systemContent },

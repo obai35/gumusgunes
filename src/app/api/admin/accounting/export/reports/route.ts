@@ -74,8 +74,8 @@ export async function GET(req: NextRequest) {
     }))
 
     periods.forEach((p) => { ws.addRow(p) })
-    ws.getColumn('revenue').numFmt = '$#,##0.00'
-    ws.getColumn('avgOrderValue').numFmt = '$#,##0.00'
+    ws.getColumn('revenue').numFmt = '#,##0.00'
+    ws.getColumn('avgOrderValue').numFmt = '#,##0.00'
 
     const buf = await wb.xlsx.writeBuffer()
     return new NextResponse(buf, {

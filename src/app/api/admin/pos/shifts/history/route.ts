@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
     const branchId = req.nextUrl.searchParams.get('branchId')
     if (!branchId) return NextResponse.json({ error: 'branchId required' }, { status: 400 })
 
-    const shifts = await prisma.shift.findMany({
+    const shifts = await db.shift.findMany({
       where: { branchId },
       orderBy: { startedAt: 'desc' },
       take: 50,

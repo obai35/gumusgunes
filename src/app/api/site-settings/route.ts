@@ -12,8 +12,8 @@ const DEFAULTS: Record<string, string> = {
   accentColor: '#c9a84c',
   bgColor: '#ffffff',
   textColor: '#1a1a2e',
-  announcementText: 'Free Worldwide Shipping on Orders Over $250 · 30-Day Returns',
-  announcementTextMobile: 'Free Shipping Over $250',
+  announcementText: 'Free Worldwide Shipping on Orders Over 250 EGP · 30-Day Returns',
+  announcementTextMobile: 'Free Shipping Over 250 EGP',
   announcementEnabled: 'true',
   announcementBg: '#0a1628',
   announcementTextColor: '#f5efe6',
@@ -53,6 +53,7 @@ const DEFAULTS: Record<string, string> = {
   navOurStory: 'Our Story',
   borderRadius: '8',
   buttonStyle: 'solid',
+  loyaltyPointsRate: '100',
 }
 
 export async function GET(req: NextRequest) {

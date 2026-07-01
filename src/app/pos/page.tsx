@@ -260,7 +260,7 @@ export default function POSPage() {
 
   function validatePayment(): string | null {
     if (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total) {
-      return `Amount tendered ($${pos.parsedCash.toFixed(2)}) is less than total ($${pos.total.toFixed(2)})`
+      return `Amount tendered (E£${pos.parsedCash.toFixed(2)}) is less than total (E£${pos.total.toFixed(2)})`
     }
     if (pos.paymentMethod === 'split') {
       if (pos.parsedCash <= 0 || pos.parsedCard <= 0) return 'Both amounts must be greater than 0 for split payment'
@@ -320,15 +320,15 @@ export default function POSPage() {
           <div className="space-y-2 text-sm text-left bg-white/5 rounded-lg p-4 mb-6">
             <div className="flex justify-between">
               <span className="text-white/50">Starting Cash</span>
-              <span className="font-medium text-silver-soft">${(shiftSummary.startingCash || 0).toFixed(2)}</span>
+              <span className="font-medium text-silver-soft">E£{(shiftSummary.startingCash || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-white/50">Ending Cash</span>
-              <span className="font-medium text-silver-soft">${(shiftSummary.endingCash || 0).toFixed(2)}</span>
+              <span className="font-medium text-silver-soft">E£{(shiftSummary.endingCash || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-white/50">Total Sales</span>
-              <span className="font-medium text-silver-soft">${(shiftSummary.totalSales || 0).toFixed(2)}</span>
+              <span className="font-medium text-silver-soft">E£{(shiftSummary.totalSales || 0).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-white/50">Order Count</span>

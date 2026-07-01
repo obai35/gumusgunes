@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Printer, DollarSign, CreditCard } from 'lucide-react'
 import type { ReceiptData } from '../types'
 
@@ -10,10 +9,6 @@ type Props = {
 }
 
 export default function ReceiptView({ receipt, onNewSale }: Props) {
-  useEffect(() => {
-    const timer = setTimeout(() => printReceipt(), 500)
-    return () => clearTimeout(timer)
-  }, [])
 
   function printReceipt() {
     const printWindow = window.open('', '_blank')
@@ -53,22 +48,22 @@ export default function ReceiptView({ receipt, onNewSale }: Props) {
                   <p class="font-bold">${item.product.name}</p>
                   <p class="text-xs">${item.product.sku} × ${item.quantity}</p>
                 </div>
-                <span class="font-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+                <span class="font-bold">E£${(item.price * item.quantity).toFixed(2)}</span>
               </div>
             `).join('')}
           </div>
           <div class="p-4">
-            <div class="flex justify-between text-sm"><span>Subtotal</span><span>$${receipt.subtotal.toFixed(2)}</span></div>
-            ${receipt.discount > 0 ? `<div class="flex justify-between text-sm"><span>Discount</span><span>-$${receipt.discount.toFixed(2)}</span></div>` : ''}
-            <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2"><span>Total</span><span>$${receipt.total.toFixed(2)}</span></div>
+            <div class="flex justify-between text-sm"><span>Subtotal</span><span>E£${receipt.subtotal.toFixed(2)}</span></div>
+            ${receipt.discount > 0 ? `<div class="flex justify-between text-sm"><span>Discount</span><span>-E£${receipt.discount.toFixed(2)}</span></div>` : ''}
+            <div class="flex justify-between text-lg font-bold border-t pt-2 mt-2"><span>Total</span><span>E£${receipt.total.toFixed(2)}</span></div>
           </div>
           <div class="p-4" style="background:#f9f9f9">
             <p class="text-xs font-bold" style="text-transform:uppercase">Payment</p>
-            ${receipt.paymentMethod === 'cash' ? `<div class="flex justify-between text-sm"><span>Cash</span><span class="font-bold">$${receipt.total.toFixed(2)}</span></div>` : ''}
-            ${receipt.paymentMethod === 'card' ? `<div class="flex justify-between text-sm"><span>Card</span><span class="font-bold">$${receipt.total.toFixed(2)}</span></div>` : ''}
+            ${receipt.paymentMethod === 'cash' ? `<div class="flex justify-between text-sm"><span>Cash</span><span class="font-bold">E£${receipt.total.toFixed(2)}</span></div>` : ''}
+            ${receipt.paymentMethod === 'card' ? `<div class="flex justify-between text-sm"><span>Card</span><span class="font-bold">E£${receipt.total.toFixed(2)}</span></div>` : ''}
             ${receipt.paymentMethod === 'split' ? `
-              <div class="flex justify-between text-sm"><span>Cash</span><span class="font-bold">$${(receipt.cashAmount || 0).toFixed(2)}</span></div>
-              <div class="flex justify-between text-sm"><span>Card</span><span class="font-bold">$${(receipt.cardAmount || 0).toFixed(2)}</span></div>
+              <div class="flex justify-between text-sm"><span>Cash</span><span class="font-bold">E£${(receipt.cashAmount || 0).toFixed(2)}</span></div>
+              <div class="flex justify-between text-sm"><span>Card</span><span class="font-bold">E£${(receipt.cardAmount || 0).toFixed(2)}</span></div>
             ` : ''}
           </div>
           <p class="text-center text-xs" style="margin-top:16px">Thank you for your purchase!</p>
@@ -100,38 +95,38 @@ export default function ReceiptView({ receipt, onNewSale }: Props) {
                 <p className="font-medium text-silver-soft truncate">{item.product.name}</p>
                 <p className="text-xs text-white/40 font-mono">{item.product.sku} × {item.quantity}</p>
               </div>
-              <span className="font-medium text-silver-soft whitespace-nowrap">${(item.price * item.quantity).toFixed(2)}</span>
+              <span className="font-medium text-silver-soft whitespace-nowrap">E£{(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
         </div>
         <div className="p-4 space-y-1 border-b border-dashed border-white/10">
-          <div className="flex justify-between text-sm text-white/40"><span>Subtotal</span><span>${receipt.subtotal.toFixed(2)}</span></div>
-          {receipt.discount > 0 && <div className="flex justify-between text-sm text-emerald-400"><span>Discount</span><span>-${receipt.discount.toFixed(2)}</span></div>}
-          <div className="flex justify-between text-lg font-bold text-gold pt-1 border-t border-white/10"><span>Total</span><span>${receipt.total.toFixed(2)}</span></div>
+          <div className="flex justify-between text-sm text-white/40"><span>Subtotal</span><span>E£{receipt.subtotal.toFixed(2)}</span></div>
+          {receipt.discount > 0 && <div className="flex justify-between text-sm text-emerald-400"><span>Discount</span><span>-E£{receipt.discount.toFixed(2)}</span></div>}
+          <div className="flex justify-between text-lg font-bold text-gold pt-1 border-t border-white/10"><span>Total</span><span>E£{receipt.total.toFixed(2)}</span></div>
         </div>
         <div className="p-4 space-y-1 border-b border-dashed border-white/10 bg-white/5">
           <p className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-2">Payment</p>
           {receipt.paymentMethod === 'cash' && (
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-emerald-400" /> Cash</span>
-              <span className="font-medium text-silver-soft">${receipt.total.toFixed(2)}</span>
+              <span className="font-medium text-silver-soft">E£{receipt.total.toFixed(2)}</span>
             </div>
           )}
           {receipt.paymentMethod === 'card' && (
             <div className="flex justify-between text-sm">
               <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-blue-400" /> Card</span>
-              <span className="font-medium text-silver-soft">${receipt.total.toFixed(2)}</span>
+              <span className="font-medium text-silver-soft">E£{receipt.total.toFixed(2)}</span>
             </div>
           )}
           {receipt.paymentMethod === 'split' && (
             <>
               <div className="flex justify-between text-sm">
                 <span className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-emerald-400" /> Cash</span>
-                <span className="font-medium text-silver-soft">${(receipt.cashAmount || 0).toFixed(2)}</span>
+                <span className="font-medium text-silver-soft">E£{(receipt.cashAmount || 0).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="flex items-center gap-1.5"><CreditCard className="h-3.5 w-3.5 text-blue-400" /> Card</span>
-                <span className="font-medium text-silver-soft">${(receipt.cardAmount || 0).toFixed(2)}</span>
+                <span className="font-medium text-silver-soft">E£{(receipt.cardAmount || 0).toFixed(2)}</span>
               </div>
             </>
           )}

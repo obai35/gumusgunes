@@ -1,17 +1,17 @@
-export type Currency = 'USD' | 'EUR' | 'TRY' | 'EGP'
+export type Currency = 'EGP' | 'USD' | 'EUR' | 'TRY'
 
 export const CURRENCIES: { code: Currency; symbol: string; rate: number; locale: string; label: string }[] = [
+  { code: 'EGP', symbol: 'E£', rate: 48, locale: 'ar-EG', label: 'EGP E£' },
   { code: 'USD', symbol: '$', rate: 1, locale: 'en-US', label: 'USD $' },
   { code: 'EUR', symbol: '€', rate: 0.92, locale: 'de-DE', label: 'EUR €' },
   { code: 'TRY', symbol: '₺', rate: 34.5, locale: 'tr-TR', label: 'TRY ₺' },
-  { code: 'EGP', symbol: 'E£', rate: 48, locale: 'ar-EG', label: 'EGP E£' },
 ]
 
 export function getCurrencyMeta(code: Currency) {
   return CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0]
 }
 
-export function formatPrice(value: number, currency: Currency = 'USD'): string {
+export function formatPrice(value: number, currency: Currency = 'EGP'): string {
   const meta = getCurrencyMeta(currency)
   const converted = value * meta.rate
   return new Intl.NumberFormat(meta.locale, {

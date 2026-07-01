@@ -117,7 +117,7 @@ function ProductsPageContent({ categories, initialProducts }: Props) {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1">
                 <label className="text-xs font-medium text-navy mb-2 block">
-                  {t('products.maxPrice')} <span className="text-gold font-semibold">${maxPrice}</span>
+                  {t('products.maxPrice')} <span className="text-gold font-semibold">E£{maxPrice}</span>
                 </label>
                 <input type="range" min={50} max={500} step={10} value={maxPrice} onChange={(e) => updateParam('maxPrice', e.target.value)} className="w-full accent-gold" />
               </div>

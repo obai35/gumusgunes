@@ -33,7 +33,7 @@ function StripeForm({ amount, currency, onSuccess }: any) {
       <PaymentElement />
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
       <button type="submit" disabled={!stripe || processing} className="w-full mt-4 py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
-        {processing ? 'Processing...' : `Pay $${amount.toFixed(2)}`}
+        {processing ? 'Processing...' : `Pay E£${amount.toFixed(2)}`}
       </button>
     </form>
   )
