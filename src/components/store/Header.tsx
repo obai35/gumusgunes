@@ -27,6 +27,11 @@ export function Header() {
   const [settings, setSettings] = useState<Record<string, string>>({})
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.__PREVIEW_SETTINGS__) {
+      setSettings(window.__PREVIEW_SETTINGS__)
+      fetch('/api/categories').then(r => r.json()).then(d => { if (d.ok) setCategories(d.categories) }).catch(() => {})
+      return
+    }
     Promise.all([
       fetch('/api/categories').then(r => r.json()),
       fetch('/api/site-settings').then(r => r.json()),
