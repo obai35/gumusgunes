@@ -15,7 +15,7 @@ function generateReceiptNumber(): string {
 
 export async function POST(req: Request) {
   try {
-    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId } = await req.json()
+    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!paymentMethod || !VALID_PAYMENT_METHODS.includes(paymentMethod)) {
       return NextResponse.json({ error: 'Valid payment method is required' }, { status: 400 })
@@ -87,6 +87,25 @@ export async function POST(req: Request) {
       }
     }
 
+    let resolvedName = 'Walk-in Customer'
+    let resolvedEmail = 'pos@gumusgunes.com'
+    let resolvedPhone: string | null = null
+    let resolvedUserId: string | null = null
+
+    if (customerId) {
+      const user = await prisma.user.findUnique({ where: { id: customerId } })
+      if (user) {
+        resolvedName = user.name
+        resolvedEmail = user.email
+        resolvedPhone = user.phone
+        resolvedUserId = user.id
+      }
+    } else if (customerName && customerEmail) {
+      resolvedName = customerName
+      resolvedEmail = customerEmail
+      resolvedPhone = customerPhone || null
+    }
+
     const orderNumber = `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
     const receiptNumber = generateReceiptNumber()
 
@@ -111,8 +130,10 @@ export async function POST(req: Request) {
           orderNumber,
           receiptNumber,
           shiftId,
-          email: 'pos@gumusgunes.com',
-          fullName: 'Walk-in Customer',
+          userId: resolvedUserId,
+          email: resolvedEmail,
+          fullName: resolvedName,
+          phone: resolvedPhone,
           address: 'In-store purchase',
           city: '-',
           postalCode: '-',
@@ -127,6 +148,7 @@ export async function POST(req: Request) {
           paymentMethod,
           cashAmount: paymentMethod === 'split' ? (cashAmount || 0) : (paymentMethod === 'cash' ? total : null),
           cardAmount: paymentMethod === 'split' ? (cardAmount || 0) : (paymentMethod === 'card' ? total : null),
+          notes: notes || null,
           paymentStatus: 'paid',
           items: {
             create: items.map((item: any) => {

@@ -323,8 +323,10 @@ model Supplier {
 
 model Expense {
   id            String    @id @default(cuid())
-  shiftId       String
-  shift         Shift     @relation(fields: [shiftId], references: [id])
+  shiftId       String?
+  shift         Shift?    @relation(fields: [shiftId], references: [id])
+  branchId      String?
+  branch        Branch?   @relation(fields: [branchId], references: [id])
   supplierId    String?
   supplier      Supplier? @relation(fields: [supplierId], references: [id])
   amount        Float
@@ -369,4 +371,16 @@ model Branch {
   createdAt DateTime      @default(now())
   shifts    Shift[]
   stocks    BranchStock[]
+  expenses  Expense[]
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  adminId     String?
+  adminName   String?
+  action      String   // create, update, delete, login, logout
+  resource    String   // e.g. order, product, category, admin, role, discount
+  resourceId  String?
+  details     String?
+  createdAt   DateTime @default(now())
 }

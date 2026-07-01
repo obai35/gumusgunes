@@ -11,7 +11,9 @@ type Props = {
   onUpdateQuantity: (productId: string, delta: number) => void
   onRemove: (productId: string) => void
   onSetDiscount?: (productId: string, discount: number) => void
+  customerSection?: ReactNode
   discountSection: ReactNode
+  notesSection?: ReactNode
   paymentSection: ReactNode
   totalsDisplay: ReactNode
   checkoutButton: ReactNode
@@ -21,7 +23,7 @@ type Props = {
   onRemoveHeldOrder?: (id: string) => void
 }
 
-function CartPanel({ cart, onUpdateQuantity, onRemove, onSetDiscount, discountSection, paymentSection, totalsDisplay, checkoutButton, heldOrders, onHoldOrder, onRecallOrder, onRemoveHeldOrder }: Props) {
+function CartPanel({ cart, onUpdateQuantity, onRemove, onSetDiscount, customerSection, discountSection, notesSection, paymentSection, totalsDisplay, checkoutButton, heldOrders, onHoldOrder, onRecallOrder, onRemoveHeldOrder }: Props) {
   const [showHeldOrders, setShowHeldOrders] = useState(false)
   const [holdLabel, setHoldLabel] = useState('')
   const [showHoldPrompt, setShowHoldPrompt] = useState(false)
@@ -91,7 +93,9 @@ function CartPanel({ cart, onUpdateQuantity, onRemove, onSetDiscount, discountSe
         )}
 
         <div className="flex-shrink-0 space-y-3">
+          {customerSection}
           {discountSection}
+          {notesSection}
           {paymentSection}
           {totalsDisplay}
           {checkoutButton}

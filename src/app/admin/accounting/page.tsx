@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2, RefreshCw } from 'lucide-react'
 
-type Period = 'day' | 'week' | 'month' | 'year'
+type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
 function formatCurrency(v: number) { return `$${v.toFixed(2)}` }
 
@@ -17,46 +17,166 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
   )
 }
 
-const PERIOD_LABELS: Record<Period, string> = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year' }
+function exportCSVRows(rows: Record<string, any>[], filename: string) {
+  if (rows.length === 0) return
+  const headers = Object.keys(rows[0])
+  const csv = [headers.join(','), ...rows.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
+  if (!data || data.length === 0) return null
+
+  const max = Math.max(...data.map(d => d.revenue), 1)
+  const isMonthly = data.length > 0 && data[0].date.length <= 7
+  const barWidth = 32
+  const gap = 6
+  const padding = { top: 10, bottom: 24, left: 0, right: 0 }
+  const chartH = 180
+  const svgW = Math.max(data.length * (barWidth + gap) + padding.left + padding.right, 400)
+
+  return (
+    <div className="bg-white rounded-xl border border-border p-5 overflow-x-auto">
+      <h3 className="text-sm font-semibold text-navy mb-2">Revenue Trend</h3>
+      <svg width={svgW} height={chartH + padding.top + padding.bottom} className="overflow-visible">
+        {data.map((d, i) => {
+          const barH = (d.revenue / max) * chartH
+          const x = padding.left + i * (barWidth + gap)
+          const y = padding.top + chartH - barH
+          return (
+            <g key={d.date} className="group">
+              <rect
+                x={x} y={y} width={barWidth} height={barH}
+                className="fill-navy/60 hover:fill-navy transition-colors cursor-pointer" rx={3}
+              >
+                <title>{formatCurrency(d.revenue)}</title>
+              </rect>
+              <text
+                x={x + barWidth / 2} y={padding.top + chartH + 16}
+                textAnchor="middle" className="fill-muted-foreground" fontSize={9}
+              >
+                {isMonthly ? d.date.slice(5) : d.date.slice(5)}
+              </text>
+              <rect
+                x={x} y={y} width={barWidth} height={barH}
+                fill="transparent" className="cursor-pointer"
+                onMouseEnter={(e) => {
+                  const t = e.currentTarget.closest('g')?.querySelector('foreignObject')
+                  if (t) t.style.display = 'block'
+                }}
+                onMouseLeave={(e) => {
+                  const t = e.currentTarget.closest('g')?.querySelector('foreignObject')
+                  if (t) t.style.display = 'none'
+                }}
+              />
+              <foreignObject
+                x={Math.max(0, x - 20)} y={Math.max(0, y - 32)}
+                width="80" height="28"
+                style={{ display: 'none' }}
+                className="pointer-events-none"
+              >
+                <div className="bg-navy text-white text-xs px-2 py-1 rounded text-center shadow-lg">
+                  {formatCurrency(d.revenue)}
+                </div>
+              </foreignObject>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+function calcCompare(current: number, previous: number | undefined): { pct: string; positive: boolean } | null {
+  if (previous === undefined || previous === 0) return null
+  const diff = ((current - previous) / previous) * 100
+  return { pct: `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%`, positive: diff >= 0 }
+}
+
+const PERIOD_LABELS: Record<string, string> = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year', custom: 'Custom' }
 
 export default function AccountingPage() {
   const [tab, setTab] = useState('overview')
   const [period, setPeriod] = useState<Period>('day')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const [overviewData, setOverviewData] = useState<any>(null)
   const [overviewLoading, setOverviewLoading] = useState(true)
 
   useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(() => setRefreshKey(k => k + 1), 30000)
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
+  }, [autoRefresh])
+
+  useEffect(() => {
+    if (tab !== 'overview') return
     setOverviewLoading(true)
-    fetch(`/api/admin/accounting/overview?period=${period}`)
+    const params = new URLSearchParams()
+    params.set('period', period)
+    if (period === 'custom' && customStart && customEnd) {
+      params.set('customStart', customStart)
+      params.set('customEnd', customEnd)
+    }
+    fetch(`/api/admin/accounting/overview?${params}`)
       .then(r => r.json())
-      .then(data => {
-        setOverviewData(data)
-        setOverviewLoading(false)
-      })
+      .then(data => { setOverviewData(data); setOverviewLoading(false) })
       .catch(() => { toast.error('Failed to load data'); setOverviewLoading(false) })
-  }, [period])
+  }, [period, customStart, customEnd, refreshKey, tab])
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-display font-semibold text-navy">Accounting</h1>
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
-          {(Object.entries(PERIOD_LABELS) as [Period, string][]).map(([key, label]) => (
-            <button
-              key={key}
-              onClick={() => setPeriod(key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                period === key ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+          <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+            {(Object.entries(PERIOD_LABELS) as [Period, string][]).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setPeriod(key)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  period === key ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {period === 'custom' && (
+            <div className="flex items-center gap-2">
+              <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
+              <span className="text-xs text-muted-foreground">to</span>
+              <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
+            </div>
+          )}
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all border ${
+              autoRefresh ? 'bg-green-50 text-green-700 border-green-300' : 'bg-white text-muted-foreground border-border hover:text-navy'
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full ${autoRefresh ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`} />
+            Auto
+          </button>
         </div>
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(['overview', 'orders', 'branches', 'reports'] as const).map(t => (
+        {(['overview', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -69,15 +189,35 @@ export default function AccountingPage() {
         ))}
       </div>
 
-      {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} />}
+      {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} compareEnabled={false} />}
       {tab === 'orders' && <OrdersTab />}
       {tab === 'branches' && <BranchesTab />}
+      {tab === 'expenses' && <ExpensesTab refreshKey={refreshKey} />}
       {tab === 'reports' && <ReportsTab />}
     </div>
   )
 }
 
-function OverviewTab({ data, loading, period }: { data: any; loading: boolean; period: Period }) {
+function OverviewTab({ data, loading, period, compareEnabled }: { data: any; loading: boolean; period: Period; compareEnabled: boolean }) {
+  const [localCompare, setLocalCompare] = useState(false)
+  const [compareData, setCompareData] = useState<any>(null)
+
+  useEffect(() => {
+    if (!localCompare) { setCompareData(null); return }
+    const params = new URLSearchParams()
+    params.set('period', period)
+    params.set('comparePeriod', 'previous')
+    if (period === 'custom') {
+      const cs = (document.querySelector('input[type="date"]') as HTMLInputElement)?.value
+      const ce = (document.querySelectorAll('input[type="date"]')[1] as HTMLInputElement)?.value
+      if (cs && ce) { params.set('customStart', cs); params.set('customEnd', ce) }
+    }
+    fetch(`/api/admin/accounting/overview?${params}`)
+      .then(r => r.json())
+      .then(d => setCompareData(d.compare || null))
+      .catch(() => {})
+  }, [localCompare, period])
+
   if (loading || !data) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
@@ -91,31 +231,91 @@ function OverviewTab({ data, loading, period }: { data: any; loading: boolean; p
   const maxPayment = Math.max(...Object.values(data.paymentBreakdown || { cash: 0 }) as number[], 1)
   const maxBranch = Math.max(...Object.values(data.branchRevenue || {}) as number[], 1)
 
+  function statCompare(current: number, compareKey: string) {
+    if (!compareData) return null
+    const prev = compareData[compareKey]
+    return calcCompare(current, prev)
+  }
+
+  function handleExportCSV() {
+    const rows: Record<string, any>[] = [
+      { Metric: 'Period', Value: period },
+      { Metric: 'Total Revenue', Value: data.totalRevenue },
+      { Metric: 'Net Revenue', Value: data.netRevenue },
+      { Metric: 'Total Orders', Value: data.totalOrders },
+      { Metric: 'Avg Order Value', Value: data.avgOrderValue },
+      { Metric: 'Returns', Value: data.totalReturns },
+      { Metric: 'Expenses', Value: data.totalExpenses },
+      { Metric: 'Pending Orders', Value: data.pendingOrders },
+      { Metric: 'Unreconciled Payments', Value: data.unreconciledOrders },
+      { Metric: 'Open Shifts', Value: data.openShifts },
+    ]
+    Object.entries(data.paymentBreakdown || {}).forEach(([k, v]) => {
+      rows.push({ Metric: `Payment - ${k}`, Value: v as number })
+    })
+    Object.entries(data.branchRevenue || {}).forEach(([k, v]) => {
+      rows.push({ Metric: `Branch - ${k}`, Value: v as number })
+    })
+    ;(data.dailyRevenue || []).forEach((d: any) => {
+      rows.push({ Metric: `Revenue ${d.date}`, Value: d.revenue })
+    })
+    exportCSVRows(rows, `overview-${period}.csv`)
+  }
+
+  function StatCard({ label, value, icon: Icon, color, bg, compareKey }: {
+    label: string; value: string; icon: any; color: string; bg: string; compareKey?: string
+  }) {
+    const cmp = compareKey ? statCompare(parseFloat(value.replace(/[^0-9.-]/g, '')), compareKey) : null
+    return (
+      <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`p-1.5 rounded-lg ${bg}`}>
+            <Icon className={`h-4 w-4 ${color}`} />
+          </div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+        </div>
+        <p className={`text-xl font-bold ${color}`}>{value}</p>
+        {cmp && (
+          <p className={`text-xs mt-1 flex items-center gap-0.5 ${cmp.positive ? 'text-green-600' : 'text-red-600'}`}>
+            {cmp.positive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {cmp.pct} vs previous
+          </p>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[
-          { label: 'Total Revenue', value: formatCurrency(data.totalRevenue), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50' },
-          { label: 'Net Revenue', value: formatCurrency(data.netRevenue), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Total Orders', value: data.totalOrders, icon: Receipt, color: 'text-navy', bg: 'bg-blue-50' },
-          { label: 'Avg Order', value: formatCurrency(data.avgOrderValue), icon: Wallet, color: 'text-purple-600', bg: 'bg-purple-50' },
-          { label: 'Returns', value: formatCurrency(data.totalReturns), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
-          { label: 'Expenses', value: formatCurrency(data.totalExpenses), icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50' },
-        ].map(s => {
-          const Icon = s.icon
-          return (
-            <div key={s.label} className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-2 mb-2">
-                <div className={`p-1.5 rounded-lg ${s.bg}`}>
-                  <Icon className={`h-4 w-4 ${s.color}`} />
-                </div>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-              </div>
-              <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
-            </div>
-          )
-        })}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLocalCompare(!localCompare)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+              localCompare ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'
+            }`}
+          >
+            vs Previous
+          </button>
+        </div>
+        <button
+          onClick={handleExportCSV}
+          className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Export CSV
+        </button>
       </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <StatCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" compareKey="compareRevenue" />
+        <StatCard label="Net Revenue" value={formatCurrency(data.netRevenue)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" compareKey="compareNetRevenue" />
+        <StatCard label="Total Orders" value={data.totalOrders} icon={Receipt} color="text-navy" bg="bg-blue-50" compareKey="compareTotalOrders" />
+        <StatCard label="Avg Order" value={formatCurrency(data.avgOrderValue)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" />
+        <StatCard label="Returns" value={formatCurrency(data.totalReturns)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" />
+        <StatCard label="Expenses" value={formatCurrency(data.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
+      </div>
+
+      <RevenueChart data={data.dailyRevenue || []} />
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-border p-5">
@@ -280,7 +480,7 @@ function OrdersTab() {
             <div><p className="text-muted-foreground">Order #</p><p className="font-medium text-navy">{selectedOrder.receiptNumber || selectedOrder.orderNumber}</p></div>
             <div><p className="text-muted-foreground">Customer</p><p className="font-medium text-navy">{selectedOrder.fullName}</p></div>
             <div><p className="text-muted-foreground">Branch</p><p className="font-medium text-navy">{selectedOrder.shift?.branch?.name || '-'}</p></div>
-            <div><p className="text-muted-foreground">Total</p><p className="font-bold text-navy">${selectedOrder.totalAmount.toFixed(2)}</p></div>
+            <div><p className="text-muted-foreground">Total</p><p className="font-bold text-navy">{formatCurrency(selectedOrder.totalAmount)}</p></div>
             <div><p className="text-muted-foreground">Status</p><span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusColors[selectedOrder.status] || ''}`}>{selectedOrder.status}</span></div>
             <div><p className="text-muted-foreground">Payment</p><p className="font-medium text-navy">{paymentLabels[selectedOrder.paymentMethod] || selectedOrder.paymentMethod}</p></div>
             <div><p className="text-muted-foreground">Payment Status</p><p className="font-medium text-navy">{selectedOrder.paymentStatus}</p></div>
@@ -298,8 +498,8 @@ function OrdersTab() {
                     <tr key={item.id || i} className="border-b border-border/50">
                       <td className="py-2 text-navy font-medium">{item.product?.name || item.product?.productName || '-'}</td>
                       <td className="py-2 text-right text-muted-foreground">{item.quantity}</td>
-                      <td className="py-2 text-right text-muted-foreground">${item.price.toFixed(2)}</td>
-                      <td className="py-2 text-right text-navy font-medium">${(item.quantity * item.price).toFixed(2)}</td>
+                      <td className="py-2 text-right text-muted-foreground">{formatCurrency(item.price)}</td>
+                      <td className="py-2 text-right text-navy font-medium">{formatCurrency(item.quantity * item.price)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -388,7 +588,7 @@ function OrdersTab() {
                   <td className="p-3 font-medium text-navy">#{order.receiptNumber || order.orderNumber?.slice(0, 10)}</td>
                   <td className="p-3 text-muted-foreground">{order.shift?.branch?.name || '-'}</td>
                   <td className="p-3 text-navy">{order.fullName}</td>
-                  <td className="p-3 text-right font-medium text-navy">${order.totalAmount.toFixed(2)}</td>
+                  <td className="p-3 text-right font-medium text-navy">{formatCurrency(order.totalAmount)}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[order.status] || ''}`}>{order.status}</span></td>
                   <td className="p-3 text-muted-foreground">{paymentLabels[order.paymentMethod] || order.paymentMethod}</td>
                   <td className="p-3">{order.reconciledAt ? <span className="text-green-600 text-xs font-medium">Yes</span> : <span className="text-amber-600 text-xs font-medium">No</span>}</td>
@@ -449,12 +649,12 @@ function BranchesTab() {
                 <h3 className="font-semibold text-navy">{branch.name}</h3>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Revenue</span><span className="font-bold text-navy">${branch.totalRevenue.toFixed(2)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Revenue</span><span className="font-bold text-navy">{formatCurrency(branch.totalRevenue)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Orders</span><span className="font-medium text-navy">{branch.orderCount}</span></div>
                 <div className="border-t border-border pt-2 mt-2 space-y-1">
-                  <div className="flex justify-between text-xs"><span className="text-green-600">Cash</span><span className="font-medium text-navy">${branch.cashTotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-blue-600">Card</span><span className="font-medium text-navy">${branch.cardTotal.toFixed(2)}</span></div>
-                  <div className="flex justify-between text-xs"><span className="text-purple-600">Other</span><span className="font-medium text-navy">${branch.otherTotal.toFixed(2)}</span></div>
+                  <div className="flex justify-between text-xs"><span className="text-green-600">Cash</span><span className="font-medium text-navy">{formatCurrency(branch.cashTotal)}</span></div>
+                  <div className="flex justify-between text-xs"><span className="text-blue-600">Card</span><span className="font-medium text-navy">{formatCurrency(branch.cardTotal)}</span></div>
+                  <div className="flex justify-between text-xs"><span className="text-purple-600">Other</span><span className="font-medium text-navy">{formatCurrency(branch.otherTotal)}</span></div>
                 </div>
               </div>
             </div>
@@ -462,6 +662,291 @@ function BranchesTab() {
           {data.branches.length === 0 && <div className="col-span-full text-center text-muted-foreground text-sm py-8">No data for this period</div>}
         </div>
       )}
+    </div>
+  )
+}
+
+function ExpensesTab({ refreshKey }: { refreshKey: number }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState('month')
+  const [branchFilter, setBranchFilter] = useState('')
+  const [showModal, setShowModal] = useState(false)
+  const [branches, setBranches] = useState<any[]>([])
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+
+  useEffect(() => {
+    fetch('/api/admin/accounting/branches?period=year')
+      .then(r => r.json())
+      .then(d => setBranches(d.branches || []))
+      .catch(() => {})
+  }, [])
+
+  function fetchExpenses() {
+    setLoading(true)
+    const params = new URLSearchParams()
+    params.set('period', period)
+    if (branchFilter) params.set('branchId', branchFilter)
+    if (period === 'custom' && customStart && customEnd) {
+      params.set('customStart', customStart)
+      params.set('customEnd', customEnd)
+    }
+    fetch(`/api/admin/accounting/expenses?${params}`)
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => { toast.error('Failed to load expenses'); setLoading(false) })
+  }
+
+  useEffect(() => { fetchExpenses() }, [period, branchFilter, customStart, customEnd, refreshKey])
+
+  async function handleDeleteExpense(id: string) {
+    try {
+      const res = await fetch(`/api/admin/accounting/expenses?id=${id}`, { method: 'DELETE' })
+      if (res.ok) { toast.success('Expense deleted'); fetchExpenses(); setDeleteConfirm(null) }
+      else toast.error('Failed to delete')
+    } catch { toast.error('Failed to delete') }
+  }
+
+  const maxMethod = Math.max(...Object.values(data?.byMethod || {}) as number[], 1)
+
+  const methodColor: Record<string, string> = {
+    cash: 'bg-green-500', card: 'bg-blue-500', bank_transfer: 'bg-amber-500',
+    instapay: 'bg-cyan-500', wallet: 'bg-pink-500',
+  }
+  const methodLabel: Record<string, string> = {
+    cash: 'Cash', card: 'Card', bank_transfer: 'Bank Transfer',
+    instapay: 'InstaPay', wallet: 'Wallet',
+  }
+
+  function handleExportCSV() {
+    if (!data?.expenses) return
+    const rows = data.expenses.map((e: any) => ({
+      Date: new Date(e.createdAt).toLocaleDateString(),
+      Description: e.description,
+      Amount: e.amount,
+      'Payment Method': methodLabel[e.paymentMethod] || e.paymentMethod,
+      Branch: e.branch?.name || '-',
+      Supplier: e.supplier?.name || '-',
+      Invoice: e.invoiceNumber || '-',
+    }))
+    exportCSVRows(rows, `expenses-${period}.csv`)
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-4 flex-wrap items-center">
+        {(['day', 'week', 'month', 'year', 'custom'] as const).map((p) => (
+          <button key={p} onClick={() => setPeriod(p)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${period === p ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
+            {p.charAt(0).toUpperCase() + p.slice(1)}
+          </button>
+        ))}
+        {period === 'custom' && (
+          <div className="flex items-center gap-2">
+            <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
+            <span className="text-xs text-muted-foreground">to</span>
+            <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
+          </div>
+        )}
+        <select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} className="px-3 py-1.5 border border-border rounded-lg text-sm ml-auto">
+          <option value="">All Branches</option>
+          {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+        <button onClick={() => setShowModal(true)} className="px-4 py-1.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors flex items-center gap-1.5">
+          <Plus className="h-4 w-4" /> Add Expense
+        </button>
+        <button onClick={handleExportCSV} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5">
+          <Download className="h-4 w-4" /> CSV
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-muted-foreground text-sm">Loading...</div>
+      ) : !data ? (
+        <div className="text-muted-foreground text-sm">No data</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-white rounded-xl border border-border p-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Expenses</p>
+              <p className="text-2xl font-bold text-orange-600">{formatCurrency(data.totalExpenses)}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-border p-4">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Count</p>
+              <p className="text-2xl font-bold text-navy">{data.count}</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-xl border border-border p-5">
+              <h3 className="text-sm font-semibold text-navy mb-4">Payment Method Breakdown</h3>
+              <div className="space-y-3">
+                {Object.entries(data.byMethod || {}).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No expenses</p>
+                ) : (
+                  Object.entries(data.byMethod || {}).map(([method, amount]) => (
+                    <div key={method}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">{methodLabel[method] || method}</span>
+                        <span className="font-medium text-navy">{formatCurrency(amount as number)}</span>
+                      </div>
+                      <MiniBar value={amount as number} max={maxMethod} color={methodColor[method] || 'bg-gray-500'} />
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
+                  <th className="p-3 font-medium">Date</th>
+                  <th className="p-3 font-medium">Description</th>
+                  <th className="p-3 font-medium text-right">Amount</th>
+                  <th className="p-3 font-medium">Payment Method</th>
+                  <th className="p-3 font-medium">Branch</th>
+                  <th className="p-3 font-medium">Supplier</th>
+                  <th className="p-3 font-medium">Invoice #</th>
+                  <th className="p-3 font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.expenses.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No expenses found</td></tr>}
+                {data.expenses.map((exp: any) => (
+                  <tr key={exp.id} className="border-b border-border/50 hover:bg-gray-50">
+                    <td className="p-3 text-muted-foreground text-xs">{new Date(exp.createdAt).toLocaleDateString()}</td>
+                    <td className="p-3 font-medium text-navy">{exp.description}</td>
+                    <td className="p-3 text-right font-medium text-orange-600">{formatCurrency(exp.amount)}</td>
+                    <td className="p-3 text-muted-foreground">{methodLabel[exp.paymentMethod] || exp.paymentMethod}</td>
+                    <td className="p-3 text-muted-foreground">{exp.branch?.name || '-'}</td>
+                    <td className="p-3 text-muted-foreground">{exp.supplier?.name || '-'}</td>
+                    <td className="p-3 text-muted-foreground">{exp.invoiceNumber || '-'}</td>
+                    <td className="p-3">
+                      {deleteConfirm === exp.id ? (
+                        <div className="flex gap-1">
+                          <button onClick={() => handleDeleteExpense(exp.id)} className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">Confirm</button>
+                          <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors">Cancel</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setDeleteConfirm(exp.id)} className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      {showModal && (
+        <AddExpenseModal
+          onClose={() => setShowModal(false)}
+          onSaved={() => { fetchExpenses(); setShowModal(false) }}
+          branches={branches}
+        />
+      )}
+    </div>
+  )
+}
+
+function AddExpenseModal({ onClose, onSaved, branches }: { onClose: () => void; onSaved: () => void; branches: any[] }) {
+  const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState('')
+  const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [branchId, setBranchId] = useState('')
+  const [supplierName, setSupplierName] = useState('')
+  const [invoiceNumber, setInvoiceNumber] = useState('')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [suppliers, setSuppliers] = useState<any[]>([])
+
+  useEffect(() => {
+    fetch('/api/admin/accounting/suppliers')
+      .then(r => r.json())
+      .then(d => setSuppliers(d.suppliers || []))
+      .catch(() => {})
+  }, [])
+
+  async function handleSave() {
+    if (!amount || !description || !paymentMethod) {
+      toast.error('Amount, description, and payment method required')
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/admin/accounting/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, description, paymentMethod, branchId: branchId || null, supplierId: supplierName || null, invoiceNumber: invoiceNumber || null, notes: notes || null }),
+      })
+      if (res.ok) { toast.success('Expense added'); onSaved() }
+      else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    } catch { toast.error('Failed to add expense') }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-navy">Add Expense</h2>
+          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded"><X className="h-5 w-5 text-muted-foreground" /></button>
+        </div>
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Amount *</label>
+            <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Description *</label>
+            <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="What is this expense for?" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Payment Method *</label>
+            <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="instapay">InstaPay</option>
+              <option value="wallet">Wallet</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Branch</label>
+            <select value={branchId} onChange={e => setBranchId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
+              <option value="">None</option>
+              {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Supplier</label>
+            <select value={supplierName} onChange={e => setSupplierName(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
+              <option value="">None</option>
+              {suppliers.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Invoice Number</label>
+            <input type="text" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} placeholder="Optional" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Notes</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional notes" rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+          </div>
+        </div>
+        <div className="flex gap-2 pt-2">
+          <button onClick={onClose} className="flex-1 px-4 py-2 border border-border rounded-lg text-sm font-medium text-muted-foreground hover:text-navy transition-colors">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="flex-1 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">
+            {saving ? 'Saving...' : 'Save Expense'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -477,6 +962,17 @@ function ReportsTab() {
       .catch(() => toast.error('Failed to load reports'))
   }, [type])
 
+  function handleExportCSV() {
+    if (!data?.periods) return
+    const rows = data.periods.map((p: any) => ({
+      Period: p.period,
+      Revenue: p.revenue,
+      Orders: p.orderCount,
+      'Avg Order Value': p.avgOrderValue,
+    }))
+    exportCSVRows(rows, `reports-${type}.csv`)
+  }
+
   return (
     <div>
       <div className="flex gap-2 mb-4">
@@ -485,8 +981,8 @@ function ReportsTab() {
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
-        <button onClick={() => window.open(`/api/admin/accounting/export/reports?type=${type}`, '_blank')} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
-          <Download className="h-4 w-4" /> Export Excel
+        <button onClick={handleExportCSV} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
+          <Download className="h-4 w-4" /> Export CSV
         </button>
       </div>
       {!data ? <div className="text-muted-foreground text-sm">Loading...</div> : (
@@ -494,7 +990,7 @@ function ReportsTab() {
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-border p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Revenue</p>
-              <p className="text-2xl font-bold text-navy">${data.summary.totalRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-navy">{formatCurrency(data.summary.totalRevenue)}</p>
             </div>
             <div className="bg-white rounded-xl border border-border p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Orders</p>
@@ -502,7 +998,7 @@ function ReportsTab() {
             </div>
             <div className="bg-white rounded-xl border border-border p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Avg Order Value</p>
-              <p className="text-2xl font-bold text-navy">${data.summary.avgOrderValue.toFixed(2)}</p>
+              <p className="text-2xl font-bold text-navy">{formatCurrency(data.summary.avgOrderValue)}</p>
             </div>
           </div>
           <div className="bg-white rounded-xl border border-border overflow-hidden">
@@ -519,9 +1015,9 @@ function ReportsTab() {
                 {data.periods.map((p: any) => (
                   <tr key={p.period} className="border-b border-border/50">
                     <td className="p-3 font-medium text-navy">{p.period}</td>
-                    <td className="p-3 text-right text-navy">${p.revenue.toFixed(2)}</td>
+                    <td className="p-3 text-right text-navy">{formatCurrency(p.revenue)}</td>
                     <td className="p-3 text-right text-muted-foreground">{p.orderCount}</td>
-                    <td className="p-3 text-right text-navy">${p.avgOrderValue.toFixed(2)}</td>
+                    <td className="p-3 text-right text-navy">{formatCurrency(p.avgOrderValue)}</td>
                   </tr>
                 ))}
                 {data.periods.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No data</td></tr>}

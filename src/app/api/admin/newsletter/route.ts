@@ -1,0 +1,74 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { verifyAdminToken } from '@/lib/admin-auth'
+
+async function getAdmin(req: NextRequest) {
+  const auth = req.headers.get('Authorization')?.slice(7)
+  if (!auth) return null
+  return verifyAdminToken(auth)
+}
+
+export async function GET(req: NextRequest) {
+  const admin = await getAdmin(req)
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { searchParams } = new URL(req.url)
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+    const take = 50
+    const skip = (page - 1) * take
+    const search = searchParams.get('search') || ''
+
+    const where: any = {}
+
+    if (search) {
+      where.OR = [
+        { email: { contains: search, mode: 'insensitive' } },
+        { name: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    const [subscribers, total, totalThisMonth] = await Promise.all([
+      db.newsletter.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+      }),
+      db.newsletter.count(),
+      db.newsletter.count({
+        where: {
+          createdAt: {
+            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+          },
+        },
+      }),
+    ])
+
+    return NextResponse.json({ ok: true, subscribers, total, totalThisMonth, page, totalPages: Math.ceil(total / take) })
+  } catch (err) {
+    console.error('GET /api/admin/newsletter error:', err)
+    return NextResponse.json({ ok: false, error: 'Failed to load subscribers' }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const admin = await getAdmin(req)
+  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get('id')
+    if (!id) return NextResponse.json({ ok: false, error: 'Missing subscriber id' }, { status: 400 })
+
+    const sub = await db.newsletter.findUnique({ where: { id } })
+    if (!sub) return NextResponse.json({ ok: false, error: 'Subscriber not found' }, { status: 404 })
+
+    await db.newsletter.delete({ where: { id } })
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('DELETE /api/admin/newsletter error:', err)
+    return NextResponse.json({ ok: false, error: 'Failed to delete subscriber' }, { status: 500 })
+  }
+}

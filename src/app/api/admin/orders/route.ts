@@ -5,7 +5,8 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-    const take = 50
+    const limitParam = searchParams.get('limit')
+    const take = limitParam ? Math.min(parseInt(limitParam), 200) : 50
     const skip = (page - 1) * take
 
     const [orders, total] = await Promise.all([

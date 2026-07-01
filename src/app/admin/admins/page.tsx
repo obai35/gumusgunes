@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { ALL_PERMISSIONS } from '@/lib/permissions'
-import { Shield, Users, Plus, Pencil, Trash2, X } from 'lucide-react'
+import { Shield, Users, Plus, Pencil, Trash2, X, History } from 'lucide-react'
 
-type Tab = 'admins' | 'roles'
+type Tab = 'admins' | 'roles' | 'activity'
 
 type AdminUser = { id: string; email: string; name: string; role: string; roleId: string | null; createdAt: string }
 type Role = { id: string; name: string; permissions: string[]; createdAt: string }
@@ -23,24 +23,19 @@ export default function AdminsPage() {
   const [tab, setTab] = useState<Tab>('admins')
 
   const isFullAccess = user?.role === 'superadmin' || user?.role === 'admin'
-  if (!isFullAccess && !user?.permissions?.includes('admins')) {
-    return <div className="p-8 text-center text-muted-foreground">You do not have permission to access this page.</div>
-  }
+  if (!isFullAccess && !user?.permissions?.includes('admins')) { return <div className="p-8 text-center text-muted-foreground">You do not have permission to access this page.</div> }
 
   return (
     <div>
       <h1 className="text-2xl font-display font-semibold text-navy mb-6">Admin Management</h1>
       <div className="flex gap-1 mb-6 border-b border-border">
-        {([{ id: 'admins' as Tab, label: 'Admins', icon: Users }, { id: 'roles' as Tab, label: 'Roles', icon: Shield }]).map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === t.id ? 'border-navy text-navy' : 'border-transparent text-muted-foreground hover:text-navy'
-            }`}
-          ><t.icon className="h-4 w-4" /> {t.label}</button>
+        {([{ id: 'admins' as Tab, label: 'Admins', icon: Users }, { id: 'roles' as Tab, label: 'Roles', icon: Shield }, { id: 'activity' as Tab, label: 'Activity Log', icon: History }]).map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${tab === t.id ? 'border-navy text-navy' : 'border-transparent text-muted-foreground hover:text-navy'}`}><t.icon className="h-4 w-4" /> {t.label}</button>
         ))}
       </div>
       {tab === 'admins' && <AdminsTab />}
       {tab === 'roles' && <RolesTab />}
+      {tab === 'activity' && <ActivityTab />}
     </div>
   )
 }
@@ -271,6 +266,94 @@ function RolesTab() {
               <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
               <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
             </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ActivityTab() {
+  const token = useAdminAuth((s) => s.token)
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [resourceFilter, setResourceFilter] = useState('')
+  const [actionFilter, setActionFilter] = useState('')
+
+  function fetchLogs() {
+    setLoading(true)
+    const params = new URLSearchParams({ limit: '100' })
+    if (resourceFilter) params.set('resource', resourceFilter)
+    if (actionFilter) params.set('action', actionFilter)
+    fetch(`/api/admin/activity?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(data => setLogs(data.logs || []))
+      .catch(() => toast.error('Failed to load activity'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { fetchLogs() }, [])
+
+  useEffect(() => { fetchLogs() }, [resourceFilter, actionFilter])
+
+  const actionColors: Record<string, string> = {
+    create: 'bg-green-100 text-green-700',
+    update: 'bg-blue-100 text-blue-700',
+    delete: 'bg-red-100 text-red-700',
+    login: 'bg-purple-100 text-purple-700',
+    logout: 'bg-gray-100 text-gray-700',
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2 mb-4">
+        <select value={resourceFilter} onChange={e => { setResourceFilter(e.target.value) }} className="px-3 py-1.5 border border-border rounded-lg text-sm">
+          <option value="">All Resources</option>
+          <option value="admin">Admins</option>
+          <option value="role">Roles</option>
+          <option value="order">Orders</option>
+          <option value="product">Products</option>
+          <option value="category">Categories</option>
+          <option value="discount">Discounts</option>
+          <option value="branch">Branches</option>
+        </select>
+        <select value={actionFilter} onChange={e => { setActionFilter(e.target.value) }} className="px-3 py-1.5 border border-border rounded-lg text-sm">
+          <option value="">All Actions</option>
+          <option value="create">Create</option>
+          <option value="update">Update</option>
+          <option value="delete">Delete</option>
+          <option value="login">Login</option>
+          <option value="logout">Logout</option>
+        </select>
+        <button onClick={fetchLogs} className="px-3 py-1.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">Refresh</button>
+      </div>
+
+      {loading ? (
+        <div className="text-muted-foreground text-sm">Loading...</div>
+      ) : (
+        <div className="bg-white rounded-xl border border-border overflow-hidden">
+          <div className="divide-y divide-border/50">
+            {logs.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground text-sm">No activity recorded yet</div>
+            ) : (
+              logs.map((log: any) => (
+                <div key={log.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 transition-colors">
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium mt-0.5 shrink-0 ${actionColors[log.action] || 'bg-gray-100 text-gray-700'}`}>
+                    {log.action}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="font-medium text-navy">{log.adminName || 'System'}</span>
+                      <span className="text-muted-foreground">{log.action}d</span>
+                      <span className="font-medium text-navy capitalize">{log.resource}</span>
+                      {log.resourceId && <span className="text-xs text-muted-foreground font-mono">#{log.resourceId.slice(0, 8)}</span>}
+                    </div>
+                    {log.details && <p className="text-xs text-muted-foreground mt-0.5">{log.details}</p>}
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{new Date(log.createdAt).toLocaleString()}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

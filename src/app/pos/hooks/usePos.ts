@@ -21,6 +21,9 @@ export function usePos() {
   const [cardAmount, setCardAmount] = useState('')
   const [receipt, setReceipt] = useState<ReceiptData | null>(null)
   const [heldOrders, setHeldOrders] = useState<HeldOrder[]>([])
+  const [customer, setCustomer] = useState<{ id: string; name: string; email: string; phone: string | null } | null>(null)
+  const [customerSearch, setCustomerSearch] = useState('')
+  const [orderNotes, setOrderNotes] = useState('')
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const itemDiscountTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.discount || 0), 0), [cart])
@@ -115,6 +118,9 @@ export function usePos() {
     setPaymentMethod('cash')
     setCashAmount('')
     setCardAmount('')
+    setCustomer(null)
+    setCustomerSearch('')
+    setOrderNotes('')
   }, [])
 
   return {
@@ -133,5 +139,8 @@ export function usePos() {
     newSale,
     setItemDiscount,
     heldOrders, holdOrder, recallOrder, removeHeldOrder,
+    customer, setCustomer,
+    customerSearch, setCustomerSearch,
+    orderNotes, setOrderNotes,
   }
 }

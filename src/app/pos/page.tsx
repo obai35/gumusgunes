@@ -23,7 +23,11 @@ import RecordsTab from './components/RecordsTab'
 import HallSaleTab from './components/HallSaleTab'
 import ReturnsTab from './components/ReturnsTab'
 import CustomerDisplay from './components/CustomerDisplay'
+import CustomerSearch from './components/CustomerSearch'
+import OfflineBanner from './components/OfflineBanner'
 import ShortcutsCheatSheet from './components/ShortcutsCheatSheet'
+import { registerSW } from '@/lib/offline'
+import { queueOrder, cacheProducts } from '@/lib/pos-db'
 import type { Shift, ShiftSummary, Category } from './types'
 
 type View = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale' | 'assessment'
@@ -65,6 +69,7 @@ export default function POSPage() {
   const [customPriceAmount, setCustomPriceAmount] = useState('')
   const customPriceRef = useRef<HTMLDivElement>(null)
   const [returnOrderId, setReturnOrderId] = useState<string | null>(null)
+  const [showNotes, setShowNotes] = useState(false)
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
@@ -93,6 +98,8 @@ export default function POSPage() {
       .catch(() => {})
   }, [])
 
+  useEffect(() => { registerSW() }, [])
+
   useEffect(() => {
     const controller = new AbortController()
     const timer = setTimeout(async () => {
@@ -102,7 +109,11 @@ export default function POSPage() {
         if (branchId) params.set('branchId', branchId)
         if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
         const res = await fetch(`/api/admin/pos/products?${params}`, { signal: controller.signal })
-        if (res.ok) pos.setProducts(await res.json())
+        if (res.ok) {
+          const data = await res.json()
+          pos.setProducts(data)
+          cacheProducts(data)
+        }
       } catch {}
     }, pos.search.length < 1 && !selectedCategoryId ? 0 : 300)
     return () => { clearTimeout(timer); controller.abort() }
@@ -182,13 +193,27 @@ export default function POSPage() {
     pos.setCheckoutLoading(true)
     try {
       const body: any = {
-        items: pos.cart.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: pos.cart.map((i) => ({ productId: i.productId, quantity: i.quantity, discount: i.discount })),
         discountCode: pos.appliedDiscount?.code,
         paymentMethod: pos.paymentMethod,
         shiftId: shift?.id,
+        notes: pos.orderNotes || undefined,
+      }
+      if (pos.customer) {
+        body.customerId = pos.customer.id
+        body.customerName = pos.customer.name
+        body.customerEmail = pos.customer.email
+        body.customerPhone = pos.customer.phone
       }
       if (pos.paymentMethod === 'cash' || pos.paymentMethod === 'split') body.cashAmount = pos.parsedCash
       if (pos.paymentMethod === 'split') body.cardAmount = pos.parsedCard
+
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        await queueOrder(body)
+        toast.success('Order queued for sync when back online')
+        pos.setCheckoutLoading(false)
+        return
+      }
 
       const res = await fetch('/api/admin/pos/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (res.ok) {
@@ -211,7 +236,7 @@ export default function POSPage() {
       }
     } catch { toast.error('Checkout failed') }
     pos.setCheckoutLoading(false)
-  }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, shift?.id])
+  }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.customer, pos.orderNotes, shift?.id])
 
   const handleAddCustomPrice = useCallback(() => {
     const name = customPriceName.trim() || 'Custom Item'
@@ -360,6 +385,7 @@ export default function POSPage() {
       onCloseShift={() => setShowCloseShift(true)}
       onLogout={handleLogout}
     >
+      <OfflineBanner />
       {view === 'pos' && (
         <div className="flex gap-3 flex-1 min-h-0 min-w-0">
           <div className="flex-1 flex flex-col min-h-0 min-w-0">
@@ -391,6 +417,14 @@ export default function POSPage() {
             onHoldOrder={pos.holdOrder}
             onRecallOrder={pos.recallOrder}
             onRemoveHeldOrder={pos.removeHeldOrder}
+            customerSection={
+              <CustomerSearch
+                customer={pos.customer}
+                setCustomer={pos.setCustomer}
+                customerSearch={pos.customerSearch}
+                setCustomerSearch={pos.setCustomerSearch}
+              />
+            }
             discountSection={
               <DiscountSection
                 discountCode={pos.discountCode}
@@ -400,6 +434,24 @@ export default function POSPage() {
                 onRemoveDiscount={() => { pos.setAppliedDiscount(null); pos.setDiscountCode('') }}
                 discountAmount={pos.discountAmount}
               />
+            }
+            notesSection={
+              <div>
+                <p className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-2">Notes</p>
+                {(showNotes || pos.orderNotes) ? (
+                  <textarea
+                    value={pos.orderNotes}
+                    onChange={(e) => pos.setOrderNotes(e.target.value)}
+                    placeholder="Order notes..."
+                    rows={2}
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"
+                  />
+                ) : (
+                  <button onClick={() => setShowNotes(true)} className="w-full py-2 px-3 rounded-lg border border-dashed border-white/10 text-xs text-white/40 hover:text-white/60 hover:border-white/20 transition-all text-left">
+                    + Add Note
+                  </button>
+                )}
+              </div>
             }
             paymentSection={
               <PaymentSection
