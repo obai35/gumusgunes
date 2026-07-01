@@ -9,6 +9,7 @@ import { ProductGrid } from '@/components/store/ProductGrid'
 import { AboutSection } from '@/components/store/AboutSection'
 import { Footer } from '@/components/store/Footer'
 import { db } from '@/lib/db'
+import { PreviewListener } from '@/components/preview/PreviewListener'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,6 +68,7 @@ export default async function PreviewPage() {
 
   return (
     <>
+      <PreviewListener />
       <style>{style}</style>
       <div data-editable="announcement">
         <Header />

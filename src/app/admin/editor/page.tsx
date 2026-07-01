@@ -32,16 +32,20 @@ export default function SiteEditor() {
       .finally(() => setLoading(false))
   }, [])
 
+  const postMessageToPreview = useCallback((key: string, value: string) => {
+    iframeRef.current?.contentWindow?.postMessage({ type: 'settings-update', key, value }, '*')
+  }, [])
+
   const persistSetting = useCallback(async (key: string, value: string) => {
     try {
       await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, value }),
+        body: JSON.stringify({ [key]: value }),
       })
     } catch { /* silent */ }
-    iframeRef.current?.contentWindow?.postMessage({ type: 'settings-update', key, value }, '*')
-  }, [])
+    postMessageToPreview(key, value)
+  }, [postMessageToPreview])
 
   const debouncedPersist = useDebounce(persistSetting, 400)
 
@@ -61,7 +65,6 @@ export default function SiteEditor() {
       if (res.ok) {
         toast.success('Settings saved')
         iframeKey.current++
-        iframeRef.current?.contentWindow?.location.reload()
       } else toast.error('Failed to save')
     } catch { toast.error('Failed to save') }
     setSaving(false)
