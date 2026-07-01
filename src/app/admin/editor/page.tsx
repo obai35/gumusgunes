@@ -100,7 +100,7 @@ export default function SiteEditor() {
   }, [handleSave, updateSetting])
 
   if (loading) return (
-    <div className="flex flex-col h-screen bg-gray-100 p-8 space-y-6">
+    <div className="flex flex-col h-full bg-gray-100 p-8 space-y-6">
       <div className="flex items-center gap-4">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-8 w-32" />
@@ -109,15 +109,16 @@ export default function SiteEditor() {
         <div className="flex-1 space-y-4">
           <Skeleton className="h-[60vh] w-full" />
         </div>
-        <Skeleton className="w-[400px] hidden lg:block" />
+        <Skeleton className="w-[400px]" />
       </div>
     </div>
   )
 
   const deviceWidth = device === 'mobile' ? '375px' : device === 'tablet' ? '768px' : '100%'
+  const iframeHeight = device === 'mobile' ? '667px' : device === 'tablet' ? '1024px' : 'calc(100vh - 140px)'
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100">
+    <div className="flex flex-col h-full bg-gray-100">
       <EditorToolbar
         activeSection={activeSection}
         onSectionChange={setActiveSection}
@@ -133,20 +134,18 @@ export default function SiteEditor() {
               ref={iframeRef}
               src={`/preview?t=${Date.now()}`}
               className="w-full border-0"
-              style={{ height: 'calc(100vh - 120px)' }}
+              style={{ height: iframeHeight }}
               title="Preview"
               key={iframeKey.current}
             />
           </div>
         </div>
-        {showPanel && (
-          <SectionPanel
-            section={activeSection}
-            settings={settings}
-            onSettingChange={updateSetting}
-            onClose={() => setShowPanel(false)}
-          />
-        )}
+        <SectionPanel
+          section={activeSection}
+          settings={settings}
+          onSettingChange={updateSetting}
+          onClose={() => setShowPanel(false)}
+        />
       </div>
     </div>
   )
