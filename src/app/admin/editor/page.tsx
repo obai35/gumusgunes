@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { EditorToolbar } from '@/components/admin/editor/EditorToolbar'
 import SectionPanel from '@/components/admin/editor/SectionPanel'
@@ -21,9 +21,9 @@ export default function SiteEditor() {
   const [saving, setSaving] = useState(false)
   const [activeSection, setActiveSection] = useState<SectionKey>('theme')
   const [device, setDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop')
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const previewWindowRef = useRef<Window | null>(null)
   const [showPanel, setShowPanel] = useState(true)
-  const iframeKey = useRef(0)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -33,7 +33,23 @@ export default function SiteEditor() {
   }, [])
 
   const postMessageToPreview = useCallback((key: string, value: string) => {
-    iframeRef.current?.contentWindow?.postMessage({ type: 'settings-update', key, value }, '*')
+    previewWindowRef.current?.postMessage({ type: 'settings-update', key, value }, '*')
+  }, [])
+
+  const openPreview = useCallback(() => {
+    const url = `/preview?t=${Date.now()}`
+    const w = window.open(url, 'sitePreview', 'width=1200,height=900,scrollbars=yes')
+    if (w) {
+      previewWindowRef.current = w
+      setPreviewOpen(true)
+      const timer = setInterval(() => {
+        if (w.closed) {
+          previewWindowRef.current = null
+          setPreviewOpen(false)
+          clearInterval(timer)
+        }
+      }, 1000)
+    }
   }, [])
 
   const persistSetting = useCallback(async (key: string, value: string) => {
@@ -64,7 +80,9 @@ export default function SiteEditor() {
       })
       if (res.ok) {
         toast.success('Settings saved')
-        iframeKey.current++
+        if (previewWindowRef.current && !previewWindowRef.current.closed) {
+          previewWindowRef.current.location.href = `/preview?t=${Date.now()}`
+        }
       } else toast.error('Failed to save')
     } catch { toast.error('Failed to save') }
     setSaving(false)
@@ -99,8 +117,6 @@ export default function SiteEditor() {
     }
   }, [handleSave, updateSetting])
 
-  const previewUrl = useMemo(() => `/preview?t=${Date.now()}`, [])
-
   if (loading) return (
     <div className="flex flex-col h-screen bg-gray-100 p-8 space-y-6">
       <div className="flex items-center gap-4">
@@ -116,8 +132,6 @@ export default function SiteEditor() {
     </div>
   )
 
-  const deviceWidth = device === 'mobile' ? '375px' : device === 'tablet' ? '768px' : '100%'
-
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       <EditorToolbar
@@ -129,17 +143,23 @@ export default function SiteEditor() {
         saving={saving}
       />
       <div className="flex flex-1 min-h-0">
-        <div className="flex-1 flex items-start justify-center overflow-auto p-4 bg-gray-200">
-          <div className="bg-white shadow-xl rounded-lg overflow-hidden transition-all duration-300" style={{ width: deviceWidth, maxWidth: '100%' }}>
-            <iframe
-              ref={iframeRef}
-              src={previewUrl}
-              className="w-full border-0"
-              style={{ height: 'calc(100vh - 120px)' }}
-              title="Preview"
-              key={iframeKey.current}
-            />
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gray-200 gap-4">
+          {!previewOpen ? (
+            <div className="text-center space-y-4">
+              <p className="text-muted-foreground text-sm">Open the preview window to see your changes in real-time.</p>
+              <button
+                onClick={openPreview}
+                className="px-6 py-3 bg-navy text-silver rounded-lg font-medium hover:bg-navy-light transition-colors"
+              >
+                Open Preview
+              </button>
+            </div>
+          ) : (
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">Preview is open in a separate window.</p>
+              <p className="text-xs text-muted-foreground">Edit settings below — changes update automatically.</p>
+            </div>
+          )}
         </div>
         {showPanel && (
           <SectionPanel
