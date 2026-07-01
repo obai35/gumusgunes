@@ -154,27 +154,31 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { orderId, action, items: returnItems, fullReturn } = await req.json()
+    const { orderId, action, items: returnItems, fullReturn, reason, refundMethod } = await req.json()
     if (!orderId || action !== 'return') return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
-      include: { items: true, shift: { select: { branchId: true } } },
+      include: { items: { include: { product: { select: { id: true, name: true, sku: true } } } }, shift: { select: { branchId: true } } },
     })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.status === 'cancelled') return NextResponse.json({ error: 'Order already returned' }, { status: 400 })
 
     const branchId = order.shift?.branchId
     let totalRefund = 0
+    const returnedItems: Array<{ productId: string; productName: string; quantity: number; refundAmount: number }> = []
 
-    const updatedOrder = await prisma.$transaction(async (tx) => {
+    const branch = branchId ? await prisma.branch.findUnique({ where: { id: branchId }, select: { name: true } }) : null
+
+    const returnRecord = await prisma.$transaction(async (tx) => {
       for (const ri of returnItems || []) {
         const orderItem = order.items.find(i => i.id === ri.itemId)
         if (!orderItem) continue
         const returnQty = Math.min(ri.quantity, orderItem.quantity)
         if (returnQty <= 0) continue
 
-        totalRefund += orderItem.price * returnQty
+        const refundForItem = orderItem.price * returnQty
+        totalRefund += refundForItem
 
         if (branchId) {
           await tx.branchStock.upsert({
@@ -207,6 +211,8 @@ export async function PUT(req: Request) {
             data: { quantity: remaining },
           })
         }
+
+        returnedItems.push({ productId: orderItem.productId, productName: orderItem.product.name, quantity: returnQty, refundAmount: refundForItem })
       }
 
       const updatedItems = await tx.orderItem.findMany({
@@ -216,15 +222,9 @@ export async function PUT(req: Request) {
       const newTotal = updatedItems.reduce((sum, i) => sum + i.price * i.quantity, 0)
       const newRefunded = (order.refundedAmount || 0) + totalRefund
 
-      const data: any = {
-        refundedAmount: newRefunded,
-      }
-      if (fullReturn) {
-        data.status = 'cancelled'
-      }
-      if (updatedItems.length > 0 && !fullReturn) {
-        data.totalAmount = newTotal
-      }
+      const data: any = { refundedAmount: newRefunded }
+      if (fullReturn) data.status = 'cancelled'
+      if (updatedItems.length > 0 && !fullReturn) data.totalAmount = newTotal
 
       await tx.order.update({ where: { id: orderId }, data })
 
@@ -232,18 +232,51 @@ export async function PUT(req: Request) {
         await tx.order.update({ where: { id: orderId }, data: { status: 'cancelled', totalAmount: 0 } })
       }
 
-      return tx.order.findUnique({
-        where: { id: orderId },
-        include: {
+      const returnNumber = `RET-${order.orderNumber}`
+      return tx.return.create({
+        data: {
+          orderId,
+          shiftId: order.shiftId || undefined,
+          returnNumber,
+          reason: reason || 'customer_change',
+          refundMethod: refundMethod || order.paymentMethod,
+          refundAmount: totalRefund,
+          restocked: true,
+          processedByName: 'POS User',
           items: {
-            where: { quantity: { gt: 0 } },
-            include: { product: { select: { id: true, name: true, sku: true } } },
+            create: returnedItems.map(ri => ({
+              productId: ri.productId,
+              quantity: ri.quantity,
+              refundAmount: ri.refundAmount,
+            })),
           },
+        },
+        include: {
+          items: { include: { product: { select: { id: true, name: true } } } },
+          order: { select: { receiptNumber: true, orderNumber: true } },
         },
       })
     })
 
-    return NextResponse.json({ ok: true, order: updatedOrder })
+    return NextResponse.json({
+      ok: true,
+      returnData: {
+        id: returnRecord.id,
+        returnNumber: returnRecord.returnNumber,
+        reason: returnRecord.reason,
+        refundMethod: returnRecord.refundMethod,
+        refundAmount: returnRecord.refundAmount,
+        createdAt: returnRecord.createdAt.toISOString(),
+        items: returnRecord.items.map(ri => ({
+          product: { name: ri.product.name },
+          quantity: ri.quantity,
+          refundAmount: ri.refundAmount,
+        })),
+        order: { receiptNumber: returnRecord.order.receiptNumber || '' },
+        processedBy: { name: returnRecord.processedByName || 'POS User' },
+      },
+      branchName: branch?.name || 'Branch',
+    })
   } catch {
     return NextResponse.json({ error: 'Failed to return order' }, { status: 500 })
   }

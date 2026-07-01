@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Search, Undo2, ChevronDown, ChevronRight } from 'lucide-react'
+import ReturnReceipt from './ReturnReceipt'
 
 type Props = {
   shiftId: string
@@ -29,6 +30,18 @@ type ReturnItem = {
   items?: OrderItem[]
 }
 
+type ReceiptData = {
+  id: string
+  returnNumber: string
+  reason: string
+  refundMethod: string
+  refundAmount: number
+  createdAt: string
+  items: Array<{ product: { name: string }; quantity: number; refundAmount: number }>
+  order: { receiptNumber: string }
+  processedBy: { name: string }
+}
+
 export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnOrderIdConsumed }: Props) {
   const [returns, setReturns] = useState<ReturnItem[]>([])
   const [search, setSearch] = useState('')
@@ -36,6 +49,9 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [returningId, setReturningId] = useState<string | null>(null)
   const [returnQtys, setReturnQtys] = useState<Record<string, number>>({})
+  const [returnReason, setReturnReason] = useState('customer_change')
+  const [refundMethod, setRefundMethod] = useState('cash')
+  const [receiptData, setReceiptData] = useState<{ data: ReceiptData; branchName: string } | null>(null)
 
   useEffect(() => {
     const params = new URLSearchParams({ branchId: branchId || '', shiftId })
@@ -59,6 +75,8 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
     const q: Record<string, number> = {}
     order.items?.forEach(i => { q[i.id] = i.quantity })
     setReturnQtys(q)
+    setReturnReason('customer_change')
+    setRefundMethod('cash')
   }
 
   function handleExpand(orderId: string, order: ReturnItem) {
@@ -109,22 +127,26 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
           action: 'return',
           items,
           fullReturn: isFullReturn,
+          reason: returnReason,
+          refundMethod: refundMethod,
         }),
       })
+      const data = await res.json()
       if (res.ok) {
         toast.success(isFullReturn ? 'Order fully returned' : 'Items returned successfully')
         if (isFullReturn) {
           setReturns(prev => prev.filter(r => r.id !== order.id))
         } else {
-          const data = await res.json()
           if (data.order) {
             setReturns(prev => prev.map(r => r.id === order.id ? data.order : r))
           }
           setExpandedId(null)
           setReturnQtys({})
         }
+        if (data.returnData) {
+          setReceiptData({ data: data.returnData, branchName: data.branchName || 'Branch' })
+        }
       } else {
-        const data = await res.json()
         toast.error(data.error || 'Failed to return order')
       }
     } catch {
@@ -228,6 +250,40 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
                       </div>
                     )
                   })}
+
+                  <div className="flex gap-2 pt-2 border-t border-white/10">
+                    <div className="flex-1">
+                      <label className="text-xs text-white/40 block mb-1">Reason</label>
+                      <select
+                        value={returnReason}
+                        onChange={e => setReturnReason(e.target.value)}
+                        className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5"
+                      >
+                        <option value="customer_change">Customer Change</option>
+                        <option value="defective">Defective</option>
+                        <option value="wrong_item">Wrong Item</option>
+                        <option value="damaged">Damaged</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs text-white/40 block mb-1">Refund Method</label>
+                      <select
+                        value={refundMethod}
+                        onChange={e => setRefundMethod(e.target.value)}
+                        className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5"
+                      >
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="instapay">InstaPay</option>
+                        <option value="wallet">Wallet</option>
+                        <option value="store_credit">Store Credit</option>
+                        <option value="no_refund">No Refund</option>
+                      </select>
+                    </div>
+                  </div>
+
                   {hasSelection && (
                     <div className="flex items-center justify-between pt-2 border-t border-white/10">
                       <span className="text-xs text-white/50">Returning {selCount} item{selCount !== 1 ? 's' : ''}</span>
@@ -250,6 +306,14 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
           <p className="text-center text-white/30 text-sm py-8">No orders found</p>
         )}
       </div>
+
+      {receiptData && (
+        <ReturnReceipt
+          returnData={receiptData.data}
+          branchName={receiptData.branchName}
+          onClose={() => setReceiptData(null)}
+        />
+      )}
     </div>
   )
 }
