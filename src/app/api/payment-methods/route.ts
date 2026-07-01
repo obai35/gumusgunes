@@ -7,9 +7,10 @@ export async function GET() {
     where: { isActive: true },
     orderBy: { sortOrder: 'asc' },
   })
-  const result = methods.map(m => ({
-    ...m,
-    config: m.config ? JSON.parse(decrypt(m.config)) : {},
-  }))
+  const result = methods.map(m => {
+    let config = {}
+    try { config = JSON.parse(decrypt(m.config)) } catch { try { config = JSON.parse(m.config) } catch {} }
+    return { ...m, config }
+  })
   return NextResponse.json({ methods: result })
 }

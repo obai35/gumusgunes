@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { encrypt } from '../src/lib/encryption'
 
 const prisma = new PrismaClient()
 
@@ -32,16 +33,20 @@ const governorates = [
   { name: 'Ismailia', nameAr: 'الإسماعيلية' },
 ]
 
+function enc(obj: Record<string, any>) {
+  return encrypt(JSON.stringify(obj))
+}
+
 const paymentMethods = [
-  { code: 'card', name: 'Card (Stripe)', nameAr: 'بطاقة (Stripe)', sortOrder: 1, isActive: true, config: JSON.stringify({ publishableKey: '', secretKey: '', webhookSecret: '' }) },
-  { code: 'paypal', name: 'PayPal', nameAr: 'PayPal', sortOrder: 2, isActive: true, config: JSON.stringify({ clientId: '', clientSecret: '', sandbox: true }) },
-  { code: 'transfer', name: 'Bank Transfer', nameAr: 'تحويل بنكي', sortOrder: 3, isActive: true, config: JSON.stringify({ bankName: 'Garanti BBVA — Istanbul', bankNameAr: 'Garanti BBVA — إسطنبول', iban: 'TR12 0006 2001 2345 6789 0000 01', referenceInstructions: 'Use your order number as the payment reference.', referenceInstructionsAr: 'استخدم رقم طلبك كمرجع للدفع.' }) },
-  { code: 'cod', name: 'Cash on Delivery', nameAr: 'الدفع عند الاستلام', sortOrder: 4, isActive: true, config: JSON.stringify({ handlingFee: 2 }) },
-  { code: 'instapay', name: 'InstaPay QR', nameAr: 'InstaPay', sortOrder: 5, isActive: false, config: JSON.stringify({ phone: '', qrUrl: '' }) },
-  { code: 'vodafone-cash', name: 'Vodafone Cash', nameAr: 'فودافون كاش', sortOrder: 6, isActive: false, config: JSON.stringify({ number: '' }) },
-  { code: 'orange-cash', name: 'Orange Cash', nameAr: 'أورنج كاش', sortOrder: 7, isActive: false, config: JSON.stringify({ number: '' }) },
-  { code: 'etisalat-wallet', name: 'Etisalat Wallet', nameAr: 'اتصالات Wallet', sortOrder: 8, isActive: false, config: JSON.stringify({ number: '' }) },
-  { code: 'fawry', name: 'Fawry', nameAr: 'فوري', sortOrder: 9, isActive: false, config: JSON.stringify({ reference: '' }) },
+  { code: 'card', name: 'Card (Stripe)', nameAr: 'بطاقة (Stripe)', sortOrder: 1, isActive: true, config: enc({ publishableKey: '', secretKey: '', webhookSecret: '' }) },
+  { code: 'paypal', name: 'PayPal', nameAr: 'PayPal', sortOrder: 2, isActive: true, config: enc({ clientId: '', clientSecret: '', sandbox: true }) },
+  { code: 'transfer', name: 'Bank Transfer', nameAr: 'تحويل بنكي', sortOrder: 3, isActive: true, config: enc({ bankName: 'Garanti BBVA — Istanbul', bankNameAr: 'Garanti BBVA — إسطنبول', iban: 'TR12 0006 2001 2345 6789 0000 01', referenceInstructions: 'Use your order number as the payment reference.', referenceInstructionsAr: 'استخدم رقم طلبك كمرجع للدفع.' }) },
+  { code: 'cod', name: 'Cash on Delivery', nameAr: 'الدفع عند الاستلام', sortOrder: 4, isActive: true, config: enc({ handlingFee: 2 }) },
+  { code: 'instapay', name: 'InstaPay QR', nameAr: 'InstaPay', sortOrder: 5, isActive: false, config: enc({ phone: '', qrUrl: '' }) },
+  { code: 'vodafone-cash', name: 'Vodafone Cash', nameAr: 'فودافون كاش', sortOrder: 6, isActive: false, config: enc({ number: '' }) },
+  { code: 'orange-cash', name: 'Orange Cash', nameAr: 'أورنج كاش', sortOrder: 7, isActive: false, config: enc({ number: '' }) },
+  { code: 'etisalat-wallet', name: 'Etisalat Wallet', nameAr: 'اتصالات Wallet', sortOrder: 8, isActive: false, config: enc({ number: '' }) },
+  { code: 'fawry', name: 'Fawry', nameAr: 'فوري', sortOrder: 9, isActive: false, config: enc({ reference: '' }) },
 ]
 
 async function main() {
@@ -59,7 +64,7 @@ async function main() {
   for (const pm of paymentMethods) {
     await prisma.paymentMethod.upsert({
       where: { code: pm.code },
-      update: {},
+      update: { config: pm.config },
       create: pm,
     })
   }
