@@ -2,38 +2,74 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download } from 'lucide-react'
+import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 
-type Tab = 'overview' | 'orders' | 'branches' | 'reports'
+type Period = 'day' | 'week' | 'month' | 'year'
+
+function formatCurrency(v: number) { return `$${v.toFixed(2)}` }
+
+function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max > 0 ? (value / max) * 100 : 0
+  return (
+    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+      <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
+    </div>
+  )
+}
+
+const PERIOD_LABELS: Record<Period, string> = { day: 'Today', week: 'This Week', month: 'This Month', year: 'This Year' }
 
 export default function AccountingPage() {
-  const [tab, setTab] = useState<Tab>('overview')
+  const [tab, setTab] = useState('overview')
+  const [period, setPeriod] = useState<Period>('day')
+  const [overviewData, setOverviewData] = useState<any>(null)
+  const [overviewLoading, setOverviewLoading] = useState(true)
+
+  useEffect(() => {
+    setOverviewLoading(true)
+    fetch(`/api/admin/accounting/overview?period=${period}`)
+      .then(r => r.json())
+      .then(data => {
+        setOverviewData(data)
+        setOverviewLoading(false)
+      })
+      .catch(() => { toast.error('Failed to load data'); setOverviewLoading(false) })
+  }, [period])
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl font-display font-semibold text-navy">Accounting</h1>
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+          {(Object.entries(PERIOD_LABELS) as [Period, string][]).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setPeriod(key)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                period === key ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="flex gap-1 mb-6 border-b border-border">
-        {([
-          { id: 'overview' as Tab, label: 'Overview' },
-          { id: 'orders' as Tab, label: 'Orders' },
-          { id: 'branches' as Tab, label: 'Branches' },
-          { id: 'reports' as Tab, label: 'Reports' },
-        ]).map((t) => (
+
+      <div className="flex gap-1 border-b border-border">
+        {(['overview', 'orders', 'branches', 'reports'] as const).map(t => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              tab === t.id ? 'border-navy text-navy' : 'border-transparent text-muted-foreground hover:text-navy'
+            key={t}
+            onClick={() => setTab(t)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors capitalize ${
+              tab === t ? 'border-navy text-navy' : 'border-transparent text-muted-foreground hover:text-navy'
             }`}
           >
-            {t.label}
+            {t}
           </button>
         ))}
       </div>
 
-      {tab === 'overview' && <OverviewTab />}
+      {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} />}
       {tab === 'orders' && <OrdersTab />}
       {tab === 'branches' && <BranchesTab />}
       {tab === 'reports' && <ReportsTab />}
@@ -41,41 +77,142 @@ export default function AccountingPage() {
   )
 }
 
-function OverviewTab() {
-  const [data, setData] = useState<any>(null)
+function OverviewTab({ data, loading, period }: { data: any; loading: boolean; period: Period }) {
+  if (loading || !data) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-pulse">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} className="bg-white rounded-xl border border-border p-4 h-24" />
+        ))}
+      </div>
+    )
+  }
 
-  useEffect(() => {
-    fetch('/api/admin/accounting/overview')
-      .then((r) => r.json())
-      .then(setData)
-      .catch(() => toast.error('Failed to load overview'))
-  }, [])
-
-  if (!data) return <div className="text-muted-foreground text-sm">Loading...</div>
+  const maxPayment = Math.max(...Object.values(data.paymentBreakdown || { cash: 0 }) as number[], 1)
+  const maxBranch = Math.max(...Object.values(data.branchRevenue || {}) as number[], 1)
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {[
-          { label: "Today's Revenue", value: `$${data.todayRevenue.toFixed(2)}`, color: 'text-green-600' },
-          { label: "Today's Orders", value: data.todayOrders, color: 'text-navy' },
-          { label: 'Pending Orders', value: data.pendingOrders, color: 'text-yellow-600' },
-          { label: 'Unreconciled Payments', value: data.unreconciledOrders, color: 'text-red-600' },
-          { label: "Today's Refunds", value: data.pendingRefunds ?? 0, color: 'text-red-600' },
-        ].map((s) => (
-          <div key={s.label} className="bg-white rounded-xl border border-border p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{s.label}</p>
-            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-          </div>
-        ))}
+          { label: 'Total Revenue', value: formatCurrency(data.totalRevenue), icon: DollarSign, color: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Net Revenue', value: formatCurrency(data.netRevenue), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Total Orders', value: data.totalOrders, icon: Receipt, color: 'text-navy', bg: 'bg-blue-50' },
+          { label: 'Avg Order', value: formatCurrency(data.avgOrderValue), icon: Wallet, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Returns', value: formatCurrency(data.totalReturns), icon: TrendingDown, color: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'Expenses', value: formatCurrency(data.totalExpenses), icon: Banknote, color: 'text-orange-600', bg: 'bg-orange-50' },
+        ].map(s => {
+          const Icon = s.icon
+          return (
+            <div key={s.label} className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                  <Icon className={`h-4 w-4 ${s.color}`} />
+                </div>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+              <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+            </div>
+          )
+        })}
       </div>
-      {data.openShifts > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-amber-800">
-            {data.openShifts} open shift{data.openShifts !== 1 ? 's' : ''}: {data.openShiftBranches.join(', ')}
-          </p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            Payment Breakdown
+          </h3>
+          <div className="space-y-3">
+            {[
+              { key: 'cash', label: 'Cash', color: 'bg-green-500' },
+              { key: 'card', label: 'Card', color: 'bg-blue-500' },
+              { key: 'split', label: 'Split', color: 'bg-purple-500' },
+              { key: 'bank_transfer', label: 'Bank Transfer', color: 'bg-amber-500' },
+              { key: 'instapay', label: 'InstaPay', color: 'bg-cyan-500' },
+              { key: 'wallet', label: 'Wallet', color: 'bg-pink-500' },
+            ].map(({ key, label, color }) => (
+              <div key={key}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="font-medium text-navy">{formatCurrency(data.paymentBreakdown?.[key] || 0)}</span>
+                </div>
+                <MiniBar value={data.paymentBreakdown?.[key] || 0} max={maxPayment} color={color} />
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            Branch Revenue
+          </h3>
+          <div className="space-y-3">
+            {Object.entries(data.branchRevenue || {}).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No data for this period</p>
+            ) : (
+              Object.entries(data.branchRevenue || {}).map(([name, amount]) => (
+                <div key={name}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-muted-foreground">{name}</span>
+                    <span className="font-medium text-navy">{formatCurrency(amount as number)}</span>
+                  </div>
+                  <MiniBar value={amount as number} max={maxBranch} color="bg-navy" />
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-border p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Pending Orders</p>
+          <p className="text-2xl font-bold text-amber-600">{data.pendingOrders}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-border p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Unreconciled Payments</p>
+          <p className="text-2xl font-bold text-red-600">{data.unreconciledOrders}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-border p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Open Shifts</p>
+          <p className={`text-2xl font-bold ${data.openShifts > 0 ? 'text-amber-600' : 'text-green-600'}`}>{data.openShifts}</p>
+          {data.openShiftBranches?.length > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">{data.openShiftBranches.join(', ')}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-navy to-navy/90 rounded-xl p-5 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm opacity-80">Net Revenue</p>
+            <p className="text-3xl font-bold mt-1">{formatCurrency(data.netRevenue)}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs opacity-60">{PERIOD_LABELS[period]}</p>
+            <p className={`text-sm font-medium mt-1 flex items-center gap-1 ${data.netRevenue >= 0 ? 'text-green-300' : 'text-red-300'}`}>
+              {data.netRevenue >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
+              Revenue - Returns - Expenses
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/20 text-sm">
+          <div>
+            <p className="text-xs opacity-60">Revenue</p>
+            <p className="font-semibold text-green-300">+{formatCurrency(data.totalRevenue)}</p>
+          </div>
+          <div>
+            <p className="text-xs opacity-60">Returns</p>
+            <p className="font-semibold text-red-300">-{formatCurrency(data.totalReturns)}</p>
+          </div>
+          <div>
+            <p className="text-xs opacity-60">Expenses</p>
+            <p className="font-semibold text-orange-300">-{formatCurrency(data.totalExpenses)}</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -123,10 +260,8 @@ function OrdersTab() {
   }
 
   const statusColors: Record<string, string> = {
-    pending: 'bg-gray-100 text-gray-700',
-    processing: 'bg-yellow-100 text-yellow-700',
-    shipped: 'bg-purple-100 text-purple-700',
-    delivered: 'bg-green-100 text-green-700',
+    pending: 'bg-gray-100 text-gray-700', processing: 'bg-yellow-100 text-yellow-700',
+    shipped: 'bg-purple-100 text-purple-700', delivered: 'bg-green-100 text-green-700',
     cancelled: 'bg-red-100 text-red-700',
   }
   const paymentLabels: Record<string, string> = {
@@ -214,16 +349,13 @@ function OrdersTab() {
           <option value="pending">Pending</option>
           <option value="paid">Paid</option>
         </select>
-        <button
-          onClick={() => {
-            const params = new URLSearchParams()
-            if (search) params.set('search', search)
-            if (statusFilter) params.set('status', statusFilter)
-            if (paymentFilter) params.set('paymentStatus', paymentFilter)
-            window.open(`/api/admin/accounting/export/orders?${params}`, '_blank')
-          }}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5"
-        >
+        <button onClick={() => {
+          const params = new URLSearchParams()
+          if (search) params.set('search', search)
+          if (statusFilter) params.set('status', statusFilter)
+          if (paymentFilter) params.set('paymentStatus', paymentFilter)
+          window.open(`/api/admin/accounting/export/orders?${params}`, '_blank')
+        }} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5">
           <Download className="h-4 w-4" /> Export Excel
         </button>
         <button onClick={fetchOrders} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">
@@ -250,9 +382,7 @@ function OrdersTab() {
               </tr>
             </thead>
             <tbody>
-              {orders.length === 0 && (
-                <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">No orders found</td></tr>
-              )}
+              {orders.length === 0 && <tr><td colSpan={9} className="p-6 text-center text-muted-foreground">No orders found</td></tr>}
               {orders.map((order) => (
                 <tr key={order.id} className="border-b border-border/50 hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedOrder(order)}>
                   <td className="p-3 font-medium text-navy">#{order.receiptNumber || order.orderNumber?.slice(0, 10)}</td>
@@ -261,22 +391,12 @@ function OrdersTab() {
                   <td className="p-3 text-right font-medium text-navy">${order.totalAmount.toFixed(2)}</td>
                   <td className="p-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[order.status] || ''}`}>{order.status}</span></td>
                   <td className="p-3 text-muted-foreground">{paymentLabels[order.paymentMethod] || order.paymentMethod}</td>
-                  <td className="p-3">
-                    {order.reconciledAt ? (
-                      <span className="text-green-600 text-xs font-medium">Yes</span>
-                    ) : (
-                      <span className="text-amber-600 text-xs font-medium">No</span>
-                    )}
-                  </td>
+                  <td className="p-3">{order.reconciledAt ? <span className="text-green-600 text-xs font-medium">Yes</span> : <span className="text-amber-600 text-xs font-medium">No</span>}</td>
                   <td className="p-3 text-muted-foreground text-xs">{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td className="p-3">
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                      {order.status !== 'delivered' && (
-                        <button onClick={() => handleFulfill(order.id)} className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">Fulfill</button>
-                      )}
-                      {!order.reconciledAt && order.paymentStatus === 'paid' && (
-                        <button onClick={() => handleReconcile(order.id)} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">Reconcile</button>
-                      )}
+                      {order.status !== 'delivered' && <button onClick={() => handleFulfill(order.id)} className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">Fulfill</button>}
+                      {!order.reconciledAt && order.paymentStatus === 'paid' && <button onClick={() => handleReconcile(order.id)} className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">Reconcile</button>}
                     </div>
                   </td>
                 </tr>
@@ -312,29 +432,18 @@ function BranchesTab() {
     <div>
       <div className="flex gap-2 mb-4">
         {['day', 'week', 'month'].map((p) => (
-          <button
-            key={p}
-            onClick={() => setPeriod(p)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-              period === p ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'
-            }`}
-          >
+          <button key={p} onClick={() => setPeriod(p)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${period === p ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
             {p.charAt(0).toUpperCase() + p.slice(1)}
           </button>
         ))}
-        <button
-          onClick={() => window.open(`/api/admin/accounting/export/branches?period=${period}`, '_blank')}
-          className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto"
-        >
+        <button onClick={() => window.open(`/api/admin/accounting/export/branches?period=${period}`, '_blank')} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
           <Download className="h-4 w-4" /> Export Excel
         </button>
       </div>
-      {!data ? (
-        <div className="text-muted-foreground text-sm">Loading...</div>
-      ) : (
+      {!data ? <div className="text-muted-foreground text-sm">Loading...</div> : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.branches.map((branch: any) => (
-            <div key={branch.id} className="bg-white rounded-xl border border-border p-5">
+            <div key={branch.id} className="bg-white rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-3">
                 <Building2 className="h-5 w-5 text-navy" />
                 <h3 className="font-semibold text-navy">{branch.name}</h3>
@@ -350,9 +459,7 @@ function BranchesTab() {
               </div>
             </div>
           ))}
-          {data.branches.length === 0 && (
-            <div className="col-span-full text-center text-muted-foreground text-sm py-8">No data for this period</div>
-          )}
+          {data.branches.length === 0 && <div className="col-span-full text-center text-muted-foreground text-sm py-8">No data for this period</div>}
         </div>
       )}
     </div>
@@ -374,26 +481,15 @@ function ReportsTab() {
     <div>
       <div className="flex gap-2 mb-4">
         {['daily', 'weekly', 'monthly'].map((t) => (
-          <button
-            key={t}
-            onClick={() => setType(t)}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
-              type === t ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'
-            }`}
-          >
+          <button key={t} onClick={() => setType(t)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${type === t ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
-        <button
-          onClick={() => window.open(`/api/admin/accounting/export/reports?type=${type}`, '_blank')}
-          className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto"
-        >
+        <button onClick={() => window.open(`/api/admin/accounting/export/reports?type=${type}`, '_blank')} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
           <Download className="h-4 w-4" /> Export Excel
         </button>
       </div>
-      {!data ? (
-        <div className="text-muted-foreground text-sm">Loading...</div>
-      ) : (
+      {!data ? <div className="text-muted-foreground text-sm">Loading...</div> : (
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-border p-4">
@@ -428,9 +524,7 @@ function ReportsTab() {
                     <td className="p-3 text-right text-navy">${p.avgOrderValue.toFixed(2)}</td>
                   </tr>
                 ))}
-                {data.periods.length === 0 && (
-                  <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No data</td></tr>
-                )}
+                {data.periods.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No data</td></tr>}
               </tbody>
             </table>
           </div>
