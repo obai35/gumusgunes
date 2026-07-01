@@ -6,7 +6,7 @@ import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Do
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
-function formatCurrency(v: number) { return `$${v.toFixed(2)}` }
+function formatCurrency(v: number | undefined | null) { return v != null ? `$${v.toFixed(2)}` : '$0.00' }
 
 function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? (value / max) * 100 : 0
@@ -133,7 +133,7 @@ export default function AccountingPage() {
       params.set('customEnd', customEnd)
     }
     fetch(`/api/admin/accounting/overview?${params}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(data => { setOverviewData(data); setOverviewLoading(false) })
       .catch(() => { toast.error('Failed to load data'); setOverviewLoading(false) })
   }, [period, customStart, customEnd, refreshKey, tab])
@@ -213,7 +213,7 @@ function OverviewTab({ data, loading, period, compareEnabled }: { data: any; loa
       if (cs && ce) { params.set('customStart', cs); params.set('customEnd', ce) }
     }
     fetch(`/api/admin/accounting/overview?${params}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => setCompareData(d.compare || null))
       .catch(() => {})
   }, [localCompare, period])
@@ -434,9 +434,9 @@ function OrdersTab() {
     if (statusFilter) params.set('status', statusFilter)
     if (paymentFilter) params.set('paymentStatus', paymentFilter)
     params.set('page', String(page))
-    fetch(`/api/admin/accounting/orders?${params}`)
-      .then((r) => r.json())
-      .then((data) => { setOrders(data.orders); setTotal(data.total) })
+      fetch(`/api/admin/accounting/orders?${params}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+      .then((data) => { setOrders(data.orders || []); setTotal(data.total || 0) })
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false))
   }
@@ -623,7 +623,7 @@ function BranchesTab() {
 
   useEffect(() => {
     fetch(`/api/admin/accounting/branches?period=${period}`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then(setData)
       .catch(() => toast.error('Failed to load branch data'))
   }, [period])
@@ -679,7 +679,7 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
 
   useEffect(() => {
     fetch('/api/admin/accounting/branches?period=year')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => setBranches(d.branches || []))
       .catch(() => {})
   }, [])
@@ -694,7 +694,7 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
       params.set('customEnd', customEnd)
     }
     fetch(`/api/admin/accounting/expenses?${params}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => { setData(d); setLoading(false) })
       .catch(() => { toast.error('Failed to load expenses'); setLoading(false) })
   }
@@ -868,7 +868,7 @@ function AddExpenseModal({ onClose, onSaved, branches }: { onClose: () => void; 
 
   useEffect(() => {
     fetch('/api/admin/accounting/suppliers')
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => setSuppliers(d.suppliers || []))
       .catch(() => {})
   }, [])
@@ -957,7 +957,7 @@ function ReportsTab() {
 
   useEffect(() => {
     fetch(`/api/admin/accounting/reports?type=${type}`)
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
       .then(setData)
       .catch(() => toast.error('Failed to load reports'))
   }, [type])
