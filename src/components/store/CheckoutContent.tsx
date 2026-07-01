@@ -34,17 +34,8 @@ const WalletPayment = dynamic(() => import('@/components/store/WalletPayment'), 
 })
 
 type Step = 'details' | 'payment' | 'processing' | 'done'
-type PaymentMethod = 'card' | 'paypal' | 'transfer' | 'cod' | 'instapay' | 'vodafone-cash' | 'orange-cash' | 'etisalat-wallet' | 'fawry'
 
 const GIFT_WRAP_PRICE = 5
-
-const EGYPT_WALLETS = [
-  { id: 'instapay' as PaymentMethod, label: 'InstaPay QR', icon: QrCode },
-  { id: 'vodafone-cash' as PaymentMethod, label: 'Vodafone Cash', icon: Smartphone },
-  { id: 'orange-cash' as PaymentMethod, label: 'Orange Cash', icon: Smartphone },
-  { id: 'etisalat-wallet' as PaymentMethod, label: 'Etisalat Wallet', icon: Smartphone },
-  { id: 'fawry' as PaymentMethod, label: 'Fawry', icon: Banknote },
-]
 
 export function CheckoutContent() {
   const router = useRouter()
@@ -67,7 +58,7 @@ export function CheckoutContent() {
     postalCode: '',
     country: t('checkout.countryDefault'),
     notes: '',
-    paymentMethod: 'card' as PaymentMethod,
+    paymentMethod: 'card',
     giftWrap: false,
     giftMessage: '',
   })
@@ -77,9 +68,14 @@ export function CheckoutContent() {
   const [shippingCost, setShippingCost] = useState(0)
   const [governorates, setGovernorates] = useState<any[]>([])
   const [matchedGovernorate, setMatchedGovernorate] = useState('')
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([])
 
   useEffect(() => {
     fetch('/api/shipping/governorates').then(r => r.json()).then(d => setGovernorates(d.governorates || [])).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/payment-methods').then(r => r.json()).then(d => setPaymentMethods(d.methods || [])).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -96,6 +92,20 @@ export function CheckoutContent() {
       setMatchedGovernorate('')
     }
   }, [form.city, governorates])
+
+  const selectedMethod = paymentMethods.find(m => m.code === form.paymentMethod)
+  const walletMethods = paymentMethods.filter(m => !['card', 'paypal', 'transfer', 'cod'].includes(m.code))
+  const methodIcons: Record<string, any> = {
+    card: CreditCard,
+    paypal: Wallet,
+    transfer: Banknote,
+    cod: Wallet,
+    instapay: QrCode,
+    'vodafone-cash': Smartphone,
+    'orange-cash': Smartphone,
+    'etisalat-wallet': Smartphone,
+    fawry: Banknote,
+  }
 
   const total = subtotal()
   const shipping = (() => {
@@ -201,13 +211,14 @@ export function CheckoutContent() {
   }
 
   const renderPaymentForm = () => {
-    if (form.paymentMethod === 'card') {
-      return <StripePayment amount={grandTotal} currency="EGP" onSuccess={handleStripeSuccess} />
+    if (!selectedMethod) return null
+    if (selectedMethod.code === 'card') {
+      return <StripePayment amount={grandTotal} currency="EGP" onSuccess={handleStripeSuccess} publishableKey={selectedMethod.config?.publishableKey} />
     }
-    if (form.paymentMethod === 'paypal') {
-      return <PayPalPayment amount={grandTotal} currency="EGP" onSuccess={handlePayPalSuccess} />
+    if (selectedMethod.code === 'paypal') {
+      return <PayPalPayment amount={grandTotal} currency="EGP" onSuccess={handlePayPalSuccess} clientId={selectedMethod.config?.clientId} sandbox={selectedMethod.config?.sandbox} />
     }
-    if (form.paymentMethod === 'transfer') {
+    if (selectedMethod.code === 'transfer') {
       return (
         <div className="p-4 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
           <p className="font-medium text-navy mb-1">{t('checkout.bankName')}</p>
@@ -216,7 +227,7 @@ export function CheckoutContent() {
         </div>
       )
     }
-    if (form.paymentMethod === 'cod') {
+    if (selectedMethod.code === 'cod') {
       return (
         <div className="p-4 rounded-xl bg-secondary/30 text-sm text-muted-foreground">
           <p className="font-medium text-navy mb-1">Cash on Delivery</p>
@@ -224,11 +235,11 @@ export function CheckoutContent() {
         </div>
       )
     }
-    if (form.paymentMethod === 'instapay') {
-      return <InstaPayQR onReference={setPaymentReference} />
+    if (selectedMethod.code === 'instapay') {
+      return <InstaPayQR method={selectedMethod} onReference={setPaymentReference} />
     }
-    if (['vodafone-cash', 'orange-cash', 'etisalat-wallet', 'fawry'].includes(form.paymentMethod)) {
-      return <WalletPayment provider={form.paymentMethod} onReference={setPaymentReference} />
+    if (['vodafone-cash', 'orange-cash', 'etisalat-wallet', 'fawry'].includes(selectedMethod.code)) {
+      return <WalletPayment method={selectedMethod} onReference={setPaymentReference} />
     }
     return null
   }
@@ -339,38 +350,41 @@ export function CheckoutContent() {
 
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Real-time</p>
             <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'card' as PaymentMethod, label: t('checkout.card'), icon: CreditCard },
-                { id: 'paypal' as PaymentMethod, label: 'PayPal', icon: Wallet },
-              ].map((m) => (
-                <button key={m.id} type="button" onClick={() => setForm({ ...form, paymentMethod: m.id })} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-colors ${form.paymentMethod === m.id ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50'}`}>
-                  <m.icon className={`h-5 w-5 ${form.paymentMethod === m.id ? 'text-gold' : 'text-muted-foreground'}`} />
-                  <span className={`text-xs font-medium ${form.paymentMethod === m.id ? 'text-navy' : 'text-muted-foreground'}`}>{m.label}</span>
-                </button>
-              ))}
+              {paymentMethods.filter(m => m.code === 'card' || m.code === 'paypal').map((m) => {
+                const Icon = methodIcons[m.code] || Wallet
+                return (
+                  <button key={m.code} type="button" onClick={() => setForm({ ...form, paymentMethod: m.code })} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-colors ${form.paymentMethod === m.code ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50'}`}>
+                    <Icon className={`h-5 w-5 ${form.paymentMethod === m.code ? 'text-gold' : 'text-muted-foreground'}`} />
+                    <span className={`text-xs font-medium ${form.paymentMethod === m.code ? 'text-navy' : 'text-muted-foreground'}`}>{m.name || m.code}</span>
+                  </button>
+                )
+              })}
             </div>
 
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2">Manual</p>
             <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'transfer' as PaymentMethod, label: t('checkout.transfer'), icon: Banknote },
-                { id: 'cod' as PaymentMethod, label: t('checkout.cod'), icon: Wallet },
-              ].map((m) => (
-                <button key={m.id} type="button" onClick={() => setForm({ ...form, paymentMethod: m.id })} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-colors ${form.paymentMethod === m.id ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50'}`}>
-                  <m.icon className={`h-5 w-5 ${form.paymentMethod === m.id ? 'text-gold' : 'text-muted-foreground'}`} />
-                  <span className={`text-xs font-medium ${form.paymentMethod === m.id ? 'text-navy' : 'text-muted-foreground'}`}>{m.label}</span>
-                </button>
-              ))}
+              {paymentMethods.filter(m => m.code === 'transfer' || m.code === 'cod').map((m) => {
+                const Icon = methodIcons[m.code] || Wallet
+                return (
+                  <button key={m.code} type="button" onClick={() => setForm({ ...form, paymentMethod: m.code })} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-colors ${form.paymentMethod === m.code ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50'}`}>
+                    <Icon className={`h-5 w-5 ${form.paymentMethod === m.code ? 'text-gold' : 'text-muted-foreground'}`} />
+                    <span className={`text-xs font-medium ${form.paymentMethod === m.code ? 'text-navy' : 'text-muted-foreground'}`}>{m.name || m.code}</span>
+                  </button>
+                )
+              })}
             </div>
 
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2">Egypt</p>
             <div className="grid grid-cols-3 gap-2">
-              {EGYPT_WALLETS.map((m) => (
-                <button key={m.id} type="button" onClick={() => setForm({ ...form, paymentMethod: m.id })} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-colors ${form.paymentMethod === m.id ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50'}`}>
-                  <m.icon className={`h-5 w-5 ${form.paymentMethod === m.id ? 'text-gold' : 'text-muted-foreground'}`} />
-                  <span className={`text-xs font-medium ${form.paymentMethod === m.id ? 'text-navy' : 'text-muted-foreground'}`}>{m.label}</span>
-                </button>
-              ))}
+              {paymentMethods.filter(m => !['card', 'paypal', 'transfer', 'cod'].includes(m.code)).map((m) => {
+                const Icon = methodIcons[m.code] || Wallet
+                return (
+                  <button key={m.code} type="button" onClick={() => setForm({ ...form, paymentMethod: m.code })} className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-colors ${form.paymentMethod === m.code ? 'border-gold bg-gold/5' : 'border-border hover:border-gold/50'}`}>
+                    <Icon className={`h-5 w-5 ${form.paymentMethod === m.code ? 'text-gold' : 'text-muted-foreground'}`} />
+                    <span className={`text-xs font-medium ${form.paymentMethod === m.code ? 'text-navy' : 'text-muted-foreground'}`}>{m.name || m.code}</span>
+                  </button>
+                )
+              })}
             </div>
           </div>
 
