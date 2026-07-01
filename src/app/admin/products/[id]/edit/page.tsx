@@ -1,15 +1,14 @@
 import { notFound } from 'next/navigation'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import { ProductForm } from '../../ProductForm'
 import StockHistory from '../StockHistory'
 
-const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
 export default async function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const product = await prisma.product.findUnique({ where: { id } })
-  const categories = await prisma.category.findMany({ orderBy: { name: 'asc' }, include: { parent: { select: { id: true, name: true } } } })
+  const product = await db.product.findUnique({ where: { id } })
+  const categories = await db.category.findMany({ orderBy: { name: 'asc' }, include: { parent: { select: { id: true, name: true } } } })
   if (!product) notFound()
 
   return (

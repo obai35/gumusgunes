@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import { cookies } from 'next/headers'
 import { OrderStatusUpdater } from './OrderStatusUpdater'
 import { PaymentVerification } from './PaymentVerification'
@@ -7,12 +7,11 @@ import ReturnsSection from './ReturnsSection'
 import EditHistory from './EditHistory'
 import OrderDetailActions from './OrderDetailActions'
 
-const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
 export default async function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const order = await prisma.order.findUnique({
+  const order = await db.order.findUnique({
     where: { id },
     include: { items: { include: { product: true } }, discount: true },
   })

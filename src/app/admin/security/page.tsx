@@ -145,18 +145,6 @@ export default function AdminSecurity() {
           </div>
         )}
 
-        {totpEnabled && !step && (
-          <div className="border-t border-border pt-4 space-y-3">
-            <p className="text-sm text-muted-foreground">To disable 2FA, enter the current code from your authenticator app:</p>
-            <div className="flex gap-2">
-              <input type="text" inputMode="numeric" maxLength={6} value={disableCode} onChange={e => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-border text-center text-lg tracking-widest font-mono" placeholder="000000" />
-              <button onClick={disableTotp} disabled={loading || disableCode.length !== 6} className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors">
-                {loading ? '...' : 'Disable'}
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Show disable section when totp is enabled and we're not in setup */}
         {totpEnabled && step === 'idle' && (
           <div className="border-t border-border pt-4 space-y-3">

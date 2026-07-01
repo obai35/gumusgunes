@@ -160,8 +160,8 @@ export default function AdminReviews() {
     return {
       totalReviews: total,
       avgRating: avg,
-      fiveStar: total,
-      pendingVerification: total,
+      fiveStar: all.filter(r => r.rating === 5).length,
+      pendingVerification: all.filter(r => !r.isVerified).length,
     }
   }, [reviews, total])
 

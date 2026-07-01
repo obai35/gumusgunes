@@ -191,7 +191,7 @@ export default function AccountingPage() {
       </div>
 
       <ErrorBoundary>
-        {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} compareEnabled={false} />}
+        {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} compareEnabled={false} customStart={customStart} customEnd={customEnd} />}
         {tab === 'orders' && <OrdersTab />}
         {tab === 'branches' && <BranchesTab />}
         {tab === 'expenses' && <ExpensesTab refreshKey={refreshKey} />}
@@ -201,7 +201,7 @@ export default function AccountingPage() {
   )
 }
 
-function OverviewTab({ data, loading, period, compareEnabled }: { data: any; loading: boolean; period: Period; compareEnabled: boolean }) {
+function OverviewTab({ data, loading, period, compareEnabled, customStart, customEnd }: { data: any; loading: boolean; period: Period; compareEnabled: boolean; customStart: string; customEnd: string }) {
   const [localCompare, setLocalCompare] = useState(false)
   const [compareData, setCompareData] = useState<any>(null)
 
@@ -210,10 +210,9 @@ function OverviewTab({ data, loading, period, compareEnabled }: { data: any; loa
     const params = new URLSearchParams()
     params.set('period', period)
     params.set('comparePeriod', 'previous')
-    if (period === 'custom') {
-      const cs = (document.querySelector('input[type="date"]') as HTMLInputElement)?.value
-      const ce = (document.querySelectorAll('input[type="date"]')[1] as HTMLInputElement)?.value
-      if (cs && ce) { params.set('customStart', cs); params.set('customEnd', ce) }
+    if (period === 'custom' && customStart && customEnd) {
+      params.set('customStart', customStart)
+      params.set('customEnd', customEnd)
     }
     fetch(`/api/admin/accounting/overview?${params}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })

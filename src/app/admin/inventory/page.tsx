@@ -1,18 +1,17 @@
 import Link from 'next/link'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import { Package, ArrowUpDown } from 'lucide-react'
 import ClickableRow from './ClickableRow'
 
-const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
 export default async function InventoryPage() {
-  const products = await prisma.product.findMany({
+  const products = await db.product.findMany({
     include: { category: true },
     orderBy: { stock: 'asc' },
   })
 
-  const recentLogs = await prisma.inventoryLog.findMany({
+  const recentLogs = await db.inventoryLog.findMany({
     take: 20,
     orderBy: { createdAt: 'desc' },
     include: { product: { select: { name: true, sku: true } } },

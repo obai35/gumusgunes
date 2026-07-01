@@ -46,7 +46,7 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
           items: productIds.map((pid) => ({
             productId: pid,
             quantity: selectedItems[pid],
-            refundAmount: items.find((i) => i.productId === pid)!.price * selectedItems[pid],
+            refundAmount: (items.find((i) => i.productId === pid)?.price ?? 0) * selectedItems[pid],
           })),
           reason,
           refundMethod,

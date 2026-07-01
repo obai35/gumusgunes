@@ -8,6 +8,7 @@ import Image from 'next/image'
 type Product = { id: string; name: string; price: number; stock: number; imageUrl: string; sku: string }
 type CartItem = { productId: string; name: string; price: number; quantity: number; imageUrl: string; stock: number }
 type PaymentMethod = 'cash' | 'card' | 'split'
+type OrderItemDetail = { id: string; quantity: number; price: number; product: { name: string; sku: string } }
 
 export default function POSPage() {
   const [search, setSearch] = useState('')
@@ -43,7 +44,6 @@ export default function POSPage() {
       })
       .catch(() => {})
   }, [selectedBranchId])
-  type OrderItemDetail = { id: string; quantity: number; price: number; product: { name: string; sku: string } }
   const [receipt, setReceipt] = useState<{ orderId: string; receiptNumber: string; total: number; items: OrderItemDetail[]; subtotal: number; discount: number; paymentMethod: string; cashAmount: number | null; cardAmount: number | null } | null>(null)
 
   useEffect(() => {

@@ -1,13 +1,12 @@
 import Link from 'next/link'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import { Plus, Percent, DollarSign } from 'lucide-react'
 import { DiscountToggle } from './DiscountToggle'
 
-const prisma = new PrismaClient()
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDiscounts() {
-  const discounts = await prisma.discount.findMany({
+  const discounts = await db.discount.findMany({
     orderBy: { createdAt: 'desc' },
   })
 
