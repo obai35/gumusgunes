@@ -4,7 +4,15 @@ import { useEffect, useRef } from 'react'
 
 declare global { interface Window { paypal?: any } }
 
-export default function PayPalPayment({ amount, currency, onSuccess }: any) {
+type Props = {
+  amount: number
+  currency: string
+  onSuccess: (orderId: string) => void
+  clientId: string
+  sandbox?: boolean
+}
+
+export default function PayPalPayment({ amount, currency, onSuccess, clientId }: Props) {
   const btnRef = useRef<HTMLDivElement>(null)
   const rendered = useRef(false)
 
@@ -12,7 +20,7 @@ export default function PayPalPayment({ amount, currency, onSuccess }: any) {
     if (rendered.current || !btnRef.current) return
 
     const script = document.createElement('script')
-    script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=${currency || 'EGP'}`
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency || 'EGP'}`
     script.onload = () => {
       if (!window.paypal || rendered.current) return
       rendered.current = true
