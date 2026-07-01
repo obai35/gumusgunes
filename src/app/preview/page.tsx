@@ -33,20 +33,22 @@ const DEFAULTS: Record<string, string> = {
 }
 
 export default async function PreviewPage() {
-  const settings = await db.siteSetting.findMany()
+  const [settings, categories, products] = await Promise.all([
+    db.siteSetting.findMany(),
+    db.category.findMany({
+      orderBy: { name: 'asc' },
+      include: { parent: { select: { id: true, name: true } }, _count: { select: { products: true } } },
+    }),
+    db.product.findMany({
+      where: { isActive: true },
+      include: { category: { select: { id: true, name: true, slug: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    }),
+  ])
+
   const map: Record<string, string> = { ...DEFAULTS }
   for (const s of settings) map[s.key] = s.value
-
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-
-  const [categoriesRes, productsRes] = await Promise.all([
-    fetch(`${baseUrl}/api/categories`, { cache: 'no-store' }).catch(() => null),
-    fetch(`${baseUrl}/api/products?limit=100`, { cache: 'no-store' }).catch(() => null),
-  ])
-  const categoriesData = categoriesRes?.ok ? await categoriesRes.json() : { categories: [] }
-  const productsData = productsRes?.ok ? await productsRes.json() : { products: [] }
-  const categories = categoriesData.categories || []
-  const products = productsData.products || []
 
   const featured = products.filter((p: any) => p.isFeatured).slice(0, 4)
   const newArrivals = products.filter((p: any) => p.isNew).slice(0, 4)
