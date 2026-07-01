@@ -1,25 +1,24 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
-    const data = await req.json()
-    const discount = await prisma.discount.create({
+    const { code, type, value, maxUses, expiresAt, appliesTo, targetValue, minOrder, governorateId } = await req.json()
+    const discount = await db.discount.create({
       data: {
-        code: data.code,
-        type: data.type,
-        value: data.value,
-        maxUses: data.maxUses || null,
-        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
-        appliesTo: data.appliesTo || 'all',
-        targetValue: data.targetValue || null,
-        minOrder: data.minOrder ? parseFloat(data.minOrder) : null,
+        code: code.toUpperCase().replace(/\s+/g, '_'),
+        type,
+        value: parseFloat(value),
+        maxUses: maxUses ? parseInt(maxUses) : null,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        appliesTo: type === 'SHIPPING' ? 'all' : (appliesTo || 'all'),
+        targetValue: type === 'SHIPPING' ? null : (targetValue || null),
+        minOrder: minOrder ? parseFloat(minOrder) : null,
+        governorateId: governorateId || null,
       },
     })
-    return NextResponse.json(discount)
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to create discount' }, { status: 500 })
+    return NextResponse.json({ discount })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

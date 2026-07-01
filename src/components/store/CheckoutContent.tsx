@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Check, CreditCard, Banknote, Wallet, Loader2, PartyPopper, Gift, Smartphone, QrCode } from 'lucide-react'
@@ -72,8 +72,39 @@ export function CheckoutContent() {
     giftMessage: '',
   })
 
+  const [shippingMethods, setShippingMethods] = useState<any[]>([])
+  const [selectedMethodId, setSelectedMethodId] = useState('')
+  const [shippingCost, setShippingCost] = useState(0)
+  const [governorates, setGovernorates] = useState<any[]>([])
+  const [matchedGovernorate, setMatchedGovernorate] = useState('')
+
+  useEffect(() => {
+    fetch('/api/shipping/governorates').then(r => r.json()).then(d => setGovernorates(d.governorates || [])).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!form.city) { setShippingMethods([]); setSelectedMethodId(''); return }
+    const match = governorates.find(g => form.city.toLowerCase().includes(g.name.toLowerCase()))
+    if (match) {
+      setMatchedGovernorate(match.id)
+      fetch(`/api/shipping/methods?governorateId=${match.id}`).then(r => r.json()).then(d => {
+        setShippingMethods(d.methods || [])
+        if (d.methods?.length > 0) setSelectedMethodId(d.methods[0].id)
+      }).catch(() => {})
+    } else {
+      setShippingMethods([])
+      setMatchedGovernorate('')
+    }
+  }, [form.city, governorates])
+
   const total = subtotal()
-  const shipping = total >= 250 ? 0 : 15
+  const shipping = (() => {
+    if (shippingMethods.length > 0 && selectedMethodId) {
+      const method = shippingMethods.find(m => m.id === selectedMethodId)
+      return method?.price ?? 0
+    }
+    return total >= 250 ? 0 : 15
+  })()
   const giftWrapFee = form.giftWrap ? GIFT_WRAP_PRICE : 0
   const tax = total * 0.18
   const grandTotal = total + shipping + tax + giftWrapFee
@@ -95,11 +126,12 @@ export function CheckoutContent() {
     })),
     subtotal: total,
     shipping,
+    shippingMethodId: selectedMethodId,
     tax,
     totalAmount: grandTotal,
     idempotencyKey,
     ...overrides,
-  }), [form, items, total, shipping, tax, grandTotal, idempotencyKey])
+  }), [form, items, total, shipping, tax, grandTotal, idempotencyKey, selectedMethodId])
 
   const { token } = useAuth()
   const submitOrder = useCallback(async (overrides = {}) => {
@@ -269,6 +301,25 @@ export function CheckoutContent() {
             </div>
           </div>
 
+          {shippingMethods.length > 0 && (
+            <div>
+              <label className="text-sm font-medium text-navy block mb-2">Shipping Method</label>
+              <div className="space-y-2">
+                {shippingMethods.map(m => (
+                  <label key={m.id} className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer ${selectedMethodId === m.id ? 'border-gold bg-gold/5' : 'border-border'}`}>
+                    <div className="flex items-center gap-3">
+                      <input type="radio" name="shipping" checked={selectedMethodId === m.id} onChange={() => setSelectedMethodId(m.id)} className="accent-gold" />
+                      <div>
+                        <p className="text-sm font-medium text-navy">{m.name}</p>
+                        <p className="text-xs text-muted-foreground">{m.estimatedDays}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-navy">{m.price === 0 ? 'Free' : `E£${m.price.toFixed(2)}`}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="p-4 rounded-xl bg-secondary/50 space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">{t('cart.subtotal')} ({items.length} items)</span><span className="font-medium text-navy">{formatPrice(total)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">{t('cart.shipping')}</span><span className="font-medium text-navy">{shipping === 0 ? t('cart.free') : formatPrice(shipping)}</span></div>

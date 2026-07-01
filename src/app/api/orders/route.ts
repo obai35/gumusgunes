@@ -22,6 +22,7 @@ const OrderSchema = z.object({
   items: z.array(OrderItemSchema).min(1),
   subtotal: z.number(),
   shipping: z.number(),
+  shippingMethodId: z.string().optional(),
   tax: z.number(),
   totalAmount: z.number(),
   idempotencyKey: z.string().optional(),
@@ -119,7 +120,25 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const shipping = subtotal >= 250 ? 0 : 15
+    let shipping = 0
+    let shippingMethodId = body.shippingMethodId || null
+    if (body.shippingMethodId) {
+      const { calculateShippingCost } = await import('@/lib/shipping')
+      const governorate = await db.governorate.findFirst({
+        where: { name: { contains: body.city, mode: 'insensitive' } },
+      })
+      if (governorate) {
+        const result = await calculateShippingCost({
+          methodId: body.shippingMethodId,
+          governorateId: governorate.id,
+          subtotal,
+          couponCode: body.discountCode,
+        })
+        shipping = result.finalCost
+      }
+    } else {
+      shipping = subtotal >= 250 ? 0 : 15
+    }
     const tax = Math.round(subtotal * 0.18 * 100) / 100
     const totalAmount = Math.round((subtotal + shipping + tax) * 100) / 100
 
@@ -146,6 +165,7 @@ export async function POST(req: NextRequest) {
         paymentReference: paymentReference || null,
         subtotal,
         shipping,
+        shippingMethodId,
         tax,
         totalAmount,
         status: rest.paymentMethod === 'cod' ? 'pending' : 'pending',
