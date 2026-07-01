@@ -266,9 +266,9 @@ function OverviewTab({ data, loading, period, compareEnabled }: { data: any; loa
   }
 
   function StatCard({ label, value, icon: Icon, color, bg, compareKey }: {
-    label: string; value: string; icon: any; color: string; bg: string; compareKey?: string
+    label: string; value: string | number; icon: any; color: string; bg: string; compareKey?: string
   }) {
-    const cmp = compareKey ? statCompare(parseFloat(value.replace(/[^0-9.-]/g, '')), compareKey) : null
+    const cmp = compareKey ? statCompare(parseFloat(String(value).replace(/[^0-9.-]/g, '')), compareKey) : null
     return (
       <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center gap-2 mb-2">
