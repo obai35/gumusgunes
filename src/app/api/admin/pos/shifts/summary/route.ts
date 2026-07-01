@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
 
     const orders = await prisma.order.findMany({
-      where: { shiftId },
+      where: { shiftId, status: { not: 'cancelled' } },
       include: {
         items: {
           include: { product: { select: { id: true, name: true, price: true, sku: true } } },
