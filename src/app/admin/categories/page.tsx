@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
-import { FolderTree, Plus, Pencil, Trash2, X } from 'lucide-react'
+import { FolderTree, Plus, Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react'
 
 type Category = {
   id: string
@@ -31,6 +31,7 @@ export default function CategoriesPage() {
   const [imageUrl, setImageUrl] = useState('')
   const [icon, setIcon] = useState('')
   const [parentId, setParentId] = useState('')
+  const [formVisible, setFormVisible] = useState(true)
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function CategoriesPage() {
   }, [token])
 
   function resetForm() {
-    setName(''); setSlug(''); setDescription(''); setImageUrl(''); setIcon(''); setParentId(''); setEditId(null)
+    setName(''); setSlug(''); setDescription(''); setImageUrl(''); setIcon(''); setParentId(''); setEditId(null); setFormVisible(true)
   }
 
   function autoSlug(val: string) {
@@ -59,7 +60,7 @@ export default function CategoriesPage() {
       const res = await fetch(url, {
         method,
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, slug, description, imageUrl, icon, parentId: parentId || null }),
+        body: JSON.stringify({ name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible: formVisible }),
       })
       if (res.ok) {
         toast.success(editId ? 'Category updated' : 'Category created')
@@ -91,7 +92,7 @@ export default function CategoriesPage() {
   function openEdit(cat: Category) {
     setName(cat.name); setSlug(cat.slug); setDescription(cat.description || '')
     setImageUrl(cat.imageUrl || ''); setIcon(cat.icon || ''); setParentId(cat.parentId || '')
-    setEditId(cat.id); setShowModal(true)
+    setFormVisible(cat.isVisible); setEditId(cat.id); setShowModal(true)
   }
 
   const parents = categories.filter(c => !c.parentId)
@@ -126,7 +127,21 @@ export default function CategoriesPage() {
                   <td className="p-3 text-muted-foreground font-mono text-xs">{parent.slug}</td>
                   <td className="p-3 text-muted-foreground">—</td>
                   <td className="p-3">{parent._count.products}</td>
-                  <td className="p-3">{parent.isVisible ? <span className="text-green-600">Yes</span> : <span className="text-red-400">No</span>}</td>
+                  <td className="p-3">
+                    <button onClick={async () => {
+                      const res = await fetch(`/api/admin/categories/${parent.id}`, {
+                        method: 'PUT',
+                        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ isVisible: !parent.isVisible }),
+                      })
+                      if (res.ok) {
+                        setCategories(prev => prev.map(c => c.id === parent.id ? { ...c, isVisible: !c.isVisible } : c))
+                      } else toast.error('Failed to toggle visibility')
+                    }} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${parent.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {parent.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                      {parent.isVisible ? 'Visible' : 'Hidden'}
+                    </button>
+                  </td>
                   <td className="p-3">
                     <div className="flex gap-2">
                       <button onClick={() => openEdit(parent)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
@@ -143,7 +158,21 @@ export default function CategoriesPage() {
                     <td className="p-3 text-muted-foreground font-mono text-xs">{child.slug}</td>
                     <td className="p-3 text-muted-foreground">{parent.name}</td>
                     <td className="p-3">{child._count.products}</td>
-                    <td className="p-3">{child.isVisible ? <span className="text-green-600">Yes</span> : <span className="text-red-400">No</span>}</td>
+                    <td className="p-3">
+                      <button onClick={async () => {
+                        const res = await fetch(`/api/admin/categories/${child.id}`, {
+                          method: 'PUT',
+                          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ isVisible: !child.isVisible }),
+                        })
+                        if (res.ok) {
+                          setCategories(prev => prev.map(c => c.id === child.id ? { ...c, isVisible: !c.isVisible } : c))
+                        } else toast.error('Failed to toggle visibility')
+                      }} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${child.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {child.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        {child.isVisible ? 'Visible' : 'Hidden'}
+                      </button>
+                    </td>
                     <td className="p-3">
                       <div className="flex gap-2">
                         <button onClick={() => openEdit(child)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
@@ -180,6 +209,10 @@ export default function CategoriesPage() {
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={formVisible} onChange={e => setFormVisible(e.target.checked)} className="rounded" />
+                Visible on storefront
+              </label>
             </div>
             <div className="flex justify-end gap-2 mt-6">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
