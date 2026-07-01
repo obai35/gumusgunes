@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import ExcelJS from 'exceljs'
-
-const prisma = new PrismaClient()
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +18,7 @@ export async function GET(req: NextRequest) {
       from.setHours(0, 0, 0, 0)
     }
 
-    const branches = await prisma.branch.findMany({
+    const branches = await db.branch.findMany({
       include: {
         shifts: {
           where: { startedAt: { gte: from } },
@@ -76,7 +74,8 @@ export async function GET(req: NextRequest) {
         'Content-Disposition': `attachment; filename="branches-${period}-${new Date().toISOString().slice(0, 10)}.xlsx"`,
       },
     })
-  } catch {
+  } catch (e) {
+    console.error('Export branches error:', e)
     return NextResponse.json({ error: 'Failed to export branch data' }, { status: 500 })
   }
 }

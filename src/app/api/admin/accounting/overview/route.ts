@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 function getDateRange(period: string, date?: string, customStart?: string, customEnd?: string): { start: Date; end: Date } {
   if (customStart && customEnd) {
@@ -58,18 +56,18 @@ function getPreviousDateRange(range: { start: Date; end: Date }): { start: Date;
 
 async function fetchPeriodMetrics(from: Date, to: Date) {
   const [orders, revenueAgg, returns, expensesSum] = await Promise.all([
-    prisma.order.findMany({
+    db.order.findMany({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
       include: { shift: { select: { branch: { select: { name: true } } } } },
     }),
-    prisma.order.aggregate({
+    db.order.aggregate({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
       _sum: { totalAmount: true },
     }),
-    prisma.return.findMany({
+    db.return.findMany({
       where: { createdAt: { gte: from, lte: to }, refundMethod: { not: 'no_refund' } },
     }),
-    prisma.expense.aggregate({
+    db.expense.aggregate({
       where: { createdAt: { gte: from, lte: to } },
       _sum: { amount: true },
     }),
@@ -101,9 +99,9 @@ export async function GET(req: NextRequest) {
       openShifts,
     ] = await Promise.all([
       fetchPeriodMetrics(start, end),
-      prisma.order.count({ where: { status: { notIn: ['delivered', 'cancelled'] } } }),
-      prisma.order.count({ where: { reconciledAt: null, paymentStatus: 'paid' } }),
-      prisma.shift.count({ where: { isOpen: true } }),
+      db.order.count({ where: { status: { notIn: ['delivered', 'cancelled'] } } }),
+      db.order.count({ where: { reconciledAt: null, paymentStatus: 'paid' } }),
+      db.shift.count({ where: { isOpen: true } }),
     ])
 
     const { orders, totalRevenue, totalReturns, totalExpenses, netRevenue } = metrics
@@ -154,7 +152,7 @@ export async function GET(req: NextRequest) {
       branchRevenue[name] = (branchRevenue[name] || 0) + o.totalAmount
     }
 
-    const openShiftsList = await prisma.shift.findMany({
+    const openShiftsList = await db.shift.findMany({
       where: { isOpen: true },
       include: { branch: { select: { name: true } } },
     })
@@ -187,7 +185,7 @@ export async function GET(req: NextRequest) {
     if (comparePeriod === 'previous') {
       const prevRange = getPreviousDateRange({ start, end })
       const prevMetrics = await fetchPeriodMetrics(prevRange.start, prevRange.end)
-      const prevOrders = await prisma.order.findMany({
+      const prevOrders = await db.order.findMany({
         where: { createdAt: { gte: prevRange.start, lte: prevRange.end }, status: { not: 'cancelled' } },
       })
 
@@ -200,7 +198,8 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(result)
-  } catch {
+  } catch (e) {
+    console.error('Overview GET error:', e)
     return NextResponse.json({ error: 'Failed to fetch overview' }, { status: 500 })
   }
 }

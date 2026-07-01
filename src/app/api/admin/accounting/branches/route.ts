@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +18,7 @@ export async function GET(req: NextRequest) {
       from.setHours(0, 0, 0, 0)
     }
 
-    const branches = await prisma.branch.findMany({
+    const branches = await db.branch.findMany({
       include: {
         shifts: {
           where: { startedAt: { gte: from } },
@@ -49,7 +47,8 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.json({ branches: result, period })
-  } catch {
+  } catch (e) {
+    console.error('Branches GET error:', e)
     return NextResponse.json({ error: 'Failed to fetch branch data' }, { status: 500 })
   }
 }

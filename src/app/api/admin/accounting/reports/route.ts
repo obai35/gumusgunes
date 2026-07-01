@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
     if (toParam) to = new Date(toParam + 'T23:59:59.999Z')
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where: {
         createdAt: { gte: from, lte: to },
         status: { not: 'cancelled' },
@@ -73,7 +71,8 @@ export async function GET(req: NextRequest) {
       from: from.toISOString(),
       to: to.toISOString(),
     })
-  } catch {
+  } catch (e) {
+    console.error('Reports GET error:', e)
     return NextResponse.json({ error: 'Failed to fetch reports' }, { status: 500 })
   }
 }

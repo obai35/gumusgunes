@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   try {
@@ -56,12 +54,12 @@ export async function GET(req: NextRequest) {
     if (branchId) where.branchId = branchId
 
     const [expenses, totalAgg] = await Promise.all([
-      prisma.expense.findMany({
+      db.expense.findMany({
         where,
         include: { branch: { select: { name: true } }, supplier: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.expense.aggregate({ where, _sum: { amount: true } }),
+      db.expense.aggregate({ where, _sum: { amount: true } }),
     ])
 
     const byMethod: Record<string, number> = {}
@@ -75,7 +73,8 @@ export async function GET(req: NextRequest) {
       count: expenses.length,
       byMethod,
     })
-  } catch {
+  } catch (e) {
+    console.error('Expenses GET error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
 }
@@ -86,7 +85,7 @@ export async function POST(req: Request) {
     if (!amount || !description || !paymentMethod) {
       return NextResponse.json({ error: 'Amount, description, and payment method required' }, { status: 400 })
     }
-    const expense = await prisma.expense.create({
+    const expense = await db.expense.create({
       data: {
         amount: parseFloat(amount),
         description,
@@ -98,7 +97,8 @@ export async function POST(req: Request) {
       },
     })
     return NextResponse.json({ ok: true, expense })
-  } catch {
+  } catch (e) {
+    console.error('Expenses POST error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
 }
@@ -107,9 +107,10 @@ export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-    await prisma.expense.delete({ where: { id } })
+    await db.expense.delete({ where: { id } })
     return NextResponse.json({ ok: true })
-  } catch {
+  } catch (e) {
+    console.error('Expenses DELETE error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
 }

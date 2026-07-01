@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import ExcelJS from 'exceljs'
-
-const prisma = new PrismaClient()
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,7 +29,7 @@ export async function GET(req: NextRequest) {
     }
     if (toParam) to = new Date(toParam + 'T23:59:59.999Z')
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
       orderBy: { createdAt: 'asc' },
     })
@@ -86,7 +84,8 @@ export async function GET(req: NextRequest) {
         'Content-Disposition': `attachment; filename="reports-${type}-${new Date().toISOString().slice(0, 10)}.xlsx"`,
       },
     })
-  } catch {
+  } catch (e) {
+    console.error('Export reports error:', e)
     return NextResponse.json({ error: 'Failed to export reports' }, { status: 500 })
   }
 }
