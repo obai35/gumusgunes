@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyToken } from '@/lib/customer-auth'
+import { getStripe } from '@/lib/stripe'
 import { z } from 'zod'
 
 const OrderItemSchema = z.object({
@@ -145,6 +146,38 @@ export async function POST(req: NextRequest) {
     const orderNumber =
       'O-' + Date.now().toString().slice(-8) + '-' + Math.floor(Math.random() * 1000).toString().padStart(3, '0')
 
+    let paymentStatus: string =
+      rest.paymentMethod === 'card' || rest.paymentMethod === 'paypal'
+        ? 'paid'
+        : rest.paymentMethod === 'cod'
+          ? 'pending'
+          : 'awaiting_verification'
+
+    // Server-side payment verification
+    if (rest.paymentMethod === 'card' && rest.stripePaymentIntentId) {
+      try {
+        const stripe = getStripe()
+        const paymentIntent = await stripe.paymentIntents.retrieve(rest.stripePaymentIntentId)
+        if (paymentIntent.status !== 'succeeded') {
+          paymentStatus = 'pending'
+        }
+      } catch {
+        paymentStatus = 'pending'
+      }
+    }
+
+    if (rest.paymentMethod === 'paypal' && rest.paypalOrderId) {
+      try {
+        const { capturePayPalOrder } = await import('@/lib/paypal')
+        const result = await capturePayPalOrder(rest.paypalOrderId)
+        if (result.status !== 'COMPLETED') {
+          paymentStatus = 'pending'
+        }
+      } catch {
+        paymentStatus = 'pending'
+      }
+    }
+
     const order = await db.order.create({
       data: {
         orderNumber,
@@ -169,7 +202,7 @@ export async function POST(req: NextRequest) {
         tax,
         totalAmount,
         status: rest.paymentMethod === 'cod' ? 'pending' : 'pending',
-        paymentStatus: rest.paymentMethod === 'card' || rest.paymentMethod === 'paypal' ? 'paid' : rest.paymentMethod === 'cod' ? 'pending' : 'awaiting_verification',
+        paymentStatus,
         items: { create: orderItemsData },
       },
       include: { items: { include: { product: true } } },
