@@ -75,7 +75,7 @@ function DiamondDot({ delay }: { delay: number }) {
 }
 
 export function ConciergeChat() {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([{ ...GREETING, content: t(GREETING.content) }])
   const [input, setInput] = useState('')
@@ -125,6 +125,7 @@ export function ConciergeChat() {
           message: trimmed,
           history: next.slice(1, -1).map((m) => ({ role: m.role, content: m.content })),
           productContext: conciergeProduct,
+          locale,
         }),
       })
       const data = await res.json()
@@ -248,18 +249,24 @@ export function ConciergeChat() {
                       {m.role === 'user' ? m.content : renderTextWithLinks(m.content, handleProductClick, handleCategoryClick)}
                     </div>
                     {m.products && m.products.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 px-0.5">
+                      <div className="flex flex-wrap gap-2 px-0.5 mt-1">
                         {m.products.map((p) => (
                           <button
                             key={p.slug}
                             onClick={() => handleProductClick(p.slug)}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-navy/5 border border-gold/15 text-xs text-navy hover:bg-navy hover:text-silver transition-all press group"
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white border border-gold/15 text-xs text-navy hover:bg-navy hover:text-silver transition-all press group shadow-sm"
                           >
-                            <span className="w-5 h-5 rounded bg-gold/10 flex items-center justify-center overflow-hidden">
-                              <ExternalLink className="w-3 h-3 text-gold-soft group-hover:text-gold" />
-                            </span>
-                            <span className="font-medium truncate max-w-[100px]">{p.name}</span>
-                            <span className="text-gold-soft">${p.price}</span>
+                            <div className="w-8 h-8 rounded-md bg-silver/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+                              {p.imageUrl ? (
+                                <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
+                              ) : (
+                                <ExternalLink className="w-4 h-4 text-gold-soft" />
+                              )}
+                            </div>
+                            <div className="text-left">
+                              <p className="font-medium leading-tight truncate max-w-[120px]">{p.name}</p>
+                              <p className="text-gold-soft text-[10px]">${p.price}</p>
+                            </div>
                           </button>
                         ))}
                       </div>
