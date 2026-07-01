@@ -12,14 +12,23 @@ export async function GET(req: Request) {
     const shift = await prisma.shift.findUnique({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
 
-    const orders = await prisma.order.findMany({
-      where: { shiftId, status: { not: 'cancelled' } },
-      include: {
-        items: {
-          include: { product: { select: { id: true, name: true, price: true, sku: true } } },
+    const [orders, returns] = await Promise.all([
+      prisma.order.findMany({
+        where: { shiftId, status: { not: 'cancelled' } },
+        include: {
+          items: {
+            include: { product: { select: { id: true, name: true, price: true, sku: true } } },
+          },
         },
-      },
-    })
+      }),
+      prisma.return.findMany({
+        where: { shiftId },
+        include: {
+          items: { include: { product: { select: { id: true, name: true } } } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ])
 
     const cashRevenue = orders.filter((o) => o.paymentMethod === 'cash').reduce((sum, o) => sum + o.totalAmount, 0)
     const cardRevenue = orders.filter((o) => o.paymentMethod === 'card').reduce((sum, o) => sum + o.totalAmount, 0)
@@ -28,6 +37,7 @@ export async function GET(req: Request) {
     const instapayRevenue = orders.filter((o) => o.paymentMethod === 'instapay').reduce((sum, o) => sum + o.totalAmount, 0)
     const walletRevenue = orders.filter((o) => o.paymentMethod === 'wallet').reduce((sum, o) => sum + o.totalAmount, 0)
     const totalRevenue = orders.reduce((sum, o) => sum + o.totalAmount, 0)
+    const totalReturns = returns.reduce((sum, r) => sum + r.refundAmount, 0)
 
     const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {}
     for (const order of orders) {
@@ -56,6 +66,8 @@ export async function GET(req: Request) {
     for (const o of orders) {
       if (paymentMethods[o.paymentMethod] !== undefined) paymentMethods[o.paymentMethod]++
     }
+
+    const netRevenue = totalRevenue - totalReturns
 
     return NextResponse.json({
       shift: {
@@ -91,9 +103,25 @@ export async function GET(req: Request) {
           product: i.product,
         })),
       })),
+      returns: returns.map((r) => ({
+        id: r.id,
+        returnNumber: r.returnNumber,
+        reason: r.reason,
+        refundMethod: r.refundMethod,
+        refundAmount: r.refundAmount,
+        createdAt: r.createdAt,
+        processedByName: r.processedByName,
+        items: r.items.map((ri) => ({
+          product: ri.product,
+          quantity: ri.quantity,
+          refundAmount: ri.refundAmount,
+        })),
+      })),
       summary: {
         totalOrders: orders.length,
         totalRevenue,
+        totalReturns,
+        netRevenue,
         cashRevenue,
         cardRevenue,
         splitRevenue,

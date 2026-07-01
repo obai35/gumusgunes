@@ -15,8 +15,10 @@ type HallSaleData = {
     isOpen: boolean
   }
   incomeByMethod: Record<string, number>
+  refundsByMethod: Record<string, number>
   expensesByMethod: Record<string, number>
   totalIncome: number
+  totalRefunds: number
   totalExpenses: number
   netTotal: number
   expectedCash: number
@@ -55,6 +57,7 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
   }
 
   const incomeMethods = Object.entries(data.incomeByMethod).filter(([, v]) => v > 0)
+  const refundMethods = Object.entries(data.refundsByMethod || {}).filter(([, v]) => v > 0)
   const expenseMethods = Object.entries(data.expensesByMethod).filter(([, v]) => v > 0)
 
   function handlePrint() {
@@ -79,15 +82,20 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
       <h2>Income</h2>
       <table>${incomeMethods.map(([m, v]) => `<tr><td>${PAYMENT_LABELS[m] || m}</td><td class="right">$${v.toFixed(2)}</td></tr>`).join('')}
       <tr class="total"><td>Total Income</td><td class="right">$${data.totalIncome.toFixed(2)}</td></tr></table>
+      ${refundMethods.length > 0 ? `
+      <h2>Refunds</h2>
+      <table>${refundMethods.map(([m, v]) => `<tr><td>${PAYMENT_LABELS[m] || m}</td><td class="right">-$${v.toFixed(2)}</td></tr>`).join('')}
+      <tr class="total"><td>Total Refunds</td><td class="right">-$${data.totalRefunds.toFixed(2)}</td></tr></table>` : ''}
       <h2>Expenses</h2>
       <table>${expenseMethods.length > 0 ? expenseMethods.map(([m, v]) => `<tr><td>${PAYMENT_LABELS[m] || m}</td><td class="right">-$${v.toFixed(2)}</td></tr>`).join('') : '<tr><td>No expenses</td><td class="right">$0.00</td></tr>'}
       <tr class="total"><td>Total Expenses</td><td class="right">-$${data.totalExpenses.toFixed(2)}</td></tr></table>
       <h2>Cash Position</h2>
       <table>
-      <tr><td>Starting Cash</td><td class="right">$${data.shift.startingCash.toFixed(2)}</td></tr>
-      <tr><td>Cash Income</td><td class="right">$${(data.incomeByMethod.cash || 0).toFixed(2)}</td></tr>
-      <tr><td>Cash Expenses</td><td class="right">-$${(data.expensesByMethod.cash || 0).toFixed(2)}</td></tr>
-      <tr class="total"><td>Expected Cash</td><td class="right">$${data.expectedCash.toFixed(2)}</td></tr>
+       <tr><td>Starting Cash</td><td class="right">$${data.shift.startingCash.toFixed(2)}</td></tr>
+       <tr><td>Cash Income</td><td class="right">$${(data.incomeByMethod.cash || 0).toFixed(2)}</td></tr>
+       ${(data.refundsByMethod?.cash || 0) > 0 ? `<tr><td>Cash Refunds</td><td class="right">-$${(data.refundsByMethod.cash || 0).toFixed(2)}</td></tr>` : ''}
+       <tr><td>Cash Expenses</td><td class="right">-$${(data.expensesByMethod.cash || 0).toFixed(2)}</td></tr>
+       <tr class="total"><td>Expected Cash</td><td class="right">$${data.expectedCash.toFixed(2)}</td></tr>
       <tr><td>Actual Ending Cash</td><td class="right">$${data.actualEndingCash.toFixed(2)}</td></tr>
       <tr class="total"><td>Difference</td><td class="right ${data.difference >= 0 ? '' : ''}">$${data.difference.toFixed(2)}</td></tr>
       </table>
@@ -162,6 +170,32 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
           )}
         </div>
 
+        {refundMethods.length > 0 && (
+          <div className="pos-glass rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-silver-soft mb-3">Refunds</h3>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10 text-left text-white/40">
+                  <th className="pb-2 font-medium">Method</th>
+                  <th className="pb-2 font-medium text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {refundMethods.map(([method, amount]) => (
+                  <tr key={method} className="border-b border-white/5">
+                    <td className="py-2 text-silver-soft font-medium">{PAYMENT_LABELS[method] || method}</td>
+                    <td className="py-2 text-right text-red-400 font-medium">-${amount.toFixed(2)}</td>
+                  </tr>
+                ))}
+                <tr className="font-bold">
+                  <td className="py-2 text-silver-soft">Total Refunds</td>
+                  <td className="py-2 text-right text-red-400">-${data.totalRefunds.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )}
+
         <div className="pos-glass rounded-xl p-4">
           <h3 className="text-sm font-semibold text-silver-soft mb-3">Expenses Breakdown</h3>
           {expenseMethods.length > 0 ? (
@@ -202,6 +236,12 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
                 <td className="py-2 text-white/50">+ Cash Income</td>
                 <td className="py-2 text-right font-medium text-emerald-400">+${(data.incomeByMethod.cash || 0).toFixed(2)}</td>
               </tr>
+              {(data.refundsByMethod?.cash || 0) > 0 && (
+                <tr className="border-b border-white/10">
+                  <td className="py-2 text-white/50">- Cash Refunds</td>
+                  <td className="py-2 text-right font-medium text-red-400">-${(data.refundsByMethod.cash || 0).toFixed(2)}</td>
+                </tr>
+              )}
               <tr className="border-b border-white/10">
                 <td className="py-2 text-white/50">- Cash Expenses</td>
                 <td className="py-2 text-right font-medium text-red-400">-${(data.expensesByMethod.cash || 0).toFixed(2)}</td>

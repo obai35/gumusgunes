@@ -21,6 +21,7 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
 
   const summary = assessmentData.summary
   const orders = assessmentData.orders || []
+  const returns = assessmentData.returns || []
 
   return (
     <div className="flex flex-col h-full">
@@ -45,17 +46,51 @@ export default function AssessmentView({ assessmentData, loading, onBack }: Prop
           ))}
         </div>
 
-        {summary?.splitRevenue !== undefined && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {summary?.splitRevenue !== undefined && (
+            <div className="pos-glass rounded-xl p-4">
+              <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Split Revenue</p>
+              <p className="text-2xl font-bold text-gold">${summary.splitRevenue.toFixed(2)}</p>
+            </div>
+          )}
+          {summary?.totalReturns !== undefined && (
+            <div className="pos-glass rounded-xl p-4">
+              <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Returns</p>
+              <p className="text-2xl font-bold text-red-400">-${summary.totalReturns.toFixed(2)}</p>
+            </div>
+          )}
+          {summary?.netRevenue !== undefined && (
+            <div className="pos-glass rounded-xl p-4">
+              <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Net Revenue</p>
+              <p className="text-2xl font-bold text-emerald-400">${summary.netRevenue.toFixed(2)}</p>
+            </div>
+          )}
+        </div>
+
+        {summary?.averageOrder !== undefined && (
           <div className="pos-glass rounded-xl p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Split Revenue</p>
-            <p className="text-2xl font-bold text-gold">${summary.splitRevenue.toFixed(2)}</p>
+            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Average Order Value</p>
+            <p className="text-2xl font-bold text-gold">${summary.averageOrder.toFixed(2)}</p>
           </div>
         )}
 
-        {summary?.averageOrderValue !== undefined && (
+        {returns.length > 0 && (
           <div className="pos-glass rounded-xl p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Average Order Value</p>
-            <p className="text-2xl font-bold text-gold">${summary.averageOrderValue.toFixed(2)}</p>
+            <h3 className="text-sm font-semibold text-silver-soft mb-3">Returns</h3>
+            <div className="space-y-2">
+              {returns.map((r: any) => (
+                <div key={r.id} className="flex items-center justify-between py-2 border-b border-white/5 text-sm">
+                  <div>
+                    <p className="font-medium text-silver-soft">{r.returnNumber}</p>
+                    <p className="text-xs text-white/40">{r.reason.replace(/_/g, ' ')} — {r.refundMethod.replace(/_/g, ' ')}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-red-400">-${r.refundAmount.toFixed(2)}</p>
+                    <p className="text-xs text-white/40">{r.createdAt ? new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
