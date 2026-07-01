@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { AdminChat } from './AdminChat'
 import {
-  LayoutDashboard, ShoppingBag, Package, Warehouse, ShoppingCart, Tag, LogOut, Sun, Receipt, Settings,
+  LayoutDashboard, ShoppingBag, Package, Warehouse, ShoppingCart, CreditCard, Tag, LogOut, Sun, Receipt, Settings,
   Store, Users, Shield, Calculator, ArrowLeftRight, FolderTree, UserCircle, MessageSquareText, Mail,
   Truck,
 } from 'lucide-react'
@@ -32,6 +32,7 @@ const links: LinkDef[] = [
   { href: '/admin/security', label: 'Security', icon: Shield, permission: 'security' },
   { href: '/admin/settings', label: 'Settings', icon: Settings, permission: 'settings' },
   { href: '/admin/newsletter', label: 'Newsletter', icon: Mail, permission: 'newsletter' },
+  { href: '/admin/payments', label: 'Payments', icon: CreditCard, permission: 'payments' },
 ]
 
 type SidebarProps = { open?: boolean; onClose?: () => void }
