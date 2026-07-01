@@ -27,10 +27,19 @@ const DEFAULTS: Record<string, string> = {
   announcementTextMobile: 'Free Shipping Over $250',
   heroTitle: 'Silver That Tells Your Story',
   heroSubtitle: 'Handcrafted premium stainless steel accessories, inspired by the sun and the moon.',
+  heroDescription: 'Each piece finished in our Istanbul atelier.',
   promoLimitedTime: 'Limited Time',
   promoHeading1: 'The Summer',
   promoHeading2: 'Solstice Collection',
   promoDescription: 'Up to 25% off selected pieces that celebrate the longest days of the year. Each purchase arrives in our signature gift box.',
+  footerEmail: 'concierge@gumusgunes.com',
+  footerPhone: '+90 212 000 00 00',
+  footerAddress: 'Grand Bazaar, Nuruosmaniye No. 42, Istanbul, Türkiye',
+  footerInstagram: 'https://instagram.com/gumusgunes',
+  footerFacebook: 'https://facebook.com/gumusgunes',
+  footerTwitter: 'https://twitter.com/gumusgunes',
+  footerYoutube: 'https://youtube.com/@gumusgunes',
+  footerCopyright: 'Gümüş Güneş Jewellery Ltd. All rights reserved.',
 }
 
 export default async function PreviewPage() {

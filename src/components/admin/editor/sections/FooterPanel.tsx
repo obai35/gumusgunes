@@ -41,6 +41,19 @@ export function FooterPanel() {
         <label className="text-xs font-medium text-muted-foreground">Phone</label>
         <input value={settings.footerPhone || ''} onChange={e => updateSetting('footerPhone', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
       </div>
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Address</label>
+        <input value={settings.footerAddress || ''} onChange={e => updateSetting('footerAddress', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
+      </div>
+      <div className="border-t border-border pt-3">
+        <span className="text-xs font-medium text-muted-foreground block mb-2">Social Links</span>
+        {['instagram', 'facebook', 'twitter', 'youtube'].map(platform => (
+          <div key={platform} className="mb-1">
+            <label className="text-xs text-muted-foreground capitalize block">{platform}</label>
+            <input value={settings[`footer${platform.charAt(0).toUpperCase() + platform.slice(1)}`] || ''} onChange={e => updateSetting(`footer${platform.charAt(0).toUpperCase() + platform.slice(1)}`, e.target.value)} className="w-full px-2 py-1 text-xs border border-border rounded mt-0.5" placeholder={`https://${platform}.com/...`} />
+          </div>
+        ))}
+      </div>
       <div className="border-t border-border pt-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-medium text-muted-foreground">Link Columns</span>
