@@ -9,6 +9,7 @@ interface ReturnReceiptProps {
     refundMethod: string
     refundAmount: number
     createdAt: string
+    notes?: string
     items: Array<{
       product: { name: string }
       quantity: number
@@ -72,7 +73,10 @@ export default function ReturnReceipt({ returnData, branchName, onClose }: Retur
 
         <div className="text-right text-sm font-bold border-t border-gray-300 pt-2 mb-6">
           Total Refund: ${returnData.refundAmount.toFixed(2)}
-          <p className="text-xs font-normal text-gray-500">Method: {returnData.refundMethod.replace(/_/g, ' ')}</p>
+          <p className="text-xs font-normal text-gray-500">
+            Method: {returnData.refundMethod.replace(/_/g, ' ')}
+            {returnData.notes && <span className="block text-gray-400 mt-0.5">{returnData.notes}</span>}
+          </p>
         </div>
 
         <div className="border-t border-gray-300 pt-4 space-y-4 text-sm">

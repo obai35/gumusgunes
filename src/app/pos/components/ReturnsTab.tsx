@@ -27,6 +27,9 @@ type ReturnItem = {
   totalAmount: number
   createdAt: string
   status: string
+  paymentMethod?: string
+  cashAmount?: number | null
+  cardAmount?: number | null
   items?: OrderItem[]
 }
 
@@ -37,6 +40,7 @@ type ReceiptData = {
   refundMethod: string
   refundAmount: number
   createdAt: string
+  notes?: string
   items: Array<{ product: { name: string }; quantity: number; refundAmount: number }>
   order: { receiptNumber: string }
   processedBy: { name: string }
@@ -51,6 +55,11 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
   const [returnQtys, setReturnQtys] = useState<Record<string, number>>({})
   const [returnReason, setReturnReason] = useState('customer_change')
   const [refundMethod, setRefundMethod] = useState('cash')
+  const [splitCashRefund, setSplitCashRefund] = useState(0)
+  const [splitCardRefund, setSplitCardRefund] = useState(0)
+  const [orderPaymentMethod, setOrderPaymentMethod] = useState('')
+  const [orderCashAmount, setOrderCashAmount] = useState(0)
+  const [orderCardAmount, setOrderCardAmount] = useState(0)
   const [receiptData, setReceiptData] = useState<{ data: ReceiptData; branchName: string } | null>(null)
 
   useEffect(() => {
@@ -76,7 +85,17 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
     order.items?.forEach(i => { q[i.id] = i.quantity })
     setReturnQtys(q)
     setReturnReason('customer_change')
-    setRefundMethod('cash')
+    const pm = order.paymentMethod || 'cash'
+    setOrderPaymentMethod(pm)
+    setOrderCashAmount(order.cashAmount || 0)
+    setOrderCardAmount(order.cardAmount || 0)
+    if (pm === 'split') {
+      setRefundMethod('split')
+      setSplitCashRefund(0)
+      setSplitCardRefund(0)
+    } else {
+      setRefundMethod(pm)
+    }
   }
 
   function handleExpand(orderId: string, order: ReturnItem) {
@@ -117,19 +136,25 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
         return orig && it.quantity >= orig.quantity
       })
 
+    let body: any = {
+      orderId: order.id,
+      action: 'return',
+      items,
+      fullReturn: isFullReturn,
+      reason: returnReason,
+      refundMethod,
+    }
+    if (refundMethod === 'split' && orderPaymentMethod === 'split') {
+      body.cashRefundAmount = splitCashRefund
+      body.cardRefundAmount = splitCardRefund
+    }
+
     setReturningId(order.id)
     try {
       const res = await fetch('/api/admin/pos/checkout', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: order.id,
-          action: 'return',
-          items,
-          fullReturn: isFullReturn,
-          reason: returnReason,
-          refundMethod: refundMethod,
-        }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (res.ok) {
@@ -268,21 +293,54 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
                     </div>
                     <div className="flex-1">
                       <label className="text-xs text-white/40 block mb-1">Refund Method</label>
-                      <select
-                        value={refundMethod}
-                        onChange={e => setRefundMethod(e.target.value)}
-                        className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5"
-                      >
-                        <option value="cash">Cash</option>
-                        <option value="card">Card</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                        <option value="instapay">InstaPay</option>
-                        <option value="wallet">Wallet</option>
-                        <option value="store_credit">Store Credit</option>
-                        <option value="no_refund">No Refund</option>
-                      </select>
+                      {orderPaymentMethod === 'store_credit' ? (
+                        <div className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5 opacity-60">
+                          Store Credit
+                        </div>
+                      ) : (
+                        <select
+                          value={refundMethod}
+                          onChange={e => setRefundMethod(e.target.value)}
+                          className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5"
+                        >
+                          <option value="cash">Cash</option>
+                          <option value="card">Card</option>
+                          {orderPaymentMethod === 'split' && <option value="split">Split (Cash + Card)</option>}
+                          <option value="bank_transfer">Bank Transfer</option>
+                          <option value="instapay">InstaPay</option>
+                          <option value="wallet">Wallet</option>
+                          <option value="store_credit">Store Credit</option>
+                          <option value="no_refund">No Refund</option>
+                        </select>
+                      )}
                     </div>
                   </div>
+                  {refundMethod === 'split' && orderPaymentMethod === 'split' && (
+                    <div className="flex gap-2 pt-1">
+                      <div className="flex-1">
+                        <label className="text-xs text-white/40 block mb-1">Cash Refund</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={splitCashRefund}
+                          onChange={e => setSplitCashRefund(Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="text-xs text-white/40 block mb-1">Card Refund</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step="0.01"
+                          value={splitCardRefund}
+                          onChange={e => setSplitCardRefund(Math.max(0, parseFloat(e.target.value) || 0))}
+                          className="w-full rounded-lg bg-white/5 border border-white/10 text-silver-soft text-xs p-1.5"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {hasSelection && (
                     <div className="flex items-center justify-between pt-2 border-t border-white/10">

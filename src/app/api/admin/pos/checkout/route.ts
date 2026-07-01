@@ -154,7 +154,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const { orderId, action, items: returnItems, fullReturn, reason, refundMethod } = await req.json()
+    const { orderId, action, items: returnItems, fullReturn, reason, refundMethod, cashRefundAmount, cardRefundAmount } = await req.json()
     if (!orderId || action !== 'return') return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
     const order = await prisma.order.findUnique({
@@ -233,6 +233,9 @@ export async function PUT(req: Request) {
       }
 
       const returnNumber = `RET-${order.orderNumber}`
+      const notes = refundMethod === 'split' && cashRefundAmount !== undefined && cardRefundAmount !== undefined
+        ? `Split refund: $${cashRefundAmount.toFixed(2)} cash, $${cardRefundAmount.toFixed(2)} card`
+        : null
       return tx.return.create({
         data: {
           orderId,
@@ -242,6 +245,7 @@ export async function PUT(req: Request) {
           refundMethod: refundMethod || order.paymentMethod,
           refundAmount: totalRefund,
           restocked: true,
+          notes,
           processedByName: 'POS User',
           items: {
             create: returnedItems.map(ri => ({
@@ -272,6 +276,7 @@ export async function PUT(req: Request) {
           quantity: ri.quantity,
           refundAmount: ri.refundAmount,
         })),
+        notes: returnRecord.notes || undefined,
         order: { receiptNumber: returnRecord.order.receiptNumber || '' },
         processedBy: { name: returnRecord.processedByName || 'POS User' },
       },
