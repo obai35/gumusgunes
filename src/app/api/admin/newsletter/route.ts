@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyAdminToken } from '@/lib/admin-auth'
+import { withAdmin } from '@/lib/admin-permissions'
 
-async function getAdmin(req: NextRequest) {
-  const auth = req.headers.get('Authorization')?.slice(7)
-  if (!auth) return null
-  return verifyAdminToken(auth)
-}
-
-export async function GET(req: NextRequest) {
-  const admin = await getAdmin(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -50,12 +41,9 @@ export async function GET(req: NextRequest) {
     console.error('GET /api/admin/newsletter error:', err)
     return NextResponse.json({ ok: false, error: 'Failed to load subscribers' }, { status: 500 })
   }
-}
+}, 'newsletter')
 
-export async function DELETE(req: NextRequest) {
-  const admin = await getAdmin(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const DELETE = withAdmin(async (req: NextRequest) => {
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
@@ -71,4 +59,4 @@ export async function DELETE(req: NextRequest) {
     console.error('DELETE /api/admin/newsletter error:', err)
     return NextResponse.json({ ok: false, error: 'Failed to delete subscriber' }, { status: 500 })
   }
-}
+}, 'newsletter')

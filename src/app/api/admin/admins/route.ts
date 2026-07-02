@@ -1,25 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/admin-auth'
-import { getAdminFromToken } from '@/lib/admin-permissions'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
-  const admin = await getAdminFromToken(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
+export const GET = withAdmin(async (req: NextRequest) => {
   const admins = await db.admin.findMany({
     include: { roleRel: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(admins.map((a) => ({ id: a.id, email: a.email, name: a.name, role: a.roleRel?.name || a.role, roleId: a.roleId, createdAt: a.createdAt })))
-}
+}, 'admins')
 
-export async function POST(req: NextRequest) {
-  const admin = await getAdminFromToken(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
+export const POST = withAdmin(async (req: NextRequest) => {
   const { name, email, password, roleId } = await req.json()
   if (!name || !email || !password || !roleId) return NextResponse.json({ error: 'Name, email, password, and roleId required' }, { status: 400 })
 
@@ -31,4 +23,4 @@ export async function POST(req: NextRequest) {
     include: { roleRel: { select: { name: true } } },
   })
   return NextResponse.json({ id: created.id, email: created.email, name: created.name, role: created.roleRel?.name || 'admin', roleId: created.roleId, createdAt: created.createdAt })
-}
+}, 'admins')

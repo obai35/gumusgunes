@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
@@ -57,7 +58,7 @@ const HIERARCHY = [
   },
 ]
 
-export async function POST() {
+export const POST = withAdmin(async (req: NextRequest) => {
   try {
     const existing = await prisma.category.findFirst()
     if (existing) {
@@ -79,4 +80,4 @@ export async function POST() {
     console.error('Seed categories error:', err)
     return NextResponse.json({ error: 'Seed failed' }, { status: 500 })
   }
-}
+}, 'categories')

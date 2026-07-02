@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyAdminToken } from '@/lib/admin-auth'
+import { withAdmin } from '@/lib/admin-permissions'
 
-async function getAdmin(req: NextRequest) {
-  const auth = req.headers.get('Authorization')?.slice(7)
-  if (!auth) return null
-  return verifyAdminToken(auth)
-}
-
-export async function GET(req: NextRequest) {
-  const admin = await getAdmin(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const GET = withAdmin(async (req: NextRequest) => {
   const categories = await db.category.findMany({
     orderBy: { name: 'asc' },
     include: {
@@ -22,12 +13,9 @@ export async function GET(req: NextRequest) {
   })
 
   return NextResponse.json(categories)
-}
+}, 'categories')
 
-export async function POST(req: NextRequest) {
-  const admin = await getAdmin(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const POST = withAdmin(async (req: NextRequest) => {
   try {
     const { name, slug, description, imageUrl, icon, parentId, isVisible } = await req.json()
     if (!name || !slug) return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
@@ -44,4 +32,4 @@ export async function POST(req: NextRequest) {
     console.error('Create category error:', err)
     return NextResponse.json({ error: 'Failed to create category' }, { status: 500 })
   }
-}
+}, 'categories')

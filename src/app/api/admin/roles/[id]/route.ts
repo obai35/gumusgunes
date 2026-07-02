@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getAdminFromToken } from '@/lib/admin-permissions'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await getAdminFromToken(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
+export const PUT = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   const { name, permissions } = await req.json()
 
@@ -19,16 +15,12 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
   const updated = await db.role.update({ where: { id }, data })
   return NextResponse.json({ ...updated, permissions: JSON.parse(updated.permissions) })
-}
+}, 'security')
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await getAdminFromToken(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!admin.isSuperAdmin && !admin.permissions.includes('admins')) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-
+export const DELETE = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
 
   await db.admin.updateMany({ where: { roleId: id }, data: { roleId: null } })
   await db.role.delete({ where: { id } })
   return NextResponse.json({ ok: true })
-}
+}, 'security')

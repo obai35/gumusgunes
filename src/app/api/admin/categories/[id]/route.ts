@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyAdminToken } from '@/lib/admin-auth'
+import { withAdmin } from '@/lib/admin-permissions'
 
-async function getAdmin(req: NextRequest) {
-  const auth = req.headers.get('Authorization')?.slice(7)
-  if (!auth) return null
-  return verifyAdminToken(auth)
-}
-
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await getAdmin(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const PUT = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   try {
     const { name, slug, description, imageUrl, icon, parentId, isVisible } = await req.json()
@@ -34,12 +25,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     console.error('Update category error:', err)
     return NextResponse.json({ error: 'Failed to update category' }, { status: 500 })
   }
-}
+}, 'categories')
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await getAdmin(req)
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const DELETE = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   try {
     const existing = await db.category.findUnique({ where: { id }, include: { _count: { select: { products: true, children: true } } } })
@@ -53,4 +41,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     console.error('Delete category error:', err)
     return NextResponse.json({ error: 'Failed to delete category' }, { status: 500 })
   }
-}
+}, 'categories')
