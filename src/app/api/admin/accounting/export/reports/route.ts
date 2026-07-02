@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import ExcelJS from 'exceljs'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams
     const type = sp.get('type') || 'daily'
@@ -88,4 +89,4 @@ export async function GET(req: NextRequest) {
     console.error('Export reports error:', e)
     return NextResponse.json({ error: 'Failed to export reports' }, { status: 500 })
   }
-}
+}, 'accounting')

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const period = req.nextUrl.searchParams.get('period') || 'month'
     const branchId = req.nextUrl.searchParams.get('branchId') || undefined
@@ -77,9 +78,9 @@ export async function GET(req: NextRequest) {
     console.error('Expenses GET error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
-}
+}, 'accounting')
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { amount, description, paymentMethod, branchId, supplierId, invoiceNumber, notes } = await req.json()
     if (!amount || !description || !paymentMethod) {
@@ -101,9 +102,9 @@ export async function POST(req: Request) {
     console.error('Expenses POST error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
-}
+}, 'accounting')
 
-export async function DELETE(req: NextRequest) {
+export const DELETE = withAdmin(async (req: NextRequest) => {
   try {
     const id = req.nextUrl.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
@@ -113,4 +114,4 @@ export async function DELETE(req: NextRequest) {
     console.error('Expenses DELETE error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
-}
+}, 'accounting')

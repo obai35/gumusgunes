@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
 function getDateRange(period: string, date?: string, customStart?: string, customEnd?: string): { start: Date; end: Date } {
   if (customStart && customEnd) {
@@ -82,7 +83,7 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
   }
 }
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const period = req.nextUrl.searchParams.get('period') || 'day'
     const date = req.nextUrl.searchParams.get('date') || undefined
@@ -202,4 +203,4 @@ export async function GET(req: NextRequest) {
     console.error('Overview GET error:', e)
     return NextResponse.json({ error: 'Failed to fetch overview' }, { status: 500 })
   }
-}
+}, 'accounting')

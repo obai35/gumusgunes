@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   try {
     const suppliers = await db.supplier.findMany({
       orderBy: { name: 'asc' },
@@ -10,4 +11,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
-}
+}, 'accounting')

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams
     const period = sp.get('period') || 'day'
@@ -51,4 +52,4 @@ export async function GET(req: NextRequest) {
     console.error('Branches GET error:', e)
     return NextResponse.json({ error: 'Failed to fetch branch data' }, { status: 500 })
   }
-}
+}, 'accounting')

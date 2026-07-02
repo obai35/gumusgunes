@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withAdmin(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params
     const order = await db.order.findUnique({ where: { id } })
@@ -16,4 +17,4 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error('Reconcile POST error:', e)
     return NextResponse.json({ error: 'Failed to reconcile order' }, { status: 500 })
   }
-}
+}, 'accounting')
