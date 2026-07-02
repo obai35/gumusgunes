@@ -17,10 +17,13 @@ export const GET = withAdmin(async (req) => {
   const pendingOrders = filter === 'pending'
     ? await db.order.findMany({
         where: {
-          status: 'confirmed',
-          paymentStatus: 'paid',
+          status: { in: ['confirmed', 'processing'] },
           shipment: null,
           shippingMethodId: { not: null },
+          OR: [
+            { paymentStatus: 'paid' },
+            { paymentMethod: 'cod' },
+          ],
         },
         include: { shippingMethod: { select: { name: true } } },
         orderBy: { createdAt: 'asc' },
