@@ -260,6 +260,8 @@ model User {
   password    String
   name        String
   phone       String?
+  avatar      String?
+  dateOfBirth DateTime?
   googleId    String?     @unique
   totpSecret  String?
   totpEnabled Boolean     @default(false)
