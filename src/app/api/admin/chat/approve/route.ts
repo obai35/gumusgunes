@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { getOrCreateSession, clearPendingActions } from '@/lib/admin-chat-session'
 import { executeTool } from '@/lib/admin-chat-tools'
 
-export async function POST(req: NextRequest) {
+const approveHandler = async (req: NextRequest, ctx: { params: any }) => {
   try {
     const { sessionId, actionIndex, approved } = await req.json()
     if (!sessionId || actionIndex === undefined || approved === undefined) {
@@ -59,3 +60,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Failed to process approval' }, { status: 500 })
   }
 }
+
+export const POST = withAdmin(approveHandler, 'chat')

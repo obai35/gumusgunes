@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 import { getOrCreateSession } from '@/lib/admin-chat-session'
 import { executeTool, isToolSafe } from '@/lib/admin-chat-tools'
@@ -62,7 +63,7 @@ const TOOL_DEFINITIONS = [
   { type: 'function', function: { name: 'restartServer', description: 'Restart the dev server (requires admin approval)', parameters: { type: 'object', properties: {} } } },
 ]
 
-export async function POST(req: NextRequest) {
+const chatHandler = async (req: NextRequest, ctx: { params: any }) => {
   try {
     const { message, history = [], sessionId: clientSessionId } = await req.json()
     if (!message || typeof message !== 'string') {
@@ -192,3 +193,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, reply: 'An error occurred. Please try again.' })
   }
 }
+
+export const POST = withAdmin(chatHandler, 'chat')
