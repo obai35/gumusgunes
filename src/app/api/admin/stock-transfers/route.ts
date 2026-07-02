@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const POST = withAdmin(async (req: NextRequest) => {
   try {
@@ -15,20 +13,20 @@ export const POST = withAdmin(async (req: NextRequest) => {
     if (fromType === 'branch' && !fromId) return NextResponse.json({ error: 'fromId required when fromType=branch' }, { status: 400 })
     if (toType === 'branch' && !toId) return NextResponse.json({ error: 'toId required when toType=branch' }, { status: 400 })
 
-    const admin = await prisma.admin.findUnique({ where: { id: createdById } })
+    const admin = await db.admin.findUnique({ where: { id: createdById } })
     if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
 
     for (const item of items) {
       if (fromType === 'branch') {
-        const bs = await prisma.branchStock.findUnique({ where: { branchId_productId: { branchId: fromId!, productId: item.productId } } })
+        const bs = await db.branchStock.findUnique({ where: { branchId_productId: { branchId: fromId!, productId: item.productId } } })
         if (!bs || bs.quantity < item.quantity) return NextResponse.json({ error: `Insufficient stock for product ${item.productId} at source branch` }, { status: 400 })
       } else {
-        const product = await prisma.product.findUnique({ where: { id: item.productId } })
+        const product = await db.product.findUnique({ where: { id: item.productId } })
         if (!product || product.stock < item.quantity) return NextResponse.json({ error: `Insufficient warehouse stock for product ${item.productId}` }, { status: 400 })
       }
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const transfers = []
 
       for (const item of items) {
@@ -84,7 +82,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       where.OR = [{ fromId: branchId, fromType: 'branch' }, { toId: branchId, toType: 'branch' }]
     }
 
-    const transfers = await prisma.stockTransfer.findMany({
+    const transfers = await db.stockTransfer.findMany({
       where,
       include: {
         product: { select: { name: true, sku: true } },

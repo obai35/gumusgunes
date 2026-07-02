@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const POST = withAdmin(async (req) => {
   const data = await req.json()
-  const product = await prisma.product.create({
+  const product = await db.product.create({
     data: {
       name: data.name, slug: data.slug, description: data.description,
       price: data.price, compareAtPrice: data.compareAtPrice, sku: data.sku,

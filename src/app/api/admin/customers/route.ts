@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const GET = withAdmin(async (req: NextRequest) => {
   try {
@@ -20,7 +18,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     } : {}
 
     const [customers, total] = await Promise.all([
-      prisma.user.findMany({
+      db.user.findMany({
         where,
         select: {
           id: true, name: true, email: true, phone: true, createdAt: true,
@@ -35,7 +33,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      prisma.user.count({ where }),
+      db.user.count({ where }),
     ])
 
     const enriched = customers.map(c => ({
@@ -50,7 +48,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     }))
 
     const userIds = customers.map(c => c.id)
-    const orderAggs = await prisma.order.groupBy({
+    const orderAggs = await db.order.groupBy({
       by: ['userId'],
       where: { userId: { in: userIds }, status: { not: 'cancelled' } },
       _sum: { totalAmount: true },
@@ -63,11 +61,11 @@ export const GET = withAdmin(async (req: NextRequest) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
     const [activeCustomerCount, revenueResult, orderCountResult] = await Promise.all([
-      prisma.user.count({
+      db.user.count({
         where: { orders: { some: { createdAt: { gte: thirtyDaysAgo } } } },
       }),
-      prisma.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: 'cancelled' } } }),
-      prisma.order.count({ where: { status: { not: 'cancelled' } } }),
+      db.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: 'cancelled' } } }),
+      db.order.count({ where: { status: { not: 'cancelled' } } }),
     ])
 
     const totalRevenue = revenueResult._sum.totalAmount || 0

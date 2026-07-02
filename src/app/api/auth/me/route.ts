@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { verifyToken } from '@/lib/customer-auth'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: Request) {
   const auth = req.headers.get('authorization')
@@ -11,7 +9,7 @@ export async function GET(req: Request) {
   const payload = verifyToken(auth.slice(7))
   if (!payload) return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: payload.userId },
     select: { id: true, email: true, name: true, phone: true, createdAt: true },
   })

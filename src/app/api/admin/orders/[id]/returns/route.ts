@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const GET = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params
-    const returns = await prisma.return.findMany({
+    const returns = await db.return.findMany({
       where: { orderId: id },
       include: {
         items: { include: { product: { select: { name: true, sku: true } } } },

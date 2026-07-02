@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
@@ -12,10 +10,10 @@ export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: str
 
     if (!editedById) return NextResponse.json({ error: 'Edited by is required' }, { status: 400 })
 
-    const admin = await prisma.admin.findUnique({ where: { id: editedById } })
+    const admin = await db.admin.findUnique({ where: { id: editedById } })
     if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
 
-    const order = await prisma.order.findUnique({
+    const order = await db.order.findUnique({
       where: { id },
       include: { items: true },
     })
@@ -30,7 +28,7 @@ export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: str
         if (existing) {
           const diff = newItem.quantity - existing.quantity
           if (diff > 0) {
-            const product = await prisma.product.findUnique({ where: { id: existing.productId } })
+            const product = await db.product.findUnique({ where: { id: existing.productId } })
             if (!product || product.stock < diff) return NextResponse.json({ error: `Insufficient stock for ${existing.productId}` }, { status: 400 })
           }
           editEntries.push({ field: `item_${existing.productId}_qty`, oldValue: existing.quantity, newValue: newItem.quantity, editedAt: new Date().toISOString(), editedBy: editedById })
@@ -47,7 +45,7 @@ export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: str
     const existingHistory = order.editHistory ? JSON.parse(order.editHistory) : []
     const updatedHistory = [...existingHistory, ...editEntries]
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       if (items) {
         for (const newItem of items) {
           const existing = order.items.find((oi) => oi.id === newItem.id)

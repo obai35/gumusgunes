@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature')!
@@ -16,11 +14,11 @@ export async function POST(req: Request) {
 
   if (event.type === 'payment_intent.succeeded') {
     const paymentIntent = event.data.object
-    const existing = await prisma.order.findUnique({
+    const existing = await db.order.findUnique({
       where: { stripePaymentIntentId: paymentIntent.id },
     })
     if (existing && existing.paymentStatus !== 'paid') {
-      await prisma.order.update({
+      await db.order.update({
         where: { id: existing.id },
         data: { paymentStatus: 'paid', status: 'processing', paymentVerifiedAt: new Date() },
       })

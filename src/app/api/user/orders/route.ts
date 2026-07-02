@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getUserFromRequest } from '@/lib/auth-api'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   const user = getUserFromRequest(req)
@@ -13,13 +11,13 @@ export async function GET(req: NextRequest) {
   const skip = (page - 1) * take
 
   const [orders, total] = await Promise.all([
-    prisma.order.findMany({
+    db.order.findMany({
       where: { userId: user.userId },
       orderBy: { createdAt: 'desc' },
       include: { items: { include: { product: { select: { name: true, imageUrl: true, slug: true } } } } },
       take, skip,
     }),
-    prisma.order.count({ where: { userId: user.userId } }),
+    db.order.count({ where: { userId: user.userId } }),
   ])
   return NextResponse.json({ orders, total, page, totalPages: Math.ceil(total / take) })
 }

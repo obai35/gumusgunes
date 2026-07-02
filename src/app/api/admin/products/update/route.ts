@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const POST = withAdmin(async (req) => {
   const data = await req.json()
-  const product = await prisma.product.update({
+  const product = await db.product.update({
     where: { id: data.id },
     data: {
       name: data.name, slug: data.slug, description: data.description,

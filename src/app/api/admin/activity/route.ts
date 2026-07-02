@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const GET = withAdmin(async (req: NextRequest) => {
   try {
@@ -18,13 +16,13 @@ export const GET = withAdmin(async (req: NextRequest) => {
     if (action) where.action = action
 
     const [logs, total] = await Promise.all([
-      prisma.activityLog.findMany({
+      db.activityLog.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: Math.min(limit, 200),
         skip: offset,
       }),
-      prisma.activityLog.count({ where }),
+      db.activityLog.count({ where }),
     ])
 
     return NextResponse.json({ logs, total })

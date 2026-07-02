@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 const HIERARCHY = [
   {
@@ -60,16 +58,16 @@ const HIERARCHY = [
 
 export const POST = withAdmin(async (req: NextRequest) => {
   try {
-    const existing = await prisma.category.findFirst()
+    const existing = await db.category.findFirst()
     if (existing) {
-      await prisma.category.deleteMany()
+      await db.category.deleteMany()
     }
 
     for (const parent of HIERARCHY) {
       const { children, ...parentData } = parent
-      const created = await prisma.category.create({ data: parentData })
+      const created = await db.category.create({ data: parentData })
       for (const child of children) {
-        await prisma.category.create({
+        await db.category.create({
           data: { ...child, parentId: created.id },
         })
       }

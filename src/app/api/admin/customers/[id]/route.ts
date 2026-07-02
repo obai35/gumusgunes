@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const GET = withAdmin(async (req: NextRequest, { params }: { params: { id: string } }) => {
   try {
-    const customer = await prisma.user.findUnique({
+    const customer = await db.user.findUnique({
       where: { id: params.id },
       select: {
         id: true, name: true, email: true, phone: true, createdAt: true,

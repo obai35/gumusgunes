@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import crypto from 'crypto'
 import { hashPassword, signToken } from '@/lib/customer-auth'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID
@@ -28,11 +26,11 @@ export async function POST(req: Request) {
     const name = payload.name || email?.split('@')[0] || 'User'
     const googleId = payload.sub
 
-    let user = await prisma.user.findUnique({ where: { email } })
+    let user = await db.user.findUnique({ where: { email } })
     if (user) {
-      if (!user.googleId) await prisma.user.update({ where: { id: user.id }, data: { googleId } })
+      if (!user.googleId) await db.user.update({ where: { id: user.id }, data: { googleId } })
     } else {
-      user = await prisma.user.create({
+      user = await db.user.create({
         data: { email, name, googleId, password: await hashPassword(crypto.randomUUID()) },
       })
     }

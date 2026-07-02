@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const GET = withAdmin(async (req) => {
   try {
     const productId = req.nextUrl.searchParams.get('productId')
     if (!productId) return NextResponse.json({ error: 'productId required' }, { status: 400 })
 
-    const logs = await prisma.inventoryLog.findMany({
+    const logs = await db.inventoryLog.findMany({
       where: { productId },
       orderBy: { createdAt: 'desc' },
       take: 100,

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
@@ -15,10 +13,10 @@ export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: st
     if (!refundMethod) return NextResponse.json({ error: 'Refund method is required' }, { status: 400 })
     if (!processedById) return NextResponse.json({ error: 'Processed by is required' }, { status: 400 })
 
-    const admin = await prisma.admin.findUnique({ where: { id: processedById } })
+    const admin = await db.admin.findUnique({ where: { id: processedById } })
     if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
 
-    const order = await prisma.order.findUnique({ where: { id }, include: { items: true } })
+    const order = await db.order.findUnique({ where: { id }, include: { items: true } })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
     for (const ri of items) {
@@ -29,7 +27,7 @@ export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: st
 
     const refundAmount = items.reduce((sum: number, ri: any) => sum + (ri.refundAmount || 0), 0)
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await db.$transaction(async (tx) => {
       const returnCount = await tx.return.count()
       const returnNumber = `RMA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(returnCount + 1).padStart(6, '0')}`
 

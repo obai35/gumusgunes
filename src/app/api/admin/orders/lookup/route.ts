@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export const GET = withAdmin(async (req) => {
   try {
     const q = req.nextUrl.searchParams.get('q') || ''
     if (!q.trim()) return NextResponse.json({ orders: [] })
 
-    const orders = await prisma.order.findMany({
+    const orders = await db.order.findMany({
       where: {
         OR: [
           { receiptNumber: { contains: q } },

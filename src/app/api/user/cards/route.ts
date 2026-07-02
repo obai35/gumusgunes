@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
 import { getUserFromRequest } from '@/lib/auth-api'
-
-const prisma = new PrismaClient()
+import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
   const user = getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const cards = await prisma.savedCard.findMany({
+  const cards = await db.savedCard.findMany({
     where: { userId: user.userId },
     orderBy: { createdAt: 'desc' },
   })
@@ -18,7 +16,7 @@ export async function POST(req: NextRequest) {
   const user = getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
-  const card = await prisma.savedCard.create({
+  const card = await db.savedCard.create({
     data: {
       userId: user.userId,
       nickname: body.nickname || null,
