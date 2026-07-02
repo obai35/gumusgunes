@@ -20,7 +20,7 @@ type Category = {
 }
 
 export default function CategoriesPage() {
-  const { user, token } = useAdminAuth()
+  const { user } = useAdminAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -35,13 +35,12 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!token) return
-    fetch('/api/admin/categories', { headers: { Authorization: `Bearer ${token}` } })
+    fetch('/api/admin/categories')
       .then(r => r.json())
       .then(setCategories)
       .catch(() => toast.error('Failed to load categories'))
       .finally(() => setLoading(false))
-  }, [token])
+  }, [])
 
   function resetForm() {
     setName(''); setSlug(''); setDescription(''); setImageUrl(''); setIcon(''); setParentId(''); setEditId(null); setFormVisible(true)
@@ -59,13 +58,13 @@ export default function CategoriesPage() {
       const method = editId ? 'PUT' : 'POST'
       const res = await fetch(url, {
         method,
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible: formVisible }),
       })
       if (res.ok) {
         toast.success(editId ? 'Category updated' : 'Category created')
         resetForm(); setShowModal(false)
-        const updated = await fetch('/api/admin/categories', { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+        const updated = await fetch('/api/admin/categories').then(r => r.json())
         setCategories(updated)
       } else {
         const e = await res.json()
@@ -78,7 +77,7 @@ export default function CategoriesPage() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this category?')) return
     try {
-      const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Category deleted')
         setCategories(prev => prev.filter(c => c.id !== id))
@@ -131,7 +130,7 @@ export default function CategoriesPage() {
                     <button onClick={async () => {
                       const res = await fetch(`/api/admin/categories/${parent.id}`, {
                         method: 'PUT',
-                        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ isVisible: !parent.isVisible }),
                       })
                       if (res.ok) {
@@ -162,7 +161,7 @@ export default function CategoriesPage() {
                       <button onClick={async () => {
                         const res = await fetch(`/api/admin/categories/${child.id}`, {
                           method: 'PUT',
-                          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+                          headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({ isVisible: !child.isVisible }),
                         })
                         if (res.ok) {

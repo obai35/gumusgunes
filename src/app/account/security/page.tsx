@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Shield, Smartphone, Copy, Check } from 'lucide-react'
 
 export default function SecurityPage() {
-  const { token, user, logout } = useAuth()
+  const { user, logout } = useAuth()
   const router = useRouter()
   const [step, setStep] = useState<'idle' | 'showSecret' | 'verify'>('idle')
   const [secret, setSecret] = useState('')
@@ -19,12 +19,12 @@ export default function SecurityPage() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    if (!token) { router.push('/login'); return }
-  }, [token, router])
+    if (!user) { router.push('/login'); return }
+  }, [user, router])
 
   async function setup2fa() {
     setLoading(true)
-    const res = await fetch('/api/auth/2fa/setup', { headers: { authorization: `Bearer ${token}` } })
+    const res = await fetch('/api/auth/2fa/setup')
     if (res.ok) {
       const data = await res.json()
       setSecret(data.secret)
@@ -42,7 +42,7 @@ export default function SecurityPage() {
     setLoading(true)
     const res = await fetch('/api/auth/2fa/verify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: verifyCode }),
     })
     if (res.ok) { toast.success('2FA enabled!'); setTotpEnabled(true); setStep('idle'); setVerifyCode('') }
@@ -54,7 +54,7 @@ export default function SecurityPage() {
     setLoading(true)
     const res = await fetch('/api/auth/2fa/disable', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', authorization: `Bearer ${token}` },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: disableCode }),
     })
     if (res.ok) { toast.success('2FA disabled'); setTotpEnabled(false); setStep('idle'); setDisableCode('') }
@@ -68,7 +68,7 @@ export default function SecurityPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (!token) return null
+  if (!user) return null
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/30 py-12 px-4">

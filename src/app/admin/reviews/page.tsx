@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
-import { useAdminAuth } from '@/lib/admin-auth-store'
 import { Search, X, Star, Download, ChevronLeft, ChevronRight, CheckCircle, XCircle, Trash2, RefreshCw, MessageSquareText } from 'lucide-react'
 
 function exportCSVRows(rows: Record<string, any>[], filename: string) {
@@ -46,7 +45,6 @@ type Review = {
 }
 
 export default function AdminReviews() {
-  const { token } = useAdminAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -60,14 +58,13 @@ export default function AdminReviews() {
   const [toggling, setToggling] = useState<string | null>(null)
 
   function fetchReviews() {
-    if (!token) return
     const params = new URLSearchParams()
     params.set('page', String(page))
     if (searchQuery) params.set('search', searchQuery)
     if (ratingFilter) params.set('rating', ratingFilter)
     if (verifiedFilter) params.set('verified', verifiedFilter)
 
-    fetch(`/api/admin/reviews?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/admin/reviews?${params}`)
       .then(r => r.json())
       .then(d => {
         if (d.ok) {
@@ -88,7 +85,7 @@ export default function AdminReviews() {
 
   useEffect(() => {
     fetchReviews()
-  }, [token, page])
+  }, [page])
 
   function handleSearch() {
     setPage(1)
@@ -100,7 +97,6 @@ export default function AdminReviews() {
     try {
       const res = await fetch(`/api/admin/reviews?id=${id}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
       })
       const d = await res.json()
       if (d.ok) {
@@ -122,7 +118,6 @@ export default function AdminReviews() {
     try {
       const res = await fetch(`/api/admin/reviews?id=${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
       const d = await res.json()
       if (d.ok) {

@@ -38,7 +38,7 @@ export default function StockTransfersPage() {
 }
 
 function NewTransfer() {
-  const { user, token } = useAdminAuth()
+  const { user } = useAdminAuth()
   const [branches, setBranches] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -52,18 +52,16 @@ function NewTransfer() {
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const headers = token ? { Authorization: `Bearer ${token}` } : {}
-
   useEffect(() => {
     fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
-    fetch('/api/admin/categories', { headers }).then((r) => r.json()).then(setCategories).catch(() => {})
-  }, [token])
+    fetch('/api/admin/categories').then((r) => r.json()).then(setCategories).catch(() => {})
+  }, [])
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (categoryFilter) params.set('categoryId', categoryFilter)
-    fetch(`/api/admin/products?${params}`, { headers }).then((r) => r.json()).then((data) => setProducts(data.products || [])).catch(() => {})
-  }, [categoryFilter, token])
+    fetch(`/api/admin/products?${params}`).then((r) => r.json()).then((data) => setProducts(data.products || [])).catch(() => {})
+  }, [categoryFilter])
 
   function addItem(productId: string) {
     const p = products.find((p: any) => p.id === productId)

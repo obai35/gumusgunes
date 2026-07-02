@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 export default function AdminLogin() {
   const router = useRouter()
-  const { login, totpPending, setTotpPending } = useAdminAuth()
+  const { adminLogin, totpPending, setTotpPending } = useAdminAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [totpCode, setTotpCode] = useState('')
@@ -39,7 +39,7 @@ export default function AdminLogin() {
         setLoading(false)
         return
       }
-      login(data.token, data.user)
+      adminLogin(data.user)
       toast.success('Welcome back!')
       router.push('/admin')
     } else {

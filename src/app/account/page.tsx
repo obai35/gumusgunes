@@ -76,7 +76,7 @@ function TabButton({ active, label, icon: Icon, onClick }: { active: boolean; la
 
 export default function AccountPage() {
   const hydrated = useHydrated()
-  const { user, token, logout, isAuthenticated } = useAuth()
+  const { user, logout, isAuthenticated } = useAuth()
   const router = useRouter()
   const formatPrice = useFormatPrice()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
@@ -104,8 +104,7 @@ export default function AccountPage() {
 
   const authHeaders = useCallback(() => ({
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  }), [token])
+  }), [])
 
   useEffect(() => {
     if (!hydrated) return

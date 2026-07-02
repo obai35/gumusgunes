@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 
 export default function AdminSecurity() {
   const router = useRouter()
-  const { token, user, logout } = useAdminAuth()
+  const { user, logout } = useAdminAuth()
   const [step, setStep] = useState<'idle' | 'showSecret' | 'verify'>('idle')
   const [secret, setSecret] = useState('')
   const [qrCode, setQrCode] = useState('')
@@ -19,18 +19,16 @@ export default function AdminSecurity() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!token) { router.push('/admin/login'); return }
-    fetch('/api/admin/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+    if (!user) { router.push('/admin/login'); return }
+    fetch('/api/admin/auth/me')
       .then(r => r.json())
       .then(data => { if (data.admin) setTotpEnabled(data.admin.totpEnabled) })
       .catch(() => {})
-  }, [token, router])
+  }, [user, router])
 
   async function startSetup() {
     setLoading(true)
-    const res = await fetch('/api/admin/auth/setup', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    const res = await fetch('/api/admin/auth/setup')
     if (res.ok) {
       const data = await res.json()
       setSecret(data.secret)
@@ -47,7 +45,7 @@ export default function AdminSecurity() {
     setLoading(true)
     const res = await fetch('/api/admin/auth/verify', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: verifyCode }),
     })
     if (res.ok) {
@@ -65,7 +63,7 @@ export default function AdminSecurity() {
     setLoading(true)
     const res = await fetch('/api/admin/auth/disable', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: disableCode }),
     })
     if (res.ok) {

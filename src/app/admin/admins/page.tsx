@@ -41,7 +41,6 @@ export default function AdminsPage() {
 }
 
 function AdminsTab() {
-  const token = useAdminAuth((s) => s.token)
   const [admins, setAdmins] = useState<AdminUser[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [showModal, setShowModal] = useState(false)
@@ -55,10 +54,9 @@ function AdminsTab() {
   function resetForm() { setName(''); setEmail(''); setPassword(''); setRoleId(''); setEditId(null) }
 
   useEffect(() => {
-    if (!token) return
-    fetch('/api/admin/admins', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()).then(setAdmins).catch(() => {})
-    fetch('/api/admin/roles', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()).then(setRoles).catch(() => {})
-  }, [token])
+    fetch('/api/admin/admins').then((r) => r.json()).then(setAdmins).catch(() => {})
+    fetch('/api/admin/roles').then((r) => r.json()).then(setRoles).catch(() => {})
+  }, [])
 
   async function handleSubmit() {
     if (!name || !email || !roleId) { toast.error('Name, email, and role are required'); return }
@@ -69,11 +67,11 @@ function AdminsTab() {
       const method = editId ? 'PUT' : 'POST'
       const body: any = { name, email, roleId }
       if (password) body.password = password
-      const res = await fetch(url, { method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (res.ok) {
         toast.success(editId ? 'Admin updated' : 'Admin created')
         resetForm(); setShowModal(false)
-        const updated = await fetch('/api/admin/admins', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json())
+        const updated = await fetch('/api/admin/admins').then((r) => r.json())
         setAdmins(updated)
       } else { const e = await res.json(); toast.error(e.error) }
     } catch { toast.error('Failed') }
@@ -83,7 +81,7 @@ function AdminsTab() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this admin?')) return
     try {
-      const res = await fetch(`/api/admin/admins/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`/api/admin/admins/${id}`, { method: 'DELETE' })
       if (res.ok) { toast.success('Admin deleted'); setAdmins(admins.filter((a) => a.id !== id)) }
       else { const e = await res.json(); toast.error(e.error) }
     } catch { toast.error('Failed to delete') }
@@ -154,7 +152,6 @@ function AdminsTab() {
 }
 
 function RolesTab() {
-  const token = useAdminAuth((s) => s.token)
   const [roles, setRoles] = useState<Role[]>([])
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
@@ -165,9 +162,8 @@ function RolesTab() {
   function resetForm() { setName(''); setPermissions([]); setEditId(null) }
 
   useEffect(() => {
-    if (!token) return
-    fetch('/api/admin/roles', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json()).then(setRoles).catch(() => {})
-  }, [token])
+    fetch('/api/admin/roles').then((r) => r.json()).then(setRoles).catch(() => {})
+  }, [])
 
   function togglePerm(p: string) {
     setPermissions((prev) => prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p])
@@ -180,11 +176,11 @@ function RolesTab() {
     try {
       const url = editId ? `/api/admin/roles/${editId}` : '/api/admin/roles'
       const method = editId ? 'PUT' : 'POST'
-      const res = await fetch(url, { method, headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ name, permissions }) })
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, permissions }) })
       if (res.ok) {
         toast.success(editId ? 'Role updated' : 'Role created')
         resetForm(); setShowModal(false)
-        const updated = await fetch('/api/admin/roles', { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json())
+        const updated = await fetch('/api/admin/roles').then((r) => r.json())
         setRoles(updated)
       } else { const e = await res.json(); toast.error(e.error) }
     } catch { toast.error('Failed') }
@@ -194,7 +190,7 @@ function RolesTab() {
   async function handleDelete(id: string) {
     if (!confirm('Delete this role? Admins assigned to it will lose their permissions.')) return
     try {
-      const res = await fetch(`/api/admin/roles/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+      const res = await fetch(`/api/admin/roles/${id}`, { method: 'DELETE' })
       if (res.ok) { toast.success('Role deleted'); setRoles(roles.filter((r) => r.id !== id)) }
       else { const e = await res.json(); toast.error(e.error) }
     } catch { toast.error('Failed to delete') }
@@ -274,7 +270,6 @@ function RolesTab() {
 }
 
 function ActivityTab() {
-  const token = useAdminAuth((s) => s.token)
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [resourceFilter, setResourceFilter] = useState('')
@@ -285,7 +280,7 @@ function ActivityTab() {
     const params = new URLSearchParams({ limit: '100' })
     if (resourceFilter) params.set('resource', resourceFilter)
     if (actionFilter) params.set('action', actionFilter)
-    fetch(`/api/admin/activity?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/admin/activity?${params}`)
       .then(r => r.json())
       .then(data => setLogs(data.logs || []))
       .catch(() => toast.error('Failed to load activity'))

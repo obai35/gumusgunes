@@ -37,7 +37,7 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        login(data.token, data.user)
+        login(data.user)
         toast.success('Welcome!')
         router.push('/')
       } else if (data.totpRequired) {
@@ -87,7 +87,7 @@ export default function LoginPage() {
     })
     const data = await res.json()
     if (res.ok) {
-      login(data.token, data.user)
+      login(data.user)
       toast.success('Welcome back!')
       router.push('/')
     } else if (data.totpRequired) {

@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 import { Check, CreditCard, Banknote, Wallet, Loader2, PartyPopper, Gift, Smartphone, QrCode } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { useCart, useUI } from '@/lib/store'
-import { useAuth } from '@/lib/auth-store'
 import { useFormatPrice } from '@/hooks/use-format-price'
 import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
@@ -143,13 +142,11 @@ export function CheckoutContent() {
     ...overrides,
   }), [form, items, total, shipping, tax, grandTotal, idempotencyKey, selectedMethodId])
 
-  const { token } = useAuth()
   const submitOrder = useCallback(async (overrides = {}) => {
     setStep('processing')
     try {
       const payload = buildPayload(overrides)
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-      if (token) headers['Authorization'] = `Bearer ${token}`
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers,

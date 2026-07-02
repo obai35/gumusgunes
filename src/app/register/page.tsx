@@ -25,7 +25,7 @@ export default function RegisterPage() {
     })
     if (res.ok) {
       const data = await res.json()
-      login(data.token, data.user)
+      login(data.user)
       toast.success('Account created!')
       router.push('/')
     } else {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
-import { useAdminAuth } from '@/lib/admin-auth-store'
 import { Search, X, Download, ChevronLeft, ChevronRight, Trash2, RefreshCw, Mail } from 'lucide-react'
 
 function exportCSVRows(rows: Record<string, any>[], filename: string) {
@@ -26,7 +25,6 @@ type Subscriber = {
 }
 
 export default function AdminNewsletter() {
-  const { token } = useAdminAuth()
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -37,12 +35,11 @@ export default function AdminNewsletter() {
   const [deleting, setDeleting] = useState<string | null>(null)
 
   function fetchSubscribers() {
-    if (!token) return
     const params = new URLSearchParams()
     params.set('page', String(page))
     if (searchQuery) params.set('search', searchQuery)
 
-    fetch(`/api/admin/newsletter?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`/api/admin/newsletter?${params}`)
       .then(r => r.json())
       .then(d => {
         if (d.ok) {
@@ -64,7 +61,7 @@ export default function AdminNewsletter() {
 
   useEffect(() => {
     fetchSubscribers()
-  }, [token, page])
+  }, [page])
 
   async function deleteSubscriber(id: string) {
     if (!confirm('Delete this subscriber?')) return
@@ -72,7 +69,6 @@ export default function AdminNewsletter() {
     try {
       const res = await fetch(`/api/admin/newsletter?id=${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
       })
       const d = await res.json()
       if (d.ok) {
