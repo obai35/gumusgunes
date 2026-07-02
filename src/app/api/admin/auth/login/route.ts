@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { verifyPassword, signAdminToken } from '@/lib/admin-auth'
 import { db } from '@/lib/db'
 
-export async function POST(req: Request) {
+const handler = async (req: NextRequest) => {
   try {
     const { email, password, totpToken } = await req.json()
     if (!email || !password) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
@@ -40,3 +41,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Login failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 5, window: '30s' })

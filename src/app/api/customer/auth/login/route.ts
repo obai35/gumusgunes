@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { verifyPassword, signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
 
-export async function POST(req: NextRequest) {
+const handler = async (req: NextRequest) => {
   try {
     const { email, password } = await req.json()
     if (!email || !password) {
@@ -38,3 +39,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 10, window: '60s' })

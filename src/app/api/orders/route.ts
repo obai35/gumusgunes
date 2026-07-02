@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { db } from '@/lib/db'
 import { verifyToken } from '@/lib/customer-auth'
 import { getStripe } from '@/lib/stripe'
@@ -33,7 +34,7 @@ const OrderSchema = z.object({
   paymentReference: z.string().optional(),
 })
 
-export async function POST(req: NextRequest) {
+const orderHandler = async (req: NextRequest) => {
   try {
     const body = await req.json()
     const parsed = OrderSchema.safeParse(body)
@@ -214,3 +215,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Failed to create order' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(orderHandler, { limit: 10, window: '60s' })

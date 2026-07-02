@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { withRateLimit } from '@/lib/rate-limit'
 
-export const POST = withAdmin(async (req) => {
+const handler = withAdmin(async (req) => {
   const { orderId } = await req.json()
   if (!orderId) return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
 
@@ -16,3 +17,5 @@ export const POST = withAdmin(async (req) => {
   })
   return NextResponse.json({ ok: true, order })
 }, 'orders')
+
+export const POST = withRateLimit(handler, { limit: 20, window: '60s' })
