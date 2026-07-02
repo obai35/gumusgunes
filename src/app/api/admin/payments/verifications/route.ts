@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   const [pending, stats] = await Promise.all([
     db.order.findMany({
       where: { paymentStatus: 'awaiting_verification' },
@@ -20,4 +21,4 @@ export async function GET() {
   ])
 
   return NextResponse.json({ orders: pending, total: stats._count })
-}
+}, 'orders')

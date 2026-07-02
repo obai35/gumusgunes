@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: Request) {
+export const GET = withAdmin(async (req) => {
   const url = new URL(req.url)
   const filter = url.searchParams.get('filter') || 'pending'
 
@@ -28,4 +29,4 @@ export async function GET(req: Request) {
     : []
 
   return NextResponse.json({ shipments, pendingOrders })
-}
+}, 'shipping')

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { encrypt } from '@/lib/encryption'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   const body = await req.json()
   const data: any = {}
@@ -16,4 +17,4 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const method = await db.paymentMethod.update({ where: { id }, data })
   return NextResponse.json({ method: { ...method, config: body.config || {} } })
-}
+}, 'payments')

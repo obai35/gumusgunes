@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { decrypt } from '@/lib/encryption'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   const methods = await db.paymentMethod.findMany({ orderBy: { sortOrder: 'asc' } })
   const result = methods.map(m => {
     let config = {}
@@ -10,4 +11,4 @@ export async function GET() {
     return { ...m, config }
   })
   return NextResponse.json({ methods: result })
-}
+}, 'payments')

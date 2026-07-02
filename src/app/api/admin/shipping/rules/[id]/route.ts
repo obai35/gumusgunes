@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   const body = await req.json()
   const rule = await db.shippingRule.update({
@@ -19,10 +20,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     },
   })
   return NextResponse.json({ rule })
-}
+}, 'shipping')
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params
   await db.shippingRule.delete({ where: { id } })
   return NextResponse.json({ ok: true })
-}
+}, 'shipping')

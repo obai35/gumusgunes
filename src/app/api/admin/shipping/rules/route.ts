@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   const rules = await db.shippingRule.findMany({
     include: { method: { select: { name: true } }, governorate: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json({ rules })
-}
+}, 'shipping')
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req) => {
   const body = await req.json()
   const rule = await db.shippingRule.create({
     data: {
@@ -25,4 +26,4 @@ export async function POST(req: Request) {
     },
   })
   return NextResponse.json({ rule })
-}
+}, 'shipping')

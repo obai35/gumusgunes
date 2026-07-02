@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   const [rates, methods, governorates] = await Promise.all([
     db.shippingRate.findMany(),
     db.shippingMethod.findMany({ where: { isActive: true } }),
     db.governorate.findMany({ orderBy: { name: 'asc' } }),
   ])
   return NextResponse.json({ rates, methods, governorates })
-}
+}, 'shipping')
 
-export async function PUT(req: Request) {
+export const PUT = withAdmin(async (req) => {
   const { rates } = await req.json()
   // rates: Array<{ methodId: string; governorateId: string; price: number }>
   await db.$transaction(async (tx) => {
@@ -23,4 +24,4 @@ export async function PUT(req: Request) {
     }
   })
   return NextResponse.json({ ok: true })
-}
+}, 'shipping')

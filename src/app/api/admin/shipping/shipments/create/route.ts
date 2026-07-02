@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req) => {
   const { orderId, methodId, trackingNumber, shippedAt, estimatedDeliveryAt, notes } = await req.json()
   if (!orderId || !methodId || !trackingNumber) {
     return NextResponse.json({ error: 'orderId, methodId, and trackingNumber are required' }, { status: 400 })
@@ -34,4 +35,4 @@ export async function POST(req: Request) {
   })
 
   return NextResponse.json({ shipment })
-}
+}, 'shipping')
