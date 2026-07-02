@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   try {
     const categories = await db.category.findMany({
       orderBy: { name: 'asc' },
@@ -11,4 +12,4 @@ export async function GET() {
   } catch {
     return NextResponse.json({ error: 'Failed to load categories' }, { status: 500 })
   }
-}
+}, 'products')

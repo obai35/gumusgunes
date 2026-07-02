@@ -1,9 +1,10 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req) => {
   try {
     const { productId, change, note } = await req.json()
     const product = await prisma.product.findUnique({ where: { id: productId } })
@@ -21,4 +22,4 @@ export async function POST(req: Request) {
   } catch (err) {
     return NextResponse.json({ error: 'Adjustment failed' }, { status: 500 })
   }
-}
+}, 'inventory')
