@@ -41,8 +41,8 @@ export function withRateLimit(
           }
         )
       }
-    } catch {
-      // If Upstash is not configured (no UPSTASH_REDIS_REST_URL env), silently skip rate limiting
+    } catch (e) {
+      console.warn('Rate limiting unavailable (Upstash may not be configured):', e)
     }
 
     return handler(req, ctx)
