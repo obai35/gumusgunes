@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req) => {
   try {
     const { orderId, reason } = await req.json()
     const order = await db.order.update({
@@ -12,4 +13,4 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ ok: false, error: 'Failed to reject payment' }, { status: 500 })
   }
-}
+}, 'orders')

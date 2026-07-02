@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req) => {
   try {
     const q = req.nextUrl.searchParams.get('q') || ''
     if (!q.trim()) return NextResponse.json({ orders: [] })
@@ -38,4 +39,4 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     return NextResponse.json({ error: 'Lookup failed' }, { status: 500 })
   }
-}
+}, 'orders')

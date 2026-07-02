@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req) => {
   try {
     const { searchParams } = new URL(req.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -22,4 +23,4 @@ export async function GET(req: NextRequest) {
     console.error('GET /api/admin/orders error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+}, 'orders')

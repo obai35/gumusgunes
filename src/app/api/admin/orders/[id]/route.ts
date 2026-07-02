@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params
     const body = await req.json()
@@ -93,4 +94,4 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch {
     return NextResponse.json({ error: 'Failed to edit order' }, { status: 500 })
   }
-}
+}, 'orders')

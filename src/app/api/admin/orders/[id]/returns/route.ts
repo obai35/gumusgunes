@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params
     const returns = await prisma.return.findMany({
@@ -18,4 +19,4 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   } catch {
     return NextResponse.json({ error: 'Failed to fetch returns' }, { status: 500 })
   }
-}
+}, 'orders')
