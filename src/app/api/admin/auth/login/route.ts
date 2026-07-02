@@ -21,7 +21,20 @@ export async function POST(req: Request) {
 
     const token = signAdminToken({ adminId: admin.id, email: admin.email })
     const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) : []
-    return NextResponse.json({ token, user: { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions } })
+
+    const response = NextResponse.json({
+      user: { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions }
+    })
+
+    response.cookies.set('__session_admin', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api',
+      maxAge: 86400,
+    })
+
+    return response
   } catch (e) {
     console.error('Login error:', e)
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Login failed' }, { status: 500 })
