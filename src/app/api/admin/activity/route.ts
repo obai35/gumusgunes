@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const adminId = req.nextUrl.searchParams.get('adminId')
     const resource = req.nextUrl.searchParams.get('resource')
@@ -30,4 +31,4 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch activity' }, { status: 500 })
   }
-}
+}, 'activity')

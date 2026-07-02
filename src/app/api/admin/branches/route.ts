@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/pos-auth'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   try {
     const branches = await db.branch.findMany({ orderBy: { createdAt: 'desc' } })
     return NextResponse.json({ ok: true, branches })
@@ -10,9 +11,9 @@ export async function GET() {
     console.error('GET /api/admin/branches error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+}, 'branches')
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest) => {
   try {
     const { name, email, password, phone, address } = await req.json()
     if (!name || !email || !password) return NextResponse.json({ error: 'Name, email, and password required' }, { status: 400 })
@@ -26,9 +27,9 @@ export async function POST(req: NextRequest) {
     console.error('POST /api/admin/branches error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+}, 'branches')
 
-export async function PUT(req: NextRequest) {
+export const PUT = withAdmin(async (req: NextRequest) => {
   try {
     const { id, name, email, password, phone, address, isActive } = await req.json()
     const data: any = {}
@@ -44,4 +45,4 @@ export async function PUT(req: NextRequest) {
     console.error('PUT /api/admin/branches error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+}, 'branches')

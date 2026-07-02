@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const DEFAULTS: Record<string, string> = {
   siteName: 'Gümüş Güneş',
@@ -37,7 +38,7 @@ const DEFAULTS: Record<string, string> = {
   loyaltyPointsRate: '100',
 }
 
-export async function GET() {
+export const GET = withAdmin(async () => {
   try {
     const settings = await db.siteSetting.findMany()
     const map: Record<string, string> = { ...DEFAULTS }
@@ -47,9 +48,9 @@ export async function GET() {
     console.error('GET /api/admin/settings error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+}, 'settings')
 
-export async function PUT(req: NextRequest) {
+export const PUT = withAdmin(async (req: NextRequest) => {
   try {
     const body = await req.json()
     const entries = Object.entries(body) as [string, string][]
@@ -65,4 +66,4 @@ export async function PUT(req: NextRequest) {
     console.error('PUT /api/admin/settings error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+}, 'settings')

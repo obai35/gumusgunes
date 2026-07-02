@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest) => {
   try {
     const body = await req.json()
     const { fromType, fromId, toType, toId, items, note, createdById } = body
@@ -73,9 +74,9 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to create transfer' }, { status: 500 })
   }
-}
+}, 'stock_transfers')
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const branchId = req.nextUrl.searchParams.get('branchId')
     const where: any = {}
@@ -102,4 +103,4 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch transfers' }, { status: 500 })
   }
-}
+}, 'stock_transfers')

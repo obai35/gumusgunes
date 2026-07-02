@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { code, type, value, maxUses, expiresAt, appliesTo, targetValue, minOrder, governorateId } = await req.json()
     const discount = await db.discount.create({
@@ -21,4 +22,4 @@ export async function POST(req: Request) {
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
-}
+}, 'discounts')

@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export const GET = withAdmin(async (req: NextRequest, { params }: { params: { id: string } }) => {
   try {
     const customer = await prisma.user.findUnique({
       where: { id: params.id },
@@ -32,4 +33,4 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   } catch {
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
-}
+}, 'customers')

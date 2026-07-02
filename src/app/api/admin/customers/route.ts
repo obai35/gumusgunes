@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const search = req.nextUrl.searchParams.get('search') || ''
     const page = parseInt(req.nextUrl.searchParams.get('page') || '1')
@@ -87,4 +88,4 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     return NextResponse.json({ error: 'Failed to fetch customers' }, { status: 500 })
   }
-}
+}, 'customers')

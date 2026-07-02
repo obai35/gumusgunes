@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const branchId = req.nextUrl.searchParams.get('branchId')
     const all = req.nextUrl.searchParams.get('all')
@@ -43,4 +44,4 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch branch stock' }, { status: 500 })
   }
-}
+}, 'branches')
