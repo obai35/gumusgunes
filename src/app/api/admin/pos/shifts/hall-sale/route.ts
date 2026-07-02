@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const shiftId = req.nextUrl.searchParams.get('shiftId')
     if (!shiftId) return NextResponse.json({ error: 'shiftId required' }, { status: 400 })
@@ -76,4 +77,4 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch hall sale data' }, { status: 500 })
   }
-}
+}, 'pos')

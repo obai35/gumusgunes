@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const branchId = req.nextUrl.searchParams.get('branchId')
     if (!branchId) return NextResponse.json({ error: 'branchId required' }, { status: 400 })
@@ -16,4 +17,4 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch shift history' }, { status: 500 })
   }
-}
+}, 'pos')

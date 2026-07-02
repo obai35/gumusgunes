@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { orderId, reason } = await req.json()
     if (!orderId) return NextResponse.json({ error: 'Order ID is required' }, { status: 400 })
@@ -56,4 +57,4 @@ export async function POST(req: Request) {
     console.error('Void order error:', err)
     return NextResponse.json({ error: 'Failed to void order' }, { status: 500 })
   }
-}
+}, 'pos')

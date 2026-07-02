@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
 const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
 
@@ -11,7 +12,7 @@ function generateReceiptNumber(): string {
   return `R-${datePart}-${seq}`
 }
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
@@ -171,9 +172,9 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
   }
-}
+}, 'pos')
 
-export async function PUT(req: Request) {
+export const PUT = withAdmin(async (req: Request) => {
   try {
     const { orderId, action, items: returnItems, fullReturn, reason, refundMethod, cashRefundAmount, cardRefundAmount } = await req.json()
     if (!orderId || action !== 'return') return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
@@ -307,4 +308,4 @@ export async function PUT(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Failed to return order' }, { status: 500 })
   }
-}
+}, 'pos')

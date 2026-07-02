@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const search = req.nextUrl.searchParams.get('search') || ''
     const branchId = req.nextUrl.searchParams.get('branchId')
@@ -39,4 +40,4 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
-}
+}, 'pos')

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: Request) {
+export const GET = withAdmin(async (req: Request) => {
   try {
     const { searchParams } = new URL(req.url)
     const shiftId = searchParams.get('shiftId')
@@ -134,4 +135,4 @@ export async function GET(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Failed to fetch shift summary' }, { status: 500 })
   }
-}
+}, 'pos')

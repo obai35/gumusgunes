@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { branchId, startingCash } = await req.json()
     if (!branchId || startingCash === undefined) {
@@ -21,4 +22,4 @@ export async function POST(req: Request) {
   } catch (err) {
     return NextResponse.json({ error: 'Failed to start shift' }, { status: 500 })
   }
-}
+}, 'pos')

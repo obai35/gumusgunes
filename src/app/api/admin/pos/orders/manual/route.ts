@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import crypto from 'crypto'
+import { withAdmin } from '@/lib/admin-permissions'
 
 function generateReceiptNumber(): string {
   const now = new Date()
@@ -11,7 +12,7 @@ function generateReceiptNumber(): string {
 
 const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { items, paymentMethod, notes, shiftId, cashAmount, cardAmount, fullName } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'At least one item is required' }, { status: 400 })
@@ -107,4 +108,4 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
   }
-}
+}, 'pos')

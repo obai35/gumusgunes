@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function POST(req: Request) {
+export const POST = withAdmin(async (req: Request) => {
   try {
     const { code, subtotal, items } = await req.json()
     const discount = await db.discount.findUnique({ where: { code } })
@@ -62,4 +63,4 @@ export async function POST(req: Request) {
     console.error('Validate discount error:', err)
     return NextResponse.json({ error: 'Failed to validate discount' }, { status: 500 })
   }
-}
+}, 'pos')

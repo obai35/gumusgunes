@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest) => {
   try {
     const search = req.nextUrl.searchParams.get('search') || ''
     const customers = await db.user.findMany({
@@ -20,4 +21,4 @@ export async function GET(req: NextRequest) {
   } catch {
     return NextResponse.json({ customers: [] })
   }
-}
+}, 'pos')
