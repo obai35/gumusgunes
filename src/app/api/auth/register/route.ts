@@ -16,7 +16,12 @@ export async function POST(req: Request) {
     })
 
     const token = signToken({ userId: user.id, email: user.email })
-    return NextResponse.json({ token, user: { id: user.id, email: user.email, name: user.name } })
+    const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } })
+    response.cookies.set('__session', token, {
+      httpOnly: true, secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict', path: '/api', maxAge: 604800,
+    })
+    return response
   } catch {
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }
