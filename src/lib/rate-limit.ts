@@ -2,18 +2,15 @@ import { NextResponse } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
 
-const redis = Redis.fromEnv()
-const rateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(10, '10s'),
-  analytics: true,
-})
-
 interface RateLimitOptions {
   limit: number
   window: string
   identifier?: (req: Request) => string
   failClosed?: boolean
+}
+
+function getRedis() {
+  return Redis.fromEnv()
 }
 
 export function withRateLimit<T extends (...args: any[]) => any>(
@@ -22,6 +19,7 @@ export function withRateLimit<T extends (...args: any[]) => any>(
 ): T {
   const wrapped = async function (this: any, req: Request, ...args: unknown[]) {
     try {
+      const redis = getRedis()
       const identifier = options.identifier?.(req) ?? req.headers.get('x-forwarded-for') ?? 'unknown'
       const limiter = new Ratelimit({
         redis,

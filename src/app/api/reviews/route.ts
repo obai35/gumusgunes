@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 import sanitizeHtml from 'sanitize-html'
 
