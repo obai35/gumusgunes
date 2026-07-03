@@ -27,8 +27,11 @@ export function Header() {
   const [settings, setSettings] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.__PREVIEW_SETTINGS__) {
-      setSettings(window.__PREVIEW_SETTINGS__)
+    if (typeof window !== 'undefined') {
+      const el = document.getElementById('__PREVIEW_DATA')
+      if (el?.textContent) {
+        setSettings(JSON.parse(el.textContent))
+      }
       fetch('/api/categories').then(r => r.json()).then(d => { if (d.ok) setCategories(d.categories) }).catch(() => {})
       return
     }
@@ -65,7 +68,7 @@ export function Header() {
 
   const cartCount = hydrated ? count() : 0
   const wishlistCount = hydrated ? wishlist.ids.length : 0
-  const { user, logout, isAuthenticated } = useAuth()
+  const { user, logout, isAuthenticated, loading } = useAuth()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
   return (
@@ -172,7 +175,7 @@ export function Header() {
               <div className="hidden sm:block"><CurrencySelector /></div>
               <div className="hidden sm:block"><LanguageSelector /></div>
               <div className="relative">
-                {!hydrated ? (
+                {!hydrated || loading ? (
                   <span className="p-2.5 inline-flex"><User className="h-5 w-5 text-muted-foreground" /></span>
                 ) : isAuthenticated() && user ? (
                   <>

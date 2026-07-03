@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import sanitizeHtml from 'sanitize-html'
 
 const ReviewSchema = z.object({
   productId: z.string().min(1),
@@ -11,7 +12,7 @@ const ReviewSchema = z.object({
   comment: z.string().min(1).max(2000),
 })
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   try {
     const body = await req.json()
     const parsed = ReviewSchema.safeParse(body)
@@ -23,13 +24,16 @@ export async function POST(req: NextRequest) {
     }
     const { productId, ...rest } = parsed.data
 
+    const sanitizedTitle = sanitizeHtml(rest.title, { allowedTags: [], allowedAttributes: {} })
+    const sanitizedComment = sanitizeHtml(rest.comment, { allowedTags: [], allowedAttributes: {} })
+
     const product = await db.product.findUnique({ where: { id: productId } })
     if (!product) {
       return NextResponse.json({ ok: false, error: 'Product not found' }, { status: 404 })
     }
 
     const review = await db.review.create({
-      data: { ...rest, productId, authorEmail: rest.authorEmail || null },
+      data: { ...rest, title: sanitizedTitle, comment: sanitizedComment, productId, authorEmail: rest.authorEmail || null },
     })
 
     // Recalculate rating + reviewCount
@@ -52,3 +56,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Failed to submit review' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handlePost, { limit: 5, window: '60s' })

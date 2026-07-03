@@ -1,50 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-type RateLimitOptions = {
+const redis = Redis.fromEnv()
+const rateLimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '10s'),
+  analytics: true,
+})
+
+interface RateLimitOptions {
   limit: number
   window: string
-  identifier?: (req: NextRequest) => string
+  identifier?: (req: Request) => string
+  failClosed?: boolean
 }
 
-export function withRateLimit(
-  handler: (req: NextRequest, ctx: { params: any }) => Promise<NextResponse>,
+export function withRateLimit<T extends (...args: any[]) => any>(
+  handler: T,
   options: RateLimitOptions
-): (req: NextRequest, ctx: { params: any }) => Promise<NextResponse> {
-  return async (req, ctx) => {
+): T {
+  const wrapped = async function (this: any, req: Request, ...args: unknown[]) {
     try {
-      const { Ratelimit } = await import('@upstash/ratelimit')
-      const { Redis } = await import('@upstash/redis')
-
-      const identifier = options.identifier
-        ? options.identifier(req)
-        : req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown'
-
-      const redis = Redis.fromEnv()
-      const ratelimit = new Ratelimit({
+      const identifier = options.identifier?.(req) ?? req.headers.get('x-forwarded-for') ?? 'unknown'
+      const limiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(options.limit, options.window),
         analytics: true,
       })
-
-      const { success, limit, remaining, reset } = await ratelimit.limit(identifier)
-
+      const { success, remaining, reset } = await limiter.limit(identifier)
       if (!success) {
         return NextResponse.json(
-          { error: 'Too many requests. Please try again later.' },
+          { error: 'Too many requests' },
           {
             status: 429,
             headers: {
               'Retry-After': String(Math.ceil((reset - Date.now()) / 1000)),
-              'X-RateLimit-Limit': String(limit),
               'X-RateLimit-Remaining': String(remaining),
             },
           }
         )
       }
-    } catch (e) {
-      console.warn('Rate limiting unavailable (Upstash may not be configured):', e)
+      return handler(req, ...args)
+    } catch (err) {
+      console.warn('[rate-limit] Unavailable:', err)
+      if (options.failClosed) {
+        return NextResponse.json(
+          { error: 'Rate limiting unavailable' },
+          { status: 429 }
+        )
+      }
+      return handler(req, ...args)
     }
-
-    return handler(req, ctx)
   }
+  return wrapped as T
 }

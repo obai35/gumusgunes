@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+
+const CreateCategorySchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  description: z.string().optional(),
+  parentId: z.string().uuid().nullable().optional(),
+  image: z.string().url().optional(),
+}).strict()
 
 export const GET = withAdmin(async (req: NextRequest) => {
   const categories = await db.category.findMany({
@@ -17,14 +26,22 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
 export const POST = withAdmin(async (req: NextRequest) => {
   try {
-    const { name, slug, description, imageUrl, icon, parentId, isVisible } = await req.json()
-    if (!name || !slug) return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
+    const body = await req.json()
+    const parsed = CreateCategorySchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+    const { name, slug, description, parentId, image } = parsed.data
+    const imageUrl = image
 
     const existing = await db.category.findUnique({ where: { slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
     const category = await db.category.create({
-      data: { name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible: isVisible ?? true },
+      data: { name, slug, description, imageUrl, parentId: parentId || null },
     })
 
     return NextResponse.json(category)

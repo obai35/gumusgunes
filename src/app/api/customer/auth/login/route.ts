@@ -2,13 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withRateLimit } from '@/lib/rate-limit'
 import { verifyPassword, signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
+import { z } from 'zod'
+
+const LoginSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  password: z.string().min(1, 'Password is required'),
+}).strict()
 
 const handler = async (req: NextRequest) => {
   try {
-    const { email, password } = await req.json()
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+    const parsed = LoginSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
     }
+    const { email, password } = parsed.data
 
     const user = await db.user.findUnique({ where: { email } })
     if (!user || !user.password) {

@@ -7,6 +7,13 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 export const POST = withAdmin(async (req, { admin }) => {
+  if (!process.env.SEED_API_KEY) {
+    return NextResponse.json(
+      { error: 'Seed API is not configured' },
+      { status: 503 }
+    )
+  }
+
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'Not available in production' }, { status: 403 })
   }

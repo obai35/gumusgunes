@@ -76,7 +76,7 @@ function TabButton({ active, label, icon: Icon, onClick }: { active: boolean; la
 
 export default function AccountPage() {
   const hydrated = useHydrated()
-  const { user, logout, isAuthenticated } = useAuth()
+  const { user, logout, isAuthenticated, loading } = useAuth()
   const router = useRouter()
   const formatPrice = useFormatPrice()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
@@ -108,6 +108,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!hydrated) return
+    if (loading) return
     if (!isAuthenticated()) { router.replace('/login'); return }
     setProfile({ name: user?.name || '', email: user?.email || '', phone: '' })
     fetchProfile()
@@ -115,7 +116,7 @@ export default function AccountPage() {
     fetchCards()
     fetchOrders()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated])
+  }, [hydrated, loading])
 
   async function fetchProfile() {
     setProfileLoading(true)
@@ -213,7 +214,10 @@ export default function AccountPage() {
     setOrdersLoading(true)
     try {
       const res = await fetch('/api/user/orders', { headers: authHeaders() })
-      if (res.ok) setOrders(await res.json())
+      if (res.ok) {
+        const data = await res.json()
+        setOrders(data.orders)
+      }
     } finally { setOrdersLoading(false) }
   }
 

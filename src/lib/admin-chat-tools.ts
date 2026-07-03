@@ -1,6 +1,5 @@
 import { exec } from 'child_process'
 import { readFile, readdir, writeFile } from 'fs/promises'
-import { db } from '@/lib/db'
 import path from 'path'
 
 const PROJECT_ROOT = process.cwd()
@@ -46,12 +45,6 @@ export async function executeTool(name: string, args: Record<string, any>): Prom
         return { content: 'Could not read server.log' }
       }
     }
-    case 'dbQuery': {
-      const query = String(args.query).trim().toLowerCase()
-      if (!/^select\b/.test(query)) throw new Error('Only SELECT queries are allowed')
-      const result = await db.$queryRawUnsafe(args.query)
-      return { rows: result }
-    }
     case 'listApiRoutes': {
       const { readdirSync } = require('fs')
       const pathMod = require('path')
@@ -77,10 +70,6 @@ export async function executeTool(name: string, args: Record<string, any>): Prom
         return '/api/' + relative.replace(/\\/g, '/').replace(/\/route\.ts$/, '')
       }) }
     }
-    case 'listDbModels': {
-      const modelNames = Object.keys(db).filter(k => k.startsWith('_') === false && typeof (db as any)[k]?.findMany === 'function')
-      return { models: modelNames }
-    }
     case 'getSystemInfo': {
       return {
         uptime: process.uptime(),
@@ -99,10 +88,12 @@ export async function executeTool(name: string, args: Record<string, any>): Prom
       return { output: execSync('git diff', { cwd: PROJECT_ROOT, encoding: 'utf-8', timeout: 10000 }) }
     }
     case 'writeFile': {
+      // TODO: add audit logging (see Task 16)
       await writeFile(safePath(args.path), args.content, 'utf-8')
       return { status: 'written', path: args.path }
     }
     case 'editFile': {
+      // TODO: add audit logging (see Task 16)
       const current = await readFile(safePath(args.path), 'utf-8')
       if (!current.includes(args.oldString)) throw new Error('oldString not found in file')
       const updated = current.replace(args.oldString, args.newString)
@@ -110,6 +101,7 @@ export async function executeTool(name: string, args: Record<string, any>): Prom
       return { status: 'edited', path: args.path }
     }
     case 'runCommand': {
+      // TODO: add audit logging (see Task 16)
       return new Promise((resolve) => {
         exec(args.command, { cwd: PROJECT_ROOT, timeout: 15000, maxBuffer: MAX_OUTPUT }, (err, stdout, stderr) => {
           resolve({ stdout: stdout?.slice(0, 100_000) || '', stderr: stderr?.slice(0, 100_000) || '', exitCode: err?.code || 0 })
@@ -117,17 +109,20 @@ export async function executeTool(name: string, args: Record<string, any>): Prom
       })
     }
     case 'gitCommit': {
+      // TODO: add audit logging (see Task 16)
       const { execSync } = require('child_process')
       execSync('git add -A', { cwd: PROJECT_ROOT, encoding: 'utf-8', timeout: 10000 })
       const result = execSync(`git commit -m "${args.message.replace(/"/g, '\\"')}"`, { cwd: PROJECT_ROOT, encoding: 'utf-8', timeout: 10000 })
       return { output: result }
     }
     case 'gitPush': {
+      // TODO: add audit logging (see Task 16)
       const { execSync } = require('child_process')
       const result = execSync('git push', { cwd: PROJECT_ROOT, encoding: 'utf-8', timeout: 30000 })
       return { output: result }
     }
     case 'restartServer': {
+      // TODO: add audit logging (see Task 16)
       setTimeout(() => process.exit(0), 1000)
       return { status: 'restarting' }
     }
@@ -150,7 +145,14 @@ export async function executeTool(name: string, args: Record<string, any>): Prom
   }
 }
 
-const SAFE_TOOLS = new Set(['readFile', 'searchCode', 'readDir', 'readLog', 'dbQuery', 'listApiRoutes', 'listDbModels', 'getSystemInfo', 'gitStatus', 'gitDiff'])
+const PENDING_APPROVALS = new Map<string, { timestamp: number }>()
+const APPROVAL_TIMEOUT = 5 * 60 * 1000 // 5 minutes
+
+export function grantApproval(tool: string): void {
+  PENDING_APPROVALS.set(tool, { timestamp: Date.now() })
+}
+
+const SAFE_TOOLS = new Set(['readFile', 'searchCode', 'readDir', 'readLog', 'listApiRoutes', 'getSystemInfo', 'gitStatus', 'gitDiff'])
 
 export function isToolSafe(name: string): boolean {
   return SAFE_TOOLS.has(name)

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
 
-export async function GET(req: NextRequest) {
+async function handleGet(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const q = (searchParams.get('q') || '').trim().toLowerCase()
@@ -45,3 +46,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Search failed' }, { status: 500 })
   }
 }
+
+export const GET = withRateLimit(handleGet, { limit: 60, window: '60s' })

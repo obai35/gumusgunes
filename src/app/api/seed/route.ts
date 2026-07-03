@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { handleApiError } from '@/lib/api-error'
 import { hashPassword } from '@/lib/admin-auth'
 
 const categories = [
@@ -468,11 +469,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, seeded: counts })
   } catch (err) {
-    console.error('Seed error:', err)
-    return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : 'Unknown error' },
-      { status: 500 }
-    )
+    return handleApiError(err, 'seed-database')
   }
 }
 

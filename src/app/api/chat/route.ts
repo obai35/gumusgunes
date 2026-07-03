@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
+import { z } from 'zod'
+
+const ChatSchema = z.object({
+  message: z.string().min(1, 'Message is required').max(2000),
+  conversationId: z.string().uuid().optional(),
+}).strict()
 
 const BRAND_PROMPT = `You are the Gümüş Güneş Concierge — warm, elegant, and deeply knowledgeable about our luxury stainless steel accessories (Gümüş Güneş means "Silver Sun").
 
@@ -191,14 +198,18 @@ async function lookupOrder(orderNumber: string, email: string) {
   }
 }
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   try {
     const body = await req.json()
-    const { message, history = [], productContext, locale = 'en' }: { message: string; history?: ChatMessage[]; productContext?: { name: string; price: number; material: string } | null; locale?: string } = body
-
-    if (!message || typeof message !== 'string') {
-      return NextResponse.json({ ok: false, error: 'Message is required' }, { status: 400 })
+    const parsed = ChatSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: 'Invalid input', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
     }
+    const { message, conversationId } = parsed.data
+    const { history = [], productContext, locale = 'en' }: { history?: ChatMessage[]; productContext?: { name: string; price: number; material: string } | null; locale?: string } = body
 
     const langName = locale === 'ar' ? 'Arabic' : 'English'
     const lower = message.toLowerCase()
@@ -293,6 +304,8 @@ export async function POST(req: NextRequest) {
     )
   }
 }
+
+export const POST = withRateLimit(handlePost, { limit: 5, window: '60s', failClosed: true })
 
 export async function GET(req: NextRequest) {
   try {

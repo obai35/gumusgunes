@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 import { withRateLimit } from '@/lib/rate-limit'
+import { logAudit } from '@/lib/audit'
 
-const handler = withAdmin(async (req) => {
+const handler = withAdmin(async (req, ctx) => {
   const { orderId } = await req.json()
   if (!orderId) return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
 
@@ -15,6 +16,15 @@ const handler = withAdmin(async (req) => {
       paymentVerifiedAt: new Date(),
     },
   })
+
+  await logAudit({
+    adminId: ctx.admin.id,
+    action: 'payment_verified',
+    resource: 'order',
+    resourceId: orderId,
+    details: { orderId, amount: order.totalAmount },
+  })
+
   return NextResponse.json({ ok: true, order })
 }, 'orders')
 

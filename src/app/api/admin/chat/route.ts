@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
+import { withRateLimit } from '@/lib/rate-limit'
 import { db } from '@/lib/db'
 import { getOrCreateSession } from '@/lib/admin-chat-session'
 import { executeTool, isToolSafe } from '@/lib/admin-chat-tools'
@@ -194,4 +195,4 @@ const chatHandler = async (req: NextRequest, ctx: { params: any }) => {
   }
 }
 
-export const POST = withAdmin(chatHandler, 'chat')
+export const POST = withRateLimit(withAdmin(chatHandler, 'chat'), { limit: 20, window: '60s' })

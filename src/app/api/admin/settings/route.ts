@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+
+const KNOWN_KEYS = ['heroTitle', 'heroSubtitle', 'aboutText', 'contactEmail',
+  'contactPhone', 'footerText', 'currency', 'vatRate', 'shippingThreshold',
+  'facebook', 'instagram', 'twitter', 'tiktok'] as const
+
+const SettingsSchema = z.object({
+  key: z.enum(KNOWN_KEYS),
+  value: z.string().min(0).max(5000),
+}).strict()
 
 const DEFAULTS: Record<string, string> = {
   siteName: 'Gümüş Güneş',
@@ -55,6 +65,13 @@ export const PUT = withAdmin(async (req: NextRequest) => {
     const body = await req.json()
     const entries = Object.entries(body) as [string, string][]
     for (const [key, value] of entries) {
+      const parsed = SettingsSchema.safeParse({ key, value })
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: `Invalid input for key "${key}"`, details: parsed.error.flatten().fieldErrors },
+          { status: 400 }
+        )
+      }
       await db.siteSetting.upsert({
         where: { key },
         update: { value: String(value) },

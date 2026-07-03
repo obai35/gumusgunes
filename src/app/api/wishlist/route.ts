@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
 
 // GET /api/wishlist?sessionId=xxx
-export async function GET(req: NextRequest) {
+async function handleGet(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const sessionId = searchParams.get('sessionId')
@@ -24,8 +25,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
+export const GET = withRateLimit(handleGet, { limit: 30, window: '60s' })
+
 // POST { sessionId, productId }
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   try {
     const body = await req.json()
     const { sessionId, productId } = body
@@ -46,3 +49,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handlePost, { limit: 30, window: '60s' })

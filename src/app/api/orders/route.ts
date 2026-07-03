@@ -202,7 +202,7 @@ const orderHandler = async (req: NextRequest) => {
         shippingMethodId,
         tax,
         totalAmount,
-        status: rest.paymentMethod === 'cod' ? 'pending' : 'pending',
+        status: rest.paymentMethod === 'cod' ? 'confirmed' : 'pending',
         paymentStatus,
         items: { create: orderItemsData },
       },

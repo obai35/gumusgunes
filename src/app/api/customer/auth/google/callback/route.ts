@@ -4,10 +4,12 @@ import { signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
 
 export async function GET(req: NextRequest) {
+  const origin = new URL(req.url).origin
+
   try {
     const code = req.nextUrl.searchParams.get('code')
     if (!code) {
-      return NextResponse.redirect(new URL('/auth/login?error=no_code', req.url))
+      return NextResponse.redirect(new URL('/login?error=google_no_code', origin))
     }
 
     const clientId = process.env.GOOGLE_CLIENT_ID
@@ -15,33 +17,48 @@ export async function GET(req: NextRequest) {
     const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/customer/auth/google/callback`
 
     if (!clientId || !clientSecret) {
-      return NextResponse.redirect(new URL('/auth/login?error=config', req.url))
+      return NextResponse.redirect(new URL('/login?error=google_config', origin))
     }
 
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
     const { tokens } = await oauth2Client.getToken(code)
     oauth2Client.setCredentials(tokens)
 
-    const people = google.people({ version: 'v1', auth: oauth2Client })
-    const profile = await people.people.get({
-      resourceName: 'people/me',
-      personFields: 'names,emailAddresses,photos,birthdays,phoneNumbers',
-    })
+    let email = ''
+    let name = ''
+    let avatar: string | null = null
+    let phone: string | null = null
+    let dateOfBirth: Date | null = null
 
-    const data = profile.data
-    const email = data.emailAddresses?.[0]?.value || ''
-    const name = data.names?.[0]?.displayName || ''
-    const avatar = data.photos?.[0]?.url || null
-    const birthday = data.birthdays?.[0]?.date
-    const phone = data.phoneNumbers?.[0]?.value || null
-
-    if (!email) {
-      return NextResponse.redirect(new URL('/auth/login?error=no_email', req.url))
+    try {
+      const people = google.people({ version: 'v1', auth: oauth2Client })
+      const profile = await people.people.get({
+        resourceName: 'people/me',
+        personFields: 'names,emailAddresses,photos',
+      })
+      const data = profile.data
+      email = data.emailAddresses?.[0]?.value || ''
+      name = data.names?.[0]?.displayName || ''
+      avatar = data.photos?.[0]?.url || null
+    } catch {
+      const tokenInfo = await oauth2Client.getTokenInfo(tokens.access_token!)
+      email = tokenInfo.email || ''
     }
 
-    let dateOfBirth: Date | null = null
-    if (birthday?.year && birthday?.month && birthday?.day) {
-      dateOfBirth = new Date(birthday.year, birthday.month - 1, birthday.day)
+    if (tokens.id_token) {
+      const parts = tokens.id_token.split('.')
+      if (parts.length === 3) {
+        try {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
+          email = email || payload.email || ''
+          name = name || payload.name || payload.given_name || ''
+          avatar = avatar || payload.picture || null
+        } catch {}
+      }
+    }
+
+    if (!email) {
+      return NextResponse.redirect(new URL('/login?error=google_no_email', origin))
     }
 
     const user = await db.user.upsert({
@@ -65,7 +82,7 @@ export async function GET(req: NextRequest) {
     })
 
     const jwtToken = signToken({ userId: user.id, email: user.email })
-    const response = NextResponse.redirect(new URL('/?google_login=success', req.url))
+    const response = NextResponse.redirect(new URL('/?google_login=success', origin))
 
     response.cookies.set('__session', jwtToken, {
       httpOnly: true,
@@ -78,6 +95,6 @@ export async function GET(req: NextRequest) {
     return response
   } catch (e) {
     console.error('Google callback error:', e)
-    return NextResponse.redirect(new URL('/auth/login?error=google_failed', req.url))
+    return NextResponse.redirect(new URL('/login?error=google_failed', origin))
   }
 }

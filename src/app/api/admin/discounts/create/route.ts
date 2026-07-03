@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { handleApiError } from '@/lib/api-error'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 
@@ -19,7 +20,7 @@ export const POST = withAdmin(async (req: Request) => {
       },
     })
     return NextResponse.json({ discount })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (err) {
+    return handleApiError(err, 'admin-discounts-create')
   }
 }, 'discounts')

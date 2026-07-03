@@ -1,12 +1,29 @@
 import { NextResponse } from 'next/server'
 import { hashPassword, signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
+import { z } from 'zod'
+
+const RegisterSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[a-z]/, 'Must include a lowercase letter')
+    .regex(/[A-Z]/, 'Must include an uppercase letter')
+    .regex(/[0-9]/, 'Must include a digit'),
+  phone: z.string().optional(),
+}).strict()
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name } = await req.json()
-    if (!email || !password || !name) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-    if (password.length < 6) return NextResponse.json({ error: 'Password must be at least 6 characters' }, { status: 400 })
+    const parsed = RegisterSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+    const { email, password, name } = parsed.data
 
     const existing = await db.user.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 })

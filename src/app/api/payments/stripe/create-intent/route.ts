@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
+import { z } from 'zod'
+
+const StripeIntentSchema = z.object({
+  orderId: z.string().uuid(),
+}).strict()
 
 export async function POST(req: Request) {
   try {
-    const { amount, currency, idempotencyKey } = await req.json()
+    const body = await req.json()
+    const parsed = StripeIntentSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+    const { orderId } = parsed.data
+    const { amount, currency, idempotencyKey } = body
     const paymentIntent = await getStripe().paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: currency?.toLowerCase() || 'egp',
@@ -11,7 +25,8 @@ export async function POST(req: Request) {
       metadata: { idempotencyKey },
     }, { idempotencyKey })
     return NextResponse.json({ clientSecret: paymentIntent.client_secret })
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 })
+  } catch (error) {
+    console.error('[payment-create-intent]', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

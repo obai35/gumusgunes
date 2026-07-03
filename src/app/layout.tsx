@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { DesignProvider } from "@/components/store/DesignProvider";
 import EditModeGate from "@/components/store/EditModeGate";
+import { AuthHydrator } from "@/components/store/AuthHydrator";
 
 
 const geistSans = Geist({
@@ -74,6 +75,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
       >
+        <AuthHydrator />
         <DesignProvider>{children}</DesignProvider>
         <EditModeGate />
         <Toaster />

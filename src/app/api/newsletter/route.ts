@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
 const Schema = z.object({
@@ -7,7 +8,7 @@ const Schema = z.object({
   name: z.string().optional(),
 })
 
-export async function POST(req: NextRequest) {
+async function handlePost(req: NextRequest) {
   try {
     const body = await req.json()
     const parsed = Schema.safeParse(body)
@@ -38,3 +39,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Subscription failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handlePost, { limit: 3, window: '60s' })

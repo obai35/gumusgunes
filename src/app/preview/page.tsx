@@ -77,7 +77,13 @@ export default async function PreviewPage() {
 
   return (
     <>
-      <script dangerouslySetInnerHTML={{ __html: `window.__PREVIEW_SETTINGS__ = ${JSON.stringify(map)}` }} />
+      <script
+        id="__PREVIEW_DATA"
+        type="application/json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(map).replace(/</g, '\\u003c')
+        }}
+      />
       <PreviewListener />
       <style>{style}</style>
       <div data-editable="announcement" data-editable-label="Announcement Bar">

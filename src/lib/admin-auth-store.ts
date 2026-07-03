@@ -5,6 +5,7 @@ import { create } from 'zustand'
 type AdminUser = { id: string; email: string; name: string; role?: string; permissions?: string[] }
 type AdminAuthState = {
   user: AdminUser | null
+  loading: boolean
   totpPending: { adminId: string; email: string } | null
   adminLogin: (user: AdminUser) => void
   logout: () => void
@@ -14,6 +15,7 @@ type AdminAuthState = {
 
 export const useAdminAuth = create<AdminAuthState>()((set) => ({
   user: null,
+  loading: true,
   totpPending: null,
   adminLogin: (user) => set({ user, totpPending: null }),
   logout: () => set({ user: null, totpPending: null }),
@@ -23,12 +25,12 @@ export const useAdminAuth = create<AdminAuthState>()((set) => ({
       const res = await fetch('/api/admin/auth/me')
       if (res.ok) {
         const data = await res.json()
-        set({ user: data.admin })
+        set({ user: data.admin, loading: false })
       } else {
-        set({ user: null })
+        set({ user: null, loading: false })
       }
     } catch {
-      set({ user: null })
+      set({ user: null, loading: false })
     }
   },
 }))
