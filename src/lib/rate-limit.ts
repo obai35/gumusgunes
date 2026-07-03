@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { Ratelimit } from '@upstash/ratelimit'
+import { logger } from './logger'
 import { Redis } from '@upstash/redis'
 
 interface RateLimitOptions {
@@ -41,7 +42,7 @@ export function withRateLimit<T extends (...args: any[]) => any>(
       }
       return handler(req, ...args)
     } catch (err) {
-      console.warn('[rate-limit] Unavailable:', err)
+      logger.warn({ err }, 'Rate limit unavailable')
       if (options.failClosed) {
         return NextResponse.json(
           { error: 'Rate limiting unavailable' },

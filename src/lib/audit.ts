@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { logger } from './logger'
 
 export async function logAudit(params: {
   adminId: string
@@ -18,6 +19,6 @@ export async function logAudit(params: {
       },
     })
   } catch (error) {
-    console.error('[audit] Failed to log:', error)
+    logger.error({ error }, 'Audit log failed')
   }
 }
