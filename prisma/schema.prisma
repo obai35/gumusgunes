@@ -359,6 +359,8 @@ model Admin {
   roleRel        Role?    @relation(fields: [roleId], references: [id])
   totpSecret     String?
   totpEnabled    Boolean  @default(false)
+  phone          String?
+  lastLoginAt    DateTime?
   createdAt      DateTime @default(now())
   processedOrders Order[]
   processedReturns Return[]
