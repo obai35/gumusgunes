@@ -1,17 +1,16 @@
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
-const KEY_HEX = process.env.ENCRYPTION_KEY || ''
-const PREV_KEY_HEX = process.env.ENCRYPTION_KEY_PREVIOUS || ''
-
 function getKey(): Buffer {
-  if (!KEY_HEX) throw new Error('ENCRYPTION_KEY env var is required')
-  return Buffer.from(KEY_HEX, 'hex')
+  const keyHex = process.env.ENCRYPTION_KEY || ''
+  if (!keyHex) throw new Error('ENCRYPTION_KEY env var is required')
+  return Buffer.from(keyHex, 'hex')
 }
 
 function getPreviousKey(): Buffer | null {
-  if (!PREV_KEY_HEX) return null
-  return Buffer.from(PREV_KEY_HEX, 'hex')
+  const prevKeyHex = process.env.ENCRYPTION_KEY_PREVIOUS || ''
+  if (!prevKeyHex) return null
+  return Buffer.from(prevKeyHex, 'hex')
 }
 
 export function encrypt(text: string): string {

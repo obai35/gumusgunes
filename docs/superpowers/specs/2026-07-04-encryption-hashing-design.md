@@ -45,7 +45,22 @@ Update password reset flow to store hashed tokens instead of plain UUIDs:
 - `src/app/api/auth/forgot-password/route.ts` — hash token with bcrypt before storing
 - `src/app/api/auth/reset-password/route.ts` — hash submitted token with bcrypt before comparing
 
-### 5. Tests
+### 5. Customer 2FA (Two-Factor Authentication)
+
+The 2FA API routes (`/api/auth/2fa/setup`, `/api/auth/2fa/verify`, `/api/auth/2fa/disable`) already exist and use the `User` model — they work for customers. Two pieces are missing:
+
+**Login Flow** — Update `src/app/api/customer/auth/login/route.ts`:
+- After password verification, if `user.totpEnabled` is true, don't issue the full JWT yet
+- Instead, issue a short-lived temp token (5 min) and return `{ requiresTotp: true, tempToken: "..." }`
+- Create `src/app/api/customer/auth/login/2fa/route.ts` (POST): accepts `{ tempToken, code }`, verifies TOTP code, issues full JWT
+
+**Frontend UI** — Add a 2FA section to `src/app/account/page.tsx`:
+- Show current status: "Two-factor authentication: Enabled/Disabled"
+- "Enable" button → shows QR code (fetches from GET /api/auth/2fa/setup) → customer scans with authenticator app → enters code to confirm (POST /api/auth/2fa/verify)
+- "Disable" button → asks for current TOTP code → POST /api/auth/2fa/disable
+- Login page: if `requiresTotp` is returned, show a TOTP code input instead of the password form
+
+### 6. Tests
 
 Add `src/lib/password.test.ts`:
 - `hashPassword` produces different output for same input (salt works)
