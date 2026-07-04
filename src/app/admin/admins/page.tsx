@@ -77,7 +77,11 @@ function AdminsTab() {
         resetForm(); setShowModal(false)
         const updated = await fetch('/api/admin/admins').then((r) => r.json())
         setAdmins(updated)
-      } else { const e = await res.json(); toast.error(e.error) }
+      } else {
+        const e = await res.json()
+        const msg = e.details ? `${e.error}: ${Object.values(e.details).flat().join(', ')}` : e.error
+        toast.error(msg)
+      }
     } catch { toast.error('Failed') }
     finally { setLoading(false) }
   }
