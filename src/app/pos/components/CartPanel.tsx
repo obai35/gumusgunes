@@ -44,7 +44,7 @@ function CartPanel({ cart, onUpdateQuantity, onRemove, onSetDiscount, customerSe
           {cart.map((item) => (
             <CartItemComponent key={item.productId} item={item} onUpdateQuantity={onUpdateQuantity} onRemove={onRemove} onSetDiscount={onSetDiscount} />
           ))}
-          {cart.length === 0 && !showHeldOrders && (
+          {cart.length === 0 && !showHeldOrders && !(heldOrders && heldOrders.length > 0) && (
             <p className="text-white/30 text-sm text-center pt-4">Cart is empty. Search and click products to add.</p>
           )}
         </div>
@@ -54,11 +54,13 @@ function CartPanel({ cart, onUpdateQuantity, onRemove, onSetDiscount, customerSe
             <button onClick={() => setShowHoldPrompt(true)} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-white/10 text-xs text-white/40 hover:text-white/60 hover:border-white/20 transition-all">
               <PauseCircle className="h-3.5 w-3.5" /> Hold
             </button>
-            {(heldOrders && heldOrders.length > 0) && (
-              <button onClick={() => setShowHeldOrders(!showHeldOrders)} className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-dashed border-white/10 text-xs text-white/40 hover:text-white/60 hover:border-white/20 transition-all">
-                <PlayCircle className="h-3.5 w-3.5" /> Held ({heldOrders.length})
-              </button>
-            )}
+          </div>
+        )}
+        {(heldOrders && heldOrders.length > 0) && (
+          <div className="flex-shrink-0 mb-3">
+            <button onClick={() => setShowHeldOrders(!showHeldOrders)} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-white/10 text-xs text-white/40 hover:text-white/60 hover:border-white/20 transition-all">
+              <PlayCircle className="h-3.5 w-3.5" /> {showHeldOrders ? 'Hide' : 'Show'} Held Orders ({heldOrders.length})
+            </button>
           </div>
         )}
 
