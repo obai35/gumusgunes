@@ -13,7 +13,7 @@ const CreateAdminSchema = z.object({
     .regex(/[a-z]/, 'Must include a lowercase letter')
     .regex(/[A-Z]/, 'Must include an uppercase letter')
     .regex(/[0-9]/, 'Must include a digit'),
-  roleId: z.string().uuid(),
+  roleId: z.string().min(1),
   phone: z.string().optional(),
 }).strict()
 
