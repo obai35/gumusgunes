@@ -28,8 +28,8 @@ import OfflineBanner from './components/OfflineBanner'
 import OfflineSyncManager from './components/OfflineSyncManager'
 import ShortcutsCheatSheet from './components/ShortcutsCheatSheet'
 import { registerSW } from '@/lib/offline'
-import { queueOrder, cacheProducts } from '@/lib/pos-db'
-import type { Shift, ShiftSummary, Category } from './types'
+import { queueOrder, cacheProducts, storeOfflineOrder, getCachedProducts } from '@/lib/pos-db'
+import type { Shift, ShiftSummary, Category, ReceiptData } from './types'
 
 type View = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale' | 'assessment'
 
@@ -71,6 +71,8 @@ export default function POSPage() {
   const customPriceRef = useRef<HTMLDivElement>(null)
   const [returnOrderId, setReturnOrderId] = useState<string | null>(null)
   const [showNotes, setShowNotes] = useState(false)
+  const [offlineMode, setOfflineMode] = useState(false)
+  const [offlineReceipt, setOfflineReceipt] = useState<ReceiptData | null>(null)
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
@@ -104,6 +106,15 @@ export default function POSPage() {
   useEffect(() => {
     const controller = new AbortController()
     const timer = setTimeout(async () => {
+      if (offlineMode) {
+        try {
+          const cached = await getCachedProducts()
+          if (cached.length > 0) {
+            pos.setProducts(cached)
+            return
+          }
+        } catch {}
+      }
       try {
         const params = new URLSearchParams({ search: pos.search })
         const branchId = user?.branchId || usePosAuth.getState().user?.branchId
@@ -115,10 +126,17 @@ export default function POSPage() {
           pos.setProducts(data)
           cacheProducts(data)
         }
-      } catch {}
+      } catch {
+        if (!offlineMode) {
+          try {
+            const cached = await getCachedProducts()
+            if (cached.length > 0) pos.setProducts(cached)
+          } catch {}
+        }
+      }
     }, pos.search.length < 1 && !selectedCategoryId ? 0 : 300)
     return () => { clearTimeout(timer); controller.abort() }
-  }, [pos.search, user?.branchId, selectedCategoryId])
+  }, [pos.search, user?.branchId, selectedCategoryId, offlineMode])
 
   const handleStartShift = useCallback(async () => {
     if (!user?.branchId) return
@@ -193,8 +211,9 @@ export default function POSPage() {
     if (validationError) { toast.error(validationError); return }
     pos.setCheckoutLoading(true)
     try {
+      const items = pos.cart.map((i) => ({ productId: i.productId, quantity: i.quantity, discount: i.discount }))
       const body: any = {
-        items: pos.cart.map((i) => ({ productId: i.productId, quantity: i.quantity, discount: i.discount })),
+        items,
         discountCode: pos.appliedDiscount?.code,
         paymentMethod: pos.paymentMethod,
         shiftId: shift?.id,
@@ -208,6 +227,45 @@ export default function POSPage() {
       }
       if (pos.paymentMethod === 'cash' || pos.paymentMethod === 'split') body.cashAmount = pos.parsedCash
       if (pos.paymentMethod === 'split') body.cardAmount = pos.parsedCard
+
+      if (offlineMode) {
+        const itemsForReceipt = pos.cart.map((i) => ({
+          id: i.productId,
+          quantity: i.quantity,
+          price: i.price,
+          product: { name: i.name, sku: i.productId },
+        }))
+        const { tempReceiptNumber } = await storeOfflineOrder({
+          items,
+          subtotal: pos.subtotal,
+          discountAmount: pos.discountAmount,
+          total: pos.total,
+          paymentMethod: pos.paymentMethod,
+          cashAmount: pos.parsedCash || null,
+          cardAmount: pos.parsedCard || null,
+          customerId: pos.customer?.id || null,
+          customerName: pos.customer?.name || null,
+          customerEmail: pos.customer?.email || null,
+          customerPhone: pos.customer?.phone || null,
+          discountCode: pos.appliedDiscount?.code || null,
+          shiftId: shift?.id || null,
+          notes: pos.orderNotes || null,
+        })
+        setOfflineReceipt({
+          orderId: tempReceiptNumber,
+          receiptNumber: tempReceiptNumber,
+          total: pos.total,
+          items: itemsForReceipt,
+          subtotal: pos.subtotal,
+          discount: pos.discountAmount,
+          paymentMethod: pos.paymentMethod,
+          cashAmount: pos.parsedCash || null,
+          cardAmount: pos.parsedCard || null,
+        })
+        toast.success(`Order saved as ${tempReceiptNumber}`)
+        pos.setCheckoutLoading(false)
+        return
+      }
 
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         await queueOrder(body)
@@ -302,6 +360,12 @@ export default function POSPage() {
   })
 
   if (!hydrated || !token) return null
+
+  if (offlineReceipt) return (
+    <div className="navy-radial min-h-screen">
+      <ReceiptView receipt={offlineReceipt} onNewSale={() => setOfflineReceipt(null)} />
+    </div>
+  )
 
   if (pos.receipt) return (
     <div className="navy-radial min-h-screen">
@@ -408,6 +472,18 @@ export default function POSPage() {
             >
               + Custom Price
             </button>
+            <div className={'mt-2 flex-shrink-0 flex items-center justify-between rounded-lg border px-3 py-1.5 text-xs transition-all ' + (offlineMode ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5 bg-white/[0.02]')}>
+              <div className="flex items-center gap-1.5">
+                <span className={'h-2 w-2 rounded-full ' + (offlineMode ? 'bg-amber-400' : 'bg-emerald-400/60')} />
+                <span className="text-white/60">Offline Mode</span>
+              </div>
+              <button
+                onClick={() => setOfflineMode(!offlineMode)}
+                className={'px-2 py-1 rounded text-[11px] font-medium transition-all ' + (offlineMode ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10')}
+              >
+                {offlineMode ? 'ON' : 'OFF'}
+              </button>
+            </div>
             <OfflineSyncManager />
           </div>
           <CartPanel
