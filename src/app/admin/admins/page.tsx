@@ -69,7 +69,7 @@ function AdminsTab() {
     try {
       const url = editId ? `/api/admin/admins/${editId}` : '/api/admin/admins'
       const method = editId ? 'PUT' : 'POST'
-      const body: any = { name, email, phone: phone || undefined, roleId }
+      const body: any = { name, email, phone: editId ? (phone || null) : (phone || undefined), roleId }
       if (password) body.password = password
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (res.ok) {

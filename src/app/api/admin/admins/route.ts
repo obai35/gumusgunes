@@ -14,6 +14,7 @@ const CreateAdminSchema = z.object({
     .regex(/[A-Z]/, 'Must include an uppercase letter')
     .regex(/[0-9]/, 'Must include a digit'),
   roleId: z.string().uuid(),
+  phone: z.string().optional(),
 }).strict()
 
 export const GET = withAdmin(async (req: NextRequest) => {
@@ -21,7 +22,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     include: { roleRel: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   })
-  return NextResponse.json(admins.map((a) => ({ id: a.id, email: a.email, name: a.name, role: a.roleRel?.name || a.role, roleId: a.roleId, createdAt: a.createdAt })))
+  return NextResponse.json(admins.map((a) => ({ id: a.id, email: a.email, name: a.name, phone: a.phone, role: a.roleRel?.name || a.role, roleId: a.roleId, totpEnabled: a.totpEnabled, lastLoginAt: a.lastLoginAt, createdAt: a.createdAt })))
 }, 'admins')
 
 export const POST = withAdmin(async (req: NextRequest, ctx) => {
@@ -33,13 +34,13 @@ export const POST = withAdmin(async (req: NextRequest, ctx) => {
       { status: 400 }
     )
   }
-  const { name, email, password, roleId } = parsed.data
+  const { name, email, password, roleId, phone } = parsed.data
 
   const existing = await db.admin.findUnique({ where: { email } })
   if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
 
   const created = await db.admin.create({
-    data: { name, email, password: await hashPassword(password), roleId },
+    data: { name, email, password: await hashPassword(password), roleId, phone },
     include: { roleRel: { select: { name: true } } },
   })
 
@@ -51,5 +52,5 @@ export const POST = withAdmin(async (req: NextRequest, ctx) => {
     details: { targetEmail: created.email, roleId: created.roleId },
   })
 
-  return NextResponse.json({ id: created.id, email: created.email, name: created.name, role: created.roleRel?.name || 'admin', roleId: created.roleId, createdAt: created.createdAt })
+  return NextResponse.json({ id: created.id, email: created.email, name: created.name, phone: created.phone, role: created.roleRel?.name || 'admin', roleId: created.roleId, totpEnabled: created.totpEnabled, lastLoginAt: created.lastLoginAt, createdAt: created.createdAt })
 }, 'admins')

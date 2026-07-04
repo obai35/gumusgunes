@@ -6,7 +6,7 @@ import type { AdminInfo } from '@/lib/admin-permissions'
 
 export const PUT = withAdmin(async (req: NextRequest, { params, admin: _admin }: { params: Promise<{ id: string }>; admin: AdminInfo }) => {
   const { id } = await params
-  const { name, email, password, roleId } = await req.json()
+  const { name, email, password, roleId, phone } = await req.json()
 
   const target = await db.admin.findUnique({ where: { id } })
   if (!target) return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
@@ -16,9 +16,10 @@ export const PUT = withAdmin(async (req: NextRequest, { params, admin: _admin }:
   if (email !== undefined) data.email = email
   if (password) data.password = await hashPassword(password)
   if (roleId !== undefined) data.roleId = roleId
+  if (phone !== undefined) data.phone = phone
 
   const updated = await db.admin.update({ where: { id }, data, include: { roleRel: { select: { name: true } } } })
-  return NextResponse.json({ id: updated.id, email: updated.email, name: updated.name, role: updated.roleRel?.name || updated.role, roleId: updated.roleId })
+  return NextResponse.json({ id: updated.id, email: updated.email, name: updated.name, phone: updated.phone, role: updated.roleRel?.name || updated.role, roleId: updated.roleId, totpEnabled: updated.totpEnabled, lastLoginAt: updated.lastLoginAt })
 }, 'admins')
 
 export const DELETE = withAdmin(async (req: NextRequest, { params, admin }: { params: Promise<{ id: string }>; admin: AdminInfo }) => {

@@ -67,7 +67,7 @@ const handler = async (req: NextRequest) => {
       details: { email: admin.email },
     })
 
-    await db.admin.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } })
+    db.admin.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
 
     const token = signAdminToken({ adminId: admin.id, email: admin.email })
     const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) : []
