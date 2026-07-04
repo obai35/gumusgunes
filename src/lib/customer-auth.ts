@@ -1,18 +1,12 @@
-import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { hashPassword, verifyPassword } from '@/lib/password'
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET
 if (!JWT_SECRET) {
   throw new Error('JWT_SECRET or NEXTAUTH_SECRET environment variable is required')
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12)
-}
-
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash)
-}
+export { hashPassword, verifyPassword }
 
 export function signToken(payload: { userId: string; email: string }): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })

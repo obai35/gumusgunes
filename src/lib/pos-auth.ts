@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '@/lib/password'
 import { db } from './db'
 
 function getJwtSecret(): string {
@@ -18,7 +18,7 @@ export type PosUser = {
 export async function verifyPosCredentials(email: string, password: string): Promise<PosUser | null> {
   const branch = await db.branch.findUnique({ where: { email } })
   if (!branch || !branch.isActive) return null
-  const valid = await bcrypt.compare(password, branch.password)
+  const valid = await verifyPassword(password, branch.password)
   if (!valid) return null
   return { id: branch.id, name: branch.name, email: branch.email, branchId: branch.id }
 }
@@ -35,6 +35,4 @@ export function verifyPosToken(token: string): PosUser | null {
   }
 }
 
-export function hashPassword(password: string): string {
-  return bcrypt.hashSync(password, 10)
-}
+export { hashPassword, verifyPassword }
