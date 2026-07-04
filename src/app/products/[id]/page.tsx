@@ -1,5 +1,6 @@
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
+import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
@@ -10,6 +11,29 @@ const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').t
 
 interface Props {
   params: Promise<{ id: string }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const product = await db.product.findFirst({
+    where: { OR: [{ id }, { slug: id }], isActive: true },
+    select: { name: true, description: true, imageUrl: true, price: true },
+  })
+
+  if (!product) {
+    return { title: "Product Not Found" }
+  }
+
+  return {
+    title: product.name,
+    description: product.description.slice(0, 160),
+    openGraph: {
+      title: product.name,
+      description: product.description.slice(0, 160),
+      images: [{ url: product.imageUrl, width: 1200, height: 1200 }],
+      type: 'product',
+    },
+  }
 }
 
 export default async function ProductDetailPage({ params }: Props) {
@@ -47,6 +71,44 @@ export default async function ProductDetailPage({ params }: Props) {
               <li className="text-navy font-medium truncate max-w-[200px]">{serialized.product.name}</li>
             </ol>
           </nav>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Product",
+                name: serialized.product.name,
+                description: serialized.product.description,
+                image: serialized.product.imageUrl,
+                brand: { "@type": "Brand", name: "Gümüş Güneş" },
+                offers: {
+                  "@type": "Offer",
+                  price: serialized.product.price,
+                  priceCurrency: "EGP",
+                  availability: serialized.product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                },
+                aggregateRating: serialized.product.reviewCount > 0 ? {
+                  "@type": "AggregateRating",
+                  ratingValue: serialized.product.rating,
+                  reviewCount: serialized.product.reviewCount,
+                } : undefined,
+              }),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                  { "@type": "ListItem", position: 1, name: "Home", item: "https://gumusgunes.com" },
+                  { "@type": "ListItem", position: 2, name: "Products", item: "https://gumusgunes.com/products" },
+                  { "@type": "ListItem", position: 3, name: serialized.product.name },
+                ],
+              }),
+            }}
+          />
           <ProductDetailClient product={serialized.product} related={serialized.related} />
         </div>
       </main>
