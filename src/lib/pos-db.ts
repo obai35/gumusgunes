@@ -13,10 +13,6 @@ function openDB(): Promise<IDBDatabase> {
         const store = db.createObjectStore('orders', { keyPath: 'id', autoIncrement: true })
         store.createIndex('synced', 'synced', { unique: false })
       }
-      if (!db.objectStoreNames.contains('offline_orders')) {
-        const store = db.createObjectStore('offline_orders', { keyPath: 'id', autoIncrement: true })
-        store.createIndex('synced', 'synced', { unique: false })
-      }
       if (!db.objectStoreNames.contains('counter')) {
         db.createObjectStore('counter', { keyPath: 'key' })
       }
@@ -82,7 +78,20 @@ export async function getCachedProducts(): Promise<any[]> {
   })
 }
 
-// --- Legacy simple queue (used for auto-offline detection) ---
+// --- Counter for temp receipt numbers ---
+
+async function getNextSeq(): Promise<number> {
+  const db = await openDB()
+  const tx = db.transaction('counter', 'readwrite')
+  const store = tx.objectStore('counter')
+  const existing = await promisifyRequest(store.get('offline_seq'))
+  const next = (existing?.value ?? 0) + 1
+  await promisifyRequest(store.put({ key: 'offline_seq', value: next }))
+  db.close()
+  return next
+}
+
+// --- Legacy simple queue (used for auto-offline detection when not in offline mode) ---
 
 export async function queueOrder(order: any) {
   const db = await openDB()
@@ -92,6 +101,74 @@ export async function queueOrder(order: any) {
   db.close()
 }
 
+// --- All-in-one: rich offline orders (used by explicit offline mode) + legacy cleanup ---
+
+export async function storeOfflineOrder(order: Omit<OfflineOrder, 'id' | 'tempReceiptNumber' | 'synced' | 'syncedFailed' | 'createdAt' | 'syncedAt' | 'realReceiptNumber' | 'realOrderId'>): Promise<{ tempReceiptNumber: string }> {
+  const seq = await getNextSeq()
+  const tempReceiptNumber = `OFF-${String(seq).padStart(4, '0')}`
+  const db = await openDB()
+  const tx = db.transaction('orders', 'readwrite')
+  const entry: OfflineOrder = {
+    tempReceiptNumber,
+    realReceiptNumber: null,
+    realOrderId: null,
+    ...order,
+    synced: false,
+    syncedFailed: false,
+    createdAt: new Date().toISOString(),
+    syncedAt: null,
+  }
+  await promisifyRequest(tx.objectStore('orders').add(entry))
+  db.close()
+  return { tempReceiptNumber }
+}
+
+export async function getUnsyncedOrdersWithTempNumbers(): Promise<OfflineOrder[]> {
+  const db = await openDB()
+  return new Promise((resolve) => {
+    const data: OfflineOrder[] = []
+    const tx = db.transaction('orders', 'readonly')
+    const index = tx.objectStore('orders').index('synced')
+    index.openCursor(IDBKeyRange.only(false)).onsuccess = (e: any) => {
+      const cursor = e.target.result
+      if (cursor) {
+        const val = cursor.value
+        if (val.tempReceiptNumber) data.push(val)
+        cursor.continue()
+      } else resolve(data)
+    }
+    tx.oncomplete = () => { db.close() }
+  })
+}
+
+export async function markOrderSyncedWithRealInfo(id: number, realReceiptNumber: string, realOrderId: string) {
+  const db = await openDB()
+  const tx = db.transaction('orders', 'readwrite')
+  const existing = await promisifyRequest(tx.objectStore('orders').get(id)) as any
+  if (existing) {
+    existing.synced = true
+    existing.syncedFailed = false
+    existing.realReceiptNumber = realReceiptNumber
+    existing.realOrderId = realOrderId
+    existing.syncedAt = new Date().toISOString()
+    await promisifyRequest(tx.objectStore('orders').put(existing))
+  }
+  db.close()
+}
+
+export async function markOrderSyncFailed(id: number) {
+  const db = await openDB()
+  const tx = db.transaction('orders', 'readwrite')
+  const existing = await promisifyRequest(tx.objectStore('orders').get(id)) as any
+  if (existing) {
+    existing.syncedFailed = true
+    await promisifyRequest(tx.objectStore('orders').put(existing))
+  }
+  db.close()
+}
+
+// --- Legacy helpers (keep for existing auto-offline detection) ---
+
 export async function getUnsyncedOrders(): Promise<any[]> {
   const db = await openDB()
   return new Promise((resolve) => {
@@ -100,8 +177,11 @@ export async function getUnsyncedOrders(): Promise<any[]> {
     const index = tx.objectStore('orders').index('synced')
     index.openCursor(IDBKeyRange.only(false)).onsuccess = (e: any) => {
       const cursor = e.target.result
-      if (cursor) { data.push(cursor.value); cursor.continue() }
-      else resolve(data)
+      if (cursor) {
+        const val = cursor.value
+        if (!val.tempReceiptNumber) data.push(val)
+        cursor.continue()
+      } else resolve(data)
     }
     tx.oncomplete = () => { db.close() }
   })
@@ -119,95 +199,5 @@ export async function markOrderSynced(id: number) {
     tx.objectStore('orders').put({ ...existing, synced: true })
   }
   await new Promise(r => tx.oncomplete = r)
-  db.close()
-}
-
-// --- Offline order counter ---
-
-async function getNextSeq(): Promise<number> {
-  const db = await openDB()
-  const tx = db.transaction('counter', 'readwrite')
-  const store = tx.objectStore('counter')
-  const existing = await promisifyRequest(store.get('offline_seq'))
-  const next = (existing?.value ?? 0) + 1
-  await promisifyRequest(store.put({ key: 'offline_seq', value: next }))
-  db.close()
-  return next
-}
-
-// --- Rich offline order storage (for explicit offline mode) ---
-
-export async function storeOfflineOrder(order: Omit<OfflineOrder, 'id' | 'tempReceiptNumber' | 'synced' | 'syncedFailed' | 'createdAt' | 'syncedAt' | 'realReceiptNumber' | 'realOrderId'>): Promise<{ tempReceiptNumber: string }> {
-  const seq = await getNextSeq()
-  const tempReceiptNumber = `OFF-${String(seq).padStart(4, '0')}`
-  const db = await openDB()
-  const tx = db.transaction('offline_orders', 'readwrite')
-  const entry: OfflineOrder = {
-    tempReceiptNumber,
-    realReceiptNumber: null,
-    realOrderId: null,
-    ...order,
-    synced: false,
-    syncedFailed: false,
-    createdAt: new Date().toISOString(),
-    syncedAt: null,
-  }
-  await promisifyRequest(tx.objectStore('offline_orders').add(entry))
-  db.close()
-  return { tempReceiptNumber }
-}
-
-export async function getOfflineOrders(): Promise<OfflineOrder[]> {
-  const db = await openDB()
-  return new Promise((resolve) => {
-    const data: OfflineOrder[] = []
-    const tx = db.transaction('offline_orders', 'readonly')
-    tx.objectStore('offline_orders').openCursor().onsuccess = (e: any) => {
-      const cursor = e.target.result
-      if (cursor) { data.push(cursor.value); cursor.continue() }
-      else resolve(data)
-    }
-    tx.oncomplete = () => { db.close() }
-  })
-}
-
-export async function getUnsyncedOfflineOrders(): Promise<OfflineOrder[]> {
-  const db = await openDB()
-  return new Promise((resolve) => {
-    const data: OfflineOrder[] = []
-    const tx = db.transaction('offline_orders', 'readonly')
-    const index = tx.objectStore('offline_orders').index('synced')
-    index.openCursor(IDBKeyRange.only(false)).onsuccess = (e: any) => {
-      const cursor = e.target.result
-      if (cursor) { data.push(cursor.value); cursor.continue() }
-      else resolve(data)
-    }
-    tx.oncomplete = () => { db.close() }
-  })
-}
-
-export async function markOfflineOrderSynced(id: number, realReceiptNumber: string, realOrderId: string) {
-  const db = await openDB()
-  const tx = db.transaction('offline_orders', 'readwrite')
-  const existing = await promisifyRequest(tx.objectStore('offline_orders').get(id)) as OfflineOrder | null
-  if (existing) {
-    existing.synced = true
-    existing.syncedFailed = false
-    existing.realReceiptNumber = realReceiptNumber
-    existing.realOrderId = realOrderId
-    existing.syncedAt = new Date().toISOString()
-    await promisifyRequest(tx.objectStore('offline_orders').put(existing))
-  }
-  db.close()
-}
-
-export async function markOfflineOrderFailed(id: number) {
-  const db = await openDB()
-  const tx = db.transaction('offline_orders', 'readwrite')
-  const existing = await promisifyRequest(tx.objectStore('offline_orders').get(id)) as OfflineOrder | null
-  if (existing) {
-    existing.syncedFailed = true
-    await promisifyRequest(tx.objectStore('offline_orders').put(existing))
-  }
   db.close()
 }

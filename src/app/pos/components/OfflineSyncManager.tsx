@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import { Upload, RefreshCw, CheckCircle, AlertTriangle, Wifi } from 'lucide-react'
-import { getUnsyncedOrders, markOrderSynced, getUnsyncedOfflineOrders, markOfflineOrderSynced, markOfflineOrderFailed } from '@/lib/pos-db'
+import { getUnsyncedOrders, getUnsyncedOrdersWithTempNumbers, markOrderSynced, markOrderSyncedWithRealInfo, markOrderSyncFailed } from '@/lib/pos-db'
 import { isOnline, onOnlineChange } from '@/lib/offline'
 
 export default function OfflineSyncManager() {
@@ -13,12 +13,12 @@ export default function OfflineSyncManager() {
 
   const refreshPending = useCallback(async () => {
     try {
-      const [legacy, offOrders] = await Promise.all([
+      const [legacy, rich] = await Promise.all([
         getUnsyncedOrders(),
-        getUnsyncedOfflineOrders(),
+        getUnsyncedOrdersWithTempNumbers(),
       ])
-      setPending(legacy.length + offOrders.length)
-      setOfflineOrders(offOrders)
+      setPending(legacy.length + rich.length)
+      setOfflineOrders(rich)
     } catch { setPending(0); setOfflineOrders([]) }
   }, [])
 
@@ -38,9 +38,9 @@ export default function OfflineSyncManager() {
     let ok = 0
     let fail = 0
     try {
-      const [legacyOrders, offOrders] = await Promise.all([
+      const [legacyOrders, richOrders] = await Promise.all([
         getUnsyncedOrders(),
-        getUnsyncedOfflineOrders(),
+        getUnsyncedOrdersWithTempNumbers(),
       ])
       for (const order of legacyOrders) {
         try {
@@ -55,7 +55,7 @@ export default function OfflineSyncManager() {
           } else { fail++ }
         } catch { fail++ }
       }
-      for (const order of offOrders) {
+      for (const order of richOrders) {
         try {
           const body: any = {
             items: order.items,
@@ -77,14 +77,14 @@ export default function OfflineSyncManager() {
           })
           if (res.ok) {
             const data = await res.json()
-            await markOfflineOrderSynced(order.id!, data.orderId, data.order?.receiptNumber || '')
+            await markOrderSyncedWithRealInfo(order.id!, data.order?.receiptNumber || '', data.orderId)
             ok++
           } else {
-            await markOfflineOrderFailed(order.id!)
+            await markOrderSyncFailed(order.id!)
             fail++
           }
         } catch {
-          await markOfflineOrderFailed(order.id!)
+          await markOrderSyncFailed(order.id!)
           fail++
         }
       }
