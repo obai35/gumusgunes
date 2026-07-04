@@ -27,7 +27,11 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Gümüş Güneş — Silver Sun Accessories | Handcrafted Stainless Steel",
+  metadataBase: new URL('https://gumusgunes.com'),
+  title: {
+    default: "Gümüş Güneş — Silver Sun Accessories | Handcrafted Stainless Steel",
+    template: "%s — Gümüş Güneş",
+  },
   description:
     "Gümüş Güneş (Silver Sun) — handcrafted premium stainless steel accessories. Rings, necklaces, earrings, bracelets and pendants inspired by the sun, moon, and stars.",
   keywords: [
@@ -49,6 +53,11 @@ export const metadata: Metadata = {
     description: "Handcrafted premium stainless steel accessories inspired by the sun, moon, and stars.",
     siteName: "Gümüş Güneş",
     type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@gumusgunes",
   },
 };
 
@@ -71,6 +80,37 @@ export default function RootLayout({
         <link rel="preconnect" href="https://js.stripe.com" />
         <link rel="preconnect" href="https://www.paypal.com" />
         <link rel="preconnect" href="https://accounts.google.com" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Gümüş Güneş",
+              url: "https://gumusgunes.com",
+              logo: "https://gumusgunes.com/gumusgunes-logo.jpeg",
+              sameAs: ["https://instagram.com/gumusgunes", "https://facebook.com/gumusgunes"],
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              url: "https://gumusgunes.com",
+              potentialAction: {
+                "@type": "SearchAction",
+                target: {
+                  "@type": "EntryPoint",
+                  urlTemplate: "https://gumusgunes.com/products?q={search_term_string}",
+                },
+                "query-input": "required name=search_term_string",
+              },
+            }),
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
