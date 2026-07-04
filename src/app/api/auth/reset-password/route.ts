@@ -5,6 +5,7 @@ import { z } from 'zod'
 
 const ResetSchema = z.object({
   token: z.string().min(1),
+  email: z.string().email(),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
     .regex(/[a-z]/, 'Must include a lowercase letter')
@@ -22,11 +23,19 @@ export async function POST(req: Request) {
       )
     }
 
-    const resetToken = await db.resetToken.findUnique({
-      where: { token: parsed.data.token },
+    const records = await db.resetToken.findMany({
+      where: { email: parsed.data.email, usedAt: null, expiresAt: { gt: new Date() } },
     })
 
-    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+    let resetToken = null
+    for (const r of records) {
+      if (await bcrypt.compare(parsed.data.token, r.token)) {
+        resetToken = r
+        break
+      }
+    }
+
+    if (!resetToken) {
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 400 })
     }
 

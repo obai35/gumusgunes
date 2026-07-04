@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withRateLimit } from '@/lib/rate-limit'
 import crypto from 'crypto'
+import bcrypt from 'bcryptjs'
 import nodemailer from 'nodemailer'
 
 async function handler(req: Request) {
@@ -26,10 +27,11 @@ async function handler(req: Request) {
 
     // Create new token
     const token = crypto.randomBytes(32).toString('hex')
+    const hashedToken = await bcrypt.hash(token, 10)
     await db.resetToken.create({
       data: {
         email,
-        token,
+        token: hashedToken,
         expiresAt: new Date(Date.now() + 3600000), // 1 hour
       },
     })
