@@ -2,10 +2,16 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
 
 const ALGORITHM = 'aes-256-gcm'
 const KEY_HEX = process.env.ENCRYPTION_KEY || ''
+const PREV_KEY_HEX = process.env.ENCRYPTION_KEY_PREVIOUS || ''
 
 function getKey(): Buffer {
   if (!KEY_HEX) throw new Error('ENCRYPTION_KEY env var is required')
   return Buffer.from(KEY_HEX, 'hex')
+}
+
+function getPreviousKey(): Buffer | null {
+  if (!PREV_KEY_HEX) return null
+  return Buffer.from(PREV_KEY_HEX, 'hex')
 }
 
 export function encrypt(text: string): string {
@@ -19,7 +25,20 @@ export function encrypt(text: string): string {
 }
 
 export function decrypt(encryptedText: string): string {
-  const key = getKey()
+  const parts = encryptedText.split(':')
+  if (parts.length !== 3) throw new Error('Invalid encrypted text format')
+  const [ivHex, authTagHex, encrypted] = parts
+
+  try {
+    return decryptWithKey(encryptedText, getKey())
+  } catch {
+    const prevKey = getPreviousKey()
+    if (!prevKey) throw new Error('Decryption failed and no previous key available')
+    return decryptWithKey(encryptedText, prevKey)
+  }
+}
+
+function decryptWithKey(encryptedText: string, key: Buffer): string {
   const parts = encryptedText.split(':')
   if (parts.length !== 3) throw new Error('Invalid encrypted text format')
   const [ivHex, authTagHex, encrypted] = parts
