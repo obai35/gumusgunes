@@ -9,6 +9,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin', '/api', '/pos', '/preview'],
       },
     ],
-    sitemap: 'https://gumusgunes.com/sitemap.xml',
+    sitemap: `${process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_URL || 'https://gumusgunes.com'}/sitemap.xml`,
   }
 }

@@ -1,8 +1,9 @@
 import { db } from '@/lib/db'
+import type { MetadataRoute } from 'next'
 
-const BASE_URL = 'https://gumusgunes.com'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_URL || 'https://gumusgunes.com'
 
-export default async function sitemap() {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await db.product.findMany({
     where: { isActive: true },
     select: { slug: true, updatedAt: true },
