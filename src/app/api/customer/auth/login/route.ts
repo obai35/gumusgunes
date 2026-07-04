@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import jwt from 'jsonwebtoken'
 import { withRateLimit } from '@/lib/rate-limit'
 import { verifyPassword, signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
@@ -28,6 +29,13 @@ const handler = async (req: NextRequest) => {
     const valid = await verifyPassword(password, user.password)
     if (!valid) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    }
+
+    if (user.totpEnabled) {
+      const JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET
+      if (!JWT_SECRET) throw new Error('JWT_SECRET not configured')
+      const tempToken = jwt.sign({ userId: user.id, email: user.email, totp: true }, JWT_SECRET, { expiresIn: '5m' })
+      return NextResponse.json({ requiresTotp: true, tempToken })
     }
 
     const token = signToken({ userId: user.id, email: user.email })
