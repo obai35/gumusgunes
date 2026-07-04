@@ -3,8 +3,20 @@ import { Footer } from '@/components/store/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import ProductsPageClient from './ProductsPageClient'
+import type { Metadata } from 'next'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "All Collections",
+    description: "Explore our handcrafted stainless steel accessories — rings, necklaces, earrings, bracelets, and pendants.",
+    openGraph: {
+      title: "All Collections — Gümüş Güneş",
+      description: "Explore our handcrafted stainless steel accessories.",
+    },
+  }
+}
 
 export default async function ProductsPage() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
