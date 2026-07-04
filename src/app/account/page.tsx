@@ -102,6 +102,11 @@ export default function AccountPage() {
   const [ordersLoading, setOrdersLoading] = useState(false)
   const [trackModal, setTrackModal] = useState<Order | null>(null)
 
+  const [totpSetup, setTotpSetup] = useState<{ secret: string; qrCode: string } | null>(null)
+  const [totpCode, setTotpCode] = useState('')
+  const [totpEnabled, setTotpEnabled] = useState(false)
+  const [totpLoading, setTotpLoading] = useState(false)
+
   const authHeaders = useCallback(() => ({
     'Content-Type': 'application/json',
   }), [])
@@ -221,6 +226,56 @@ export default function AccountPage() {
     } finally { setOrdersLoading(false) }
   }
 
+  async function handleEnable2FA() {
+    setTotpLoading(true)
+    try {
+      const res = await fetch('/api/auth/2fa/setup', { headers: authHeaders() })
+      if (res.ok) {
+        const data = await res.json()
+        setTotpSetup({ secret: data.secret, qrCode: data.qrCode })
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to start 2FA setup')
+      }
+    } catch { toast.error('Something went wrong') }
+    finally { setTotpLoading(false) }
+  }
+
+  async function handleVerify2FA() {
+    if (totpCode.length !== 6) { toast.error('Enter a valid 6-digit code'); return }
+    setTotpLoading(true)
+    try {
+      const res = await fetch('/api/auth/2fa/verify', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ token: totpCode }) })
+      if (res.ok) {
+        toast.success('Two-factor authentication enabled')
+        setTotpEnabled(true)
+        setTotpSetup(null)
+        setTotpCode('')
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Invalid code')
+      }
+    } catch { toast.error('Something went wrong') }
+    finally { setTotpLoading(false) }
+  }
+
+  async function handleDisable2FA() {
+    if (totpCode.length !== 6) { toast.error('Enter your current 6-digit code'); return }
+    setTotpLoading(true)
+    try {
+      const res = await fetch('/api/auth/2fa/disable', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ token: totpCode }) })
+      if (res.ok) {
+        toast.success('Two-factor authentication disabled')
+        setTotpEnabled(false)
+        setTotpCode('')
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to disable 2FA')
+      }
+    } catch { toast.error('Something went wrong') }
+    finally { setTotpLoading(false) }
+  }
+
   if (!hydrated) return null
 
   if (!isAuthenticated()) return null
@@ -284,6 +339,45 @@ export default function AccountPage() {
                   </Button>
                 </div>
               )}
+
+              {/* Two-Factor Authentication */}
+              <div className="mt-8 p-5 rounded-2xl border border-border bg-white">
+                <h3 className="font-display text-lg font-semibold text-navy mb-1">Two-Factor Authentication</h3>
+                <p className="text-sm text-muted-foreground mb-4">Add an extra layer of security to your account.</p>
+
+                {totpSetup ? (
+                  <div>
+                    <img src={totpSetup.qrCode} alt="Scan with authenticator app" className="mx-auto mb-3 w-48 h-48" />
+                    <p className="text-xs text-muted-foreground text-center mb-3">Scan this QR code with Google Authenticator or similar app.</p>
+                    <div className="flex gap-2">
+                      <Input value={totpCode} onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" maxLength={6} className="rounded-xl font-mono text-center" />
+                      <Button onClick={handleVerify2FA} disabled={totpLoading || totpCode.length !== 6} className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep press flex-shrink-0">
+                        {totpLoading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                        Verify & Enable
+                      </Button>
+                    </div>
+                  </div>
+                ) : totpEnabled ? (
+                  <div>
+                    <p className="text-sm mb-3">Two-factor authentication is <span className="text-green-600 font-medium">Enabled</span></p>
+                    <div className="flex gap-2">
+                      <Input value={totpCode} onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="6-digit code" maxLength={6} className="rounded-xl font-mono text-center" />
+                      <Button onClick={handleDisable2FA} disabled={totpLoading || totpCode.length !== 6} variant="outline" className="rounded-full text-red-500 border-red-200 hover:bg-red-50 press flex-shrink-0">
+                        {totpLoading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                        Disable
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm mb-3">Two-factor authentication is <span className="text-muted-foreground">Disabled</span></p>
+                    <Button onClick={handleEnable2FA} disabled={totpLoading} className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep press">
+                      {totpLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      Enable 2FA
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
