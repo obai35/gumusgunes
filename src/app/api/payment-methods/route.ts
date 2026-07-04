@@ -12,5 +12,5 @@ export async function GET() {
     try { config = JSON.parse(decrypt(m.config)) } catch { try { config = JSON.parse(m.config) } catch {} }
     return { ...m, config }
   })
-  return NextResponse.json({ methods: result })
+  return NextResponse.json({ methods: result }, { headers: { 'Cache-Control': 'public, s-maxage=3600' } })
 }

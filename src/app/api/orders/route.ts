@@ -76,7 +76,7 @@ const orderHandler = async (req: NextRequest) => {
     const newProductIds = items.map((i: any) => i.productId).sort()
     const pendingOrders = await db.order.findMany({
       where: { email: rest.email.toLowerCase(), status: { in: ['pending', 'processing'] } },
-      include: { items: true },
+      select: { id: true, items: { select: { productId: true } } },
     })
     for (const pending of pendingOrders) {
       const pendingProductIds = pending.items.map(i => i.productId).sort()
@@ -206,7 +206,17 @@ const orderHandler = async (req: NextRequest) => {
         paymentStatus,
         items: { create: orderItemsData },
       },
-      include: { items: { include: { product: true } } },
+      select: {
+        id: true, orderNumber: true, userId: true, email: true, fullName: true, phone: true,
+        address: true, city: true, postalCode: true, country: true, totalAmount: true,
+        subtotal: true, shipping: true, tax: true, status: true, paymentMethod: true,
+        paymentStatus: true, discountId: true, discountAmount: true, shippingMethodId: true,
+        notes: true, idempotencyKey: true, stripePaymentIntentId: true, paypalOrderId: true,
+        walletProvider: true, paymentReference: true, createdAt: true,
+        items: {
+          select: { id: true, quantity: true, price: true, discount: true, productId: true, product: { select: { id: true, name: true, price: true, imageUrl: true, stock: true } } },
+        },
+      },
     })
 
     return NextResponse.json({ ok: true, order })

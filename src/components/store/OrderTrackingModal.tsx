@@ -9,6 +9,7 @@ import { cn, formatDate } from '@/lib/format'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import Image from 'next/image'
 import { toast } from 'sonner'
 import { useTranslation } from '@/hooks/use-translation'
 
@@ -267,8 +268,8 @@ export function OrderTrackingModal() {
                     <div className="space-y-2">
                       {order.items.map((item) => (
                         <div key={item.id} className="flex items-center gap-3 p-2 rounded-xl bg-secondary/30">
-                          <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-                            <img src={item.product.imageUrl} alt={item.product.name} loading="lazy" className="h-full w-full object-cover" />
+                          <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0 relative">
+                            <Image src={item.product.imageUrl} alt={item.product.name} fill className="object-cover" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-navy line-clamp-1">{item.product.name}</p>

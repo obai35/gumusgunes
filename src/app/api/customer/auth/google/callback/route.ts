@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { google } from 'googleapis'
 import { signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
 
@@ -20,29 +19,48 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=google_config', origin))
     }
 
-    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
-    const { tokens } = await oauth2Client.getToken(code)
-    oauth2Client.setCredentials(tokens)
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        code,
+        client_id: clientId,
+        client_secret: clientSecret,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code',
+      }),
+    })
+
+    if (!tokenRes.ok) {
+      return NextResponse.redirect(new URL('/login?error=google_token', origin))
+    }
+
+    const tokens: { access_token: string; id_token?: string } = await tokenRes.json()
 
     let email = ''
     let name = ''
     let avatar: string | null = null
-    let phone: string | null = null
-    let dateOfBirth: Date | null = null
 
     try {
-      const people = google.people({ version: 'v1', auth: oauth2Client })
-      const profile = await people.people.get({
-        resourceName: 'people/me',
-        personFields: 'names,emailAddresses,photos',
+      const profileRes = await fetch('https://people.googleapis.com/v1/people/me?personFields=names,emailAddresses,photos', {
+        headers: { Authorization: `Bearer ${tokens.access_token}` },
       })
-      const data = profile.data
-      email = data.emailAddresses?.[0]?.value || ''
-      name = data.names?.[0]?.displayName || ''
-      avatar = data.photos?.[0]?.url || null
-    } catch {
-      const tokenInfo = await oauth2Client.getTokenInfo(tokens.access_token!)
-      email = tokenInfo.email || ''
+      if (profileRes.ok) {
+        const data = await profileRes.json()
+        email = data.emailAddresses?.[0]?.value || ''
+        name = data.names?.[0]?.displayName || ''
+        avatar = data.photos?.[0]?.url || null
+      }
+    } catch {}
+
+    if (!email) {
+      try {
+        const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${tokens.access_token}`)
+        if (infoRes.ok) {
+          const info = await infoRes.json()
+          email = info.email || ''
+        }
+      } catch {}
     }
 
     if (tokens.id_token) {
@@ -67,8 +85,6 @@ export async function GET(req: NextRequest) {
         googleId: tokens.id_token || email,
         name: name || undefined,
         avatar: avatar || undefined,
-        dateOfBirth: dateOfBirth || undefined,
-        phone: phone || undefined,
       },
       create: {
         email,
@@ -76,8 +92,6 @@ export async function GET(req: NextRequest) {
         password: '',
         googleId: tokens.id_token || email,
         avatar,
-        dateOfBirth,
-        phone,
       },
     })
 

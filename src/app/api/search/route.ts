@@ -21,9 +21,13 @@ async function handleGet(req: NextRequest) {
           { sku: { contains: q } },
         ],
       },
+      select: {
+        id: true, name: true, slug: true, price: true, imageUrl: true,
+        rating: true, reviewCount: true, isNew: true, isBestseller: true,
+        category: { select: { id: true, name: true, slug: true } },
+      },
       take: 12,
       orderBy: { isBestseller: 'desc' },
-      include: { category: true },
     })
 
     const categories = await db.category.findMany({

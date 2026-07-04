@@ -13,11 +13,15 @@ export async function GET(
         OR: [{ id }, { slug: id }],
         isActive: true,
       },
-      include: {
-        category: true,
+      select: {
+        id: true, name: true, slug: true, description: true, price: true, compareAtPrice: true,
+        sku: true, imageUrl: true, images: true, material: true, weight: true, rating: true, reviewCount: true,
+        stock: true, tags: true, isNew: true, isBestseller: true, isFeatured: true, createdAt: true,
+        category: { select: { id: true, name: true, slug: true } },
         reviews: {
           orderBy: { createdAt: 'desc' },
           take: 20,
+          select: { id: true, authorName: true, rating: true, title: true, comment: true, createdAt: true },
         },
       },
     })
@@ -36,11 +40,15 @@ export async function GET(
         id: { not: product.id },
         isActive: true,
       },
+      select: {
+        id: true, name: true, slug: true, price: true, imageUrl: true,
+        rating: true, reviewCount: true, isNew: true, isBestseller: true,
+      },
       take: 4,
       orderBy: { isBestseller: 'desc' },
     })
 
-    return NextResponse.json({ ok: true, product, related })
+    return NextResponse.json({ ok: true, product, related }, { headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' } })
   } catch (err) {
     console.error('GET /api/products/[id] error:', err)
     return NextResponse.json(

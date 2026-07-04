@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Heart, Star, Eye, GitCompare } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -54,11 +55,12 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
     >
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-secondary">
-        <img
+        <Image
           src={product.imageUrl}
           alt={product.name}
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+          fill
+          sizes="(max-width: 768px) 50vw, 25vw"
+          className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
 
         {/* Badges */}

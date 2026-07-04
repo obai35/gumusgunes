@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, Truck, Sparkles, Plus as PlusIcon } from 'lucide-react'
@@ -99,12 +100,13 @@ export function CartContent() {
       <div className="flex-1 overflow-y-auto scroll-luxury p-5 space-y-4">
         {items.map((item) => (
           <div key={item.product.id} className="flex gap-3 group">
-            <div className="h-20 w-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-              <img
+            <div className="h-20 w-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0 relative">
+              <Image
                 src={item.product.imageUrl}
                 alt={item.product.name}
-                loading="lazy"
-                className="h-full w-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
               />
             </div>
             <div className="flex-1 min-w-0">
@@ -159,12 +161,13 @@ export function CartContent() {
                   key={rec.id}
                   className="flex items-center gap-3 p-2 rounded-xl hover:bg-secondary/60 transition-colors group"
                 >
-                  <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
-              <img
+                  <div className="h-14 w-14 rounded-lg overflow-hidden bg-secondary flex-shrink-0 relative">
+              <Image
                 src={rec.imageUrl}
                 alt={rec.name}
-                loading="lazy"
-                className="h-full w-full object-cover"
+                fill
+                sizes="56px"
+                className="object-cover"
               />
                   </div>
                   <div className="flex-1 min-w-0">

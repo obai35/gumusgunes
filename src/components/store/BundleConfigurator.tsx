@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Layers, Check, ShoppingBag, Sparkles, X, ChevronRight, RotateCcw } from 'lucide-react'
 import { useCart } from '@/lib/store'
@@ -249,9 +250,9 @@ export function BundleConfigurator() {
                       product ? 'border-gold/30 bg-gold/5' : 'border-dashed border-border'
                     )}
                   >
-                    <div className="h-14 w-14 rounded-xl overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center text-2xl">
+                    <div className="h-14 w-14 rounded-xl overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center text-2xl relative">
                       {product ? (
-                        <img src={product.imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
                       ) : (
                         step.icon
                       )}

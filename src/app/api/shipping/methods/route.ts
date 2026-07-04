@@ -17,5 +17,5 @@ export async function GET(req: Request) {
     estimatedDays: r.method.estimatedDays,
     price: r.price,
   }))
-  return NextResponse.json({ methods })
+  return NextResponse.json({ methods }, { headers: { 'Cache-Control': 'public, s-maxage=3600' } })
 }

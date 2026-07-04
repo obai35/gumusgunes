@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -156,15 +157,16 @@ export function ProductModal() {
                       setZoomPos({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) })
                     }}
                   >
-                    <img
+                    <Image
                       src={product.imageUrl}
                       alt={product.name}
-                      loading="lazy"
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-200"
+                      fill
+                      className="object-cover transition-transform duration-200"
                       style={zoom ? {
                         transform: `scale(2.2)`,
                         transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                       } : undefined}
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                     {/* Zoom hint */}
                     <div className={cn(
@@ -195,11 +197,11 @@ export function ProductModal() {
                         key={i}
                         onClick={() => setActiveImage(i)}
                         className={cn(
-                          'h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors',
+                          'h-16 w-16 relative rounded-lg overflow-hidden border-2 transition-colors',
                           activeImage === i ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100'
                         )}
                       >
-                        <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
+                        <Image src={img} alt="" fill className="object-cover" sizes="80px" />
                       </button>
                     ))}
                   </div>
@@ -453,11 +455,12 @@ export function ProductModal() {
                             onClick={() => setProductModal(rp.id)}
                             className="group relative aspect-square rounded-lg overflow-hidden bg-secondary"
                           >
-                            <img
+                            <Image
                               src={rp.imageUrl}
                               alt={rp.name}
-                              loading="lazy"
-                              className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform"
+                              fill
+                              className="object-cover group-hover:scale-105 transition-transform"
+                              sizes="25vw"
                             />
                             <div className="absolute inset-0 bg-navy-deep/0 group-hover:bg-navy-deep/30 transition-colors" />
                           </button>

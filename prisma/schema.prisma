@@ -41,6 +41,13 @@ model Product {
   returnItems    ReturnItem[]
   stocks         BranchStock[]
   transfers      StockTransfer[]
+
+  @@index([categoryId, isActive])
+  @@index([isActive, isFeatured])
+  @@index([isActive, isNew])
+  @@index([isActive, isBestseller])
+  @@index([price])
+  @@index([createdAt])
 }
 
 model Category {
@@ -69,6 +76,8 @@ model Review {
   comment    String
   isVerified Boolean  @default(false)
   createdAt  DateTime @default(now())
+
+  @@index([productId, createdAt])
 }
 
 model Order {
@@ -119,6 +128,11 @@ model Order {
   returns        Return[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model OrderItem {
@@ -322,7 +336,9 @@ model StockTransfer {
   note        String?
   createdById String
   createdBy   Admin    @relation(fields: [createdById], references: [id])
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([createdById, createdAt])
 }
 
 model Role {
@@ -357,6 +373,8 @@ model InventoryLog {
   change    Int
   note      String?
   createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
 }
 
 model Discount {
@@ -431,6 +449,8 @@ model Shift {
   orders            Order[]
   expenses          Expense[]
   returns           Return[]
+
+  @@index([branchId, isOpen])
 }
 
 model Branch {
@@ -470,6 +490,8 @@ model ActivityLog {
   resourceId  String?
   details     String?
   createdAt   DateTime @default(now())
+
+  @@index([adminId, createdAt])
 }
 
 model ResetToken {

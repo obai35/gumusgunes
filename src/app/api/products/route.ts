@@ -55,7 +55,11 @@ export async function GET(req: NextRequest) {
     const products = await db.product.findMany({
       where,
       orderBy,
-      include: { category: true },
+      select: {
+        id: true, name: true, slug: true, price: true, compareAtPrice: true, imageUrl: true,
+        rating: true, reviewCount: true, isNew: true, isBestseller: true, stock: true,
+        category: { select: { id: true, name: true, slug: true } },
+      },
       take: Math.max(1, Math.min(100, parseInt(limit || '20'))),
     })
 

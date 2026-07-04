@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Heart, ShoppingBag, Star, Truck, ShieldCheck, RefreshCw, Minus, Plus, ZoomIn } from 'lucide-react'
@@ -65,11 +66,12 @@ export default function ProductDetailClient({ product, related }: Props) {
             })
           }}
         >
-          <img
+          <Image
             src={product.imageUrl}
             alt={product.name}
-            loading="lazy"
-            className="absolute inset-0 h-full w-full object-cover transition-transform duration-200"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover transition-transform duration-200"
             style={zoom ? { transform: 'scale(2.2)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : undefined}
           />
           <div className={cn(
@@ -96,7 +98,7 @@ export default function ProductDetailClient({ product, related }: Props) {
               onClick={() => setActiveImage(i)}
               className={cn('h-16 w-16 rounded-lg overflow-hidden border-2 transition-colors', activeImage === i ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100')}
             >
-              <img src={img} alt="" loading="lazy" className="h-full w-full object-cover" />
+              <Image src={img} alt="" fill sizes="80px" className="object-cover" />
             </button>
           ))}
         </div>
@@ -227,7 +229,7 @@ export default function ProductDetailClient({ product, related }: Props) {
                   href={`/products/${rp.id}`}
                   className="group relative aspect-square rounded-lg overflow-hidden bg-secondary"
                 >
-                  <img src={rp.imageUrl} alt={rp.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                  <Image src={rp.imageUrl} alt={rp.name} fill sizes="120px" className="object-cover group-hover:scale-105 transition-transform" />
                   <div className="absolute inset-0 bg-navy-deep/0 group-hover:bg-navy-deep/30 transition-colors" />
                 </Link>
               ))}
