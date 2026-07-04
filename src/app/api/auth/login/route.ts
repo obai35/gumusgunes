@@ -21,6 +21,9 @@ export async function POST(req: Request) {
 
     const user = await db.user.findUnique({ where: { email } })
     if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    if (!user.password) {
+      return NextResponse.json({ error: 'This account uses Google sign-in. Please sign in with Google.', code: 'google_only_account' }, { status: 401 })
+    }
 
     const valid = await verifyPassword(password, user.password)
     if (!valid) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })

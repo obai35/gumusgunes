@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
-import { User, MapPin, CreditCard, Package, Loader2, Plus, Trash2, ChevronRight, Search, X } from 'lucide-react'
+import { User, MapPin, CreditCard, Package, Loader2, Plus, Trash2, ChevronRight, Search, X, Key, Chrome } from 'lucide-react'
 
 type Tab = 'profile' | 'addresses' | 'cards' | 'orders'
 
@@ -84,6 +84,10 @@ export default function AccountPage() {
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' })
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileSaving, setProfileSaving] = useState(false)
+  const [hasPassword, setHasPassword] = useState(true)
+  const [hasGoogle, setHasGoogle] = useState(false)
+  const [setPwdValue, setSetPwdValue] = useState('')
+  const [setPwdLoading, setSetPwdLoading] = useState(false)
 
   const [addresses, setAddresses] = useState<Address[]>([])
   const [addressLoading, setAddressLoading] = useState(false)
@@ -130,6 +134,8 @@ export default function AccountPage() {
       if (res.ok) {
         const data = await res.json()
         setProfile({ name: data.name, email: data.email, phone: data.phone || '' })
+        setHasPassword(data.hasPassword !== false)
+        setHasGoogle(data.hasGoogle === true)
       }
     } finally { setProfileLoading(false) }
   }
@@ -259,6 +265,26 @@ export default function AccountPage() {
     finally { setTotpLoading(false) }
   }
 
+  async function handleSetPassword() {
+    setSetPwdLoading(true)
+    try {
+      const res = await fetch('/api/customer/auth/set-password', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ password: setPwdValue }) })
+      if (res.ok) {
+        toast.success('Password set! You can now sign in with email as well.')
+        setHasPassword(true)
+        setSetPwdValue('')
+      } else {
+        const err = await res.json()
+        toast.error(err.error || 'Failed to set password')
+      }
+    } catch { toast.error('Something went wrong') }
+    finally { setSetPwdLoading(false) }
+  }
+
+  async function handleLinkGoogle() {
+    window.location.href = '/api/customer/auth/google'
+  }
+
   async function handleDisable2FA() {
     if (totpCode.length !== 6) { toast.error('Enter your current 6-digit code'); return }
     setTotpLoading(true)
@@ -339,6 +365,44 @@ export default function AccountPage() {
                   </Button>
                 </div>
               )}
+
+              {/* Link Google / Set Password */}
+              <div className="mt-8 p-5 rounded-2xl border border-border bg-white space-y-4">
+                <h3 className="font-display text-lg font-semibold text-navy">Account Linking</h3>
+                {!hasGoogle && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-navy">Link Google Account</p>
+                      <p className="text-xs text-muted-foreground">Sign in with Google as well as email</p>
+                    </div>
+                    <Button onClick={handleLinkGoogle} className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep press flex-shrink-0 text-sm">
+                      <Chrome className="h-4 w-4 mr-1.5" /> Link Google
+                    </Button>
+                  </div>
+                )}
+                {hasGoogle && (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-navy">Google Account</p>
+                      <p className="text-xs text-green-600">Linked</p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">Connected</span>
+                  </div>
+                )}
+                {!hasPassword && (
+                  <div className="border-t border-border pt-4">
+                    <p className="text-sm font-medium text-navy mb-1">Set Password</p>
+                    <p className="text-xs text-muted-foreground mb-3">You signed up via Google. Set a password to also sign in with email.</p>
+                    <div className="flex gap-2">
+                      <Input type="password" value={setPwdValue} onChange={(e) => setSetPwdValue(e.target.value)} placeholder="New password" className="rounded-xl" />
+                      <Button onClick={handleSetPassword} disabled={setPwdLoading || setPwdValue.length < 8} className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep press flex-shrink-0">
+                        {setPwdLoading && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+                        Set
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Two-Factor Authentication */}
               <div className="mt-8 p-5 rounded-2xl border border-border bg-white">

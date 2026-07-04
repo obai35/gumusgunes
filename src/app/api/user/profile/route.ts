@@ -14,10 +14,17 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const profile = await db.user.findUnique({
     where: { id: user.userId },
-    select: { id: true, email: true, name: true, phone: true },
+    select: { id: true, email: true, name: true, phone: true, password: true, googleId: true },
   })
   if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(profile)
+  return NextResponse.json({
+    id: profile.id,
+    email: profile.email,
+    name: profile.name,
+    phone: profile.phone,
+    hasPassword: profile.password !== '',
+    hasGoogle: profile.googleId !== null,
+  })
 }
 
 export async function PUT(req: NextRequest) {

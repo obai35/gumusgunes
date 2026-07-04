@@ -79,10 +79,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=google_no_email', origin))
     }
 
+    const googleSub = (() => {
+      if (!tokens.id_token) return email
+      try {
+        const parts = tokens.id_token.split('.')
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString())
+        return payload.sub || email
+      } catch { return email }
+    })()
+
     const user = await db.user.upsert({
       where: { email },
       update: {
-        googleId: tokens.id_token || email,
+        googleId: googleSub,
         name: name || undefined,
         avatar: avatar || undefined,
       },
@@ -90,7 +99,7 @@ export async function GET(req: NextRequest) {
         email,
         name,
         password: '',
-        googleId: tokens.id_token || email,
+        googleId: googleSub,
         avatar,
       },
     })
