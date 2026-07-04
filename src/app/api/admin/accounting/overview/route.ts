@@ -59,7 +59,8 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
   const [orders, revenueAgg, returns, expensesSum] = await Promise.all([
     db.order.findMany({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
-      include: { shift: { select: { branch: { select: { name: true } } } } },
+      select: { id: true, totalAmount: true, createdAt: true, paymentMethod: true, cashAmount: true, cardAmount: true, status: true, shiftId: true },
+      take: 1000,
     }),
     db.order.aggregate({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
@@ -67,6 +68,7 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
     }),
     db.return.findMany({
       where: { createdAt: { gte: from, lte: to }, refundMethod: { not: 'no_refund' } },
+      select: { refundAmount: true },
     }),
     db.expense.aggregate({
       where: { createdAt: { gte: from, lte: to } },
@@ -74,8 +76,18 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
     }),
   ])
 
+  const orderShiftIds = [...new Set(orders.map(o => o.shiftId).filter(Boolean))]
+  const shifts = orderShiftIds.length > 0
+    ? await db.shift.findMany({
+        where: { id: { in: orderShiftIds } },
+        select: { id: true, branch: { select: { name: true } } },
+      })
+    : []
+  const branchByShiftId = new Map(shifts.map(s => [s.id, s.branch?.name || 'Unknown']))
+
   return {
     orders,
+    branchByShiftId,
     totalRevenue: revenueAgg._sum.totalAmount || 0,
     totalReturns: returns.reduce((sum, r) => sum + r.refundAmount, 0),
     totalExpenses: expensesSum._sum.amount || 0,
@@ -105,7 +117,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       db.shift.count({ where: { isOpen: true } }),
     ])
 
-    const { orders, totalRevenue, totalReturns, totalExpenses, netRevenue } = metrics
+    const { orders, branchByShiftId, totalRevenue, totalReturns, totalExpenses, netRevenue } = metrics
 
     const dailyMap: Record<string, number> = {}
     for (const o of orders) {
@@ -149,7 +161,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
     const branchRevenue: Record<string, number> = {}
     for (const o of orders) {
-      const name = o.shift?.branch?.name || 'Unknown'
+      const name = branchByShiftId.get(o.shiftId || '') || 'Unknown'
       branchRevenue[name] = (branchRevenue[name] || 0) + o.totalAmount
     }
 
@@ -186,13 +198,10 @@ export const GET = withAdmin(async (req: NextRequest) => {
     if (comparePeriod === 'previous') {
       const prevRange = getPreviousDateRange({ start, end })
       const prevMetrics = await fetchPeriodMetrics(prevRange.start, prevRange.end)
-      const prevOrders = await db.order.findMany({
-        where: { createdAt: { gte: prevRange.start, lte: prevRange.end }, status: { not: 'cancelled' } },
-      })
 
       result.compare = {
         compareRevenue: prevMetrics.totalRevenue,
-        compareTotalOrders: prevOrders.length,
+        compareTotalOrders: prevMetrics.orders.length,
         compareNetRevenue: prevMetrics.netRevenue,
         compareDateRange: { start: prevRange.start.toISOString(), end: prevRange.end.toISOString() },
       }

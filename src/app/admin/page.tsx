@@ -139,22 +139,20 @@ export default function AdminDashboard() {
     let cancelled = false
     async function load() {
       try {
-        const [dayRes, weekRes, monthRes, activityRes, lowStockRes] = await Promise.all([
+        const [dayRes, weekRes, monthRes, activityRes] = await Promise.all([
           fetch('/api/admin/accounting/overview?period=day'),
           fetch('/api/admin/accounting/overview?period=week'),
           fetch('/api/admin/accounting/overview?period=month'),
           fetch('/api/admin/activity?limit=10'),
-          fetch('/api/admin/products?lowStock=true&limit=1'),
         ])
         if (cancelled) return
-        const [dayData, weekData, monthData, activityData, lowStockData] = await Promise.all([
-          dayRes.json(), weekRes.json(), monthRes.json(), activityRes.json(), lowStockRes.json(),
+        const [dayData, weekData, monthData, activityData] = await Promise.all([
+          dayRes.json(), weekRes.json(), monthRes.json(), activityRes.json(),
         ])
         setOverviewDay(dayData)
         setOverviewWeek(weekData)
         setOverviewMonth(monthData)
         setActivities(activityData.logs || [])
-        setLowStockCount(lowStockData.total || 0)
       } catch {
         if (!cancelled) toast.error('Failed to load dashboard data')
       } finally {
@@ -302,7 +300,7 @@ export default function AdminDashboard() {
               View All <ChevronRight className="h-3 w-3" />
             </Link>
           </div>
-          <LowStockList />
+          <LowStockList onTotal={setLowStockCount} />
         </div>
       </div>
     </div>
@@ -350,14 +348,18 @@ function OrdersList() {
   )
 }
 
-function LowStockList() {
+function LowStockList({ onTotal }: { onTotal?: (n: number) => void }) {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetch('/api/admin/products?lowStock=true&limit=20')
       .then(r => r.json())
-      .then(data => setProducts(data.products || data || []))
+      .then(data => {
+        const list = data.products || data || []
+        setProducts(list)
+        if (onTotal) onTotal(data.total || list.length)
+      })
       .catch(() => toast.error('Failed to load low stock items'))
       .finally(() => setLoading(false))
   }, [])

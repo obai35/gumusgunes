@@ -20,6 +20,14 @@ export type AdminInfo = {
   isSuperAdmin: boolean
 }
 
+const adminCache = new Map<string, { admin: AdminInfo; expiresAt: number }>()
+const CACHE_TTL = 60_000
+
+export function clearAdminCache(adminId?: string) {
+  if (adminId) adminCache.delete(adminId)
+  else adminCache.clear()
+}
+
 export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | null> {
   const cookieToken = req.cookies.get('__session_admin')?.value
   const authHeader = req.headers.get('Authorization')
@@ -27,6 +35,8 @@ export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | n
   if (!token) return null
   const payload = verifyAdminToken(token)
   if (!payload) return null
+  const cached = adminCache.get(payload.adminId)
+  if (cached && cached.expiresAt > Date.now()) return cached.admin
   const admin = await db.admin.findUnique({
     where: { id: payload.adminId },
     include: { roleRel: true },
@@ -35,7 +45,9 @@ export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | n
   const role = admin.roleRel?.name || admin.role
   const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) as string[] : []
   const isSuperAdmin = role === 'superadmin' || role === 'admin'
-  return { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin }
+  const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin }
+  adminCache.set(payload.adminId, { admin: result, expiresAt: Date.now() + CACHE_TTL })
+  return result
 }
 
 export function withAdmin(
