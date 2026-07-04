@@ -25,6 +25,7 @@ import ReturnsTab from './components/ReturnsTab'
 import CustomerDisplay from './components/CustomerDisplay'
 import CustomerSearch from './components/CustomerSearch'
 import OfflineBanner from './components/OfflineBanner'
+import OfflineSyncManager from './components/OfflineSyncManager'
 import ShortcutsCheatSheet from './components/ShortcutsCheatSheet'
 import { registerSW } from '@/lib/offline'
 import { queueOrder, cacheProducts } from '@/lib/pos-db'
@@ -407,6 +408,7 @@ export default function POSPage() {
             >
               + Custom Price
             </button>
+            <OfflineSyncManager />
           </div>
           <CartPanel
             cart={pos.cart}
