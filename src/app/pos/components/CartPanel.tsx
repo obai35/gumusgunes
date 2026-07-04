@@ -29,7 +29,7 @@ function CartPanel({ cart, onUpdateQuantity, onRemove, onSetDiscount, customerSe
   const [showHoldPrompt, setShowHoldPrompt] = useState(false)
 
   return (
-    <div className="w-[320px] min-w-[320px] flex flex-col bg-[rgba(10,22,40,0.95)] rounded-xl shrink-0 self-start sticky top-0 max-h-[calc(100dvh-3rem)] border border-gold/30 shadow-[0_0_20px_-8px_rgba(212,175,55,0.3)]">
+    <div className="w-[320px] min-w-[320px] flex flex-col bg-[rgba(10,22,40,0.95)] rounded-xl shrink-0 self-start sticky top-0 max-h-[calc(100dvh-3rem)] overflow-y-auto border border-gold/30 shadow-[0_0_20px_-8px_rgba(212,175,55,0.3)]">
       <div className="p-4 flex flex-col h-full">
         <div className="flex items-center justify-between mb-3 flex-shrink-0">
           <h2 className="font-semibold text-silver-soft flex items-center gap-2"><ShoppingCart className="h-4 w-4 text-gold" /> Cart ({cart.length})</h2>
