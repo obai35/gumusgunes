@@ -3,6 +3,7 @@ import { withRateLimit } from '@/lib/rate-limit'
 import { db } from '@/lib/db'
 import { verifyToken } from '@/lib/customer-auth'
 import { getStripe } from '@/lib/stripe'
+import { encrypt } from '@/lib/encryption'
 import { z } from 'zod'
 
 const OrderItemSchema = z.object({
@@ -196,7 +197,7 @@ const orderHandler = async (req: NextRequest) => {
         stripePaymentIntentId: stripePaymentIntentId || null,
         paypalOrderId: paypalOrderId || null,
         walletProvider: walletProvider || null,
-        paymentReference: paymentReference || null,
+        paymentReference: paymentReference ? encrypt(paymentReference) : null,
         subtotal,
         shipping,
         shippingMethodId,

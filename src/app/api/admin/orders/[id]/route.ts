@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { decrypt } from '@/lib/encryption'
 
 export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
@@ -87,6 +88,13 @@ export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: str
         include: { items: { include: { product: { select: { name: true } } } } },
       })
     })
+
+    if (result.paymentProofUrl) {
+      try { result.paymentProofUrl = decrypt(result.paymentProofUrl) } catch {}
+    }
+    if (result.paymentReference) {
+      try { result.paymentReference = decrypt(result.paymentReference) } catch {}
+    }
 
     return NextResponse.json(result)
   } catch {
