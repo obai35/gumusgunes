@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
-import { ALL_PERMISSIONS } from '@/lib/admin-permissions'
+import { ALL_PERMISSIONS, type Permission } from '@/lib/admin-permissions'
 import { Shield, Users, Plus, Pencil, Trash2, X, History } from 'lucide-react'
 
 type Tab = 'admins' | 'roles' | 'activity'
@@ -11,7 +11,7 @@ type Tab = 'admins' | 'roles' | 'activity'
 type AdminUser = { id: string; email: string; name: string; phone: string | null; role: string; roleId: string | null; totpEnabled: boolean; lastLoginAt: string | null; createdAt: string }
 type Role = { id: string; name: string; permissions: string[]; createdAt: string }
 
-const PERMISSION_LABELS: Record<string, string> = {
+const PERMISSION_LABELS: Record<Permission, string> = {
   dashboard: 'Dashboard', accounting: 'Accounting', orders: 'Orders', receipts: 'Receipts',
   products: 'Products', inventory: 'Inventory', discounts: 'Discounts', stock_transfers: 'Stock Transfers',
   branches: 'Branches', pos: 'POS', editor: 'Site Editor', categories: 'Categories', settings: 'Settings',
