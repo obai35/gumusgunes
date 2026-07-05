@@ -363,7 +363,7 @@ export default function POSPage() {
 
   if (offlineReceipt) return (
     <div className="navy-radial min-h-screen">
-      <ReceiptView receipt={offlineReceipt} onNewSale={() => setOfflineReceipt(null)} />
+      <ReceiptView receipt={offlineReceipt} onNewSale={() => setOfflineReceipt(null)} isOffline />
     </div>
   )
 
@@ -449,6 +449,8 @@ export default function POSPage() {
       onAssessment={() => setView('assessment')}
       onCloseShift={() => setShowCloseShift(true)}
       onLogout={handleLogout}
+      offlineMode={offlineMode}
+      onToggleOffline={() => setOfflineMode(!offlineMode)}
     >
       <OfflineBanner />
       {view === 'pos' && (
@@ -472,17 +474,19 @@ export default function POSPage() {
             >
               + Custom Price
             </button>
-            <div className={'mt-2 flex-shrink-0 flex items-center justify-between rounded-lg border px-3 py-1.5 text-xs transition-all ' + (offlineMode ? 'border-amber-500/30 bg-amber-500/5' : 'border-white/5 bg-white/[0.02]')}>
-              <div className="flex items-center gap-1.5">
-                <span className={'h-2 w-2 rounded-full ' + (offlineMode ? 'bg-amber-400' : 'bg-emerald-400/60')} />
-                <span className="text-white/60">Offline Mode</span>
+            <div className={'mt-2 flex-shrink-0 flex items-center justify-between rounded-lg border px-3 py-2 text-xs transition-all ' + (offlineMode ? 'border-amber-500/30 bg-amber-500/[0.06] shadow-[0_0_15px_-6px_rgba(251,191,36,0.2)]' : 'border-white/5 bg-white/[0.02]')}>
+              <div className="flex items-center gap-2">
+                <div className={'h-6 w-10 rounded-full relative cursor-pointer transition-all duration-300 ' + (offlineMode ? 'bg-amber-500/40' : 'bg-white/10')} onClick={() => setOfflineMode(!offlineMode)}>
+                  <div className={'absolute top-0.5 left-0.5 h-5 w-5 rounded-full shadow-md transition-all duration-300 ' + (offlineMode ? 'translate-x-4 bg-amber-400' : 'translate-x-0 bg-white/40')} />
+                </div>
+                <div>
+                  <p className={'font-medium leading-tight ' + (offlineMode ? 'text-amber-300' : 'text-white/50')}>Offline Mode</p>
+                  <p className="text-[10px] text-white/25 leading-tight mt-0.5">{offlineMode ? 'Orders saved locally' : 'Sync to server'}</p>
+                </div>
               </div>
-              <button
-                onClick={() => setOfflineMode(!offlineMode)}
-                className={'px-2 py-1 rounded text-[11px] font-medium transition-all ' + (offlineMode ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30' : 'bg-white/5 text-white/40 hover:text-white/60 hover:bg-white/10')}
-              >
-                {offlineMode ? 'ON' : 'OFF'}
-              </button>
+              <div className={'text-[10px] font-mono px-1.5 py-0.5 rounded ' + (offlineMode ? 'text-amber-400/60 bg-amber-500/10' : 'text-white/15 bg-white/5')}>
+                {offlineMode ? 'LOCAL' : 'LIVE'}
+              </div>
             </div>
             <OfflineSyncManager />
           </div>

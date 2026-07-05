@@ -6,9 +6,10 @@ import type { ReceiptData } from '../types'
 type Props = {
   receipt: ReceiptData
   onNewSale: () => void
+  isOffline?: boolean
 }
 
-export default function ReceiptView({ receipt, onNewSale }: Props) {
+export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
 
   function printReceipt() {
     const printWindow = window.open('', '_blank')
@@ -76,7 +77,12 @@ export default function ReceiptView({ receipt, onNewSale }: Props) {
 
   return (
     <div className="flex items-start justify-center min-h-[60vh] pt-8" id="pos-receipt">
-      <div className="pos-glass-strong rounded-xl w-full max-w-sm">
+      <div className={'pos-glass-strong rounded-xl w-full max-w-sm relative overflow-hidden ' + (isOffline ? 'ring-1 ring-amber-500/30' : '')}>
+        {isOffline && (
+          <div className="absolute top-3 right-3 px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded-md text-amber-400 text-[10px] font-bold uppercase tracking-widest shadow-[0_0_12px_-4px_rgba(251,191,36,0.3)]">
+            Offline
+          </div>
+        )}
         <div className="text-center p-6 border-b border-dashed border-white/10">
           <div className="flex items-center justify-center gap-2 mb-2">
             <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/40">

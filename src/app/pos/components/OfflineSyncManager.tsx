@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
-import { Upload, RefreshCw, CheckCircle, AlertTriangle, Wifi } from 'lucide-react'
+import { Upload, RefreshCw, CheckCircle, AlertTriangle, Wifi, ChevronDown, Clock } from 'lucide-react'
 import { getUnsyncedOrders, getUnsyncedOrdersWithTempNumbers, markOrderSynced, markOrderSyncedWithRealInfo, markOrderSyncFailed } from '@/lib/pos-db'
 import { isOnline, onOnlineChange } from '@/lib/offline'
 
 export default function OfflineSyncManager() {
   const [pending, setPending] = useState(0)
   const [syncing, setSyncing] = useState(false)
+  const [syncProgress, setSyncProgress] = useState<{ current: number; total: number } | null>(null)
   const [result, setResult] = useState<{ ok: number; fail: number } | null>(null)
   const [showDetails, setShowDetails] = useState(false)
   const [offlineOrders, setOfflineOrders] = useState<any[]>([])
@@ -35,6 +36,7 @@ export default function OfflineSyncManager() {
     if (syncing) return
     setSyncing(true)
     setResult(null)
+    setSyncProgress(null)
     let ok = 0
     let fail = 0
     try {
@@ -42,6 +44,8 @@ export default function OfflineSyncManager() {
         getUnsyncedOrders(),
         getUnsyncedOrdersWithTempNumbers(),
       ])
+      const total = legacyOrders.length + richOrders.length
+      setSyncProgress({ current: 0, total })
       for (const order of legacyOrders) {
         try {
           const res = await fetch('/api/admin/pos/checkout', {
@@ -54,6 +58,7 @@ export default function OfflineSyncManager() {
             ok++
           } else { fail++ }
         } catch { fail++ }
+        setSyncProgress((p) => p ? { ...p, current: p.current + 1 } : null)
       }
       for (const order of richOrders) {
         try {
@@ -87,9 +92,11 @@ export default function OfflineSyncManager() {
           await markOrderSyncFailed(order.tempReceiptNumber)
           fail++
         }
+        setSyncProgress((p) => p ? { ...p, current: p.current + 1 } : null)
       }
     } catch { fail = pending }
     setSyncing(false)
+    setSyncProgress(null)
     if (ok === 0 && fail === 0) {
       setResult(null)
     } else {
@@ -101,70 +108,79 @@ export default function OfflineSyncManager() {
     await refreshPending()
   }, [syncing, pending, refreshPending])
 
+  const statusInfo = syncing
+    ? { border: 'border-gold/30', bg: 'bg-gold/[0.04]', icon: RefreshCw, iconClass: 'text-gold animate-spin', text: syncProgress ? `Syncing ${syncProgress.current + 1}/${syncProgress.total}` : 'Syncing...' }
+    : pending > 0 && result?.fail && result.fail > 0
+      ? { border: 'border-red-500/30', bg: 'bg-red-500/[0.04]', icon: AlertTriangle, iconClass: 'text-red-400', text: `${result.ok} synced, ${result.fail} failed` }
+      : result?.ok && result.ok > 0
+        ? { border: 'border-emerald-500/30', bg: 'bg-emerald-500/[0.04]', icon: CheckCircle, iconClass: 'text-emerald-400', text: `${result.ok} order${result.ok !== 1 ? 's' : ''} synced` }
+        : pending > 0
+          ? { border: 'border-amber-500/30', bg: 'bg-amber-500/[0.04]', icon: Upload, iconClass: 'text-amber-400', text: `${pending} order${pending !== 1 ? 's' : ''} pending sync` }
+          : { border: 'border-white/5', bg: 'bg-transparent', icon: Wifi, iconClass: 'text-emerald-400/50', text: 'All orders synced' }
+
+  const Icon = statusInfo.icon
+
   return (
-    <div className={`mt-2 flex-shrink-0 rounded-lg border px-3 py-2 text-xs transition-all ${
-      pending > 0
-        ? result?.fail && result.fail > 0
-          ? 'border-red-500/30 bg-red-500/5'
-          : result && result.ok > 0
-            ? 'border-emerald-500/30 bg-emerald-500/5'
-            : 'border-amber-500/30 bg-amber-500/5'
-        : 'border-white/5 bg-white/[0.02]'
-    }`}>
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 text-white/60 min-w-0">
-          {syncing ? (
-            <RefreshCw className="h-3.5 w-3.5 animate-spin text-gold shrink-0" />
-          ) : pending > 0 && result?.fail && result.fail > 0 ? (
-            <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0" />
-          ) : result?.ok && result.ok > 0 ? (
-            <CheckCircle className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-          ) : pending > 0 ? (
-            <Upload className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-          ) : (
-            <Wifi className="h-3.5 w-3.5 text-emerald-400/60 shrink-0" />
-          )}
-          <span className="truncate">
-            {syncing
-              ? 'Syncing...'
-              : result
-                ? result.fail > 0
-                  ? `${result.ok} synced, ${result.fail} failed`
-                  : `${result.ok} order${result.ok !== 1 ? 's' : ''} synced`
-                : pending > 0
-                  ? `${pending} order${pending !== 1 ? 's' : ''} pending`
-                  : 'Online'
-            }
-          </span>
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          {(pending > 0 || offlineOrders.length > 0) && (
+    <div className={'mt-2 flex-shrink-0 rounded-xl overflow-hidden border transition-all duration-300 ' + statusInfo.border + ' ' + statusInfo.bg}>
+      <div className="px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className={'h-6 w-6 rounded-lg flex items-center justify-center ' + (syncing ? 'bg-gold/10' : pending > 0 && result?.fail && result.fail > 0 ? 'bg-red-500/10' : result?.ok && result.ok > 0 ? 'bg-emerald-500/10' : pending > 0 ? 'bg-amber-500/10' : 'bg-white/5')}>
+              <Icon className={'h-3.5 w-3.5 ' + statusInfo.iconClass} />
+            </div>
+            <div>
+              <p className={'text-xs font-medium leading-tight ' + (syncing ? 'text-gold' : pending > 0 ? 'text-amber-300' : result?.ok && result.ok > 0 ? 'text-emerald-300' : 'text-white/50')}>{statusInfo.text}</p>
+              {!syncing && !result && pending === 0 && (
+                <p className="text-[10px] text-white/20 leading-tight mt-0.5">No pending orders to sync</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            {offlineOrders.length > 0 && (
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className={'flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-all ' + (showDetails ? 'bg-white/10 text-white/60' : 'text-white/30 hover:text-white/60 hover:bg-white/5')}
+              >
+                <ChevronDown className={'h-3 w-3 transition-transform duration-200 ' + (showDetails ? 'rotate-180' : '')} />
+                {offlineOrders.length}
+              </button>
+            )}
             <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="px-1.5 py-1 rounded text-white/30 hover:text-white/60 text-[11px]"
+              onClick={syncAll}
+              disabled={syncing}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gold/20 text-gold text-[11px] font-semibold hover:bg-gold/30 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-[0_0_10px_-4px_rgba(212,175,55,0.15)]"
             >
-              {showDetails ? 'Hide' : 'Details'}
+              <RefreshCw className={'h-3 w-3 ' + (syncing ? 'animate-spin' : '')} />
+              {syncing ? 'Syncing' : 'Sync'}
             </button>
-          )}
-          <button
-            onClick={syncAll}
-            disabled={syncing}
-            className="flex items-center gap-1 px-2 py-1 rounded bg-gold/20 text-gold text-[11px] font-medium hover:bg-gold/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            <RefreshCw className={`h-3 w-3 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Syncing...' : 'Sync'}
-          </button>
+          </div>
         </div>
+        {syncing && syncProgress && (
+          <div className="mt-2 h-1 rounded-full bg-white/5 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-gold/60 to-gold transition-all duration-300"
+              style={{ width: `${((syncProgress.current + 1) / syncProgress.total) * 100}%` }}
+            />
+          </div>
+        )}
       </div>
       {showDetails && offlineOrders.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
-          <p className="text-[10px] text-white/20 font-medium uppercase tracking-wider">Pending Offline Orders</p>
-          {offlineOrders.map((o, i) => (
-            <div key={o.tempReceiptNumber || i} className="flex items-center justify-between text-[11px]">
-              <span className="text-amber-400/80 font-mono">{o.tempReceiptNumber}</span>
-              <span className="text-white/40">E£{o.total?.toFixed(2)}</span>
-            </div>
-          ))}
+        <div className="border-t border-white/5 mx-3">
+          <div className="py-2 space-y-1">
+            <p className="text-[10px] text-white/20 font-medium uppercase tracking-wider pb-1">Pending Offline Orders</p>
+            {offlineOrders.map((o, i) => (
+              <div key={o.tempReceiptNumber || i} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-white/[0.02] hover:bg-white/5 transition-colors">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-amber-400/80 font-mono text-[11px] font-medium">{o.tempReceiptNumber}</span>
+                  <span className="text-white/25 text-[10px]">{o.items?.length || 0} item{(o.items?.length || 0) !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-white/50 text-[11px] font-mono">E£{o.total?.toFixed(2)}</span>
+                  <Clock className="h-3 w-3 text-white/20" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

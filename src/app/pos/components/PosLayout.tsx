@@ -2,7 +2,7 @@
 
 import { memo } from 'react'
 import type { ReactNode } from 'react'
-import { LogOut, ClipboardList, Clock, ShoppingCart, Search, FileText, BarChart3, RotateCcw } from 'lucide-react'
+import { LogOut, ClipboardList, Clock, ShoppingCart, Search, FileText, BarChart3, RotateCcw, WifiOff } from 'lucide-react'
 import type { Shift } from '../types'
 
 type TabId = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale'
@@ -15,6 +15,8 @@ type Props = {
   onAssessment: () => void
   onCloseShift: () => void
   onLogout: () => void
+  offlineMode?: boolean
+  onToggleOffline?: () => void
   children: ReactNode
 }
 
@@ -26,7 +28,7 @@ const tabs: { id: TabId; label: string; icon: typeof ShoppingCart }[] = [
   { id: 'hall-sale', label: 'Hall Sale', icon: BarChart3 },
 ]
 
-function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, children }: Props) {
+function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, onCloseShift, onLogout, offlineMode, onToggleOffline, children }: Props) {
   return (
     <div className="flex flex-col min-h-screen pos-interface navy-radial">
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-white/10">
@@ -39,6 +41,12 @@ function PosLayout({ branchName, shift, activeTab, onTabChange, onAssessment, on
           </div>
           <span className="text-white/20">|</span>
           <h1 className="font-display text-lg font-semibold text-silver-soft">{branchName}</h1>
+          {offlineMode && (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/15 text-amber-400 text-xs font-semibold rounded-full border border-amber-500/30 shadow-[0_0_12px_-4px_rgba(251,191,36,0.3)]">
+              <WifiOff className="h-3 w-3" />
+              Offline Mode
+            </span>
+          )}
           {shift && (
             <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-xs font-medium rounded-full border border-emerald-500/20">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
