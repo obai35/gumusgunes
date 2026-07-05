@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { getBlurDataUrl } from '@/lib/blur'
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -161,6 +162,8 @@ export function ProductModal() {
                       src={product.imageUrl}
                       alt={product.name}
                       fill
+                      placeholder="blur"
+                      blurDataURL={getBlurDataUrl(product.imageUrl)}
                       className="object-cover transition-transform duration-200"
                       style={zoom ? {
                         transform: `scale(2.2)`,
@@ -201,7 +204,7 @@ export function ProductModal() {
                           activeImage === i ? 'border-gold' : 'border-transparent opacity-60 hover:opacity-100'
                         )}
                       >
-                        <Image src={img} alt="" fill className="object-cover" sizes="80px" />
+                        <Image src={img} alt="" fill placeholder="blur" blurDataURL={getBlurDataUrl(img)} className="object-cover" sizes="80px" />
                       </button>
                     ))}
                   </div>
@@ -459,6 +462,8 @@ export function ProductModal() {
                               src={rp.imageUrl}
                               alt={rp.name}
                               fill
+                              placeholder="blur"
+                              blurDataURL={getBlurDataUrl(rp.imageUrl)}
                               className="object-cover group-hover:scale-105 transition-transform"
                               sizes="25vw"
                             />

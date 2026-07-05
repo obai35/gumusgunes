@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { getBlurDataUrl } from '@/lib/blur'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, Truck, Sparkles, Plus as PlusIcon } from 'lucide-react'
@@ -105,6 +106,8 @@ export function CartContent() {
                 src={item.product.imageUrl}
                 alt={item.product.name}
                 fill
+                placeholder="blur"
+                blurDataURL={getBlurDataUrl(item.product.imageUrl)}
                 sizes="80px"
                 className="object-cover"
               />
@@ -166,6 +169,8 @@ export function CartContent() {
                 src={rec.imageUrl}
                 alt={rec.name}
                 fill
+                placeholder="blur"
+                blurDataURL={getBlurDataUrl(rec.imageUrl)}
                 sizes="56px"
                 className="object-cover"
               />

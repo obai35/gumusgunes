@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { getBlurDataUrl } from '@/lib/blur'
 import { useRouter } from 'next/navigation'
 import { Heart, Star, Eye, GitCompare } from 'lucide-react'
 import { motion } from 'framer-motion'
@@ -59,6 +60,8 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
           src={product.imageUrl}
           alt={product.name}
           fill
+          placeholder="blur"
+          blurDataURL={getBlurDataUrl(product.imageUrl)}
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-cover transition-transform duration-700 group-hover:scale-105"
         />

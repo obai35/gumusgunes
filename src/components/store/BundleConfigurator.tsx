@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { getBlurDataUrl } from '@/lib/blur'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Layers, Check, ShoppingBag, Sparkles, X, ChevronRight, RotateCcw } from 'lucide-react'
 import { useCart } from '@/lib/store'
@@ -252,7 +253,7 @@ export function BundleConfigurator() {
                   >
                     <div className="h-14 w-14 rounded-xl overflow-hidden bg-secondary flex-shrink-0 flex items-center justify-center text-2xl relative">
                       {product ? (
-                        <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                        <Image src={product.imageUrl} alt={product.name} fill placeholder="blur" blurDataURL={getBlurDataUrl(product.imageUrl)} className="object-cover" />
                       ) : (
                         step.icon
                       )}
