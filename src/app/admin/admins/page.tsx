@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { ALL_PERMISSIONS, type Permission } from '@/lib/admin-permissions'
 import { Shield, Users, Plus, Pencil, Trash2, X, History } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Tab = 'admins' | 'roles' | 'activity'
 
@@ -354,7 +355,7 @@ function ActivityTab() {
       </div>
 
       {loading ? (
-        <div className="text-muted-foreground text-sm">Loading...</div>
+        <div className="space-y-3"><div className="flex gap-2"><Skeleton className="h-9 w-32" /><Skeleton className="h-9 w-32" /><Skeleton className="h-9 w-16" /></div><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div>
       ) : (
         <div className="bg-white rounded-xl border border-border overflow-hidden">
           <div className="divide-y divide-border/50">

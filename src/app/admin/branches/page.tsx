@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Plus, X, Eye, EyeOff } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function AdminBranches() {
   const [branches, setBranches] = useState<any[]>([])
@@ -63,7 +64,7 @@ export default function AdminBranches() {
     setShowForm(true)
   }
 
-  if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-6 space-y-3"><Skeleton className="h-8 w-48" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
 
   return (
     <div>

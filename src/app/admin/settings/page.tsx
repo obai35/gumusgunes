@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Save } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Settings = Record<string, string>
 
@@ -58,7 +59,7 @@ export default function AdminSettings() {
 
   const groups = [...new Set(FIELDS.map(f => f.group))]
 
-  if (loading) return <div className="p-6 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-6 space-y-6"><Skeleton className="h-8 w-48" /><Skeleton className="h-6 w-32" /><div className="grid grid-cols-1 md:grid-cols-2 gap-4"><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /></div></div>
 
   return (
     <div>

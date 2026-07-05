@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2, RefreshCw } from 'lucide-react'
 import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
@@ -566,7 +567,7 @@ function OrdersTab() {
       </div>
 
       {loading ? (
-        <div className="text-muted-foreground text-sm">Loading...</div>
+        <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
       ) : (
         <div className="bg-white rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
@@ -642,7 +643,7 @@ function BranchesTab() {
           <Download className="h-4 w-4" /> Export Excel
         </button>
       </div>
-      {!data ? <div className="text-muted-foreground text-sm">Loading...</div> : (
+      {!data ? <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"><Skeleton className="h-40 w-full" /><Skeleton className="h-40 w-full" /><Skeleton className="h-40 w-full" /></div> : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {data.branches.map((branch: any) => (
             <div key={branch.id} className="bg-white rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
@@ -764,7 +765,7 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
       </div>
 
       {loading ? (
-        <div className="text-muted-foreground text-sm">Loading...</div>
+        <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
       ) : !data ? (
         <div className="text-muted-foreground text-sm">No data</div>
       ) : (
@@ -987,7 +988,7 @@ function ReportsTab() {
           <Download className="h-4 w-4" /> Export CSV
         </button>
       </div>
-      {!data ? <div className="text-muted-foreground text-sm">Loading...</div> : (
+      {!data ? <div className="space-y-4"><div className="grid grid-cols-3 gap-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div><Skeleton className="h-48 w-full" /></div> : (
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-border p-4">
