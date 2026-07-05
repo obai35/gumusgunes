@@ -1,28 +1,33 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
 export function NavigationProgress() {
   const pathname = usePathname()
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
+  const firstRender = useRef(true)
 
   useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return }
+
     setLoading(true)
     setProgress(20)
-    const fast = setTimeout(() => setProgress(70), 100)
-    const slow = setTimeout(() => setProgress(85), 400)
 
-    const done = setTimeout(() => {
+    const ids: ReturnType<typeof setTimeout>[] = []
+
+    ids.push(setTimeout(() => setProgress(70), 100))
+    ids.push(setTimeout(() => setProgress(85), 400))
+    ids.push(setTimeout(() => {
       setProgress(100)
-      setTimeout(() => {
+      ids.push(setTimeout(() => {
         setLoading(false)
         setProgress(0)
-      }, 200)
-    }, 600)
+      }, 200))
+    }, 600))
 
-    return () => { clearTimeout(fast); clearTimeout(slow); clearTimeout(done) }
+    return () => { ids.forEach(clearTimeout) }
   }, [pathname])
 
   if (!loading) return null
