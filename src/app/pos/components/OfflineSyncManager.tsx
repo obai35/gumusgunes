@@ -77,14 +77,14 @@ export default function OfflineSyncManager() {
           })
           if (res.ok) {
             const data = await res.json()
-            await markOrderSyncedWithRealInfo(order.id!, data.order?.receiptNumber || '', data.orderId)
+            await markOrderSyncedWithRealInfo(order.tempReceiptNumber, data.order?.receiptNumber || '', data.orderId)
             ok++
           } else {
-            await markOrderSyncFailed(order.id!)
+            await markOrderSyncFailed(order.tempReceiptNumber)
             fail++
           }
         } catch {
-          await markOrderSyncFailed(order.id!)
+          await markOrderSyncFailed(order.tempReceiptNumber)
           fail++
         }
       }
@@ -159,8 +159,8 @@ export default function OfflineSyncManager() {
       {showDetails && offlineOrders.length > 0 && (
         <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
           <p className="text-[10px] text-white/20 font-medium uppercase tracking-wider">Pending Offline Orders</p>
-          {offlineOrders.map((o) => (
-            <div key={o.id} className="flex items-center justify-between text-[11px]">
+          {offlineOrders.map((o, i) => (
+            <div key={o.tempReceiptNumber || i} className="flex items-center justify-between text-[11px]">
               <span className="text-amber-400/80 font-mono">{o.tempReceiptNumber}</span>
               <span className="text-white/40">E£{o.total?.toFixed(2)}</span>
             </div>
