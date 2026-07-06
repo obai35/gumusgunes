@@ -6,7 +6,7 @@ import { useCart, useUI, useWishlist } from '@/lib/store'
 import { useAuth } from '@/lib/auth-store'
 import { useHydrated } from '@/hooks/use-hydrated'
 import { useTranslation } from '@/hooks/use-translation'
-import { Search, Heart, ShoppingBag, Menu, X, Sun, User, LogOut, ChevronDown } from 'lucide-react'
+import { Search, Heart, ShoppingBag, Menu, X, Sun, User, LogOut, ChevronDown, Package, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/format'
 import { CurrencySelector } from './CurrencySelector'
@@ -23,8 +23,9 @@ export function Header() {
   const { setSearchOpen, setWishlistOpen, setMobileMenuOpen, mobileMenuOpen } = useUI()
   const wishlist = useWishlist()
   const [categories, setCategories] = useState<Category[]>([])
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
   const [settings, setSettings] = useState<Record<string, string>>({})
+  const [logoMenuOpen, setLogoMenuOpen] = useState(false)
+  const [wiggleDone, setWiggleDone] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -53,7 +54,6 @@ export function Header() {
   ]
 
   function selectCategory(slug: string) {
-    setOpenDropdown(null)
     const evt = new CustomEvent('gg:select-category', { detail: slug })
     window.dispatchEvent(evt)
     document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' })
@@ -64,6 +64,11 @@ export function Header() {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  useEffect(() => {
+    const timer = setTimeout(() => setWiggleDone(true), 1800)
+    return () => clearTimeout(timer)
   }, [])
 
   const cartCount = hydrated ? count() : 0
@@ -90,7 +95,7 @@ export function Header() {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-between h-20">
+          <div className={cn("flex items-center justify-between transition-all duration-500", scrolled ? "h-16" : "h-20")}>
             <button
               onClick={() => setMobileMenuOpen(true)}
               className="lg:hidden p-2 -ml-2 text-navy hover:text-gold transition-colors"
@@ -99,8 +104,17 @@ export function Header() {
               <Menu className="h-6 w-6" />
             </button>
 
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative h-12 w-12 rounded-full overflow-hidden ring-2 ring-gold/30 group-hover:ring-gold/60 transition-all">
+            <button
+              onClick={() => setLogoMenuOpen(v => !v)}
+              className="flex items-center gap-3 group cursor-pointer text-left"
+            >
+              <div
+                className={cn(
+                  "relative rounded-full overflow-hidden ring-2 ring-gold/30 group-hover:ring-gold/60 transition-all duration-500",
+                  scrolled ? "h-9 w-9" : "h-12 w-12",
+                  wiggleDone ? "animate-wiggle-subtle" : "animate-wiggle"
+                )}
+              >
                 <img
                   src={settings.logoUrl || '/gumusgunes-logo.jpeg'}
                   alt={settings.siteName || 'Gümüş Güneş'}
@@ -116,58 +130,8 @@ export function Header() {
                   {settings.siteTagline || t('brand.tagline')}
                 </span>
               </div>
-            </Link>
-
-            {/* Nav links with category dropdowns */}
-            <nav className="hidden lg:flex items-center gap-8">
-              {categories.map((parent) => (
-                <div
-                  key={parent.id}
-                  className="relative"
-                  onMouseEnter={() => setOpenDropdown(parent.slug)}
-                  onMouseLeave={() => setOpenDropdown(null)}
-                >
-                  <button
-                    onClick={() => selectCategory(parent.slug)}
-                    className="flex items-center gap-1 text-sm font-medium text-navy/80 hover:text-gold transition-colors group"
-                  >
-                    {parent.name}
-                    <ChevronDown className={cn('h-3 w-3 transition-transform', openDropdown === parent.slug && 'rotate-180')} />
-                  </button>
-                  {openDropdown === parent.slug && parent.children && (
-                    <div className="absolute left-0 top-full pt-2">
-                      <div className="bg-white rounded-xl border border-border shadow-xl py-2 min-w-[180px]">
-                        <button
-                          onClick={() => selectCategory(parent.slug)}
-                          className="w-full text-left px-4 py-2 text-sm font-semibold text-navy hover:bg-secondary transition-colors border-b border-border/50"
-                        >
-                          All {parent.name}
-                        </button>
-                        {parent.children.map((child: any) => (
-                          <button
-                            key={child.id}
-                            onClick={() => selectCategory(child.slug)}
-                            className="w-full text-left px-4 py-2 text-sm text-navy/80 hover:text-gold hover:bg-secondary transition-colors"
-                          >
-                            {child.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="relative text-sm font-medium text-navy/80 hover:text-gold transition-colors group"
-                >
-                  {link.label}
-                  <span className="absolute -bottom-1.5 left-0 w-0 h-px bg-gold transition-all duration-300 group-hover:w-full" />
-                </Link>
-              ))}
-            </nav>
+              <ChevronDown className={cn("h-4 w-4 text-gold transition-transform duration-300 hidden sm:block", logoMenuOpen && "rotate-180")} />
+            </button>
 
             {/* Actions */}
             <div className="flex items-center gap-1 sm:gap-2">
@@ -191,6 +155,13 @@ export function Header() {
                         <Link href="/account" onClick={() => setUserMenuOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-navy hover:bg-secondary transition-colors">
                           <User className="h-4 w-4" /> My Account
                         </Link>
+                        <Link href="/account?tab=orders" onClick={() => setUserMenuOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-navy/80 hover:bg-secondary transition-colors pl-9">
+                          <Package className="h-3.5 w-3.5" /> Orders
+                        </Link>
+                        <Link href="/account?tab=addresses" onClick={() => setUserMenuOpen(false)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-navy/80 hover:bg-secondary transition-colors pl-9">
+                          <MapPin className="h-3.5 w-3.5" /> Addresses
+                        </Link>
+                        <div className="border-t border-border/50 my-1" />
                         <button onClick={() => { logout(); setUserMenuOpen(false); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
                           <LogOut className="h-4 w-4" /> {t('nav.signOut')}
                         </button>
@@ -220,9 +191,62 @@ export function Header() {
               </button>
             </div>
           </div>
+
+            {/* Logo dropdown menu */}
+            {logoMenuOpen && (
+              <div className="absolute left-4 sm:left-6 top-full mt-2 z-50 w-72 max-w-[calc(100vw-2rem)] animate-fade-in-down origin-top-left">
+                <div className="bg-white rounded-2xl border border-border shadow-2xl py-3 overflow-y-auto max-h-[70vh]">
+                  <Link
+                    href="/"
+                    onClick={() => setLogoMenuOpen(false)}
+                    className="block px-5 py-3 text-sm font-semibold text-navy hover:bg-secondary transition-colors border-b border-border/40"
+                  >
+                    Home
+                  </Link>
+                  {categories.length > 0 && (
+                    <div className="border-b border-border/40 py-1">
+                      <div className="px-5 py-2 text-[10px] tracking-[0.2em] uppercase text-muted-foreground font-semibold">Categories</div>
+                      {categories.map((parent) => (
+                        <div key={parent.id}>
+                          <button
+                            onClick={() => { selectCategory(parent.slug); setLogoMenuOpen(false) }}
+                            className="w-full text-left px-5 py-2.5 text-sm font-medium text-navy hover:bg-secondary hover:text-gold transition-colors flex items-center justify-between"
+                          >
+                            {parent.name}
+                            {parent.children?.length > 0 && <ChevronDown className="h-3 w-3 text-muted-foreground -rotate-90" />}
+                          </button>
+                          {parent.children?.map((child: any) => (
+                            <button
+                              key={child.id}
+                              onClick={() => { selectCategory(child.slug); setLogoMenuOpen(false) }}
+                              className="w-full text-left pl-10 pr-5 py-2 text-sm text-navy/70 hover:text-gold hover:bg-secondary transition-colors"
+                            >
+                              {child.name}
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="py-1">
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setLogoMenuOpen(false)}
+                        className="block px-5 py-2.5 text-sm text-navy/80 hover:text-gold hover:bg-secondary transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
         </div>
       </header>
 
+      {logoMenuOpen && <div className="fixed inset-0 z-40" onClick={() => setLogoMenuOpen(false)} />}
       {userMenuOpen && <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />}
 
       {/* Mobile menu */}
