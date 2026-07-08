@@ -30,6 +30,30 @@ export default function ProductDetailClient({ product, related }: Props) {
   const [zoom, setZoom] = useState(false)
   const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 })
   const imageRef = useRef<HTMLDivElement>(null)
+  const [graphMatches, setGraphMatches] = useState<Product[]>(related?.slice(0, 4) || [])
+  const [graphCompleteLook, setGraphCompleteLook] = useState<Product[]>([])
+
+  useEffect(() => {
+    async function loadGraph() {
+      try {
+        const [matchesRes, lookRes] = await Promise.all([
+          fetch(`/api/products/${product.id}/related?type=MATCHES&limit=4`),
+          fetch(`/api/products/${product.id}/complete-look?limit=4`),
+        ])
+        if (matchesRes.ok) {
+          const data = await matchesRes.json()
+          if (data.length > 0) setGraphMatches(data)
+        }
+        if (lookRes.ok) {
+          const data = await lookRes.json()
+          if (data.length > 0) setGraphCompleteLook(data)
+        }
+      } catch {
+        // fall back to static related prop
+      }
+    }
+    loadGraph()
+  }, [product.id])
 
   useEffect(() => { addToRecentlyViewed(product.id) }, [product.id, addToRecentlyViewed])
 
@@ -218,12 +242,31 @@ export default function ProductDetailClient({ product, related }: Props) {
           </div>
         )}
 
-        {/* Related products */}
-        {related.length > 0 && (
+        {/* Product graph: complete the look */}
+        {graphCompleteLook.length > 0 && (
+          <div>
+            <h3 className="font-display text-lg font-semibold text-navy mb-3">{t('products.completeTheLook')}</h3>
+            <div className="grid grid-cols-4 gap-2">
+              {graphCompleteLook.map((rp) => (
+                <Link
+                  key={rp.id}
+                  href={`/products/${rp.id}`}
+                  className="group relative aspect-square rounded-lg overflow-hidden bg-secondary"
+                >
+                  <Image src={rp.imageUrl} alt={rp.name} fill sizes="120px" className="object-cover group-hover:scale-105 transition-transform" />
+                  <div className="absolute inset-0 bg-navy-deep/0 group-hover:bg-navy-deep/30 transition-colors" />
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Product graph: matches/you may also like */}
+        {graphMatches.length > 0 && (
           <div>
             <h3 className="font-display text-lg font-semibold text-navy mb-3">{t('products.youMayAlsoLove')}</h3>
             <div className="grid grid-cols-4 gap-2">
-              {related.slice(0, 4).map((rp) => (
+              {graphMatches.map((rp) => (
                 <Link
                   key={rp.id}
                   href={`/products/${rp.id}`}
