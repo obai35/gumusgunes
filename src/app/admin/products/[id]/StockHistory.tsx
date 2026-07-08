@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { History } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface StockHistoryProps {
   productId: string
@@ -19,7 +20,13 @@ export default function StockHistory({ productId }: StockHistoryProps) {
       .finally(() => setLoading(false))
   }, [productId])
 
-  if (loading) return null
+  if (loading) return (
+    <div className="space-y-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full rounded-lg" />
+      ))}
+    </div>
+  )
 
   const typeColors: Record<string, string> = {
     SALE: 'bg-red-100 text-red-700',

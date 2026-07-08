@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, ArrowRight, Search, X, CheckCheck, Check, XCircle, Tags, DollarSign, Package, Star, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { ProductToggle } from './ProductToggle'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Category = { id: string; name: string }
 type Product = {
@@ -128,6 +130,20 @@ export default function AdminProducts() {
 
   const selectedCount = selectedIds.size
 
+  if (loading) return (
+    <div className="space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex gap-4 p-4 border border-border rounded-lg">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -228,9 +244,7 @@ export default function AdminProducts() {
             </tr>
           </thead>
           <tbody>
-            {loading ? (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading products...</td></tr>
-            ) : products.length === 0 ? (
+            {products.length === 0 ? (
               <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{searchQuery ? 'No products match your search.' : 'No products yet.'}</td></tr>
             ) : products.map(p => (
               <tr key={p.id} className={`border-b border-border/50 hover:bg-gray-50/50 ${selectedIds.has(p.id) ? 'bg-navy/[0.02]' : ''}`}>
@@ -317,100 +331,128 @@ export default function AdminProducts() {
       )}
 
       {/* Price Modal */}
-      {showPriceModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-navy">Adjust Price</h3>
-              <button onClick={() => setShowPriceModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
-            </div>
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPriceValue(p => ({ ...p, type: 'percentage' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.type === 'percentage' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
-                >Percentage</button>
-                <button
-                  onClick={() => setPriceValue(p => ({ ...p, type: 'fixed' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.type === 'fixed' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
-                >Fixed</button>
+      <AnimatePresence>
+        {showPriceModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-navy">Adjust Price</h3>
+                <button onClick={() => setShowPriceModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPriceValue(p => ({ ...p, direction: 'increase' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.direction === 'increase' ? 'bg-green-100 text-green-700 border-green-300' : 'border-border hover:bg-gray-50'}`}
-                >Increase</button>
-                <button
-                  onClick={() => setPriceValue(p => ({ ...p, direction: 'decrease' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.direction === 'decrease' ? 'bg-red-100 text-red-700 border-red-300' : 'border-border hover:bg-gray-50'}`}
-                >Decrease</button>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPriceValue(p => ({ ...p, type: 'percentage' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.type === 'percentage' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
+                  >Percentage</button>
+                  <button
+                    onClick={() => setPriceValue(p => ({ ...p, type: 'fixed' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.type === 'fixed' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
+                  >Fixed</button>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPriceValue(p => ({ ...p, direction: 'increase' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.direction === 'increase' ? 'bg-green-100 text-green-700 border-green-300' : 'border-border hover:bg-gray-50'}`}
+                  >Increase</button>
+                  <button
+                    onClick={() => setPriceValue(p => ({ ...p, direction: 'decrease' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.direction === 'decrease' ? 'bg-red-100 text-red-700 border-red-300' : 'border-border hover:bg-gray-50'}`}
+                  >Decrease</button>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={priceValue.amount}
+                  onChange={e => setPriceValue(p => ({ ...p, amount: e.target.value }))}
+                  placeholder={priceValue.type === 'percentage' ? 'Percentage (e.g. 10)' : 'Amount (e.g. 5.00)'}
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+                />
               </div>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={priceValue.amount}
-                onChange={e => setPriceValue(p => ({ ...p, amount: e.target.value }))}
-                placeholder={priceValue.type === 'percentage' ? 'Percentage (e.g. 10)' : 'Amount (e.g. 5.00)'}
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm"
-              />
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowPriceModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-              <button
-                onClick={() => doBulk('adjustPrice', { type: priceValue.type, amount: parseFloat(priceValue.amount), direction: priceValue.direction })}
-                disabled={busy.size > 0 || !priceValue.amount}
-                className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
-              >Apply</button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="flex justify-end gap-2 mt-6">
+                <button onClick={() => setShowPriceModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button
+                  onClick={() => doBulk('adjustPrice', { type: priceValue.type, amount: parseFloat(priceValue.amount), direction: priceValue.direction })}
+                  disabled={busy.size > 0 || !priceValue.amount}
+                  className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
+                >Apply</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Stock Modal */}
-      {showStockModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-navy">Adjust Stock</h3>
-              <button onClick={() => setShowStockModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
-            </div>
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setStockValue(s => ({ ...s, type: 'set' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'set' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
-                >Set</button>
-                <button
-                  onClick={() => setStockValue(s => ({ ...s, type: 'add' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'add' ? 'bg-green-100 text-green-700 border-green-300' : 'border-border hover:bg-gray-50'}`}
-                >Add</button>
-                <button
-                  onClick={() => setStockValue(s => ({ ...s, type: 'subtract' }))}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'subtract' ? 'bg-red-100 text-red-700 border-red-300' : 'border-border hover:bg-gray-50'}`}
-                >Subtract</button>
+      <AnimatePresence>
+        {showStockModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-navy">Adjust Stock</h3>
+                <button onClick={() => setShowStockModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
-              <input
-                type="number"
-                step="1"
-                min="0"
-                value={stockValue.amount}
-                onChange={e => setStockValue(s => ({ ...s, amount: e.target.value }))}
-                placeholder="Quantity"
-                className="w-full px-3 py-2 border border-border rounded-lg text-sm"
-              />
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowStockModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-              <button
-                onClick={() => doBulk('adjustStock', { type: stockValue.type, amount: parseInt(stockValue.amount, 10) })}
-                disabled={busy.size > 0 || stockValue.amount === ''}
-                className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
-              >Apply</button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setStockValue(s => ({ ...s, type: 'set' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'set' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
+                  >Set</button>
+                  <button
+                    onClick={() => setStockValue(s => ({ ...s, type: 'add' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'add' ? 'bg-green-100 text-green-700 border-green-300' : 'border-border hover:bg-gray-50'}`}
+                  >Add</button>
+                  <button
+                    onClick={() => setStockValue(s => ({ ...s, type: 'subtract' }))}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'subtract' ? 'bg-red-100 text-red-700 border-red-300' : 'border-border hover:bg-gray-50'}`}
+                  >Subtract</button>
+                </div>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={stockValue.amount}
+                  onChange={e => setStockValue(s => ({ ...s, amount: e.target.value }))}
+                  placeholder="Quantity"
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <button onClick={() => setShowStockModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button
+                  onClick={() => doBulk('adjustStock', { type: stockValue.type, amount: parseInt(stockValue.amount, 10) })}
+                  disabled={busy.size > 0 || stockValue.amount === ''}
+                  className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
+                >Apply</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

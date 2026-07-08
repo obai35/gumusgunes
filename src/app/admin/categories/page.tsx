@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { FolderTree, Plus, Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react'
@@ -189,37 +190,51 @@ export default function CategoriesPage() {
         </table>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-navy">{editId ? 'Edit Category' : 'New Category'}</h3>
-              <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
-            </div>
-            <div className="space-y-3">
-              <input value={name} onChange={e => { setName(e.target.value); autoSlug(e.target.value) }} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="Slug" className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono" />
-              <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <input value={icon} onChange={e => setIcon(e.target.value)} placeholder="Icon (emoji)" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <select value={parentId} onChange={e => setParentId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-                <option value="">Top-level category</option>
-                {parents.filter(p => p.id !== editId).map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={formVisible} onChange={e => setFormVisible(e.target.checked)} className="rounded" />
-                Visible on storefront
-              </label>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-              <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-navy">{editId ? 'Edit Category' : 'New Category'}</h3>
+                <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+              </div>
+              <div className="space-y-3">
+                <input value={name} onChange={e => { setName(e.target.value); autoSlug(e.target.value) }} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="Slug" className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono" />
+                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={icon} onChange={e => setIcon(e.target.value)} placeholder="Icon (emoji)" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <select value={parentId} onChange={e => setParentId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
+                  <option value="">Top-level category</option>
+                  {parents.filter(p => p.id !== editId).map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={formVisible} onChange={e => setFormVisible(e.target.checked)} className="rounded" />
+                  Visible on storefront
+                </label>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

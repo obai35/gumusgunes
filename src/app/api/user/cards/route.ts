@@ -4,12 +4,10 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 
 const CardSchema = z.object({
-  cardholderName: z.string().min(1).max(100),
-  last4: z.string().length(4),
-  brand: z.string().min(1).max(50),
+  nickname: z.string().max(100).optional().nullable().default(null),
+  lastFour: z.string().length(4),
   expiryMonth: z.number().int().min(1).max(12),
   expiryYear: z.number().int().min(2024),
-  token: z.string().min(1),
 }).strict()
 
 export async function GET(req: NextRequest) {
@@ -32,13 +30,9 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     )
   }
-  const { expiryMonth, expiryYear } = parsed.data
+  const { nickname, lastFour, expiryMonth, expiryYear } = parsed.data
   const card = await db.savedCard.create({
-    data: {
-      userId: user.userId,
-      expiryMonth,
-      expiryYear,
-    },
+    data: { userId: user.userId, nickname, lastFour, expiryMonth, expiryYear },
   })
   return NextResponse.json(card, { status: 201 })
 }

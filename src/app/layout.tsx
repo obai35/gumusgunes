@@ -7,6 +7,7 @@ import EditModeGate from "@/components/store/EditModeGate";
 import { AuthHydrator } from "@/components/store/AuthHydrator";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { PageViewWrapper } from "@/components/ui/PageViewWrapper";
+import { AmbientMist } from "@/components/ui/AmbientMist";
 
 
 const geistSans = Geist({
@@ -117,6 +118,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
       >
+        <AmbientMist />
         <NavigationProgress />
         <AuthHydrator />
         <DesignProvider>

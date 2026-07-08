@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { ALL_PERMISSIONS, type Permission } from '@/lib/admin-permissions'
@@ -154,30 +155,44 @@ function AdminsTab() {
         </table>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-navy">{editId ? 'Edit Admin' : 'New Admin'}</h3>
-              <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
-            </div>
-            <div className="space-y-3">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" type="tel" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={editId ? 'New password (leave blank)' : 'Password'} type="password" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-                <option value="">Select role...</option>
-                {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-              <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-navy">{editId ? 'Edit Admin' : 'New Admin'}</h3>
+                <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+              </div>
+              <div className="space-y-3">
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" type="tel" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={editId ? 'New password (leave blank)' : 'Password'} type="password" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
+                  <option value="">Select role...</option>
+                  {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                </select>
+              </div>
+              <div className="flex justify-end gap-2 mt-6">
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -268,34 +283,48 @@ function RolesTab() {
         </table>
       </div>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-navy">{editId ? 'Edit Role' : 'New Role'}</h3>
-              <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
-            </div>
-            <div className="space-y-4">
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Role name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">Permissions</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[...ALL_PERMISSIONS].map((p) => (
-                    <label key={p} className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" checked={permissions.includes(p)} onChange={() => togglePerm(p)} className="rounded border-border" />
-                      <span className="text-sm text-navy">{PERMISSION_LABELS[p]}</span>
-                    </label>
-                  ))}
+      <AnimatePresence>
+        {showModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-navy">{editId ? 'Edit Role' : 'New Role'}</h3>
+                <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
+              </div>
+              <div className="space-y-4">
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Role name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Permissions</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[...ALL_PERMISSIONS].map((p) => (
+                      <label key={p} className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={permissions.includes(p)} onChange={() => togglePerm(p)} className="rounded border-border" />
+                        <span className="text-sm text-navy">{PERMISSION_LABELS[p]}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-              <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
-            </div>
-          </div>
-        </div>
-      )}
+              <div className="flex justify-end gap-2 mt-6">
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

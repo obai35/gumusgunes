@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { AdminAuthGuard } from './AdminAuthGuard'
 import { Menu, X } from 'lucide-react'
+import { PageTransition } from '@/components/ui/PageTransition'
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -29,7 +31,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
               Menu
             </button>
-            {children}
+            <AnimatePresence mode="wait">
+              <PageTransition key={pathname}>
+                {children}
+              </PageTransition>
+            </AnimatePresence>
           </main>
         </div>
       )}

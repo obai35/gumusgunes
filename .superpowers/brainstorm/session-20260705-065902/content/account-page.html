@@ -1,0 +1,81 @@
+<h2>Account Page — Current State</h2>
+<p class="subtitle">The page exists with 4 tabs, but has some issues. What would you like to improve?</p>
+
+<div class="mockup" style="max-width: 800px; margin: 0 auto;">
+  <div class="mockup-header" style="background: #0a1628; color: #d4af37; padding: 16px; border-radius: 12px 12px 0 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <span style="font-weight: 600;">Gümüş Güneş</span>
+      <div style="display: flex; gap: 12px; font-size: 12px; color: rgba(255,255,255,0.5);">
+        <span>🔍</span>
+        <span>❤️</span>
+        <span>🛒</span>
+        <span style="color: #d4af37;">👤 Oba</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding: 20px; background: #f5efe6; min-height: 400px;">
+    <div style="font-size: 24px; font-weight: 700; color: #0a1628; margin-bottom: 16px;">My Account</div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;">
+      <div style="background: #0a1628; color: #f5efe6; padding: 8px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">👤 Profile</div>
+      <div style="background: #e8ddd0; color: #0a1628; padding: 8px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">📍 Addresses</div>
+      <div style="background: #e8ddd0; color: #0a1628; padding: 8px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">💳 Payment Methods</div>
+      <div style="background: #e8ddd0; color: #0a1628; padding: 8px 16px; border-radius: 12px; font-size: 13px; display: flex; align-items: center; gap: 6px;">📦 Orders</div>
+    </div>
+
+    <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div style="font-size: 18px; font-weight: 600; color: #0a1628;">Profile</div>
+        <div style="font-size: 12px; color: #999;">Tab content shows here</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Name</div><div style="background: #f5f0eb; padding: 10px 14px; border-radius: 10px; font-size: 14px; color: #333;">Oba</div></div>
+        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Email</div><div style="background: #f0ece7; padding: 10px 14px; border-radius: 10px; font-size: 14px; color: #999;">oba@email.com</div></div>
+        <div><div style="font-size: 12px; color: #666; margin-bottom: 4px;">Phone</div><div style="background: #f5f0eb; padding: 10px 14px; border-radius: 10px; font-size: 14px; color: #333;">+20 100 000 0000</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 20px;">
+  <h3>Known Issues With Current Account Page:</h3>
+  <div class="pros-cons">
+    <div class="cons">
+      <ul>
+        <li><strong>Cards API broken</strong> — Zod validation rejects frontend fields</li>
+        <li><strong>Addresses API broken</strong> — Zod validation rejects frontend fields</li>
+        <li><strong>No i18n</strong> — Everything hardcoded in English</li>
+        <li><strong>No forgot-password page</strong> — API exists, no UI</li>
+        <li><strong>No reset-password page</strong> — API exists, no UI</li>
+        <li><strong>Header dropdown</strong> — Only "My Account" link, no shortcuts</li>
+        <li><strong>Duplicated 2FA</strong> — On both main page and /account/security</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3 style="margin-top: 24px;">What do you want to focus on?</h3>
+<div class="options">
+  <div class="option" data-choice="fix" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Fix the bugs first</h3>
+      <p>Repair cards & addresses API + add i18n. Keep current design.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="redesign" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Redesign + fix</h3>
+      <p>Polish the look, add animations, fix bugs, add missing pages, improve header dropdown.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="full" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Full overhaul</h3>
+      <p>Everything in B plus responsive overhaul, mobile nav improvements, order tracking UX, wishlist integration.</p>
+    </div>
+  </div>
+</div>

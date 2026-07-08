@@ -3,21 +3,26 @@
 import { create } from 'zustand'
 
 type User = { id: string; email: string; name: string }
+type TotpPending = { userId: string; email: string } | null
 type AuthState = {
   user: User | null
   loading: boolean
+  totpPending: TotpPending
   login: (user: User) => void
   logout: () => void
   isAuthenticated: () => boolean
+  setTotpPending: (val: TotpPending) => void
   fetchUser: () => Promise<void>
 }
 
 export const useAuth = create<AuthState>()((set, get) => ({
   user: null,
   loading: true,
+  totpPending: null,
   login: (user) => set({ user }),
   logout: () => set({ user: null }),
   isAuthenticated: () => !!get().user,
+  setTotpPending: (val) => set({ totpPending: val }),
   fetchUser: async () => {
     try {
       const res = await fetch('/api/customer/auth/me')

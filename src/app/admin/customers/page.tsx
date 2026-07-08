@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Fragment } from 'react'
 import { toast } from 'sonner'
 import { Search, X, Download, FileText } from 'lucide-react'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const statusColor: Record<string, string> = {
   pending: 'bg-gray-100 text-gray-700',
@@ -108,6 +109,20 @@ export default function CustomersPage() {
     toast.success('CSV exported')
   }
 
+  if (loading) return (
+    <div className="space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex gap-4 p-4 border border-border rounded-lg">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -160,10 +175,7 @@ export default function CustomersPage() {
       </div>
 
       {/* Table */}
-      {loading ? (
-        <div className="text-sm text-muted-foreground">Loading customers...</div>
-      ) : (
-        <div className="bg-white rounded-xl border border-border overflow-hidden">
+      <div className="bg-white rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-border">
               <tr>
@@ -258,7 +270,6 @@ export default function CustomersPage() {
             </tbody>
           </table>
         </div>
-      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

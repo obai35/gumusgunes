@@ -41,6 +41,9 @@ model Product {
   returnItems    ReturnItem[]
   stocks         BranchStock[]
   transfers      StockTransfer[]
+  fromRelations  ProductRelation[]  @relation("FromProduct")
+  toRelations    ProductRelation[]  @relation("ToProduct")
+  embedding      ProductEmbedding?
 
   @@index([categoryId, isActive])
   @@index([isActive, isFeatured])
@@ -48,6 +51,40 @@ model Product {
   @@index([isActive, isBestseller])
   @@index([price])
   @@index([createdAt])
+}
+
+enum RelationType {
+  MATCHES
+  COMPLEMENTS
+  SIMILAR_TO
+  ALSO_BOUGHT
+  OCCASION
+  COLLECTION
+}
+
+model ProductRelation {
+  id        String       @id @default(cuid())
+  fromId    String
+  from      Product      @relation("FromProduct", fields: [fromId], references: [id], onDelete: Cascade)
+  toId      String
+  to        Product      @relation("ToProduct", fields: [toId], references: [id], onDelete: Cascade)
+  type      RelationType
+  weight    Float        @default(1.0)
+  metadata  Json?
+  createdAt DateTime     @default(now())
+
+  @@unique([fromId, toId, type])
+  @@index([fromId, type, weight])
+  @@index([toId, type])
+}
+
+model ProductEmbedding {
+  id        String   @id @default(cuid())
+  productId String   @unique
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  vector    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {

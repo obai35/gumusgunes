@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { ArrowRight, Search, X } from 'lucide-react'
 import type { Order } from '@/lib/types'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const statusColor: Record<string, string> = {
   pending: 'bg-gray-100 text-gray-700',
@@ -41,7 +42,19 @@ export default function AdminOrders() {
     return true
   })
 
-  if (loading) return <div className="p-6 text-muted-foreground">Loading orders...</div>
+  if (loading) return (
+    <div className="space-y-3">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex gap-4 p-4 border border-border rounded-lg">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 
   return (
     <div>

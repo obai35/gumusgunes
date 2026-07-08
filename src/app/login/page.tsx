@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-store'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [totpCode, setTotpCode] = useState('')
   const [totpEmail, setTotpEmail] = useState('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (totpPending) setTotpEmail(totpPending.email)
@@ -21,6 +23,10 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    const newErrors: Record<string, string> = {}
+    if (!email) newErrors.email = 'Email is required'
+    if (!password) newErrors.password = 'Password is required'
+    if (Object.keys(newErrors).length) { setErrors(newErrors); return }
     setLoading(true)
     const body: any = { email, password }
     if (totpPending) { body.email = totpEmail; body.totpToken = totpCode }
@@ -83,14 +89,51 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4 shadow-sm">
-          <div>
-            <label className="text-sm font-medium text-navy">Email</label>
-            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-border text-sm mt-1" placeholder="your@email.com" />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-navy">Password</label>
-            <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-3 py-2.5 rounded-lg border border-border text-sm mt-1" placeholder="••••••••" />
-          </div>
+          <label className="relative block">
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setErrors(prev => ({ ...prev, email: '' })) }}
+              className={cn(
+                "peer w-full rounded-lg border px-3 pt-5 pb-2.5 text-sm outline-none transition-colors",
+                errors.email ? "border-red-500 animate-shake" : "border-border focus:border-gold"
+              )}
+              placeholder=" "
+            />
+            <span className={cn(
+              "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+              errors.email ? "text-red-500" : "text-muted-foreground",
+              "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+              "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+            )}>
+              Email
+            </span>
+            {errors.email && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.email}</p>}
+          </label>
+          <label className="relative block">
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setErrors(prev => ({ ...prev, password: '' })) }}
+              className={cn(
+                "peer w-full rounded-lg border px-3 pt-5 pb-2.5 text-sm outline-none transition-colors",
+                errors.password ? "border-red-500 animate-shake" : "border-border focus:border-gold"
+              )}
+              placeholder=" "
+            />
+            <span className={cn(
+              "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+              errors.password ? "text-red-500" : "text-muted-foreground",
+              "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+              "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+            )}>
+              Password
+            </span>
+            {errors.password && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.password}</p>}
+          </label>
+          <Link href="/forgot-password" className="text-xs text-gold hover:text-gold/80 font-medium mt-1 inline-block">Forgot password?</Link>
           <button type="submit" disabled={loading} className="w-full py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">
             {loading ? 'Signing in...' : 'Sign In'}
           </button>

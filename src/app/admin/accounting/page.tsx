@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2, RefreshCw } from 'lucide-react'
 import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -523,8 +524,8 @@ function OrdersTab() {
           </div>
         </div>
       </div>
-    )
-  }
+  )
+}
 
   return (
     <div>
@@ -847,13 +848,15 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
         </>
       )}
 
-      {showModal && (
-        <AddExpenseModal
-          onClose={() => setShowModal(false)}
-          onSaved={() => { fetchExpenses(); setShowModal(false) }}
-          branches={branches}
-        />
-      )}
+      <AnimatePresence>
+        {showModal && (
+          <AddExpenseModal
+            onClose={() => setShowModal(false)}
+            onSaved={() => { fetchExpenses(); setShowModal(false) }}
+            branches={branches}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -895,8 +898,22 @@ function AddExpenseModal({ onClose, onSaved, branches }: { onClose: () => void; 
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4" onClick={e => e.stopPropagation()}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15 }}
+        className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 space-y-4"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-navy">Add Expense</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded"><X className="h-5 w-5 text-muted-foreground" /></button>
@@ -949,8 +966,8 @@ function AddExpenseModal({ onClose, onSaved, branches }: { onClose: () => void; 
             {saving ? 'Saving...' : 'Save Expense'}
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   )
 }
 

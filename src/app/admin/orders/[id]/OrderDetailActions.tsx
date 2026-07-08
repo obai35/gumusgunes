@@ -1,5 +1,6 @@
 'use client'
 
+import { AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 import ReturnModal from './ReturnModal'
 import EditOrderModal from './EditOrderModal'
@@ -25,8 +26,12 @@ export default function OrderDetailActions({ orderId, items, customer, adminId }
           Edit Order
         </button>
       </div>
-      {showReturn && <ReturnModal orderId={orderId} items={items} adminId={adminId} onClose={() => setShowReturn(false)} onSuccess={() => window.location.reload()} />}
-      {showEdit && <EditOrderModal orderId={orderId} items={items} customer={customer} adminId={adminId} onClose={() => setShowEdit(false)} onSuccess={() => window.location.reload()} />}
+      <AnimatePresence>
+        {showReturn && <ReturnModal orderId={orderId} items={items} adminId={adminId} onClose={() => setShowReturn(false)} onSuccess={() => window.location.reload()} />}
+      </AnimatePresence>
+      <AnimatePresence>
+        {showEdit && <EditOrderModal orderId={orderId} items={items} customer={customer} adminId={adminId} onClose={() => setShowEdit(false)} onSuccess={() => window.location.reload()} />}
+      </AnimatePresence>
     </>
   )
 }

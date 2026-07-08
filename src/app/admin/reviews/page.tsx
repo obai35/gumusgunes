@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 import { Search, X, Star, Download, ChevronLeft, ChevronRight, CheckCircle, XCircle, Trash2, RefreshCw, MessageSquareText } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 function exportCSVRows(rows: Record<string, any>[], filename: string) {
   if (rows.length === 0) return
@@ -160,7 +161,20 @@ export default function AdminReviews() {
     }
   }, [reviews, total])
 
-  if (loading) return <div className="p-6 text-muted-foreground">Loading reviews...</div>
+  if (loading) return (
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="p-4 border border-border rounded-lg space-y-2">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-5/6" />
+        </div>
+      ))}
+    </div>
+  )
 
   return (
     <div>

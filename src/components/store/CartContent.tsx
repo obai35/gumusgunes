@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { getBlurDataUrl } from '@/lib/blur'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, Truck, Sparkles, Plus as PlusIcon } from 'lucide-react'
 import { useCart } from '@/lib/store'
 import { useFormatPrice } from '@/hooks/use-format-price'
@@ -99,8 +99,17 @@ export function CartContent() {
       </div>
 
       <div className="flex-1 overflow-y-auto scroll-luxury p-5 space-y-4">
-        {items.map((item) => (
-          <div key={item.product.id} className="flex gap-3 group">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {items.map((item) => (
+            <motion.div
+              key={item.product.id}
+              layout
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 80 }}
+              transition={{ duration: 0.2 }}
+              className="flex gap-3 group"
+            >
             <div className="h-20 w-20 rounded-lg overflow-hidden bg-secondary flex-shrink-0 relative">
               <Image
                 src={item.product.imageUrl}
@@ -149,8 +158,9 @@ export function CartContent() {
                 </span>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
+        </AnimatePresence>
 
         {recommendations.length > 0 && (
           <div className="mt-6 pt-5 border-t border-dashed border-border">

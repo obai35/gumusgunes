@@ -10,6 +10,7 @@ import { AboutSection } from '@/components/store/AboutSection'
 import { Footer } from '@/components/store/Footer'
 import { db } from '@/lib/db'
 import { PreviewListener } from '@/components/preview/PreviewListener'
+import { AmbientMist } from '@/components/ui/AmbientMist'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,6 +78,7 @@ export default async function PreviewPage() {
 
   return (
     <>
+      <AmbientMist />
       <script
         id="__PREVIEW_DATA"
         type="application/json"

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface ReturnsSectionProps {
   orderId: string
@@ -18,7 +19,16 @@ export default function ReturnsSection({ orderId }: ReturnsSectionProps) {
       .finally(() => setLoading(false))
   }, [orderId])
 
-  if (loading) return null
+  if (loading) return (
+    <div className="space-y-2">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="p-4 border border-border rounded-lg space-y-2">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
+      ))}
+    </div>
+  )
   if (returns.length === 0) return null
 
   const refundLabels: Record<string, string> = {

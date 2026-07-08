@@ -4,16 +4,14 @@ import { db } from '@/lib/db'
 import { z } from 'zod'
 
 const AddressSchema = z.object({
-  label: z.string().min(1).max(50),
   fullName: z.string().min(1).max(100),
-  phone: z.string().min(1).max(20),
+  phone: z.string().max(20).optional().default(''),
   street: z.string().min(1).max(200),
   city: z.string().min(1).max(100),
-  governorateId: z.string().uuid(),
-  building: z.string().min(1).max(50),
-  floor: z.string().optional(),
-  apartment: z.string().optional(),
-  landmark: z.string().optional(),
+  state: z.string().max(100).optional().default(''),
+  postalCode: z.string().max(20).optional().default(''),
+  country: z.string().max(100).optional().default('EG'),
+  isDefault: z.boolean().optional().default(false),
 }).strict()
 
 export async function GET(req: NextRequest) {
@@ -36,9 +34,12 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     )
   }
-  const { fullName, phone, street, city } = parsed.data
+  const { fullName, phone, street, city, state, postalCode, country, isDefault } = parsed.data
+  if (isDefault) {
+    await db.address.updateMany({ where: { userId: user.userId }, data: { isDefault: false } })
+  }
   const address = await db.address.create({
-    data: { userId: user.userId, fullName, phone, street, city },
+    data: { userId: user.userId, fullName, phone: phone || null, street, city, state: state || null, postalCode, country, isDefault },
   })
   return NextResponse.json(address, { status: 201 })
 }

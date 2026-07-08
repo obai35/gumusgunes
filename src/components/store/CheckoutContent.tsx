@@ -62,6 +62,8 @@ export function CheckoutContent() {
     giftMessage: '',
   })
 
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
   const [shippingMethods, setShippingMethods] = useState<any[]>([])
   const [selectedMethodId, setSelectedMethodId] = useState('')
   const [shippingCost, setShippingCost] = useState(0)
@@ -185,10 +187,13 @@ export function CheckoutContent() {
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.email || !form.fullName || !form.address || !form.city || !form.postalCode) {
-      toast.error(t('checkout.validationError'))
-      return
-    }
+    const newErrors: Record<string, string> = {}
+    if (!form.email.trim()) newErrors.email = 'Email is required'
+    if (!form.fullName.trim()) newErrors.fullName = 'Name is required'
+    if (!form.address.trim()) newErrors.address = 'Address is required'
+    if (!form.city.trim()) newErrors.city = 'City is required'
+    if (!form.postalCode.trim()) newErrors.postalCode = 'Postal code is required'
+    if (Object.keys(newErrors).length) { setErrors(newErrors); return }
     setStep('payment')
   }
 
@@ -246,40 +251,145 @@ export function CheckoutContent() {
       {step === 'details' && (
         <form onSubmit={handleDetailsSubmit} className="p-6 space-y-5">
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email">{t('checkout.email')} *</Label>
-              <Input id="email" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fullName">{t('checkout.fullName')} *</Label>
-              <Input id="fullName" required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="Ayşe Yılmaz" className="rounded-xl" />
-            </div>
+            <label className="relative block">
+              <Input
+                id="email"
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => { setForm({ ...form, email: e.target.value }); setErrors(prev => ({ ...prev, email: '' })) }}
+                className={cn("peer rounded-xl pt-5", errors.email ? "border-red-500 animate-shake" : "")}
+                placeholder=" "
+              />
+              <span className={cn(
+                "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+                errors.email ? "text-red-500" : "text-muted-foreground",
+                "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+                "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+              )}>
+                {t('checkout.email')} *
+              </span>
+              {errors.email && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.email}</p>}
+            </label>
+            <label className="relative block">
+              <Input
+                id="fullName"
+                required
+                value={form.fullName}
+                onChange={(e) => { setForm({ ...form, fullName: e.target.value }); setErrors(prev => ({ ...prev, fullName: '' })) }}
+                className={cn("peer rounded-xl pt-5", errors.fullName ? "border-red-500 animate-shake" : "")}
+                placeholder=" "
+              />
+              <span className={cn(
+                "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+                errors.fullName ? "text-red-500" : "text-muted-foreground",
+                "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+                "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+              )}>
+                {t('checkout.fullName')} *
+              </span>
+              {errors.fullName && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.fullName}</p>}
+            </label>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="address">{t('checkout.address')} *</Label>
-            <Input id="address" required value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Street address, building, apt" className="rounded-xl" />
-          </div>
+          <label className="relative block">
+            <Input
+              id="address"
+              required
+              value={form.address}
+              onChange={(e) => { setForm({ ...form, address: e.target.value }); setErrors(prev => ({ ...prev, address: '' })) }}
+              className={cn("peer rounded-xl pt-5", errors.address ? "border-red-500 animate-shake" : "")}
+              placeholder=" "
+            />
+            <span className={cn(
+              "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+              errors.address ? "text-red-500" : "text-muted-foreground",
+              "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+              "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+            )}>
+              {t('checkout.address')} *
+            </span>
+            {errors.address && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.address}</p>}
+          </label>
 
           <div className="grid sm:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="city">{t('checkout.city')} *</Label>
-              <Input id="city" required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Istanbul" className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="postalCode">{t('checkout.postalCode')} *</Label>
-              <Input id="postalCode" required value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} placeholder="34000" className="rounded-xl" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="country">{t('checkout.country')} *</Label>
-              <Input id="country" required value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} className="rounded-xl" />
-            </div>
+            <label className="relative block">
+              <Input
+                id="city"
+                required
+                value={form.city}
+                onChange={(e) => { setForm({ ...form, city: e.target.value }); setErrors(prev => ({ ...prev, city: '' })) }}
+                className={cn("peer rounded-xl pt-5", errors.city ? "border-red-500 animate-shake" : "")}
+                placeholder=" "
+              />
+              <span className={cn(
+                "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+                errors.city ? "text-red-500" : "text-muted-foreground",
+                "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+                "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+              )}>
+                {t('checkout.city')} *
+              </span>
+              {errors.city && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.city}</p>}
+            </label>
+            <label className="relative block">
+              <Input
+                id="postalCode"
+                required
+                value={form.postalCode}
+                onChange={(e) => { setForm({ ...form, postalCode: e.target.value }); setErrors(prev => ({ ...prev, postalCode: '' })) }}
+                className={cn("peer rounded-xl pt-5", errors.postalCode ? "border-red-500 animate-shake" : "")}
+                placeholder=" "
+              />
+              <span className={cn(
+                "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+                errors.postalCode ? "text-red-500" : "text-muted-foreground",
+                "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+                "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+              )}>
+                {t('checkout.postalCode')} *
+              </span>
+              {errors.postalCode && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.postalCode}</p>}
+            </label>
+            <label className="relative block">
+              <Input
+                id="country"
+                required
+                value={form.country}
+                onChange={(e) => { setForm({ ...form, country: e.target.value }); setErrors(prev => ({ ...prev, country: '' })) }}
+                className={cn("peer rounded-xl pt-5", errors.country ? "border-red-500 animate-shake" : "")}
+                placeholder=" "
+              />
+              <span className={cn(
+                "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+                errors.country ? "text-red-500" : "text-muted-foreground",
+                "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+                "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+              )}>
+                {t('checkout.country')} *
+              </span>
+              {errors.country && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.country}</p>}
+            </label>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="phone">{t('checkout.phone')}</Label>
-            <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+90 5XX XXX XX XX" className="rounded-xl" />
-          </div>
+          <label className="relative block">
+            <Input
+              id="phone"
+              value={form.phone}
+              onChange={(e) => { setForm({ ...form, phone: e.target.value }); setErrors(prev => ({ ...prev, phone: '' })) }}
+              className={cn("peer rounded-xl pt-5", errors.phone ? "border-red-500 animate-shake" : "")}
+              placeholder=" "
+            />
+            <span className={cn(
+              "absolute left-3 top-1.5 text-sm transition-all duration-200 pointer-events-none",
+              errors.phone ? "text-red-500" : "text-muted-foreground",
+              "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
+              "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
+            )}>
+              {t('checkout.phone')}
+            </span>
+            {errors.phone && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.phone}</p>}
+          </label>
 
           <div className="space-y-1.5">
             <Label htmlFor="notes">{t('checkout.orderNotes')}</Label>
