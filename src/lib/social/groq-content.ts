@@ -20,7 +20,12 @@ Audience: Everyone — women (primary target 14-45), men, children, couples.
 Positioning: Both luxury AND everyday wear. Pieces are elegant enough for special occasions but durable and affordable enough for daily use.
 Markets: Egypt (primary), with regional Arab world and global reach.
 Values: Quality, affordability, style, versatility, family.
-Language: Arabic is primary. Use Egyptian Arabic dialect (عامية مصرية) for casual posts, and Modern Standard Arabic (فصحى) for luxury/formal posts. Occasionally bilingual Arabic/English for wider reach.`
+Language: Mix of Egyptian Arabic + English + Turkish naturally.
+- Egyptian Arabic (عامية مصرية) for casual/relatable posts
+- English for modern/lifestyle/fashion terms and hashtags
+- Turkish words/phrases for authenticity (e.g., "gümüş", "bileklik", "kalite", "Türkiye'den")
+- Captions should feel like how a bilingual Egyptian actually talks — Arabic sentence with English words mixed in naturally, occasional Turkish flair to highlight the Turkish connection
+- Hashtags: mix of Arabic, English, and Turkish`
 
 export class GroqContentGenerator {
   private async generate(prompt: string, maxTokens = 800): Promise<string> {
@@ -50,7 +55,9 @@ export class GroqContentGenerator {
     return `أنت مدير محتوى لعلامة "${BRAND_IDENTITY.trim()}"
 
 قواعد المحتوى:
-- المنشورات باللغة العربية (مصرية للكاجوال، فصحى للوكس)
+- Mix languages naturally: Egyptian Arabic + English + Turkish words
+- Example: "ده bracelets استانليس ستيل من Türkiye جودة و Kalite 🌙✨"
+- Turkish words to sprinkle: gümüş, bileklik, kolye, yüzük, kalite, Türkiye'den, el yapımı
 - استخدم emojis مناسبة 🌙✨💫🪙🇪🇬
 - العبارات تكون دافئة وقريبة من القلب
 - العروض الترويجية تكون محترمة مش رخيصة
