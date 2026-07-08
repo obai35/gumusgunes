@@ -69,6 +69,14 @@ async function main() {
     })
   }
   console.log(`Seeded ${paymentMethods.length} payment methods`)
+
+  console.log('Seeding product knowledge graph...')
+  try {
+    const { execSync } = require('child_process')
+    execSync('npx tsx prisma/seed-graph.ts', { stdio: 'inherit', timeout: 300000 })
+  } catch {
+    console.log('Graph seed skipped')
+  }
 }
 
 main()
