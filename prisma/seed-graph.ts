@@ -88,9 +88,9 @@ async function main() {
 
     await prisma.$executeRaw`
       INSERT INTO "ProductEmbedding" ("id", "productId", "vector", "createdAt", "updatedAt")
-      VALUES (gen_random_uuid(), ${p.id}, ${vectorStr}::vector, NOW(), NOW())
+      VALUES (gen_random_uuid(), ${p.id}, ${vectorStr}, NOW(), NOW())
       ON CONFLICT ("productId")
-      DO UPDATE SET "vector" = ${vectorStr}::vector, "updatedAt" = NOW()
+      DO UPDATE SET "vector" = ${vectorStr}, "updatedAt" = NOW()
     `
 
     if ((i + 1) % 10 === 0) console.log(`  Embedded ${i + 1}/${products.length}`)
@@ -103,7 +103,7 @@ async function main() {
     if (!source) continue
 
     const similar = await prisma.$queryRaw<{ id: string; similarity: number }[]>`
-      SELECT e."productId" as id, 1 - (e.vector <=> ${source.vector}::vector) as similarity
+      SELECT e."productId" as id, 1 - (e.vector::vector <=> ${source.vector}::vector) as similarity
       FROM "ProductEmbedding" e
       WHERE e."productId" != ${p.id}
       ORDER BY similarity DESC

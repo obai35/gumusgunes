@@ -45,7 +45,7 @@ export async function getSemanticSimilar(productId: string, limit = 6): Promise<
     JOIN "Product" p ON p.id = e."productId"
     WHERE e."productId" != ${productId}
       AND p."isActive" = true
-    ORDER BY e.vector <=> ${source.vector}::vector
+    ORDER BY e.vector::vector <=> ${source.vector}::vector
     LIMIT ${limit}
   `
   return results.map(normalizeProduct)
