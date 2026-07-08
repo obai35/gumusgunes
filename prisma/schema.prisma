@@ -319,7 +319,7 @@ model User {
   createdAt   DateTime    @default(now())
   addresses   Address[]
   savedCards  SavedCard[]
-  orders      Order[]
+  orders        Order[]
 }
 
 model Address {
@@ -432,6 +432,7 @@ model Discount {
   governorate   Governorate? @relation(fields: [governorateId], references: [id])
   createdAt     DateTime     @default(now())
   orders        Order[]
+  socialPosts   SocialPost[]
 }
 
 model SiteSetting {
@@ -518,6 +519,74 @@ model PaymentMethod {
   config        String   @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model SocialAccount {
+  id           String       @id @default(cuid())
+  platform     String       // instagram | facebook
+  accountId    String       // platform user ID
+  accountName  String       // display name
+  accessToken  String       // encrypted
+  tokenExpires DateTime?
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  posts        SocialPost[]
+}
+
+model SocialPost {
+  id             String          @id @default(cuid())
+  accountId      String?
+  account        SocialAccount?  @relation(fields: [accountId], references: [id])
+  campaignId     String?
+  campaign       SocialCampaign? @relation(fields: [campaignId], references: [id])
+  platform       String          // instagram | facebook | both
+  postType       String          // feed | reel | story | carousel
+  status         String          // draft | scheduled | publishing | published | failed
+  mediaUrls      String          // JSON array
+  caption        String?
+  hashtags       String?         // JSON array
+  productIds     String?         // JSON array
+  discountId     String?
+  discount       Discount?       @relation(fields: [discountId], references: [id])
+  scheduledAt    DateTime?
+  publishedAt    DateTime?
+  platformPostId String?
+  permalink      String?
+  performance    Json?
+  errorLog       String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([accountId, status])
+}
+
+model SocialDraft {
+  id         String   @id @default(cuid())
+  title      String?
+  mediaUrls  String   // JSON array
+  caption    String?
+  hashtags   String?
+  productIds String?
+  discountId String?
+  platforms  String   // JSON array
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model SocialCampaign {
+  id            String       @id @default(cuid())
+  name          String
+  goal          String       // awareness | engagement | sales | followers
+  budget        Float?
+  status        String       // draft | active | paused | completed
+  startDate     DateTime?
+  endDate       DateTime?
+  triggerType   String?
+  triggerConfig Json?
+  posts         SocialPost[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model ActivityLog {

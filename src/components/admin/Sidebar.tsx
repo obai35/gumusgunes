@@ -8,7 +8,7 @@ import { AdminChat } from './AdminChat'
 import {
   LayoutDashboard, ShoppingBag, Package, Warehouse, ShoppingCart, CreditCard, Tag, LogOut, Sun, Receipt, Settings,
   Store, Users, Shield, Calculator, ArrowLeftRight, FolderTree, UserCircle, MessageSquareText, Mail,
-  Truck,
+  Truck, Share2,
 } from 'lucide-react'
 
 type LinkDef = { href: string; label: string; icon: any; permission?: string }
@@ -27,6 +27,7 @@ const links: LinkDef[] = [
   { href: '/admin/shipping', label: 'Shipping', icon: Truck, permission: 'shipping' },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree, permission: 'categories' },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquareText, permission: 'reviews' },
+  { href: '/admin/social', label: 'Social', icon: Share2, permission: 'social' },
   { href: '/admin/editor', label: 'Site Editor', icon: Store, permission: 'editor' },
   { href: '/admin/admins', label: 'Admins', icon: Shield, permission: 'admins' },
   { href: '/admin/security', label: 'Security', icon: Shield, permission: 'security' },
