@@ -65,7 +65,6 @@ export function SparkleTrail() {
           width:${s.size}px;
           height:${s.size}px;
           transform:translateY(${yOffset}px);
-          opacity:${opacity};
           pointer-events:none;
           z-index:9998;
           color:rgba(212,175,55,${opacity});
