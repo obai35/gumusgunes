@@ -36,20 +36,30 @@ export function Hero() {
         </div>
       </div>
 
+      {/* Sunburst rotating glow */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] max-w-[90vw] max-h-[90vw]"
+          style={{
+            background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 50%)',
+            animation: 'sun-rotate 120s linear infinite, sun-pulse 6s ease-in-out infinite',
+          }}
+        />
+      </div>
+
       {/* Sparkles */}
       <div className="absolute inset-0 pointer-events-none">
-        {[...Array(12)].map((_, i) => (
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute"
             style={{
-              top: `${15 + (i * 7) % 70}%`,
-              left: `${5 + (i * 11) % 90}%`,
+              top: `${10 + (i * 5) % 80}%`,
+              left: `${5 + (i * 9) % 90}%`,
             }}
             animate={{ opacity: [0, 1, 0], scale: [0, 1, 0] }}
-            transition={{ duration: 3, delay: i * 0.4, repeat: Infinity, repeatDelay: 2 }}
+            transition={{ duration: 3, delay: i * 0.25, repeat: Infinity, repeatDelay: 1.5 }}
           >
-            <Sparkles className="h-3 w-3 text-gold/60" />
+            <Sparkles className={`${i % 3 === 0 ? 'h-4 w-4' : 'h-3 w-3'} text-gold/70`} />
           </motion.div>
         ))}
       </div>
@@ -83,14 +93,14 @@ export function Hero() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <a
                 href="#collections"
-                className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow"
+                className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow hover-glow"
               >
                 {t('hero.cta')}
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </a>
               <button
                 onClick={() => setSearchOpen(true)}
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full border border-silver/30 text-silver hover:border-gold hover:text-gold transition-all text-sm font-medium tracking-wide"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full border border-silver/30 text-silver hover:border-gold hover:text-gold transition-all text-sm font-medium tracking-wide hover-glow"
               >
                 {t('hero.searchVault')}
               </button>
@@ -119,9 +129,12 @@ export function Hero() {
             className="relative"
           >
             <div className="relative aspect-square max-w-lg mx-auto">
-              {/* Decorative ring */}
+              {/* Decorative rings */}
               <div className="absolute -inset-4 rounded-full border border-gold/20" />
               <div className="absolute -inset-8 rounded-full border border-gold/10" />
+              {/* Pulsing rings */}
+              <div className="absolute -inset-12 rounded-full border border-gold/20" style={{ animation: 'ring-pulse 4s ease-out infinite' }} />
+              <div className="absolute -inset-16 rounded-full border border-gold/10" style={{ animation: 'ring-pulse 4s ease-out 1s infinite' }} />
 
               {/* Glow */}
               <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.3)_0%,transparent_70%)] blur-2xl" />
