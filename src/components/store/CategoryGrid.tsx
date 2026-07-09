@@ -70,7 +70,7 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-50px' }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="group relative overflow-hidden rounded-2xl bg-navy image-zoom luxury-shadow aspect-[4/5] sm:aspect-square"
+                className="group relative overflow-hidden rounded-2xl bg-navy image-zoom luxury-shadow hover-glow aspect-[4/5] sm:aspect-square"
               >
                 {cat.imageUrl && (
                   <img

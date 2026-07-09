@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { GlowReveal } from './GlowReveal'
 import { Mail, Send, Check, Gift } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,7 +43,7 @@ export function Newsletter() {
   }
 
   return (
-    <section className="py-20 sm:py-28 bg-navy text-silver relative overflow-hidden">
+    <GlowReveal><section className="py-20 sm:py-28 bg-navy text-silver relative overflow-hidden">
       {/* Decorative sun rays */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[1000px] max-h-[1000px] rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.10)_0%,transparent_60%)]" />
@@ -112,6 +113,6 @@ export function Newsletter() {
           </p>
         </motion.div>
       </div>
-    </section>
+    </section></GlowReveal>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { GlowReveal } from './GlowReveal'
 import { Sparkles, Gem, Sun, Award } from 'lucide-react'
 import { useTranslation } from '@/hooks/use-translation'
 
@@ -26,7 +27,7 @@ const pillars = [
 export function AboutSection() {
   const { t } = useTranslation()
   return (
-    <section id="about" className="py-20 sm:py-28 bg-background scroll-mt-24">
+    <GlowReveal><section id="about" className="py-20 sm:py-28 bg-background scroll-mt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Image */}
@@ -104,6 +105,6 @@ export function AboutSection() {
           </motion.div>
         </div>
       </div>
-    </section>
+    </section></GlowReveal>
   )
 }

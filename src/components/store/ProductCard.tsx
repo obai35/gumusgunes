@@ -51,7 +51,7 @@ export function ProductCard({ product, index = 0 }: { product: Product; index?: 
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.4, delay: (index % 4) * 0.06 }}
-      className="group relative bg-card rounded-2xl overflow-hidden border border-border/60 card-hover cursor-pointer"
+      className="group relative bg-card rounded-2xl overflow-hidden border border-border/60 card-hover hover-glow cursor-pointer"
       onClick={handleOpen}
     >
       {/* Image */}

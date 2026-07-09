@@ -34,7 +34,7 @@ export function TrustBadges() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {badges.map((b) => (
-            <div key={b.title} className="flex flex-col sm:flex-row items-center sm:items-start gap-3 text-center sm:text-left">
+            <div key={b.title} className="flex flex-col sm:flex-row items-center sm:items-start gap-3 text-center sm:text-left hover-glow">
               <div className="flex-shrink-0 h-12 w-12 rounded-full bg-navy/5 border border-gold/20 flex items-center justify-center">
                 <b.icon className="h-5 w-5 text-gold" />
               </div>

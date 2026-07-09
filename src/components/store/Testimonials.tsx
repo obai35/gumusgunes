@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { GlowReveal } from './GlowReveal'
 import { Star, Quote } from 'lucide-react'
 import { useTranslation } from '@/hooks/use-translation'
 
@@ -58,7 +59,7 @@ const testimonials = [
 export function Testimonials() {
   const { t } = useTranslation()
   return (
-    <section className="py-20 sm:py-28 bg-secondary/30">
+    <GlowReveal><section className="py-20 sm:py-28 bg-secondary/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-12">
           <div className="inline-block">
@@ -119,6 +120,6 @@ export function Testimonials() {
           ))}
         </div>
       </div>
-    </section>
+    </section></GlowReveal>
   )
 }
