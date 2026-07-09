@@ -6,6 +6,7 @@ export function EnhancedAmbientMist() {
   const [pos, setPos] = useState({ x: 0.5, y: 0.5 })
 
   useEffect(() => {
+    if (window.location.pathname.startsWith('/admin') || window.location.pathname.startsWith('/pos')) return
     let raf: number
     const target = { x: 0.5, y: 0.5 }
     const current = { x: 0.5, y: 0.5 }
