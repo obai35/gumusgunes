@@ -22,7 +22,7 @@ export default function AdminLogin() {
 
     const body: any = { email, password }
     if (totpPending) {
-      body.totpToken = totpCode
+      body.totpCode = totpCode
       body.email = email || totpPending.email
     }
 
