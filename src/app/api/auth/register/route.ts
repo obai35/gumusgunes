@@ -12,6 +12,7 @@ const RegisterSchema = z.object({
     .regex(/[A-Z]/, 'Must include an uppercase letter')
     .regex(/[0-9]/, 'Must include a digit'),
   phone: z.string().optional(),
+  gender: z.enum(['MALE', 'FEMALE']).optional(),
 }).strict()
 
 export async function POST(req: Request) {
@@ -23,17 +24,17 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
-    const { email, password, name } = parsed.data
+    const { email, password, name, gender } = parsed.data
 
     const existing = await db.user.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
 
     const user = await db.user.create({
-      data: { email, password: await hashPassword(password), name },
+      data: { email, password: await hashPassword(password), name, gender },
     })
 
     const token = signToken({ userId: user.id, email: user.email })
-    const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } })
+    const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name, gender: user.gender } })
     response.cookies.set('__session', token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict', path: '/api', maxAge: 604800,
