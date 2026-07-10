@@ -39,6 +39,7 @@ const GIFT_WRAP_PRICE = 5
 export function CheckoutContent() {
   const router = useRouter()
   const { items, subtotal, clearCart } = useCart()
+  const safeItems = Array.isArray(items) ? items : []
   const { setCheckoutOpen } = useUI()
   const formatPrice = useFormatPrice()
   const { t } = useTranslation()
@@ -130,7 +131,7 @@ export function CheckoutContent() {
     country: form.country,
     notes: [form.notes, form.giftWrap && form.giftMessage ? `[Gift message: ${form.giftMessage}]` : '', form.giftWrap ? '[Gift wrapping included]' : ''].filter(Boolean).join('\n'),
     paymentMethod: form.paymentMethod,
-    items: items.map((i: any) => ({
+    items: safeItems.map((i: any) => ({
       productId: i.product.id,
       quantity: i.quantity,
       price: i.product.price,
@@ -142,7 +143,7 @@ export function CheckoutContent() {
     totalAmount: grandTotal,
     idempotencyKey,
     ...overrides,
-  }), [form, items, total, shipping, tax, grandTotal, idempotencyKey, selectedMethodId])
+  }), [form, safeItems, total, shipping, tax, grandTotal, idempotencyKey, selectedMethodId])
 
   const submitOrder = useCallback(async (overrides = {}) => {
     setStep('processing')

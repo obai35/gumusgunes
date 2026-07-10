@@ -23,20 +23,21 @@ export function CartContent() {
   const formatPrice = useFormatPrice()
   const { t } = useTranslation()
   const [recommendations, setRecommendations] = useState<Product[]>([])
+  const safeItems = Array.isArray(items) ? items : []
 
   const total = subtotal()
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - total)
   const progress = Math.min(100, (total / FREE_SHIPPING_THRESHOLD) * 100)
 
   useEffect(() => {
-    if (items.length === 0) return
+    if (safeItems.length === 0) return
     let cancelled = false
     fetch('/api/products?limit=20')
       .then((r) => r.json())
       .then((d) => {
         if (cancelled || !d.ok) return
-        const cartIds = new Set(items.map((i) => i.product.id))
-        const cartCategoryIds = new Set(items.map((i) => i.product.categoryId))
+        const cartIds = new Set(safeItems.map((i) => i.product.id))
+        const cartCategoryIds = new Set(safeItems.map((i) => i.product.categoryId))
         const recs = (d.products as Product[])
           .filter((p) => !cartIds.has(p.id))
           .sort((a, b) => {
@@ -50,7 +51,7 @@ export function CartContent() {
       })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [items])
+  }, [safeItems])
 
   const handleCheckout = () => {
     closeCart()
@@ -62,7 +63,7 @@ export function CartContent() {
     toast.success(t('cart.addedToBag', product.name))
   }
 
-  if (items.length === 0) {
+  if (safeItems.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
         <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center mb-4">
@@ -102,7 +103,7 @@ export function CartContent() {
 
       <div className="flex-1 overflow-y-auto scroll-luxury p-5 space-y-4">
         <AnimatePresence mode="popLayout" initial={false}>
-          {items.map((item) => (
+          {safeItems.map((item) => (
             <motion.div
               key={item.product.id}
               layout
