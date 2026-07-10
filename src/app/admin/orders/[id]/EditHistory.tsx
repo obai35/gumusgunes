@@ -8,7 +8,7 @@ export default function EditHistory({ editHistory }: EditHistoryProps) {
   if (!editHistory) return null
 
   let entries: any[]
-  try { entries = JSON.parse(editHistory) } catch { return null }
+  try { entries = Array.isArray(JSON.parse(editHistory)) ? JSON.parse(editHistory) : [] } catch { return null }
   if (entries.length === 0) return null
 
   const fieldLabels: Record<string, string> = {

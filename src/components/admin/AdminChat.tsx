@@ -153,7 +153,7 @@ export function AdminChat() {
                   </div>
                 </div>
 
-                {m.pendingActions && m.pendingActions.length > 0 && (
+                {Array.isArray(m.pendingActions) && m.pendingActions.length > 0 && (
                   <div className="mt-1.5 ml-8 space-y-1">
                     {m.pendingActions.map((action) => (
                       <div key={action.index} className="flex items-center justify-between bg-navy-soft/30 rounded-lg px-2.5 py-1.5 text-xs">

@@ -15,7 +15,7 @@ export default function AdminBranches() {
 
   useEffect(() => {
     fetch('/api/admin/branches').then(r => r.json()).then(d => {
-      if (d.ok) setBranches(d.branches)
+      if (d.ok) setBranches(Array.isArray(d.branches) ? d.branches : [])
     }).finally(() => setLoading(false))
   }, [])
 
@@ -115,7 +115,7 @@ export default function AdminBranches() {
             </tr>
           </thead>
           <tbody>
-            {branches.map((b: any) => (
+            {Array.isArray(branches) && branches.map((b: any) => (
               <tr key={b.id} className="border-b border-border/50 hover:bg-gray-50/50">
                 <td className="px-4 py-3 font-medium text-navy">{b.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{b.email}</td>

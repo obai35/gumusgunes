@@ -15,7 +15,7 @@ export default function StockHistory({ productId }: StockHistoryProps) {
   useEffect(() => {
     fetch(`/api/admin/inventory/logs?productId=${productId}`)
       .then((r) => r.json())
-      .then(setLogs)
+      .then((data) => setLogs(Array.isArray(data) ? data : []))
       .catch(() => setLogs([]))
       .finally(() => setLoading(false))
   }, [productId])
@@ -44,7 +44,7 @@ export default function StockHistory({ productId }: StockHistoryProps) {
         <p className="text-sm text-muted-foreground">No stock history</p>
       ) : (
         <div className="space-y-2 max-h-80 overflow-y-auto">
-          {logs.map((log: any) => (
+          {Array.isArray(logs) && logs.map((log: any) => (
             <div key={log.id} className="flex items-center justify-between text-sm py-2 border-b border-border/50 last:border-0">
               <div className="flex items-center gap-2">
                 <span className={`px-2 py-0.5 rounded text-xs font-medium ${typeColors[log.type] || 'bg-gray-100 text-gray-700'}`}>{log.type}</span>

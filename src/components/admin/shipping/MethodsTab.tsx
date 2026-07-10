@@ -17,7 +17,7 @@ export default function MethodsTab() {
 
   async function fetchMethods() {
     const res = await fetch('/api/admin/shipping/methods')
-    if (res.ok) { const d = await res.json(); setMethods(d.methods) }
+    if (res.ok) { const d = await res.json(); setMethods(Array.isArray(d.methods) ? d.methods : []) }
     setLoading(false)
   }
 
@@ -65,7 +65,7 @@ export default function MethodsTab() {
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border bg-gray-50/50"><th className="text-left px-4 py-3 text-muted-foreground font-medium">Name</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Est. Delivery</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Active</th><th className="text-right px-4 py-3 text-muted-foreground font-medium">Actions</th></tr></thead>
           <tbody>
-            {methods.map(m => (
+            {Array.isArray(methods) && methods.map(m => (
               <tr key={m.id} className="border-b border-border/50">
                 <td className="px-4 py-3 font-medium text-navy">{m.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{m.estimatedDays}</td>

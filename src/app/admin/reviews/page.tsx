@@ -69,7 +69,7 @@ export default function AdminReviews() {
       .then(r => r.json())
       .then(d => {
         if (d.ok) {
-          setReviews(d.reviews)
+          setReviews(Array.isArray(d.reviews) ? d.reviews : [])
           setTotal(d.total)
           setTotalPages(d.totalPages)
         } else {
@@ -136,7 +136,7 @@ export default function AdminReviews() {
   }
 
   function handleExportCSV() {
-    const rows = reviews.map(r => ({
+    const rows = Array.isArray(reviews) ? reviews.map(r => ({
       Product: r.product.name,
       Author: r.authorName,
       Email: r.authorEmail || '',
@@ -145,7 +145,7 @@ export default function AdminReviews() {
       Comment: r.comment,
       Verified: r.isVerified ? 'Yes' : 'No',
       Date: new Date(r.createdAt).toLocaleDateString(),
-    }))
+    })) : []
     exportCSVRows(rows, `reviews-${new Date().toISOString().split('T')[0]}.csv`)
   }
 
@@ -262,7 +262,7 @@ export default function AdminReviews() {
             </tr>
           </thead>
           <tbody>
-            {reviews.map(review => (
+            {Array.isArray(reviews) && reviews.map(review => (
               <>
                 <tr
                   key={review.id}

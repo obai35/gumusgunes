@@ -53,14 +53,14 @@ function NewTransfer() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
-    fetch('/api/admin/categories').then((r) => r.json()).then(setCategories).catch(() => {})
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(Array.isArray(data.branches) ? data.branches : [])).catch(() => {})
+    fetch('/api/admin/categories').then((r) => r.json()).then((data) => setCategories(Array.isArray(data) ? data : [])).catch(() => {})
   }, [])
 
   useEffect(() => {
     const params = new URLSearchParams()
     if (categoryFilter) params.set('categoryId', categoryFilter)
-    fetch(`/api/admin/products?${params}`).then((r) => r.json()).then((data) => setProducts(data.products || [])).catch(() => {})
+    fetch(`/api/admin/products?${params}`).then((r) => r.json()).then((data) => setProducts(Array.isArray(data.products) ? data.products : [])).catch(() => {})
   }, [categoryFilter])
 
   function addItem(productId: string) {
@@ -151,7 +151,7 @@ function NewTransfer() {
           <div className="flex gap-2 mb-4">
             <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm min-w-[160px]">
               <option value="">All Categories</option>
-              {categories.map((c: any) => (
+              {Array.isArray(categories) && categories.map((c: any) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
@@ -208,13 +208,13 @@ function BranchStockView() {
   const [allData, setAllData] = useState<any>(null)
 
   useEffect(() => {
-    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(Array.isArray(data.branches) ? data.branches : [])).catch(() => {})
   }, [])
 
   useEffect(() => {
     if (!selectedBranch) return
     fetch(`/api/admin/branch-stock?branchId=${selectedBranch}`)
-      .then((r) => r.json()).then(setStocks).catch(() => setStocks([]))
+      .then((r) => r.json()).then((data) => setStocks(Array.isArray(data) ? data : [])).catch(() => setStocks([]))
   }, [selectedBranch])
 
   useEffect(() => {
@@ -267,7 +267,7 @@ function BranchStockView() {
             <div key={branch.branchId} className="bg-white rounded-xl border border-border p-5">
               <h3 className="font-semibold text-navy mb-3 flex items-center gap-2"><Building2 className="h-4 w-4" /> {branch.branchName}</h3>
               <div className="space-y-1 text-sm">
-                {branch.stocks.slice(0, 5).map((s: any) => (
+                {Array.isArray(branch.stocks) && branch.stocks.slice(0, 5).map((s: any) => (
                   <div key={s.productId} className="flex justify-between"><span className="text-muted-foreground truncate">{s.productName}</span><span className="font-medium text-navy">{s.quantity}</span></div>
                 ))}
                 {branch.stocks.length > 5 && <p className="text-xs text-muted-foreground">...and {branch.stocks.length - 5} more</p>}
@@ -287,13 +287,13 @@ function TransferHistory() {
   const [branchFilter, setBranchFilter] = useState('')
 
   useEffect(() => {
-    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(data.branches || [])).catch(() => {})
+    fetch('/api/admin/branches').then((r) => r.json()).then((data) => setBranches(Array.isArray(data.branches) ? data.branches : [])).catch(() => {})
   }, [])
 
   useEffect(() => {
     const params = branchFilter ? `?branchId=${branchFilter}` : ''
     fetch(`/api/admin/stock-transfers${params}`)
-      .then((r) => r.json()).then(setTransfers).catch(() => setTransfers([]))
+      .then((r) => r.json()).then((data) => setTransfers(Array.isArray(data) ? data : [])).catch(() => setTransfers([]))
   }, [branchFilter])
 
   const locationName = (type: string, id: string | null) => {
@@ -316,7 +316,7 @@ function TransferHistory() {
             <th className="p-3 font-medium">Product</th><th className="p-3 font-medium text-right">Qty</th><th className="p-3 font-medium">Note</th><th className="p-3 font-medium">Admin</th>
           </tr></thead>
           <tbody>
-            {transfers.map((t) => (
+            {Array.isArray(transfers) && transfers.map((t) => (
               <tr key={t.id} className="border-b border-border/50">
                 <td className="p-3 text-xs text-muted-foreground">{new Date(t.createdAt).toLocaleString()}</td>
                 <td className="p-3 font-medium text-navy">{locationName(t.fromType, t.fromId)}</td>

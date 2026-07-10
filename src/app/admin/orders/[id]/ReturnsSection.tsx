@@ -14,7 +14,7 @@ export default function ReturnsSection({ orderId }: ReturnsSectionProps) {
   useEffect(() => {
     fetch(`/api/admin/orders/${orderId}/returns`)
       .then((r) => r.json())
-      .then(setReturns)
+      .then((data) => setReturns(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [orderId])
@@ -42,7 +42,7 @@ export default function ReturnsSection({ orderId }: ReturnsSectionProps) {
     <div className="bg-white rounded-xl border border-border p-5">
       <h2 className="font-display font-semibold text-navy mb-4">Returns ({returns.length})</h2>
       <div className="space-y-3">
-        {returns.map((ret: any) => (
+        {Array.isArray(returns) && returns.map((ret: any) => (
           <div key={ret.id} className="border border-border rounded-lg p-3">
             <div className="flex justify-between text-sm mb-2">
               <span className="font-medium text-navy">{ret.returnNumber}</span>

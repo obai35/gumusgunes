@@ -21,7 +21,7 @@ export default function VerificationTab() {
 
   async function fetchOrders() {
     const res = await fetch('/api/admin/payments/verifications')
-    if (res.ok) { const d = await res.json(); setOrders(d.orders); setTotal(d.total) }
+    if (res.ok) { const d = await res.json(); setOrders(Array.isArray(d.orders) ? d.orders : []); setTotal(d.total) }
     setLoading(false)
   }
 
@@ -48,7 +48,7 @@ export default function VerificationTab() {
         <p className="text-sm text-muted-foreground">No pending verifications.</p>
       ) : (
         <div className="space-y-3">
-          {orders.map(o => (
+          {Array.isArray(orders) && orders.map(o => (
             <div key={o.id} className="bg-white rounded-xl border border-border p-4">
               <div className="flex items-start justify-between">
                 <div className="text-sm space-y-1">

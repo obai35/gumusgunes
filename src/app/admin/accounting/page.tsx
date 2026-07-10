@@ -34,7 +34,7 @@ function exportCSVRows(rows: Record<string, any>[], filename: string) {
 }
 
 function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
-  if (!data || data.length === 0) return null
+  if (!Array.isArray(data) || data.length === 0) return null
 
   const max = Math.max(...data.map(d => d.revenue), 1)
   const isMonthly = data.length > 0 && data[0].date.length <= 7
@@ -260,7 +260,7 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
     Object.entries(data.branchRevenue || {}).forEach(([k, v]) => {
       rows.push({ Metric: `Branch - ${k}`, Value: v as number })
     })
-    ;(data.dailyRevenue || []).forEach((d: any) => {
+    ;(Array.isArray(data.dailyRevenue) ? data.dailyRevenue : []).forEach((d: any) => {
       rows.push({ Metric: `Revenue ${d.date}`, Value: d.revenue })
     })
     exportCSVRows(rows, `overview-${period}.csv`)
@@ -646,7 +646,7 @@ function BranchesTab() {
       </div>
       {!data ? <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"><Skeleton className="h-40 w-full" /><Skeleton className="h-40 w-full" /><Skeleton className="h-40 w-full" /></div> : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {data.branches.map((branch: any) => (
+          {(Array.isArray(data.branches) ? data.branches : []).map((branch: any) => (
             <div key={branch.id} className="bg-white rounded-xl border border-border p-5 hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-3">
                 <Building2 className="h-5 w-5 text-navy" />
@@ -663,7 +663,7 @@ function BranchesTab() {
               </div>
             </div>
           ))}
-          {data.branches.length === 0 && <div className="col-span-full text-center text-muted-foreground text-sm py-8">No data for this period</div>}
+          {(!Array.isArray(data.branches) || data.branches.length === 0) && <div className="col-span-full text-center text-muted-foreground text-sm py-8">No data for this period</div>}
         </div>
       )}
     </div>
@@ -818,8 +818,8 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
                 </tr>
               </thead>
               <tbody>
-                {data.expenses.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No expenses found</td></tr>}
-                {data.expenses.map((exp: any) => (
+                {(!Array.isArray(data.expenses) || data.expenses.length === 0) && <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No expenses found</td></tr>}
+                {Array.isArray(data.expenses) && data.expenses.map((exp: any) => (
                   <tr key={exp.id} className="border-b border-border/50 hover:bg-gray-50">
                     <td className="p-3 text-muted-foreground text-xs">{new Date(exp.createdAt).toLocaleDateString()}</td>
                     <td className="p-3 font-medium text-navy">{exp.description}</td>
@@ -1032,7 +1032,7 @@ function ReportsTab() {
                 </tr>
               </thead>
               <tbody>
-                {data.periods.map((p: any) => (
+                {Array.isArray(data.periods) && data.periods.map((p: any) => (
                   <tr key={p.period} className="border-b border-border/50">
                     <td className="p-3 font-medium text-navy">{p.period}</td>
                     <td className="p-3 text-right text-navy">{formatCurrency(p.revenue)}</td>
@@ -1040,7 +1040,7 @@ function ReportsTab() {
                     <td className="p-3 text-right text-navy">{formatCurrency(p.avgOrderValue)}</td>
                   </tr>
                 ))}
-                {data.periods.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No data</td></tr>}
+                {(!Array.isArray(data.periods) || data.periods.length === 0) && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No data</td></tr>}
               </tbody>
             </table>
           </div>

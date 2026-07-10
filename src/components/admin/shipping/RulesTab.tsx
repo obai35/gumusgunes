@@ -14,7 +14,7 @@ export default function RulesTab() {
 
   async function fetchRules() {
     const res = await fetch('/api/admin/shipping/rules')
-    if (res.ok) { const d = await res.json(); setRules(d.rules) }
+    if (res.ok) { const d = await res.json(); setRules(Array.isArray(d.rules) ? d.rules : []) }
     setLoading(false)
   }
 
@@ -48,7 +48,7 @@ export default function RulesTab() {
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border bg-gray-50/50"><th className="text-left px-4 py-3 text-muted-foreground font-medium">Name</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Method</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Min Amount</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Governorate</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Discount</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Dates</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Active</th><th className="text-right px-4 py-3 text-muted-foreground font-medium">Actions</th></tr></thead>
           <tbody>
-            {rules.map(r => (
+            {Array.isArray(rules) && rules.map(r => (
               <tr key={r.id} className="border-b border-border/50">
                 <td className="px-4 py-3 font-medium text-navy">{r.name}</td>
                 <td className="px-4 py-3 text-muted-foreground">{r.method?.name || 'All'}</td>

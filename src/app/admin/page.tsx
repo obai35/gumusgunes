@@ -37,7 +37,7 @@ function SparklineCard({ icon: Icon, label, value, sparklineData, sparklineColor
 }
 
 function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
-  if (!data || data.length === 0) return null
+  if (!Array.isArray(data) || data.length === 0) return null
 
   const max = Math.max(...data.map(d => d.revenue), 1)
   const barWidth = 40

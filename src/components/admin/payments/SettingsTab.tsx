@@ -18,7 +18,7 @@ export default function SettingsTab() {
 
   async function fetchMethods() {
     const res = await fetch('/api/admin/payment-methods')
-    if (res.ok) { const d = await res.json(); setMethods(d.methods) }
+    if (res.ok) { const d = await res.json(); setMethods(Array.isArray(d.methods) ? d.methods : []) }
     setLoading(false)
   }
 
@@ -57,7 +57,7 @@ export default function SettingsTab() {
             </tr>
           </thead>
           <tbody>
-            {methods.map(m => (
+            {Array.isArray(methods) && methods.map(m => (
               <tr key={m.id} className="border-b border-border/50">
                 <td className="px-4 py-3 text-muted-foreground text-xs">{m.sortOrder}</td>
                 <td className="px-4 py-3 font-medium text-navy">{m.name}</td>

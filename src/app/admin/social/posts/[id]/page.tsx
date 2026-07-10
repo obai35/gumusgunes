@@ -56,7 +56,7 @@ export default function EditPost() {
   })
 
   useEffect(() => {
-    fetch('/api/admin/social/accounts').then(r => r.json()).then(setAccounts)
+    fetch('/api/admin/social/accounts').then(r => r.json()).then(data => setAccounts(Array.isArray(data) ? data : []))
     fetch(`/api/admin/social/posts/${id}`).then(r => r.json()).then((post: Post) => {
       setForm({
         accountId: post.accountId || '',

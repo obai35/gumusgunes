@@ -25,7 +25,7 @@ export default function AdminOrders() {
   useEffect(() => {
     fetch('/api/admin/orders')
       .then(r => r.json())
-      .then(d => { if (d.ok) setOrders(d.orders) })
+      .then(d => { if (d.ok) setOrders(Array.isArray(d.orders) ? d.orders : []) })
       .finally(() => setLoading(false))
   }, [])
 

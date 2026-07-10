@@ -44,7 +44,7 @@ export default function AdminNewsletter() {
       .then(r => r.json())
       .then(d => {
         if (d.ok) {
-          setSubscribers(d.subscribers)
+          setSubscribers(Array.isArray(d.subscribers) ? d.subscribers : [])
           setTotal(d.total)
           setTotalThisMonth(d.totalThisMonth)
           setTotalPages(d.totalPages)
@@ -87,11 +87,11 @@ export default function AdminNewsletter() {
   }
 
   function handleExportCSV() {
-    const rows = subscribers.map(s => ({
+    const rows = Array.isArray(subscribers) ? subscribers.map(s => ({
       Email: s.email,
       Name: s.name || '',
       SubscribedDate: new Date(s.createdAt).toLocaleDateString(),
-    }))
+    })) : []
     exportCSVRows(rows, `newsletter-${new Date().toISOString().split('T')[0]}.csv`)
   }
 
@@ -167,7 +167,7 @@ export default function AdminNewsletter() {
             </tr>
           </thead>
           <tbody>
-            {subscribers.map(sub => (
+            {Array.isArray(subscribers) && subscribers.map(sub => (
               <tr key={sub.id} className="border-b border-border/50 hover:bg-gray-50/50">
                 <td className="px-4 py-3 font-medium text-navy">
                   <div className="flex items-center gap-2">

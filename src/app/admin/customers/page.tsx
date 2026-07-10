@@ -49,7 +49,7 @@ export default function CustomersPage() {
       const res = await fetch('/api/admin/customers?' + params)
       const data = await res.json()
       if (!res.ok) { toast.error(data.error || 'Failed to load customers'); return }
-      setCustomers(data.customers)
+      setCustomers(Array.isArray(data.customers) ? data.customers : [])
       setTotal(data.total)
       setTotalPages(data.totalPages)
       setStats(data.stats)
@@ -76,7 +76,7 @@ export default function CustomersPage() {
       const res = await fetch(`/api/admin/customers/${customerId}`)
       const data = await res.json()
       if (!res.ok) { toast.error(data.error || 'Failed'); return }
-      setExpandedOrders(data.customer.orders.slice(0, 5))
+      setExpandedOrders(Array.isArray(data.customer.orders) ? data.customer.orders.slice(0, 5) : [])
     } catch {
       toast.error('Failed to load customer details')
     } finally {
@@ -190,7 +190,7 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody>
-              {customers.map((c: any) => (
+              {Array.isArray(customers) && customers.map((c: any) => (
                 <Fragment key={c.id}>
                   <tr
                     className="border-b border-border/50 hover:bg-gray-50/50 cursor-pointer"
@@ -237,7 +237,7 @@ export default function CustomersPage() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {expandedOrders.map((o: any) => (
+                                {Array.isArray(expandedOrders) && expandedOrders.map((o: any) => (
                                   <tr key={o.id} className="border-b border-border/30">
                                     <td className="py-1.5 pr-3 font-medium text-navy">{o.orderNumber}</td>
                                     <td className="py-1.5 pr-3 text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</td>

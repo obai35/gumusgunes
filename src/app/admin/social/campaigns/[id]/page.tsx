@@ -136,7 +136,7 @@ export default function CampaignDetail() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="p-4 rounded-xl bg-secondary/40 border border-border/40">
           <p className="text-xs text-muted-foreground">Total Posts</p>
-          <p className="text-xl font-semibold text-navy">{campaign.posts.length}</p>
+          <p className="text-xl font-semibold text-navy">{campaign.posts?.length ?? 0}</p>
         </div>
         {campaign.budget && (
           <div className="p-4 rounded-xl bg-secondary/40 border border-border/40">
@@ -163,7 +163,7 @@ export default function CampaignDetail() {
 
       <div className="p-6 rounded-2xl bg-secondary/30 border border-border/30">
         <h2 className="font-semibold mb-4">Posts</h2>
-        {campaign.posts.length === 0 ? (
+        {!campaign.posts?.length ? (
           <p className="text-sm text-muted-foreground py-8 text-center">No posts in this campaign yet.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -179,7 +179,7 @@ export default function CampaignDetail() {
                 </tr>
               </thead>
               <tbody>
-                {campaign.posts.map(p => (
+                {Array.isArray(campaign.posts) && campaign.posts.map(p => (
                   <tr key={p.id} className="border-b border-border/30 hover:bg-secondary/20">
                     <td className="px-3 py-2 text-xs">
                       {p.account ? `${p.account.accountName} (${p.account.platform})` : '-'}

@@ -45,7 +45,7 @@ export default function NewPost() {
   const [planCount, setPlanCount] = useState(5)
 
   useEffect(() => {
-    fetch('/api/admin/social/accounts').then(r => r.json()).then(setAccounts)
+    fetch('/api/admin/social/accounts').then(r => r.json()).then(data => setAccounts(Array.isArray(data) ? data : []))
   }, [])
 
   async function generateWithAI() {
@@ -418,7 +418,7 @@ export default function NewPost() {
                   </div>
                 ))}
               </div>
-              {planData.weekPlan && planData.weekPlan.length > 0 && (
+              {Array.isArray(planData.weekPlan) && planData.weekPlan.length > 0 && (
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border/30">
                   <h3 className="font-medium text-sm mb-2">Weekly Plan</h3>
                   <ul className="list-disc list-inside space-y-1">

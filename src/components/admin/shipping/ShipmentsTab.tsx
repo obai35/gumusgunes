@@ -37,7 +37,7 @@ export default function ShipmentsTab() {
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-navy mb-3">Orders Awaiting Shipment</h3>
           <div className="space-y-2">
-            {data.pendingOrders.map(o => (
+            {Array.isArray(data.pendingOrders) && data.pendingOrders.map(o => (
               <div key={o.id} className="bg-white rounded-xl border border-border p-4 flex items-center justify-between">
                 <div className="text-sm">
                   <p className="font-medium text-navy">{o.orderNumber}</p>
@@ -55,7 +55,7 @@ export default function ShipmentsTab() {
           <table className="w-full text-sm">
             <thead><tr className="border-b border-border bg-gray-50/50"><th className="text-left px-4 py-3 text-muted-foreground font-medium">Order</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Customer</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Method</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Tracking</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Status</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Shipped</th></tr></thead>
             <tbody>
-              {data.shipments.map(s => (
+              {Array.isArray(data.shipments) && data.shipments.map(s => (
                 <tr key={s.id} className="border-b border-border/50">
                   <td className="px-4 py-3 font-medium text-navy">{s.order.orderNumber}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.order.fullName}</td>

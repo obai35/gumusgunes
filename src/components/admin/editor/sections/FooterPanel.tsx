@@ -65,7 +65,7 @@ export function FooterPanel() {
               <input value={col.title} onChange={e => updateCol(col._id, e.target.value)} placeholder="Column title" className="flex-1 px-2 py-1 text-xs border border-border rounded font-medium" />
               <button onClick={() => removeCol(col._id)} className="p-1 text-muted-foreground hover:text-red-500"><X className="h-3 w-3" /></button>
             </div>
-            {col.links.map(link => (
+            {Array.isArray(col.links) && col.links.map(link => (
               <div key={link._id} className="flex items-center gap-1 ml-2 mb-1">
                 <input value={link.label} onChange={e => updateLink(col._id, link._id, 'label', e.target.value)} placeholder="Label" className="flex-1 px-1.5 py-0.5 text-xs border border-border rounded" />
                 <input value={link.href} onChange={e => updateLink(col._id, link._id, 'href', e.target.value)} placeholder="/link" className="flex-1 px-1.5 py-0.5 text-xs border border-border rounded font-mono" />

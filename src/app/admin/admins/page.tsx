@@ -60,8 +60,8 @@ function AdminsTab() {
   function resetForm() { setName(''); setEmail(''); setPhone(''); setPassword(''); setRoleId(''); setEditId(null) }
 
   useEffect(() => {
-    fetch('/api/admin/admins').then((r) => r.json()).then(setAdmins).catch(() => {})
-    fetch('/api/admin/roles').then((r) => r.json()).then(setRoles).catch(() => {})
+    fetch('/api/admin/admins').then((r) => r.json()).then((data) => setAdmins(Array.isArray(data) ? data : [])).catch(() => {})
+    fetch('/api/admin/roles').then((r) => r.json()).then((data) => setRoles(Array.isArray(data) ? data : [])).catch(() => {})
   }, [])
 
   async function handleSubmit() {
@@ -78,7 +78,7 @@ function AdminsTab() {
         toast.success(editId ? 'Admin updated' : 'Admin created')
         resetForm(); setShowModal(false)
         const updated = await fetch('/api/admin/admins').then((r) => r.json())
-        setAdmins(updated)
+        setAdmins(Array.isArray(updated) ? updated : [])
       } else {
         const e = await res.json()
         const msg = e.details ? `${e.error}: ${Object.values(e.details).flat().join(', ')}` : e.error
@@ -129,7 +129,7 @@ function AdminsTab() {
             <th className="p-3 font-medium">Created</th><th className="p-3 font-medium">Actions</th>
           </tr></thead>
           <tbody>
-            {filtered.map((a) => (
+            {Array.isArray(filtered) && filtered.map((a) => (
               <tr key={a.id} className="border-b border-border/50">
                 <td className="p-3 font-medium text-navy">{a.name}</td>
                 <td className="p-3 text-muted-foreground">{a.email}</td>
@@ -182,7 +182,7 @@ function AdminsTab() {
                 <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={editId ? 'New password (leave blank)' : 'Password'} type="password" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                 <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
                   <option value="">Select role...</option>
-                  {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  {Array.isArray(roles) && roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>
               <div className="flex justify-end gap-2 mt-6">
@@ -227,7 +227,7 @@ function RolesTab() {
         toast.success(editId ? 'Role updated' : 'Role created')
         resetForm(); setShowModal(false)
         const updated = await fetch('/api/admin/roles').then((r) => r.json())
-        setRoles(updated)
+        setRoles(Array.isArray(updated) ? updated : [])
       } else { const e = await res.json(); toast.error(e.error) }
     } catch { toast.error('Failed') }
     finally { setLoading(false) }
@@ -259,12 +259,12 @@ function RolesTab() {
             <th className="p-3 font-medium">Name</th><th className="p-3 font-medium">Permissions</th><th className="p-3 font-medium">Created</th><th className="p-3 font-medium">Actions</th>
           </tr></thead>
           <tbody>
-            {roles.map((r) => (
+            {Array.isArray(roles) && roles.map((r) => (
               <tr key={r.id} className="border-b border-border/50">
                 <td className="p-3 font-medium text-navy">{r.name}</td>
                 <td className="p-3">
                   <div className="flex flex-wrap gap-1">
-                    {r.permissions.map((p) => (
+                    {Array.isArray(r.permissions) && r.permissions.map((p) => (
                       <span key={p} className="px-2 py-0.5 bg-navy/5 text-navy rounded text-xs">{PERMISSION_LABELS[p] || p}</span>
                     ))}
                   </div>

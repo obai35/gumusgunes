@@ -44,7 +44,7 @@ export default function AdminProducts() {
       const res = await fetch(`/api/admin/products?${params}`)
       const data = await res.json()
       if (data.ok) {
-        setProducts(data.products)
+        setProducts(Array.isArray(data.products) ? data.products : [])
         setTotal(data.total)
         setTotalPages(data.totalPages)
       } else {
@@ -64,7 +64,7 @@ export default function AdminProducts() {
   useEffect(() => {
     fetch('/api/admin/products/categories')
       .then(r => r.json())
-      .then(setCategories)
+      .then(d => setCategories(Array.isArray(d) ? d : []))
       .catch(() => {})
   }, [])
 

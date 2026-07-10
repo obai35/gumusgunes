@@ -20,8 +20,8 @@ export default function RatesTab() {
     const res = await fetch('/api/admin/shipping/rates')
     if (res.ok) {
       const d = await res.json()
-      setGovernorates(d.governorates)
-      setMethods(d.methods)
+      setGovernorates(Array.isArray(d.governorates) ? d.governorates : [])
+      setMethods(Array.isArray(d.methods) ? d.methods : [])
       const map: Record<string, Record<string, string>> = {}
       for (const m of d.methods) map[m.id] = {}
       for (const r of d.rates) {
@@ -68,14 +68,14 @@ export default function RatesTab() {
           <thead>
             <tr className="border-b border-border bg-gray-50/50">
               <th className="text-left px-3 py-2 text-muted-foreground font-medium sticky left-0 bg-gray-50/50">Governorate</th>
-              {methods.map(m => <th key={m.id} className="text-center px-2 py-2 text-muted-foreground font-medium min-w-[100px]">{m.name}</th>)}
+              {Array.isArray(methods) && methods.map(m => <th key={m.id} className="text-center px-2 py-2 text-muted-foreground font-medium min-w-[100px]">{m.name}</th>)}
             </tr>
           </thead>
           <tbody>
-            {governorates.map(g => (
+            {Array.isArray(governorates) && governorates.map(g => (
               <tr key={g.id} className="border-b border-border/50">
                 <td className="px-3 py-2 font-medium text-navy sticky left-0 bg-white">{g.name}</td>
-                {methods.map(m => (
+                {Array.isArray(methods) && methods.map(m => (
                   <td key={m.id} className="px-2 py-2 text-center">
                     <input
                       type="number"
