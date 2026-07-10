@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [gender, setGender] = useState<'MALE' | 'FEMALE' | ''>('')
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -28,7 +29,7 @@ export default function RegisterPage() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name.trim(), email, password }),
+      body: JSON.stringify({ name: name.trim(), email, password, gender: gender || undefined }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -123,6 +124,33 @@ export default function RegisterPage() {
             </span>
             {errors.password && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.password}</p>}
           </label>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground font-medium">Gender (optional)</p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setGender('MALE')}
+                className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                  gender === 'MALE'
+                    ? 'border-gold bg-gold/10 text-navy'
+                    : 'border-border text-muted-foreground hover:border-gold/50'
+                }`}
+              >
+                <span className="mr-1.5">👨</span> Man
+              </button>
+              <button
+                type="button"
+                onClick={() => setGender('FEMALE')}
+                className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                  gender === 'FEMALE'
+                    ? 'border-gold bg-gold/10 text-navy'
+                    : 'border-border text-muted-foreground hover:border-gold/50'
+                }`}
+              >
+                <span className="mr-1.5">👩</span> Woman
+              </button>
+            </div>
+          </div>
           <button type="submit" disabled={loading} className="w-full py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">
             {loading ? 'Creating...' : 'Create Account'}
           </button>

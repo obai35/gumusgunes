@@ -7,6 +7,7 @@ const ProfileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   phone: z.string().max(20).optional(),
   dateOfBirth: z.string().optional(),
+  gender: z.enum(['MALE', 'FEMALE']).optional(),
 }).strict()
 
 export async function GET(req: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const profile = await db.user.findUnique({
     where: { id: user.userId },
-    select: { id: true, email: true, name: true, phone: true, password: true, googleId: true },
+    select: { id: true, email: true, name: true, phone: true, gender: true, password: true, googleId: true },
   })
   if (!profile) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json({
@@ -22,6 +23,7 @@ export async function GET(req: NextRequest) {
     email: profile.email,
     name: profile.name,
     phone: profile.phone,
+    gender: profile.gender,
     hasPassword: profile.password !== '',
     hasGoogle: profile.googleId !== null,
   })
@@ -37,11 +39,11 @@ export async function PUT(req: NextRequest) {
       { status: 400 }
     )
   }
-  const { name, phone } = parsed.data
+  const { name, phone, gender } = parsed.data
   const updated = await db.user.update({
     where: { id: user.userId },
-    data: { name, phone },
-    select: { id: true, email: true, name: true, phone: true },
+    data: { name, phone, gender },
+    select: { id: true, email: true, name: true, phone: true, gender: true },
   })
   return NextResponse.json(updated)
 }

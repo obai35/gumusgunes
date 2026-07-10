@@ -8,6 +8,7 @@ import { AuthHydrator } from "@/components/store/AuthHydrator";
 import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { PageViewWrapper } from "@/components/ui/PageViewWrapper";
 import { StorefrontEffects } from "@/components/store/StorefrontEffects";
+import { NavigationLoadingProvider } from "@/components/store/NavigationLoadingProvider"
 
 
 const geistSans = Geist({
@@ -121,9 +122,11 @@ export default function RootLayout({
         <StorefrontEffects />
         <NavigationProgress />
         <AuthHydrator />
-        <DesignProvider>
-          <PageViewWrapper>{children}</PageViewWrapper>
-        </DesignProvider>
+        <NavigationLoadingProvider>
+          <DesignProvider>
+            <PageViewWrapper>{children}</PageViewWrapper>
+          </DesignProvider>
+        </NavigationLoadingProvider>
         <EditModeGate />
         <Toaster />
       </body>

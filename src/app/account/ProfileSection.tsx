@@ -24,6 +24,7 @@ export function ProfileSection() {
   const [totpEnabled, setTotpEnabled] = useState(false)
   const [totpLoading, setTotpLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [gender, setGender] = useState<'MALE' | 'FEMALE' | ''>('')
 
   useEffect(() => {
     if (user) setProfile({ name: user.name || '', email: user.email || '', phone: '' })
@@ -38,6 +39,7 @@ export function ProfileSection() {
       if (res.ok) {
         const data = await res.json()
         setProfile({ name: data.name, email: data.email, phone: data.phone || '' })
+        setGender(data.gender || '')
         setHasPassword(data.hasPassword !== false)
         setHasGoogle(data.hasGoogle === true)
       }
@@ -50,7 +52,7 @@ export function ProfileSection() {
     if (Object.keys(newErrors).length) { setErrors(newErrors); return }
     setProfileSaving(true)
     try {
-      const res = await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: profile.name, phone: profile.phone }) })
+      const res = await fetch('/api/user/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: profile.name, phone: profile.phone, gender: gender || undefined }) })
       if (res.ok) toast.success('Profile updated')
       else toast.error('Failed to update profile')
     } catch { toast.error('Something went wrong') }
@@ -182,6 +184,33 @@ export function ProfileSection() {
           </span>
           {errors.phone && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.phone}</p>}
         </label>
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground font-medium">Gender</p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setGender('MALE')}
+              className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${
+                gender === 'MALE'
+                  ? 'border-gold bg-gold/10 text-navy'
+                  : 'border-border text-muted-foreground hover:border-gold/50'
+              }`}
+            >
+              <span className="mr-1.5">👨</span> Man
+            </button>
+            <button
+              type="button"
+              onClick={() => setGender('FEMALE')}
+              className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-all ${
+                gender === 'FEMALE'
+                  ? 'border-gold bg-gold/10 text-navy'
+                  : 'border-border text-muted-foreground hover:border-gold/50'
+              }`}
+            >
+              <span className="mr-1.5">👩</span> Woman
+            </button>
+          </div>
+        </div>
         <Button onClick={saveProfile} disabled={profileSaving} className="rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep press">
           {profileSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           Save Changes

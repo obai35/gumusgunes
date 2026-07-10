@@ -12,11 +12,13 @@ import { useTranslation } from '@/hooks/use-translation'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import type { Product } from '@/lib/types'
+import { usePageNavigation } from './NavigationLoadingProvider'
 
 const FREE_SHIPPING_THRESHOLD = 250
 
 export function CartContent() {
   const router = useRouter()
+  const { navigateToCheckout } = usePageNavigation()
   const { items, closeCart, updateQuantity, removeItem, subtotal, addItem } = useCart()
   const formatPrice = useFormatPrice()
   const { t } = useTranslation()
@@ -52,7 +54,7 @@ export function CartContent() {
 
   const handleCheckout = () => {
     closeCart()
-    router.push('/checkout')
+    navigateToCheckout()
   }
 
   const handleAddRec = (product: Product) => {

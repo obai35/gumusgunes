@@ -2,7 +2,7 @@
 
 import { create } from 'zustand'
 
-type User = { id: string; email: string; name: string }
+type User = { id: string; email: string; name: string; gender?: string }
 type TotpPending = { userId: string; email: string } | null
 type AuthState = {
   user: User | null

@@ -13,6 +13,7 @@ const RegisterSchema = z.object({
     .regex(/[A-Z]/, 'Must include an uppercase letter')
     .regex(/[0-9]/, 'Must include a digit'),
   phone: z.string().optional(),
+  gender: z.enum(['MALE', 'FEMALE']).optional(),
 }).strict()
 
 const handler = async (req: NextRequest) => {
@@ -32,12 +33,12 @@ const handler = async (req: NextRequest) => {
     }
 
     const user = await db.user.create({
-      data: { email, name, password: await hashPassword(password) },
+      data: { email, name, password: await hashPassword(password), gender: parsed.data.gender },
     })
 
     const token = signToken({ userId: user.id, email: user.email })
     const response = NextResponse.json({
-      user: { id: user.id, email: user.email, name: user.name }
+      user: { id: user.id, email: user.email, name: user.name, gender: user.gender }
     })
 
     response.cookies.set('__session', token, {

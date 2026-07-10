@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/format'
 import { CurrencySelector } from './CurrencySelector'
 import { LanguageSelector } from './LanguageSelector'
+import { usePageNavigation } from './NavigationLoadingProvider'
 import { LoyaltyBadge } from './LoyaltyBadge'
 import type { Category } from '@/lib/types'
 
@@ -26,6 +27,7 @@ export function Header() {
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [logoMenuOpen, setLogoMenuOpen] = useState(false)
   const [wiggleDone, setWiggleDone] = useState(false)
+  const { navigateToCart } = usePageNavigation()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -183,7 +185,7 @@ export function Header() {
                   <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-gold text-[10px] font-bold text-navy-deep flex items-center justify-center">{wishlistCount}</span>
                 )}
               </button>
-              <button onClick={() => router.push('/cart')} className="relative p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors" aria-label={t('nav.cart')}>
+              <button onClick={() => navigateToCart()} className="relative p-2.5 rounded-full hover:bg-secondary text-navy hover:text-gold transition-colors" aria-label={t('nav.cart')}>
                 <ShoppingBag className="h-5 w-5" />
                 {cartCount > 0 && (
                   <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-navy text-[10px] font-bold text-silver flex items-center justify-center">{cartCount}</span>
