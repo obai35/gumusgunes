@@ -10,7 +10,7 @@ import {
 import { StatsCard } from '@/components/admin/StatsCard'
 
 function Sparkline({ data, color }: { data: number[]; color: string }) {
-  if (data.length < 2) return null
+  if (!Array.isArray(data) || data.length < 2) return null
   const max = Math.max(...data, 1)
   const h = 24, w = 80
   const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(' ')
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
         setOverviewDay(dayData)
         setOverviewWeek(weekData)
         setOverviewMonth(monthData)
-        setActivities(activityData.logs || [])
+        setActivities(Array.isArray(activityData.logs) ? activityData.logs : [])
       } catch {
         if (!cancelled) toast.error('Failed to load dashboard data')
       } finally {
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
     return () => { cancelled = true }
   }, [])
 
-  const weekRevenue = overviewWeek?.dailyRevenue?.map((d: any) => d.revenue) || []
+  const weekRevenue = Array.isArray(overviewWeek?.dailyRevenue) ? overviewWeek.dailyRevenue.map((d: any) => d.revenue) : []
 
   return (
     <div>
@@ -314,7 +314,7 @@ function OrdersList() {
   useEffect(() => {
     fetch('/api/admin/orders?limit=10')
       .then(r => r.json())
-      .then(data => setOrders(data.orders || data || []))
+      .then(data => setOrders(Array.isArray(data.orders) ? data.orders : Array.isArray(data) ? data : []))
       .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false))
   }, [])
@@ -356,7 +356,7 @@ function LowStockList({ onTotal }: { onTotal?: (n: number) => void }) {
     fetch('/api/admin/products?lowStock=true&limit=20')
       .then(r => r.json())
       .then(data => {
-        const list = data.products || data || []
+        const list = Array.isArray(data.products) ? data.products : Array.isArray(data) ? data : []
         setProducts(list)
         if (onTotal) onTotal(data.total || list.length)
       })

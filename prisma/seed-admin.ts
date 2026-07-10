@@ -15,9 +15,9 @@ async function main() {
     create: {
       name: 'super_admin',
       permissions: JSON.stringify([
-        'products', 'orders', 'customers', 'inventory', 'admins',
+        'dashboard', 'accounting', 'orders', 'products', 'customers', 'inventory', 'admins',
         'branches', 'categories', 'discounts', 'reviews', 'settings',
-        'payments', 'shipping', 'reports', 'social', 'editor', 'pos',
+        'payments', 'shipping', 'reports', 'social', 'editor', 'pos', 'activity',
       ]),
     },
   })
