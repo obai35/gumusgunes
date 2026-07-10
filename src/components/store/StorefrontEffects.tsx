@@ -1,18 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { EnhancedAmbientMist } from '@/components/ui/EnhancedAmbientMist'
 import { CursorEffects } from './CursorEffects'
 
 export function StorefrontEffects() {
-  const [isStorefront, setIsStorefront] = useState(false)
+  const pathname = usePathname()
 
-  useEffect(() => {
-    const path = window.location.pathname
-    setIsStorefront(!path.startsWith('/admin') && !path.startsWith('/pos'))
-  }, [])
-
-  if (!isStorefront) return null
+  if (pathname.startsWith('/admin') || pathname.startsWith('/pos')) return null
 
   return (
     <>
