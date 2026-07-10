@@ -7,7 +7,12 @@ import { CursorEffects } from './CursorEffects'
 export function StorefrontEffects() {
   const pathname = usePathname()
 
-  if (pathname.startsWith('/admin') || pathname.startsWith('/pos')) return null
+  if (
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/pos') ||
+    pathname.startsWith('/cart') ||
+    pathname.startsWith('/checkout')
+  ) return null
 
   return (
     <>

@@ -1,9 +1,11 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, Component, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { CartLoadingScreen } from './CartLoadingScreen'
-import { CheckoutLoadingScreen } from './CheckoutLoadingScreen'
+import dynamic from 'next/dynamic'
+
+const CartLoadingScreen = dynamic(() => import('./CartLoadingScreen').then(m => ({ default: m.CartLoadingScreen })), { ssr: false })
+const CheckoutLoadingScreen = dynamic(() => import('./CheckoutLoadingScreen').then(m => ({ default: m.CheckoutLoadingScreen })), { ssr: false })
 
 type LoadingType = 'cart' | 'checkout' | null
 
@@ -21,6 +23,20 @@ const NavCtx = createContext<NavContext>({
 
 export function usePageNavigation() {
   return useContext(NavCtx)
+}
+
+class LoadingErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    if (this.state.hasError) return null
+    return this.props.children
+  }
 }
 
 export function NavigationLoadingProvider({ children }: { children: React.ReactNode }) {
@@ -46,8 +62,10 @@ export function NavigationLoadingProvider({ children }: { children: React.ReactN
   return (
     <NavCtx.Provider value={{ loading, navigateToCart, navigateToCheckout }}>
       {children}
-      {loading === 'cart' && <CartLoadingScreen />}
-      {loading === 'checkout' && <CheckoutLoadingScreen />}
+      <LoadingErrorBoundary>
+        {loading === 'cart' && <CartLoadingScreen />}
+        {loading === 'checkout' && <CheckoutLoadingScreen />}
+      </LoadingErrorBoundary>
     </NavCtx.Provider>
   )
 }

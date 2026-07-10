@@ -1,108 +1,168 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/lib/auth-store'
 
 const GOLD = '#C9A96E'
 
-const figureVariants = {
-  hidden: { x: -200, opacity: 0 },
-  visible: {
-    x: 0,
-    opacity: 1,
-    transition: { duration: 0.6, ease: 'easeOut' },
-  },
-}
+function CartScene() {
+  const [phase, setPhase] = useState<'enter' | 'reach' | 'place'>('enter')
 
-const armVariants = {
-  hidden: { rotate: 0 },
-  reach: {
-    rotate: -30,
-    transition: { duration: 0.5, delay: 0.7, ease: 'easeInOut' },
-  },
-  place: {
-    rotate: 20,
-    transition: { duration: 0.5, delay: 1.5, ease: 'easeInOut' },
-  },
-}
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('reach'), 600)
+    const t2 = setTimeout(() => setPhase('place'), 1600)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
 
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0, x: 40, y: -20 },
-  float: {
-    opacity: 1,
-    scale: 1.2,
-    x: 100,
-    y: 60,
-    transition: { duration: 0.6, delay: 1.0, ease: 'easeOut' },
-  },
-  drop: {
-    opacity: 0,
-    scale: 0.3,
-    x: 110,
-    y: 80,
-    transition: { duration: 0.3, delay: 1.8, ease: 'easeIn' },
-  },
-}
-
-function MaleFigure() {
   return (
-    <motion.g variants={figureVariants}>
-      <circle cx="50" cy="40" r="14" fill="#f0d5b0" />
-      <path d="M36 35 Q50 15 64 35 Q60 30 50 28 Q40 30 36 35Z" fill="#3a2a1a" />
-      <path d="M40 54 L60 54 L55 85 L45 85Z" fill="#4a5568" />
-      <motion.g variants={armVariants} style={{ originX: '45px', originY: '56px' }}>
-        <rect x="26" y="54" width="18" height="7" rx="3" fill="#f0d5b0" transform="rotate(-15 35 57)" />
+    <svg viewBox="0 0 400 280" className="w-80 h-56">
+      {/* Shopping Cart */}
+      <g>
+        <rect x="250" y="160" width="70" height="50" rx="8" fill="none" stroke={GOLD} strokeWidth="3" />
+        <line x1="250" y1="175" x2="320" y2="175" stroke={GOLD} strokeWidth="1.5" opacity="0.4" />
+        <line x1="250" y1="190" x2="320" y2="190" stroke={GOLD} strokeWidth="1.5" opacity="0.4" />
+        <path d="M260 160 Q260 140 285 140 Q310 140 310 160" fill="none" stroke={GOLD} strokeWidth="3" />
+        <circle cx="265" cy="215" r="8" fill="none" stroke={GOLD} strokeWidth="2.5" />
+        <circle cx="305" cy="215" r="8" fill="none" stroke={GOLD} strokeWidth="2.5" />
+        <circle cx="270" cy="185" r="5" fill={GOLD} opacity="0.6" />
+        <rect x="290" y="180" width="10" height="10" rx="2" fill={GOLD} opacity="0.6" />
+      </g>
+
+      {/* Figure */}
+      <motion.g
+        initial={{ x: -150, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        {/* Head */}
+        <circle cx="60" cy="50" r="14" fill="#f0d5b0" />
+        {/* Hair */}
+        <path d="M46 45 Q60 25 74 45 Q70 40 60 38 Q50 40 46 45Z" fill="#3a2a1a" />
+        {/* Torso */}
+        <rect x="50" y="64" width="20" height="30" rx="4" fill="#1a202c" />
+        {/* Left arm */}
+        <motion.g
+          animate={phase === 'reach' ? { rotate: -25 } : phase === 'place' ? { rotate: 35 } : { rotate: 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{ originX: '55px', originY: '66px' }}
+        >
+          <rect x="30" y="64" width="20" height="7" rx="3" fill="#f0d5b0" />
+        </motion.g>
+        {/* Right arm */}
+        <motion.g
+          animate={phase === 'reach' ? { rotate: -25 } : phase === 'place' ? { rotate: 20 } : { rotate: 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{ originX: '65px', originY: '66px' }}
+        >
+          <rect x="70" y="64" width="20" height="7" rx="3" fill="#f0d5b0" />
+        </motion.g>
+        {/* Legs */}
+        <rect x="53" y="94" width="8" height="18" rx="3" fill="#2d3748" />
+        <rect x="63" y="94" width="8" height="18" rx="3" fill="#2d3748" />
       </motion.g>
-      <motion.g variants={armVariants} style={{ originX: '55px', originY: '56px' }}>
-        <rect x="56" y="54" width="18" height="7" rx="3" fill="#f0d5b0" transform="rotate(15 65 57)" />
-      </motion.g>
-      <rect x="43" y="85" width="9" height="20" rx="3" fill="#2d3748" />
-      <rect x="52" y="85" width="9" height="20" rx="3" fill="#2d3748" />
-    </motion.g>
+
+      {/* Sparkle Item */}
+      {phase === 'reach' && (
+        <motion.g
+          initial={{ opacity: 0, scale: 0, x: 120, y: 40 }}
+          animate={{ opacity: 1, scale: 1.2, x: 140, y: 70 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+          <polygon points="0,-10 4,-3 12,-3 6,3 8,12 0,7 -8,12 -6,3 -12,-3 -4,-3" fill={GOLD} />
+        </motion.g>
+      )}
+      {phase === 'place' && (
+        <motion.g
+          initial={{ opacity: 1, scale: 1.2, x: 140, y: 70 }}
+          animate={{ opacity: 0, scale: 0.3, x: 155, y: 100 }}
+          transition={{ duration: 0.4, ease: 'easeIn' }}
+        >
+          <polygon points="0,-10 4,-3 12,-3 6,3 8,12 0,7 -8,12 -6,3 -12,-3 -4,-3" fill={GOLD} />
+        </motion.g>
+      )}
+    </svg>
   )
 }
 
-function FemaleFigure() {
-  return (
-    <motion.g variants={figureVariants}>
-      <circle cx="50" cy="40" r="13" fill="#f5dcc3" />
-      <path d="M37 35 Q50 10 63 35 Q58 28 50 26 Q42 28 37 35Z" fill="#5c3a1e" />
-      <path d="M37 35 Q35 50 37 65" stroke="#5c3a1e" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M63 35 Q65 50 63 65" stroke="#5c3a1e" strokeWidth="4" fill="none" strokeLinecap="round" />
-      <path d="M38 54 L62 54 L66 90 L34 90Z" fill="#c53030" />
-      <motion.g variants={armVariants} style={{ originX: '45px', originY: '56px' }}>
-        <rect x="26" y="54" width="16" height="6" rx="3" fill="#f5dcc3" transform="rotate(-15 34 57)" />
-      </motion.g>
-      <motion.g variants={armVariants} style={{ originX: '55px', originY: '56px' }}>
-        <rect x="58" y="54" width="16" height="6" rx="3" fill="#f5dcc3" transform="rotate(15 66 57)" />
-      </motion.g>
-      <rect x="44" y="88" width="7" height="17" rx="2" fill="#f5dcc3" />
-      <rect x="53" y="88" width="7" height="17" rx="2" fill="#f5dcc3" />
-    </motion.g>
-  )
-}
+function CartSceneFemale() {
+  const [phase, setPhase] = useState<'enter' | 'reach' | 'place'>('enter')
 
-function ShoppingCart() {
-  return (
-    <g>
-      <rect x="250" y="160" width="70" height="50" rx="8" fill="none" stroke={GOLD} strokeWidth="3" />
-      <line x1="250" y1="175" x2="320" y2="175" stroke={GOLD} strokeWidth="1.5" opacity="0.4" />
-      <line x1="250" y1="190" x2="320" y2="190" stroke={GOLD} strokeWidth="1.5" opacity="0.4" />
-      <path d="M260 160 Q260 140 285 140 Q310 140 310 160" fill="none" stroke={GOLD} strokeWidth="3" />
-      <circle cx="265" cy="215" r="8" fill="none" stroke={GOLD} strokeWidth="2.5" />
-      <circle cx="305" cy="215" r="8" fill="none" stroke={GOLD} strokeWidth="2.5" />
-      <circle cx="270" cy="185" r="5" fill={GOLD} opacity="0.6" />
-      <rect x="290" y="180" width="10" height="10" rx="2" fill={GOLD} opacity="0.6" />
-    </g>
-  )
-}
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('reach'), 600)
+    const t2 = setTimeout(() => setPhase('place'), 1600)
+    return () => { clearTimeout(t1); clearTimeout(t2) }
+  }, [])
 
-function SparkleItem() {
   return (
-    <motion.g variants={itemVariants}>
-      <polygon points="0,-12 5,-3 14,-3 7,4 9,14 0,8 -9,14 -7,4 -14,-3 -5,-3" fill={GOLD} />
-    </motion.g>
+    <svg viewBox="0 0 400 280" className="w-80 h-56">
+      {/* Shopping Cart */}
+      <g>
+        <rect x="250" y="160" width="70" height="50" rx="8" fill="none" stroke={GOLD} strokeWidth="3" />
+        <line x1="250" y1="175" x2="320" y2="175" stroke={GOLD} strokeWidth="1.5" opacity="0.4" />
+        <line x1="250" y1="190" x2="320" y2="190" stroke={GOLD} strokeWidth="1.5" opacity="0.4" />
+        <path d="M260 160 Q260 140 285 140 Q310 140 310 160" fill="none" stroke={GOLD} strokeWidth="3" />
+        <circle cx="265" cy="215" r="8" fill="none" stroke={GOLD} strokeWidth="2.5" />
+        <circle cx="305" cy="215" r="8" fill="none" stroke={GOLD} strokeWidth="2.5" />
+        <circle cx="270" cy="185" r="5" fill={GOLD} opacity="0.6" />
+        <rect x="290" y="180" width="10" height="10" rx="2" fill={GOLD} opacity="0.6" />
+      </g>
+
+      {/* Female Figure */}
+      <motion.g
+        initial={{ x: -150, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
+        {/* Head */}
+        <circle cx="60" cy="50" r="13" fill="#f5dcc3" />
+        {/* Hair */}
+        <path d="M47 45 Q60 28 73 45 Q69 38 60 36 Q51 38 47 45Z" fill="#5c3a1e" />
+        <path d="M47 45 Q45 58 47 72" stroke="#5c3a1e" strokeWidth="4" fill="none" strokeLinecap="round" />
+        <path d="M73 45 Q75 58 73 72" stroke="#5c3a1e" strokeWidth="4" fill="none" strokeLinecap="round" />
+        {/* Dress */}
+        <path d="M48 64 L72 64 L76 98 L44 98Z" fill="#c53030" />
+        {/* Left arm */}
+        <motion.g
+          animate={phase === 'reach' ? { rotate: -25 } : phase === 'place' ? { rotate: 35 } : { rotate: 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{ originX: '55px', originY: '66px' }}
+        >
+          <rect x="32" y="64" width="18" height="6" rx="3" fill="#f5dcc3" />
+        </motion.g>
+        {/* Right arm */}
+        <motion.g
+          animate={phase === 'reach' ? { rotate: -25 } : phase === 'place' ? { rotate: 20 } : { rotate: 0 }}
+          transition={{ duration: 0.5, ease: 'easeInOut' }}
+          style={{ originX: '65px', originY: '66px' }}
+        >
+          <rect x="70" y="64" width="18" height="6" rx="3" fill="#f5dcc3" />
+        </motion.g>
+        {/* Legs */}
+        <rect x="53" y="96" width="7" height="16" rx="2" fill="#f5dcc3" />
+        <rect x="62" y="96" width="7" height="16" rx="2" fill="#f5dcc3" />
+      </motion.g>
+
+      {/* Sparkle Item */}
+      {phase === 'reach' && (
+        <motion.g
+          initial={{ opacity: 0, scale: 0, x: 120, y: 40 }}
+          animate={{ opacity: 1, scale: 1.2, x: 140, y: 70 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+          <polygon points="0,-10 4,-3 12,-3 6,3 8,12 0,7 -8,12 -6,3 -12,-3 -4,-3" fill={GOLD} />
+        </motion.g>
+      )}
+      {phase === 'place' && (
+        <motion.g
+          initial={{ opacity: 1, scale: 1.2, x: 140, y: 70 }}
+          animate={{ opacity: 0, scale: 0.3, x: 155, y: 100 }}
+          transition={{ duration: 0.4, ease: 'easeIn' }}
+        >
+          <polygon points="0,-10 4,-3 12,-3 6,3 8,12 0,7 -8,12 -6,3 -12,-3 -4,-3" fill={GOLD} />
+        </motion.g>
+      )}
+    </svg>
   )
 }
 
@@ -113,53 +173,28 @@ export function CartLoadingScreen() {
 
   useEffect(() => {
     if (!gender) {
-      const timer = setTimeout(() => setShowFemale(true), 1400)
+      const timer = setTimeout(() => setShowFemale(true), 1500)
       return () => clearTimeout(timer)
     }
   }, [gender])
 
   return (
     <div className="fixed inset-0 z-[100] bg-navy-deep flex items-center justify-center">
-      <div className="flex flex-col items-center gap-8">
-        <svg viewBox="0 0 400 280" className="w-80 h-56">
-          {!showFemale && (
-            <motion.g
-              initial="hidden"
-              animate="visible"
-              exit={{ opacity: 0, transition: { duration: 0.3 } }}
-            >
-              <MaleFigure />
-              <ShoppingCart />
-              <motion.g
-                initial="hidden"
-                animate={['float', 'drop']}
-                style={{ x: 50, y: 50 }}
-              >
-                <SparkleItem />
-              </motion.g>
-            </motion.g>
-          )}
-          {(gender === 'FEMALE' || showFemale) && (
-            <motion.g
-              initial="hidden"
-              animate="visible"
-            >
-              <FemaleFigure />
-              <ShoppingCart />
-              <motion.g
-                initial="hidden"
-                animate={['float', 'drop']}
-                style={{ x: 50, y: 50 }}
-              >
-                <SparkleItem />
-              </motion.g>
-            </motion.g>
-          )}
-        </svg>
-        <p className="font-display text-sm text-gold tracking-wider uppercase animate-pulse">
-          Adding to your bag...
-        </p>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={showFemale ? 'female' : 'male'}
+          className="flex flex-col items-center gap-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          {gender === 'FEMALE' || showFemale ? <CartSceneFemale /> : <CartScene />}
+          <p className="font-display text-sm text-gold tracking-wider uppercase animate-pulse">
+            Adding to your bag...
+          </p>
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }
