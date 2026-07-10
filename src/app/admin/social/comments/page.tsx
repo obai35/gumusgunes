@@ -26,14 +26,14 @@ export default function SocialComments() {
   const [sendingReply, setSendingReply] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/admin/social/accounts').then(r => r.json()).then(setAccounts)
+    fetch('/api/admin/social/accounts').then(r => r.json()).then(data => setAccounts(Array.isArray(data) ? data : []))
   }, [])
 
   async function loadPosts(accountId: string) {
     if (!accountId) return
     const res = await fetch(`/api/admin/social/posts?accountId=${accountId}`)
     const data = await res.json()
-    setPosts(data.filter((p: Post) => p.platformPostId))
+    setPosts(Array.isArray(data) ? data.filter((p: Post) => p.platformPostId) : [])
     setSelectedPostId('')
     setComments([])
   }
@@ -50,7 +50,7 @@ export default function SocialComments() {
     try {
       const res = await fetch(`/api/admin/social/comments?postId=${post.platformPostId}`)
       const data = await res.json()
-      setComments(data)
+      setComments(Array.isArray(data) ? data : [])
     } catch {
       toast.error('Failed to load comments')
     }

@@ -38,7 +38,7 @@ export default function SocialPosts() {
     if (statusFilter) params.set('status', statusFilter)
     const res = await fetch(`/api/admin/social/posts?${params}`)
     const data = await res.json()
-    setPosts(data)
+    setPosts(Array.isArray(data) ? data : [])
     setLoading(false)
   }
 

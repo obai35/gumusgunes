@@ -31,7 +31,7 @@ export default function CampaignsList() {
   useEffect(() => {
     fetch('/api/admin/social/campaigns')
       .then(r => r.json())
-      .then(setCampaigns)
+      .then(data => setCampaigns(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false))
   }, [])
 

@@ -9,7 +9,7 @@ export default function SocialSettings() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/social/accounts').then(r => r.json()).then(setAccounts).finally(() => setLoading(false))
+    fetch('/api/admin/social/accounts').then(r => r.json()).then(data => setAccounts(Array.isArray(data) ? data : [])).finally(() => setLoading(false))
   }, [])
 
   async function addAccount() {
@@ -26,7 +26,7 @@ export default function SocialSettings() {
       toast.success('Account connected')
       setForm({ platform: 'instagram', accountId: '', accountName: '', accessToken: '' })
       const updated = await fetch('/api/admin/social/accounts').then(r => r.json())
-      setAccounts(updated)
+      setAccounts(Array.isArray(updated) ? updated : [])
     } else {
       toast.error('Failed to connect')
     }

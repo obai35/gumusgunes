@@ -38,7 +38,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     fetch('/api/admin/categories')
       .then(r => r.json())
-      .then(setCategories)
+      .then(data => setCategories(Array.isArray(data) ? data : []))
       .catch(() => toast.error('Failed to load categories'))
       .finally(() => setLoading(false))
   }, [])
@@ -66,7 +66,7 @@ export default function CategoriesPage() {
         toast.success(editId ? 'Category updated' : 'Category created')
         resetForm(); setShowModal(false)
         const updated = await fetch('/api/admin/categories').then(r => r.json())
-        setCategories(updated)
+        setCategories(Array.isArray(updated) ? updated : [])
       } else {
         const e = await res.json()
         toast.error(e.error || 'Failed')

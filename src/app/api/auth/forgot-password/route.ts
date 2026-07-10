@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withRateLimit } from '@/lib/rate-limit'
+import { sendEmail, passwordResetEmail } from '@/lib/email'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
-import nodemailer from 'nodemailer'
 
 async function handler(req: Request) {
   try {
@@ -36,28 +36,8 @@ async function handler(req: Request) {
       },
     })
 
-    // Send email (skip if SMTP not configured)
-    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: false,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      })
-
-      const resetUrl = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/reset-password?token=${token}`
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || 'noreply@gumusgunes.com',
-        to: email,
-        subject: 'Password Reset - Gümüş Güneş',
-        html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link expires in 1 hour.</p>`,
-      })
-    } else {
-      console.log('[forgot-password] SMTP not configured. Reset token for', email, ':', token)
-    }
+    // Send email via reusable email service
+    await sendEmail(passwordResetEmail(token, email))
 
     return NextResponse.json({ message: 'If the email exists, a reset link has been sent' })
   } catch (error) {

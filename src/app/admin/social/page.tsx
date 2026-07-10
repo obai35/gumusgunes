@@ -10,7 +10,7 @@ export default function SocialDashboard() {
   useEffect(() => {
     fetch('/api/admin/social/accounts')
       .then(r => r.json())
-      .then(setAccounts)
+      .then(data => setAccounts(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false))
   }, [])
 

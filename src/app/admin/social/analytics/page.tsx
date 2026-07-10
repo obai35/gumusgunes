@@ -43,7 +43,7 @@ export default function AnalyticsDashboard() {
     ]).then(([ov, tr, accts]) => {
       setOverview(ov)
       setTrends(tr.trends || [])
-      setAccounts(accts)
+      setAccounts(Array.isArray(accts) ? accts : [])
     }).finally(() => setLoading(false))
   }, [])
 
