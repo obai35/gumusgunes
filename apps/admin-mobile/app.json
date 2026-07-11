@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Gümüş Güneş Admin",
+    "slug": "gumusgunes-admin",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "gumusgunes-admin",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0a0a0a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gumusgunes.admin"
+    },
+    "android": {
+      "package": "com.gumusgunes.admin",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0a0a"
+      },
+      "permissions": ["VIBRATE"]
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "apiUrl": "https://gumusgunes.vercel.app",
+      "socketUrl": "https://gumusgunes-socket.up.railway.app"
+    }
+  }
+}
