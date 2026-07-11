@@ -133,3 +133,21 @@ export async function createExpenseJournalEntry(expense: {
     ],
   })
 }
+
+export async function createReconciliationJournalEntry(order: {
+  id: string
+  totalAmount: number
+  createdAt: Date
+}) {
+  return createJournalEntry({
+    date: new Date(),
+    description: `Payment reconciled for #${order.id.slice(0, 8)}`,
+    reference: order.id,
+    type: 'reconciliation',
+    orderId: order.id,
+    lines: [
+      { accountCode: ACCOUNTS.bank, debit: order.totalAmount },
+      { accountCode: ACCOUNTS.ar, credit: order.totalAmount },
+    ],
+  })
+}
