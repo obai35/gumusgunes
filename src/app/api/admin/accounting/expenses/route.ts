@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { createExpenseJournalEntry } from '@/lib/accounting'
 
 export const GET = withAdmin(async (req: NextRequest) => {
   try {
@@ -97,6 +98,11 @@ export const POST = withAdmin(async (req: Request) => {
         notes: notes || null,
       },
     })
+    try {
+      await createExpenseJournalEntry(expense)
+    } catch (journalErr) {
+      console.error('Failed to create journal entry for expense:', journalErr)
+    }
     return NextResponse.json({ ok: true, expense })
   } catch (e) {
     console.error('Expenses POST error:', e)
