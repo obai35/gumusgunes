@@ -6,10 +6,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2, RefreshCw } from 'lucide-react'
 import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
+import JournalTab from './JournalTab'
+import AccountsTab from './AccountsTab'
+import TrialBalanceTab from './TrialBalanceTab'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
-function formatCurrency(v: number | undefined | null) { return v != null ? `E£${v.toFixed(2)}` : 'E£0.00' }
+export function formatCurrency(v: number | undefined | null) { return v != null ? `E£${v.toFixed(2)}` : 'E£0.00' }
 
 function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? (value / max) * 100 : 0
@@ -179,7 +182,7 @@ export default function AccountingPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(['overview', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
+        {(['overview', 'journal', 'accounts', 'trial-balance', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -194,6 +197,9 @@ export default function AccountingPage() {
 
       <ErrorBoundary>
         {tab === 'overview' && <OverviewTab data={overviewData} loading={overviewLoading} period={period} compareEnabled={false} customStart={customStart} customEnd={customEnd} />}
+        {tab === 'journal' && <JournalTab />}
+        {tab === 'accounts' && <AccountsTab />}
+        {tab === 'trial-balance' && <TrialBalanceTab />}
         {tab === 'orders' && <OrdersTab />}
         {tab === 'branches' && <BranchesTab />}
         {tab === 'expenses' && <ExpensesTab refreshKey={refreshKey} />}
