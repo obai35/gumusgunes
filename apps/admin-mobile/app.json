@@ -35,7 +35,8 @@
         {
           "android": {
             "compileSdkVersion": 34,
-            "targetSdkVersion": 34
+            "targetSdkVersion": 34,
+            "kotlinVersion": "1.9.25"
           }
         }
       ]
