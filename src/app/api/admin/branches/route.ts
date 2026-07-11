@@ -20,7 +20,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
     const existing = await db.branch.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
     const branch = await db.branch.create({
-      data: { name, email, password: hashPassword(password), phone, address },
+      data: { name, email, password: await hashPassword(password), phone, address },
     })
     return NextResponse.json({ ok: true, branch })
   } catch (err) {
@@ -35,7 +35,7 @@ export const PUT = withAdmin(async (req: NextRequest) => {
     const data: any = {}
     if (name !== undefined) data.name = name
     if (email !== undefined) data.email = email
-    if (password) data.password = hashPassword(password)
+    if (password) data.password = await hashPassword(password)
     if (phone !== undefined) data.phone = phone
     if (address !== undefined) data.address = address
     if (isActive !== undefined) data.isActive = isActive

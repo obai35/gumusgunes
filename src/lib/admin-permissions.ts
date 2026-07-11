@@ -44,7 +44,7 @@ export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | n
   if (!admin) return null
   const role = admin.roleRel?.name || admin.role
   const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) as string[] : []
-  const isSuperAdmin = role === 'superadmin' || role === 'admin'
+  const isSuperAdmin = role === 'superadmin' || role === 'super_admin' || role === 'admin'
   const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin }
   adminCache.set(payload.adminId, { admin: result, expiresAt: Date.now() + CACHE_TTL })
   return result
@@ -55,14 +55,20 @@ export function withAdmin(
   requiredPermission?: Permission
 ): (req: NextRequest, ctx: { params: any }) => Promise<NextResponse> {
   return async (req, ctx) => {
-    const admin = await getAdminFromToken(req)
-    if (!admin) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    try {
+      const admin = await getAdminFromToken(req)
+      if (!admin) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+      if (requiredPermission && !admin.isSuperAdmin && !admin.permissions.includes(requiredPermission)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+      return await handler(req, { ...ctx, admin })
+    } catch (err) {
+      console.error('[withAdmin] Unhandled error:', err)
+      const message = err instanceof Error ? err.message : 'Internal server error'
+      return NextResponse.json({ error: message, code: 'INTERNAL_ERROR' }, { status: 500 })
     }
-    if (requiredPermission && !admin.isSuperAdmin && !admin.permissions.includes(requiredPermission)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-    return handler(req, { ...ctx, admin })
   }
 }
 
