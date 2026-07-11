@@ -19,7 +19,9 @@
     "cap:open:android": "npx cap open android",
     "cap:open:ios": "npx cap open ios",
     "cap:build:android": "next build && npx cap sync && cd android && gradlew assembleDebug",
-    "cap:assets": "npx capacitor-assets generate"
+    "cap:assets": "npx capacitor-assets generate",
+    "socket:dev": "cd server && npx tsx watch socket-server.ts",
+    "socket:start": "cd server && npx tsx socket-server.ts"
   },
   "dependencies": {
     "@capacitor/core": "^8.4.1",
