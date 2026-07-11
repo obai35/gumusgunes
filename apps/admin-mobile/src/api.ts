@@ -1,10 +1,19 @@
-import * as SecureStore from 'expo-secure-store'
-
 const BASE = 'https://gumusgunes.vercel.app'
+
+let secureStore: any = null
+
+async function getSecureStore() {
+  if (!secureStore) {
+    const mod = await import('expo-secure-store')
+    secureStore = mod
+  }
+  return secureStore
+}
 
 async function getToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync('admin_token')
+    const store = await getSecureStore()
+    return await store.getItemAsync('admin_token')
   } catch {
     return null
   }
@@ -36,13 +45,12 @@ export const api = {
     if (!res.ok) throw new Error('Invalid credentials')
     const data = await res.json()
 
-    // The server sets an httpOnly cookie. For mobile, we also try to
-    // extract the Set-Cookie header and store the session token.
+    const store = await getSecureStore()
     const setCookie = res.headers.get('set-cookie')
     if (setCookie) {
       const match = setCookie.match(/__session_admin=([^;]+)/)
       if (match) {
-        await SecureStore.setItemAsync('admin_token', match[1])
+        await store.setItemAsync('admin_token', match[1])
       }
     }
 

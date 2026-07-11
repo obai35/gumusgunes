@@ -1,16 +1,33 @@
-import { io, Socket } from 'socket.io-client'
-import * as SecureStore from 'expo-secure-store'
-
 const SOCKET_URL = 'https://gumusgunes-socket.up.railway.app'
 
-let socket: Socket | null = null
+let socket: any = null
+let ioMod: any = null
+let secureStore: any = null
+
+async function getIo() {
+  if (!ioMod) {
+    const mod = await import('socket.io-client')
+    ioMod = mod
+  }
+  return ioMod
+}
+
+async function getSecureStore() {
+  if (!secureStore) {
+    const mod = await import('expo-secure-store')
+    secureStore = mod
+  }
+  return secureStore
+}
 
 export async function connectSocket() {
   if (socket?.connected) return socket
 
-  const token = await SecureStore.getItemAsync('admin_token')
+  const store = await getSecureStore()
+  const token = await store.getItemAsync('admin_token')
   if (!token) throw new Error('Not authenticated')
 
+  const { io } = await getIo()
   socket = io(SOCKET_URL, {
     auth: { token },
     transports: ['websocket'],
@@ -34,6 +51,6 @@ export function disconnectSocket() {
   }
 }
 
-export function getSocket(): Socket | null {
+export function getSocket(): any {
   return socket
 }
