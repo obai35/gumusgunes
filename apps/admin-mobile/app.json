@@ -8,7 +8,7 @@
     "icon": "./assets/icon.png",
     "scheme": "gumusgunes-admin",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "cli": {
       "appVersionSource": "remote"
     },
@@ -29,7 +29,18 @@
       ]
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "newArchEnabled": false,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          }
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://gumusgunes.vercel.app",
