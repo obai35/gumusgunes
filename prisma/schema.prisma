@@ -405,9 +405,11 @@ model Admin {
   phone          String?
   lastLoginAt    DateTime?
   createdAt      DateTime @default(now())
-  processedOrders Order[]
-  processedReturns Return[]
-  stockTransfers   StockTransfer[]
+  processedOrders      Order[]
+  processedReturns     Return[]
+  stockTransfers       StockTransfer[]
+  assignedConversations Conversation[]
+  sentMessages         Message[]
 }
 
 model InventoryLog {
@@ -618,4 +620,48 @@ model ResetToken {
 
   @@index([email])
   @@index([token])
+}
+
+// ── WhatsApp Multi-Agent Chat ──
+
+enum ConversationStatus {
+  ACTIVE
+  WAITING
+  CLOSED
+}
+
+enum MessageRole {
+  CUSTOMER
+  BOT
+  ADMIN
+}
+
+model Conversation {
+  id            String             @id @default(cuid())
+  customerName  String?
+  customerPhone String?
+  status        ConversationStatus @default(ACTIVE)
+  source        String             @default("whatsapp")
+  assignedTo    String?
+  assignedAdmin Admin?             @relation(fields: [assignedTo], references: [id])
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  messages      Message[]
+
+  @@index([status, updatedAt])
+  @@index([assignedTo])
+}
+
+model Message {
+  id             String         @id @default(cuid())
+  conversationId String
+  content        String
+  role           MessageRole
+  adminId        String?
+  admin          Admin?         @relation(fields: [adminId], references: [id])
+  encrypted      Boolean        @default(false)
+  createdAt      DateTime       @default(now())
+  conversation   Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }
