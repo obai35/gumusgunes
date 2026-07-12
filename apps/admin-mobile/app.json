@@ -44,6 +44,12 @@
         }
       ]
     ],
+    "updates": {
+      "url": "https://u.expo.dev/66601809-ac07-42bd-8685-5e54a1dc3000",
+      "enabled": true,
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0
+    },
     "extra": {
       "apiUrl": "https://gumusgunes.vercel.app",
       "socketUrl": "https://gumusgunes-socket.up.railway.app",
