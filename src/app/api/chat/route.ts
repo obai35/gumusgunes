@@ -359,7 +359,7 @@ async function handlePost(req: NextRequest) {
   }
 }
 
-export const POST = withRateLimit(handlePost, { limit: 5, window: '60s', failClosed: true })
+export const POST = withRateLimit(handlePost, { limit: 5, window: '60s', failClosed: false })
 
 export async function GET(req: NextRequest) {
   try {
