@@ -12,18 +12,24 @@ export async function GET(req: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
+      if (req.signal.aborted) {
+        controller.close()
+        return
+      }
+
       const clientId = subscribe(conversationId, (data: object) => {
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
-        } catch {
-          // stream closed
+        } catch (e) {
+          console.debug('SSE enqueue error:', e)
         }
       })
 
       const heartbeat = setInterval(() => {
         try {
           controller.enqueue(encoder.encode('data: {"type":"heartbeat"}\n\n'))
-        } catch {
+        } catch (e) {
+          console.debug('SSE heartbeat error:', e)
           clearInterval(heartbeat)
         }
       }, 30000)
