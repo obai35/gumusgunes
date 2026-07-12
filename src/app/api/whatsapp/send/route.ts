@@ -35,11 +35,15 @@ const handler = withAdmin(async (req, { admin }) => {
 
   if (!conversation.customerPhone) return NextResponse.json({ error: 'No customer phone' }, { status: 400 })
 
-  await sendWhatsAppMessage(conversation.customerPhone, message)
-
   const msg = await db.message.create({
     data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id },
   })
+
+  try {
+    await sendWhatsAppMessage(conversation.customerPhone, message)
+  } catch (err) {
+    console.error('WhatsApp send failed:', err)
+  }
 
   emitSocketEvent('message:new', { ...msg, adminName: admin.name })
 
