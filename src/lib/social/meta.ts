@@ -202,4 +202,24 @@ export class MetaClient {
     })
     return { adId: data.id }
   }
+
+  async sendMessengerMessage(psid: string, text: string): Promise<void> {
+    await this.fetch(`/me/messages`, {
+      method: 'POST',
+      body: JSON.stringify({
+        recipient: { id: psid },
+        message: { text },
+      }),
+    })
+  }
+
+  async sendInstagramMessage(igUserId: string, text: string): Promise<void> {
+    await this.fetch(`/${igUserId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({
+        recipient: { id: igUserId },
+        message: { text },
+      }),
+    })
+  }
 }

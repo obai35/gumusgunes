@@ -5,9 +5,11 @@ import { db } from '@/lib/db'
 const handler = withAdmin(async (req, { admin }) => {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') || undefined
+  const source = searchParams.get('source') || undefined
 
   const where: any = {}
   if (status) where.status = status
+  if (source && source !== 'all') where.source = source
 
   const conversations = await db.conversation.findMany({
     where,
