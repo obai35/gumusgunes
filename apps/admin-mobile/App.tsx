@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import LoginScreen from './src/screens/LoginScreen'
 import ConversationsScreen from './src/screens/ConversationsScreen'
+import SettingsScreen from './src/screens/SettingsScreen'
 
 const Stack = createNativeStackNavigator()
 
@@ -82,8 +83,23 @@ export default function App() {
             }}
           >
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Conversations" component={ConversationsScreen} options={{ title: 'Conversations' }} />
+            <Stack.Screen
+              name="Conversations"
+              component={ConversationsScreen}
+              options={({ navigation }) => ({
+                title: 'Conversations',
+                headerRight: () => (
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Settings')}
+                    style={{ marginRight: 16 }}
+                  >
+                    <Text style={{ color: '#d4af37', fontSize: 22 }}>⚙</Text>
+                  </TouchableOpacity>
+                ),
+              })}
+            />
             <Stack.Screen name="Chat" component={LazyChatScreen} options={{ title: 'Chat' }} />
+            <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>
