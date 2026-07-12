@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 import { sendWhatsAppMessage } from '@/lib/whatsapp'
+import { publish } from '@/lib/chat-sse'
 import { z } from 'zod'
 
 const SendSchema = z.object({
@@ -18,11 +19,21 @@ const handler = withAdmin(async (req, { admin }) => {
 
   const conversation = await db.conversation.findUnique({ where: { id: conversationId } })
   if (!conversation) return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
-  if (!conversation.customerPhone) return NextResponse.json({ error: 'No customer phone' }, { status: 400 })
 
   if (!conversation.assignedTo) {
     await db.conversation.update({ where: { id: conversationId }, data: { assignedTo: admin.id, status: 'ACTIVE' } })
   }
+
+  if (conversation.source === 'website') {
+    const msg = await db.message.create({
+      data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id },
+    })
+    publish(conversationId, { type: 'message', message: msg })
+    emitSocketEvent('message:new', { ...msg, adminName: admin.name })
+    return NextResponse.json({ ok: true, message: msg })
+  }
+
+  if (!conversation.customerPhone) return NextResponse.json({ error: 'No customer phone' }, { status: 400 })
 
   await sendWhatsAppMessage(conversation.customerPhone, message)
 
@@ -30,16 +41,17 @@ const handler = withAdmin(async (req, { admin }) => {
     data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id },
   })
 
-  fetch(`${process.env.SOCKET_SERVER_URL || 'http://localhost:3001'}/emit`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      event: 'message:new',
-      data: { ...msg, adminName: admin.name },
-    }),
-  }).catch(() => {})
+  emitSocketEvent('message:new', { ...msg, adminName: admin.name })
 
   return NextResponse.json({ ok: true, message: msg })
 })
+
+function emitSocketEvent(event: string, data: any) {
+  fetch(`${process.env.SOCKET_SERVER_URL || 'http://localhost:3001'}/emit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ event, data }),
+  }).catch(() => {})
+}
 
 export const POST = handler
