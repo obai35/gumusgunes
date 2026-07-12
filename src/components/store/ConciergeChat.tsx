@@ -83,6 +83,7 @@ export function ConciergeChat() {
   const [unread, setUnread] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [conversationId, setConversationIdState] = useState<string | null>(null)
   const { conciergeProduct, setProductModal } = useUI()
 
   useEffect(() => {
@@ -94,6 +95,42 @@ export function ConciergeChat() {
       }, 100)
     }
   }, [open, messages])
+
+  useEffect(() => {
+    const saved = localStorage.getItem('website-chat-conversation-id')
+    if (saved) setConversationIdState(saved)
+  }, [])
+
+  useEffect(() => {
+    if (!conversationId) return
+
+    const eventSource = new EventSource(`/api/chat/stream?conversationId=${conversationId}`)
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'message') {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: 'assistant',
+              content: data.message.content,
+            },
+          ])
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
+
+    eventSource.onerror = () => {
+      // EventSource will auto-reconnect
+    }
+
+    return () => {
+      eventSource.close()
+    }
+  }, [conversationId])
 
   const handleProductClick = (slug: string) => {
     const product = [...(messages.flatMap(m => m.products || []))].find(p => p.slug === slug)
@@ -126,11 +163,16 @@ export function ConciergeChat() {
           history: next.slice(1, -1).map((m) => ({ role: m.role, content: m.content })),
           productContext: conciergeProduct,
           locale,
+          conversationId,
         }),
       })
       const data = await res.json()
       if (data.ok) {
         setMessages((m) => [...m, { role: 'assistant', content: data.reply, products: data.products }])
+        if (data.conversationId) {
+          setConversationIdState(data.conversationId)
+          localStorage.setItem('website-chat-conversation-id', data.conversationId)
+        }
         if (!open) setUnread(true)
       } else {
         setMessages((m) => [
