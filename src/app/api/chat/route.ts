@@ -295,7 +295,51 @@ async function handlePost(req: NextRequest) {
       reply = getFallbackResponse(message, productContext)
     }
 
-    return NextResponse.json({ ok: true, reply, products: matchedProducts })
+    // Persist conversation and messages
+    let convId = conversationId || null
+    if (!convId) {
+      const conv = await db.conversation.create({
+        data: { source: 'website', status: 'ACTIVE', customerName: 'Website Visitor' },
+      })
+      convId = conv.id
+    }
+
+    await db.message.create({
+      data: { conversationId: convId, content: message, role: 'CUSTOMER' },
+    })
+
+    if (reply) {
+      await db.message.create({
+        data: { conversationId: convId, content: reply, role: 'BOT' },
+      })
+    }
+
+    const escalationKeywords = ['/escalate', 'i cannot answer', 'i am not sure',
+      "i'm having trouble responding", 'please email concierge']
+    const needsEscalation = reply && escalationKeywords.some(k => reply.toLowerCase().includes(k))
+
+    if (needsEscalation) {
+      await db.conversation.update({
+        where: { id: convId },
+        data: { status: 'WAITING' },
+      })
+
+      fetch(`${process.env.SOCKET_SERVER_URL || 'http://localhost:3001'}/emit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'conversation:waiting',
+          data: { conversationId: convId, customerName: 'Website Visitor', customerPhone: null },
+        }),
+      }).catch(() => {})
+    }
+
+    return NextResponse.json({
+      ok: true,
+      reply,
+      products: matchedProducts,
+      conversationId: convId,
+    })
   } catch (err) {
     console.error('POST /api/chat error:', err)
     return NextResponse.json(
