@@ -2,20 +2,11 @@ type SSECallback = (data: object) => void
 
 const clients = new Map<string, Map<string, SSECallback>>()
 
-export function subscribe(conversationId: string): { clientId: string; sendEvent: SSECallback } {
+export function subscribe(conversationId: string, callback: SSECallback): string {
   const clientId = crypto.randomUUID()
   if (!clients.has(conversationId)) clients.set(conversationId, new Map())
-
-  const sendEvent: SSECallback = (data: object) => {
-    const clientMap = clients.get(conversationId)
-    if (!clientMap) return
-    for (const cb of clientMap.values()) {
-      cb(data)
-    }
-  }
-
-  clients.get(conversationId)!.set(clientId, sendEvent)
-  return { clientId, sendEvent }
+  clients.get(conversationId)!.set(clientId, callback)
+  return clientId
 }
 
 export function unsubscribe(conversationId: string, clientId: string) {
