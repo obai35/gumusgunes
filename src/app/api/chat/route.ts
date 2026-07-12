@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 const ChatSchema = z.object({
   message: z.string().min(1, 'Message is required').max(2000),
-  conversationId: z.string().optional(),
+  conversationId: z.string().nullable().optional(),
 })
 
 const BRAND_PROMPT = `You are the Gümüş Güneş Concierge — warm, elegant, and deeply knowledgeable about our luxury stainless steel accessories (Gümüş Güneş means "Silver Sun").
