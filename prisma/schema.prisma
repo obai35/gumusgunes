@@ -719,3 +719,15 @@ model JournalLine {
   entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   account   Account      @relation(fields: [accountId], references: [id])
 }
+
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      String   @default("checkout")
+  expiresAt DateTime
+  verifiedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([email, code, type])
+}

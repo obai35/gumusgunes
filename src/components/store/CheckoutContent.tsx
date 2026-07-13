@@ -32,7 +32,7 @@ const WalletPayment = dynamic(() => import('@/components/store/WalletPayment'), 
   ssr: false,
 })
 
-type Step = 'details' | 'payment' | 'processing' | 'done'
+type Step = 'details' | 'otp' | 'payment' | 'processing' | 'done'
 
 const GIFT_WRAP_PRICE = 5
 
@@ -62,6 +62,11 @@ export function CheckoutContent() {
     giftWrap: false,
     giftMessage: '',
   })
+
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpSending, setOtpSending] = useState(false)
+  const [otpVerified, setOtpVerified] = useState(false)
 
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -186,16 +191,58 @@ export function CheckoutContent() {
     router.push('/')
   }
 
+  const sendOtpCode = async () => {
+    setOtpSending(true)
+    try {
+      const res = await fetch('/api/checkout/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email }),
+      })
+      const data = await res.json()
+      if (!data.ok) throw new Error(data.error)
+      setOtpSent(true)
+      toast.success('Verification code sent to your email')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to send code')
+    } finally {
+      setOtpSending(false)
+    }
+  }
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (otpCode.length !== 6) {
+      toast.error('Please enter the full 6-digit code')
+      return
+    }
+    try {
+      const res = await fetch('/api/checkout/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, code: otpCode }),
+      })
+      const data = await res.json()
+      if (!data.ok) throw new Error(data.error)
+      setOtpVerified(true)
+      setStep('payment')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Invalid code')
+    }
+  }
+
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const newErrors: Record<string, string> = {}
     if (!form.email.trim()) newErrors.email = 'Email is required'
     if (!form.fullName.trim()) newErrors.fullName = 'Name is required'
+    if (!form.phone.trim()) newErrors.phone = 'Phone is required'
     if (!form.address.trim()) newErrors.address = 'Address is required'
     if (!form.city.trim()) newErrors.city = 'City is required'
     if (!form.postalCode.trim()) newErrors.postalCode = 'Postal code is required'
     if (Object.keys(newErrors).length) { setErrors(newErrors); return }
-    setStep('payment')
+    setStep('otp')
+    sendOtpCode()
   }
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
@@ -448,6 +495,58 @@ export function CheckoutContent() {
           </div>
 
           <Button type="submit" className="w-full h-12 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep font-semibold tracking-wide">{t('checkout.continuePayment')}</Button>
+        </form>
+      )}
+
+      {step === 'otp' && (
+        <form onSubmit={handleOtpSubmit} className="p-6 space-y-5">
+          <div className="text-center py-4">
+            <h3 className="font-display text-xl font-semibold text-navy mb-2">Verify Your Email</h3>
+            <p className="text-sm text-muted-foreground mb-2">
+              We've sent a 6-digit code to <strong className="text-navy">{form.email}</strong>
+            </p>
+            <button type="button" onClick={sendOtpCode} disabled={otpSending} className="text-xs text-gold hover:underline disabled:opacity-50">
+              {otpSending ? 'Sending...' : 'Resend code'}
+            </button>
+          </div>
+
+          <div className="flex justify-center gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <input
+                key={i}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otpCode[i] || ''}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '')
+                  const next = otpCode.split('')
+                  next[i] = val[val.length - 1] || ''
+                  setOtpCode(next.join(''))
+                  if (val && i < 5) {
+                    const nextInput = document.querySelector(`input[data-otp-index="${i + 1}"]`) as HTMLInputElement
+                    nextInput?.focus()
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && !otpCode[i] && i > 0) {
+                    const prev = document.querySelector(`input[data-otp-index="${i - 1}"]`) as HTMLInputElement
+                    prev?.focus()
+                  }
+                }}
+                data-otp-index={i}
+                className="w-12 h-14 text-center text-xl font-bold font-mono rounded-xl border-2 border-border bg-background text-navy focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-all"
+              />
+            ))}
+          </div>
+
+          <Button type="submit" disabled={otpCode.length !== 6} className="w-full h-12 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep font-semibold tracking-wide">
+            Verify & Continue
+          </Button>
+
+          <Button type="button" onClick={() => setStep('details')} variant="outline" className="w-full rounded-full">
+            Back to Details
+          </Button>
         </form>
       )}
 

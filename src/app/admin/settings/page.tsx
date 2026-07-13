@@ -31,6 +31,15 @@ const FIELDS: { key: string; label: string; type?: string; group: string }[] = [
   { key: 'footerAbout', label: 'Footer About Text', group: 'Footer' },
   { key: 'footerAddress', label: 'Footer Address', group: 'Footer' },
   { key: 'loyaltyPointsRate', label: 'Loyalty Points Rate (EGP per point)', group: 'Loyalty', type: 'number' },
+  { key: 'receiptHeader', label: 'Receipt Header', group: 'Receipt' },
+  { key: 'receiptFooter', label: 'Receipt Footer', group: 'Receipt' },
+  { key: 'receiptShowLogo', label: 'Show Logo on Receipt', type: 'select', group: 'Receipt' },
+  { key: 'receiptShowTax', label: 'Show Tax Info', type: 'select', group: 'Receipt' },
+  { key: 'receiptTaxId', label: 'Tax Registration Number', group: 'Receipt' },
+  { key: 'receiptPhone', label: 'Receipt Phone', group: 'Receipt' },
+  { key: 'receiptAddress', label: 'Receipt Address', group: 'Receipt' },
+  { key: 'receiptShowReturnPolicy', label: 'Show Return Policy', type: 'select', group: 'Receipt' },
+  { key: 'receiptReturnPolicyDays', label: 'Return Policy Days', type: 'number', group: 'Receipt' },
 ]
 
 export default function AdminSettings() {
@@ -81,11 +90,23 @@ export default function AdminSettings() {
             {FIELDS.filter(f => f.group === group).map(field => (
               <div key={field.key}>
                 <label className="text-sm font-medium text-navy block mb-1">{field.label}</label>
-                <input
-                  value={settings[field.key] || ''}
-                  onChange={e => setSettings({ ...settings, [field.key]: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm"
-                />
+                {field.type === 'select' ? (
+                  <select
+                    value={settings[field.key] || 'true'}
+                    onChange={e => setSettings({ ...settings, [field.key]: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                  >
+                    <option value="true">Enabled</option>
+                    <option value="false">Disabled</option>
+                  </select>
+                ) : (
+                  <input
+                    type={field.type === 'number' ? 'number' : 'text'}
+                    value={settings[field.key] || ''}
+                    onChange={e => setSettings({ ...settings, [field.key]: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-border text-sm"
+                  />
+                )}
               </div>
             ))}
           </div>

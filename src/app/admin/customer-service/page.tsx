@@ -1,9 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import { Plus, Pencil, Trash2, X, Headset } from 'lucide-react'
+import { DataTable } from '@/components/admin/DataTable'
+import { Pagination } from '@/components/admin/Pagination'
+import { PageHeader } from '@/components/admin/PageHeader'
+import { SearchInput } from '@/components/admin/SearchInput'
+import { ExportButton } from '@/components/admin/ExportButton'
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import type { ColumnDef } from '@tanstack/react-table'
 
 type Agent = { id: string; email: string; name: string; phone: string | null; role: string; roleId: string | null; createdAt: string }
 
@@ -19,6 +26,10 @@ export default function CustomerServicePage() {
   const [roleId, setRoleId] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
 
   function resetForm() { setName(''); setEmail(''); setPhone(''); setPassword(''); setRoleId(''); setEditId(null) }
 
@@ -26,6 +37,8 @@ export default function CustomerServicePage() {
     fetch('/api/admin/admins').then((r) => r.json()).then((data) => setAgents(Array.isArray(data) ? data : [])).catch(() => {})
     fetch('/api/admin/roles').then((r) => r.json()).then((data) => setRoles(Array.isArray(data) ? data : [])).catch(() => {})
   }, [])
+
+  useEffect(() => { setPage(1) }, [search])
 
   async function handleSubmit() {
     if (!name || !email || !roleId) { toast.error('Name, email, and role are required'); return }
@@ -52,73 +65,127 @@ export default function CustomerServicePage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this agent?')) return
+    setConfirmDeleteId(id)
+    setConfirmOpen(true)
+  }
+
+  async function handleDeleteConfirm() {
+    if (!confirmDeleteId) return
     try {
-      const res = await fetch(`/api/admin/admins/${id}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Agent deleted'); setAgents(agents.filter((a) => a.id !== id)) }
+      const res = await fetch(`/api/admin/admins/${confirmDeleteId}`, { method: 'DELETE' })
+      if (res.ok) { toast.success('Agent deleted'); setAgents(agents.filter((a) => a.id !== confirmDeleteId)) }
       else { const e = await res.json(); toast.error(e.error) }
     } catch { toast.error('Failed to delete') }
+    finally { setConfirmOpen(false); setConfirmDeleteId(null) }
   }
 
   function openEdit(agent: Agent) {
     setName(agent.name); setEmail(agent.email); setPhone(agent.phone || ''); setRoleId(agent.roleId || ''); setPassword(''); setEditId(agent.id); setShowModal(true)
   }
 
-  const filtered = agents.filter(
-    (a) => a.name.toLowerCase().includes(search.toLowerCase()) || a.email.toLowerCase().includes(search.toLowerCase())
+  const filtered = useMemo(() =>
+    agents.filter(
+      (a) => a.name.toLowerCase().includes(search.toLowerCase()) || a.email.toLowerCase().includes(search.toLowerCase())
+    ), [agents, search]
   )
+
+  const paginated = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return filtered.slice(start, start + pageSize)
+  }, [filtered, page, pageSize])
+
+  const totalPages = Math.ceil(filtered.length / pageSize)
+
+  const columns: ColumnDef<Agent>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => (
+        <span className="font-medium text-navy flex items-center gap-2">
+          <Headset className="h-4 w-4 text-gold" />
+          {row.original.name}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.email}</span>,
+    },
+    {
+      accessorKey: 'phone',
+      header: 'Phone',
+      cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.original.phone || '—'}</span>,
+    },
+    {
+      accessorKey: 'role',
+      header: 'Role',
+      cell: ({ row }) => (
+        <span className="px-2 py-0.5 bg-navy/5 text-navy rounded text-xs font-medium">{row.original.role}</span>
+      ),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Created',
+      cell: ({ row }) => <span className="text-muted-foreground text-xs">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <button onClick={() => openEdit(row.original)} className="text-navy hover:text-gold transition-colors"><Pencil className="h-4 w-4" /></button>
+          <button onClick={() => handleDelete(row.original.id)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="h-4 w-4" /></button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-display font-semibold text-navy">Customer Service</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage customer service agents</p>
-        </div>
-        <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-          <Plus className="h-4 w-4" /> New Agent
-        </button>
-      </div>
+      <PageHeader
+        title="Customer Service"
+        subtitle="Manage customer service agents"
+        actions={
+          <>
+            <ExportButton
+              filename="customer-service-agents"
+              columns={[
+                { header: 'Name', key: 'name' },
+                { header: 'Email', key: 'email' },
+                { header: 'Phone', key: 'phone' },
+                { header: 'Role', key: 'role' },
+                { header: 'Created', key: 'createdAt' },
+              ]}
+              data={agents}
+            />
+            <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
+              <Plus className="h-4 w-4" /> New Agent
+            </button>
+          </>
+        }
+      />
 
       <div className="mb-4">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or email..."
-          className="w-full px-3 py-2 border border-border rounded-lg text-sm"
-        />
+        <SearchInput value={search} onChange={setSearch} placeholder="Search by name or email..." />
       </div>
 
-      <div className="bg-white rounded-xl border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead><tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
-            <th className="p-3 font-medium">Name</th><th className="p-3 font-medium">Email</th>
-            <th className="p-3 font-medium">Phone</th><th className="p-3 font-medium">Role</th>
-            <th className="p-3 font-medium">Created</th><th className="p-3 font-medium">Actions</th>
-          </tr></thead>
-          <tbody>
-            {filtered.map((a) => (
-              <tr key={a.id} className="border-b border-border/50">
-                <td className="p-3 font-medium text-navy flex items-center gap-2">
-                  <Headset className="h-4 w-4 text-gold" />
-                  {a.name}
-                </td>
-                <td className="p-3 text-muted-foreground">{a.email}</td>
-                <td className="p-3 text-muted-foreground text-sm">{a.phone || '—'}</td>
-                <td className="p-3"><span className="px-2 py-0.5 bg-navy/5 text-navy rounded text-xs font-medium">{a.role}</span></td>
-                <td className="p-3 text-muted-foreground text-xs">{new Date(a.createdAt).toLocaleDateString()}</td>
-                <td className="p-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => openEdit(a)} className="text-navy hover:text-gold transition-colors"><Pencil className="h-4 w-4" /></button>
-                    <button onClick={() => handleDelete(a.id)} className="text-red-400 hover:text-red-600 transition-colors"><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No agents yet</td></tr>}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={paginated}
+        keyExtractor={(a) => a.id}
+        emptyTitle="No agents found"
+        emptyDescription={search ? 'Try adjusting your search terms' : undefined}
+      />
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(s) => { setPageSize(s); setPage(1) }}
+      />
 
       <AnimatePresence>
         {showModal && (
@@ -158,6 +225,16 @@ export default function CustomerServicePage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete Agent"
+        description="Are you sure you want to delete this agent? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirm}
+        destructive
+      />
     </div>
   )
 }

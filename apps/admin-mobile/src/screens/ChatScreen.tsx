@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native'
 import { GiftedChat, IMessage, Bubble, InputToolbar } from 'react-native-gifted-chat'
 import { FontAwesome5 } from '@expo/vector-icons'
 import { colors, borderRadius } from '../theme'
@@ -27,7 +27,10 @@ export default function ChatScreen({ route, navigation }: any) {
   const [messages, setMessages] = useState<IMessage[]>([])
   const [conversation, setConversation] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [claiming, setClaiming] = useState(false)
+  const [sending, setSending] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
+  const onSendRef = useRef(false)
 
   const load = useCallback(async () => {
     try {
@@ -87,12 +90,15 @@ export default function ChatScreen({ route, navigation }: any) {
   }, [conversationId, load])
 
   const handleClaim = async () => {
+    setClaiming(true)
     try {
       await api.claimConversation(conversationId)
       Alert.alert('Claimed', 'You are now handling this conversation')
-      load()
+      await load()
     } catch (err: any) {
       Alert.alert('Error', err.message)
+    } finally {
+      setClaiming(false)
     }
   }
 
@@ -112,11 +118,24 @@ export default function ChatScreen({ route, navigation }: any) {
 
   const onSend = async (newMessages: IMessage[]) => {
     const text = newMessages[0]?.text
-    if (!text) return
+    if (!text || sending) return
+    const optimisticMsg: IMessage = {
+      _id: `temp-${Date.now()}`,
+      text,
+      createdAt: new Date(),
+      user: { _id: 'admin', name: 'You' },
+    }
+    setMessages(prev => GiftedChat.append(prev, [optimisticMsg]))
+    setSending(true)
+    onSendRef.current = true
     try {
       await api.sendMessage(conversationId, text)
     } catch (err: any) {
+      setMessages(prev => prev.filter(m => m._id !== optimisticMsg._id))
       Alert.alert('Error', err.message)
+    } finally {
+      setSending(false)
+      onSendRef.current = false
     }
   }
 
@@ -192,9 +211,13 @@ export default function ChatScreen({ route, navigation }: any) {
         renderInputToolbar={(props: any) => (
           <View>
             <View style={styles.actionBar}>
-              {(!conversation?.assignedAdmin) && (
-                <TouchableOpacity style={styles.claimBtn} onPress={handleClaim}>
-                  <Text style={styles.claimText}>Claim Conversation</Text>
+              {(!conversation?.assignedAdmin && !conversation?.assignedTo) && (
+                <TouchableOpacity style={styles.claimBtn} onPress={handleClaim} disabled={claiming}>
+                  {claiming ? (
+                    <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                    <Text style={styles.claimText}>Claim Conversation</Text>
+                  )}
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>

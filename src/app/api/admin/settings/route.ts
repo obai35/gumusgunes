@@ -3,12 +3,8 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 
-const KNOWN_KEYS = ['heroTitle', 'heroSubtitle', 'aboutText', 'contactEmail',
-  'contactPhone', 'footerText', 'currency', 'vatRate', 'shippingThreshold',
-  'facebook', 'instagram', 'twitter', 'tiktok'] as const
-
 const SettingsSchema = z.object({
-  key: z.enum(KNOWN_KEYS),
+  key: z.string().min(1).max(100),
   value: z.string().min(0).max(5000),
 }).strict()
 
@@ -46,6 +42,15 @@ const DEFAULTS: Record<string, string> = {
   promoHeading2: 'Solstice Collection',
   promoDescription: 'Up to 25% off selected pieces that celebrate the longest days of the year. Each purchase arrives in our signature gift box.',
   loyaltyPointsRate: '100',
+  receiptHeader: 'Gümüş Güneş',
+  receiptFooter: 'Thank you for your purchase!',
+  receiptShowLogo: 'true',
+  receiptShowTax: 'true',
+  receiptTaxId: '123-456-789',
+  receiptPhone: '+90 212 000 00 00',
+  receiptAddress: 'Grand Bazaar, Istanbul',
+  receiptShowReturnPolicy: 'true',
+  receiptReturnPolicyDays: '30',
 }
 
 export const GET = withAdmin(async () => {

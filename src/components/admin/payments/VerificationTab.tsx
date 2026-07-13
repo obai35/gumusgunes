@@ -1,86 +1,231 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
 import { CheckCircle, XCircle } from 'lucide-react'
+import type { ColumnDef } from '@tanstack/react-table'
+import { DataTable } from '@/components/admin/DataTable'
+import { Pagination } from '@/components/admin/Pagination'
+import { SearchInput } from '@/components/admin/SearchInput'
+import { ExportButton } from '@/components/admin/ExportButton'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 type Order = {
-  id: string; orderNumber: string; fullName: string; totalAmount: number
-  paymentMethod: string; paymentReference: string | null; walletProvider: string | null
-  createdAt: string; notes: string | null
+  id: string
+  orderNumber: string
+  fullName: string
+  totalAmount: number
+  paymentMethod: string
+  paymentReference: string | null
+  walletProvider: string | null
+  createdAt: string
+  notes: string | null
 }
 
 export default function VerificationTab() {
   const [orders, setOrders] = useState<Order[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [rejectId, setRejectId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [search, setSearch] = useState('')
+  const [rejectOrderId, setRejectOrderId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
 
-  useEffect(() => { fetchOrders() }, [])
+  const pageSize = 20
+  const totalPages = Math.ceil(total / pageSize)
 
-  async function fetchOrders() {
-    const res = await fetch('/api/admin/payments/verifications')
-    if (res.ok) { const d = await res.json(); setOrders(Array.isArray(d.orders) ? d.orders : []); setTotal(d.total) }
+  const fetchOrders = useCallback(async () => {
+    setLoading(true)
+    const params = new URLSearchParams({ page: String(page) })
+    if (search) params.set('search', search)
+    const res = await fetch(`/api/admin/payments/verifications?${params}`)
+    if (res.ok) {
+      const d = await res.json()
+      setOrders(Array.isArray(d.orders) ? d.orders : [])
+      setTotal(d.total)
+    }
     setLoading(false)
-  }
+  }, [page, search])
+
+  useEffect(() => { fetchOrders() }, [fetchOrders])
+
+  useEffect(() => { setPage(1) }, [search])
 
   async function handleVerify(orderId: string) {
-    const res = await fetch('/api/admin/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId }) })
+    const res = await fetch('/api/admin/payments/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId }),
+    })
     if (res.ok) { toast.success('Payment verified'); fetchOrders() }
     else toast.error('Failed to verify')
   }
 
-  async function handleReject(orderId: string) {
-    const res = await fetch('/api/admin/payments/reject', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ orderId, reason: rejectReason }) })
-    if (res.ok) { toast.success('Payment rejected'); setRejectId(null); setRejectReason(''); fetchOrders() }
-    else toast.error('Failed to reject')
+  function handleRejectClick(orderId: string) {
+    setRejectOrderId(orderId)
+    setRejectReason('')
+    setRejectDialogOpen(true)
   }
 
-  if (loading) return <div className="text-muted-foreground text-sm">Loading...</div>
+  async function handleRejectConfirm() {
+    if (!rejectOrderId) return
+    if (!rejectReason.trim()) {
+      toast.error('Please provide a reason for rejection')
+      return
+    }
+    const res = await fetch('/api/admin/payments/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: rejectOrderId, reason: rejectReason }),
+    })
+    if (res.ok) {
+      toast.success('Payment rejected')
+      setRejectOrderId(null)
+      setRejectReason('')
+      setRejectDialogOpen(false)
+      fetchOrders()
+    } else {
+      toast.error('Failed to reject')
+    }
+  }
+
+  const columns: ColumnDef<Order>[] = [
+    {
+      accessorKey: 'orderNumber',
+      header: 'Order Number',
+    },
+    {
+      accessorKey: 'fullName',
+      header: 'Customer Name',
+    },
+    {
+      accessorKey: 'totalAmount',
+      header: 'Total Amount',
+      cell: ({ row }) => `E£${row.original.totalAmount.toFixed(2)}`,
+    },
+    {
+      accessorKey: 'paymentMethod',
+      header: 'Payment Method',
+    },
+    {
+      id: 'walletInfo',
+      header: 'Wallet / Reference',
+      cell: ({ row }) => {
+        const o = row.original
+        const parts: string[] = []
+        if (o.walletProvider) parts.push(o.walletProvider)
+        if (o.paymentReference) parts.push(`Ref: ${o.paymentReference}`)
+        return parts.length ? parts.join(' \u2014 ') : '\u2014'
+      },
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Date',
+      cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleVerify(row.original.id)}
+            className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100"
+          >
+            <CheckCircle className="h-3.5 w-3.5" /> Approve
+          </button>
+          <button
+            onClick={() => handleRejectClick(row.original.id)}
+            className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100"
+          >
+            <XCircle className="h-3.5 w-3.5" /> Reject
+          </button>
+        </div>
+      ),
+    },
+  ]
+
+  const exportColumns = [
+    { header: 'Order Number', key: 'orderNumber' },
+    { header: 'Customer Name', key: 'fullName' },
+    { header: 'Total Amount', key: 'totalAmount' },
+    { header: 'Payment Method', key: 'paymentMethod' },
+    { header: 'Wallet Provider', key: 'walletProvider' },
+    { header: 'Payment Reference', key: 'paymentReference' },
+    { header: 'Date', key: 'createdAt' },
+  ]
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <p className="text-sm text-muted-foreground">{total} orders awaiting verification</p>
-      </div>
-      {orders.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No pending verifications.</p>
-      ) : (
-        <div className="space-y-3">
-          {Array.isArray(orders) && orders.map(o => (
-            <div key={o.id} className="bg-white rounded-xl border border-border p-4">
-              <div className="flex items-start justify-between">
-                <div className="text-sm space-y-1">
-                  <p className="font-medium text-navy">{o.orderNumber}</p>
-                  <p className="text-muted-foreground">{o.fullName}</p>
-                  <p className="text-navy font-semibold">E£{o.totalAmount.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {o.paymentMethod}
-                    {o.walletProvider && ` — ${o.walletProvider}`}
-                    {o.paymentReference && ` — Ref: ${o.paymentReference}`}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleString()}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleVerify(o.id)} className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100">
-                    <CheckCircle className="h-3.5 w-3.5" /> Approve
-                  </button>
-                  <button onClick={() => setRejectId(rejectId === o.id ? null : o.id)} className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100">
-                    <XCircle className="h-3.5 w-3.5" /> Reject
-                  </button>
-                </div>
-              </div>
-              {rejectId === o.id && (
-                <div className="mt-3 flex gap-2">
-                  <input value={rejectReason} onChange={e => setRejectReason(e.target.value)} placeholder="Reason for rejection..." className="flex-1 px-3 py-1.5 border border-border rounded-lg text-sm" />
-                  <button onClick={() => handleReject(o.id)} disabled={!rejectReason.trim()} className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-xs font-medium disabled:opacity-50">Confirm</button>
-                </div>
-              )}
-            </div>
-          ))}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <SearchInput value={search} onChange={setSearch} placeholder="Search orders..." className="w-72" />
+          <p className="text-sm text-muted-foreground">{total} orders awaiting verification</p>
         </div>
-      )}
+        <ExportButton
+          filename="payment-verifications"
+          columns={exportColumns}
+          data={orders}
+        />
+      </div>
+
+      <DataTable
+        columns={columns}
+        data={orders}
+        loading={loading}
+        keyExtractor={(o) => o.id}
+        emptyTitle="No pending verifications"
+        emptyDescription="All payment verifications have been processed."
+      />
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+      />
+
+      <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reject Payment</AlertDialogTitle>
+            <AlertDialogDescription>
+              Provide a reason for rejecting this payment verification.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="px-6 pb-2">
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Reason for rejection..."
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm resize-none h-24"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleRejectConfirm()
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Reject
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

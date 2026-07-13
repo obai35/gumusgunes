@@ -1,6 +1,7 @@
 import sharp from 'sharp'
 import fs from 'fs/promises'
 import path from 'path'
+import crypto from 'node:crypto'
 
 const HF_API_URL = 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell'
 
@@ -14,7 +15,7 @@ const PROMPT_TEMPLATES: Record<string, string> = {
 
 export function buildPrompt(productName: string, productType: string): string {
   const suffix = PROMPT_TEMPLATES[productType] || PROMPT_TEMPLATES.other
-  return `Professional product photography of a ${productName}, ${suffix}`
+  return `Professional product photography of ${productName}, ${suffix}`
 }
 
 export async function enhanceImage(
@@ -26,10 +27,16 @@ export async function enhanceImage(
   const apiKey = process.env.HF_API_KEY
   if (!apiKey) throw new Error('HF_API_KEY not set')
 
+  try {
+    await sharp(imageBuffer).metadata()
+  } catch {
+    throw new Error('Invalid image file')
+  }
+
   const prompt = customPrompt || buildPrompt(productName, productType)
-  const timestamp = Date.now()
-  const filename = `${timestamp}.jpg`
-  const originalFilename = `${timestamp}-original.jpg`
+  const uid = crypto.randomUUID()
+  const filename = `${uid}.jpg`
+  const originalFilename = `${uid}-original.jpg`
   const outputDir = path.join(process.cwd(), 'public', 'products', 'enhanced')
 
   await fs.mkdir(outputDir, { recursive: true })
@@ -37,17 +44,26 @@ export async function enhanceImage(
 
   const base64Image = imageBuffer.toString('base64')
 
-  const response = await fetch(HF_API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      inputs: base64Image,
-      parameters: { prompt, strength: 0.85, guidance_scale: 7.5 },
-    }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+
+  let response: Response
+  try {
+    response = await fetch(HF_API_URL, {
+      signal: controller.signal,
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: base64Image,
+        parameters: { prompt, strength: 0.85, guidance_scale: 7.5 },
+      }),
+    })
+  } finally {
+    clearTimeout(timeout)
+  }
 
   if (!response.ok) {
     const errText = await response.text().catch(() => 'Unknown error')
@@ -55,7 +71,12 @@ export async function enhanceImage(
   }
 
   const enhancedBuffer = Buffer.from(await response.arrayBuffer())
-  const optimized = await sharp(enhancedBuffer).jpeg({ quality: 90 }).toBuffer()
+  let optimized: Buffer
+  try {
+    optimized = await sharp(enhancedBuffer).jpeg({ quality: 90 }).toBuffer()
+  } catch {
+    throw new Error('Failed to process enhanced image with sharp')
+  }
   await fs.writeFile(path.join(outputDir, filename), optimized)
 
   return {

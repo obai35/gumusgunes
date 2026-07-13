@@ -1,22 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Search, X, Download, ChevronLeft, ChevronRight, Trash2, RefreshCw, Mail } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
-
-function exportCSVRows(rows: Record<string, any>[], filename: string) {
-  if (rows.length === 0) return
-  const headers = Object.keys(rows[0])
-  const csv = [headers.join(','), ...rows.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+import { ColumnDef } from '@tanstack/react-table'
+import { Mail, Trash2, RefreshCw, Users, UserPlus } from 'lucide-react'
+import { DataTable } from '@/components/admin/DataTable'
+import { SearchInput } from '@/components/admin/SearchInput'
+import { Pagination } from '@/components/admin/Pagination'
+import { StatsCard } from '@/components/admin/StatsCard'
+import { ExportButton } from '@/components/admin/ExportButton'
+import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { PageHeader } from '@/components/admin/PageHeader'
 
 type Subscriber = {
   id: string
@@ -34,8 +28,10 @@ export default function AdminNewsletter() {
   const [totalThisMonth, setTotalThisMonth] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [deleteId, setDeleteId] = useState<string | null>(null)
 
   function fetchSubscribers() {
+    setLoading(true)
     const params = new URLSearchParams()
     params.set('page', String(page))
     if (searchQuery) params.set('search', searchQuery)
@@ -64,16 +60,17 @@ export default function AdminNewsletter() {
     fetchSubscribers()
   }, [page])
 
-  async function deleteSubscriber(id: string) {
-    if (!confirm('Delete this subscriber?')) return
-    setDeleting(id)
+  async function handleDelete() {
+    if (!deleteId) return
+    setDeleting(deleteId)
+    setDeleteId(null)
     try {
-      const res = await fetch(`/api/admin/newsletter?id=${id}`, {
+      const res = await fetch(`/api/admin/newsletter?id=${deleteId}`, {
         method: 'DELETE',
       })
       const d = await res.json()
       if (d.ok) {
-        setSubscribers(prev => prev.filter(s => s.id !== id))
+        setSubscribers(prev => prev.filter(s => s.id !== deleteId))
         setTotal(prev => prev - 1)
         toast.success('Subscriber deleted')
       } else {
@@ -86,138 +83,126 @@ export default function AdminNewsletter() {
     }
   }
 
-  function handleExportCSV() {
-    const rows = Array.isArray(subscribers) ? subscribers.map(s => ({
+  const columns: ColumnDef<Subscriber>[] = useMemo(() => [
+    {
+      accessorKey: 'email',
+      header: 'Email',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-muted-foreground" />
+          <span className="font-medium text-navy">{row.original.email}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground">{row.original.name || '—'}</span>
+      ),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Subscribed Date',
+      cell: ({ row }) => (
+        <span className="text-xs text-muted-foreground">
+          {new Date(row.original.createdAt).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="text-right">
+          <button
+            disabled={deleting === row.original.id}
+            onClick={() => setDeleteId(row.original.id)}
+            className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Delete"
+          >
+            {deleting === row.original.id ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
+      ),
+    },
+  ], [deleting])
+
+  const exportData = useMemo(() =>
+    subscribers.map(s => ({
       Email: s.email,
       Name: s.name || '',
-      SubscribedDate: new Date(s.createdAt).toLocaleDateString(),
-    })) : []
-    exportCSVRows(rows, `newsletter-${new Date().toISOString().split('T')[0]}.csv`)
-  }
-
-  if (loading) return (
-    <div className="space-y-3">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-4 p-4 border border-border rounded-lg">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-          </div>
-        </div>
-      ))}
-    </div>
-  )
+      'Subscribed Date': new Date(s.createdAt).toLocaleDateString(),
+    })),
+  [subscribers])
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-display font-semibold text-navy">Newsletter Subscribers</h1>
-        <button
-          onClick={handleExportCSV}
-          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-        >
-          <Download className="h-4 w-4" /> Export CSV
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs text-muted-foreground mb-1">Total Subscribers</p>
-          <p className="text-2xl font-bold text-navy">{total}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs text-muted-foreground mb-1">Subscribed This Month</p>
-          <p className="text-2xl font-bold text-green-600">{totalThisMonth}</p>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="flex flex-wrap gap-3 mb-5 items-center">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by email or name..."
-            className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
+      <PageHeader
+        title="Newsletter Subscribers"
+        subtitle={`${total} subscriber${total !== 1 ? 's' : ''}`}
+        actions={
+          <ExportButton
+            filename={`newsletter-${new Date().toISOString().split('T')[0]}`}
+            columns={[
+              { header: 'Email', key: 'Email' },
+              { header: 'Name', key: 'Name' },
+              { header: 'Subscribed Date', key: 'Subscribed Date' },
+            ]}
+            data={exportData}
           />
-          {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); setPage(1) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-        <button onClick={fetchSubscribers} className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy flex items-center gap-1">
+        }
+      />
+
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        <StatsCard icon={Users} label="Total Subscribers" value={String(total)} />
+        <StatsCard icon={UserPlus} label="Subscribed This Month" value={String(totalThisMonth)} />
+      </div>
+
+      <div className="flex flex-wrap gap-3 mb-5 items-center">
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by email or name..."
+          className="flex-1 min-w-[200px] max-w-sm"
+        />
+        <button
+          onClick={fetchSubscribers}
+          className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy flex items-center gap-1"
+        >
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
         </button>
-        <span className="text-xs text-muted-foreground">{total} subscriber{total !== 1 ? 's' : ''}</span>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-border">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Subscribed Date</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(subscribers) && subscribers.map(sub => (
-              <tr key={sub.id} className="border-b border-border/50 hover:bg-gray-50/50">
-                <td className="px-4 py-3 font-medium text-navy">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    {sub.email}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{sub.name || '—'}</td>
-                <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(sub.createdAt).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-right">
-                  <button
-                    disabled={deleting === sub.id}
-                    onClick={() => deleteSubscriber(sub.id)}
-                    className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    title="Delete"
-                  >
-                    {deleting === sub.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {subscribers.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No subscribers found.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={subscribers}
+        loading={loading}
+        keyExtractor={item => item.id}
+        emptyTitle="No subscribers found"
+        emptyDescription="No newsletter subscribers match your search."
+      />
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
-          <div className="flex gap-2">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
-            >
-              <ChevronLeft className="h-4 w-4" /> Previous
-            </button>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
-            >
-              Next <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={total}
+        onPageChange={setPage}
+      />
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={open => { if (!open) setDeleteId(null) }}
+        title="Delete subscriber"
+        description="Are you sure you want to delete this subscriber? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        destructive
+      />
     </div>
   )
 }

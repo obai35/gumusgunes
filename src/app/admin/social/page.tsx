@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { Bot } from 'lucide-react'
 
 export default function SocialDashboard() {
   const [accounts, setAccounts] = useState<any[]>([])
@@ -50,6 +51,14 @@ export default function SocialDashboard() {
           )}
         </div>
       </div>
+
+      <Link href="/admin/social/agent" className="block bg-gradient-to-br from-navy to-navy-deep rounded-xl border border-gold/20 p-5 hover:border-gold/50 transition-all group mb-3">
+        <div className="h-12 w-12 rounded-lg bg-gold/20 flex items-center justify-center mb-3 group-hover:bg-gold/30 transition-colors">
+          <Bot className="h-6 w-6 text-gold" />
+        </div>
+        <h3 className="font-semibold text-silver mb-1">AI Agent</h3>
+        <p className="text-xs text-silver/60">Trend analysis, video ideas, ad management & insights</p>
+      </Link>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[

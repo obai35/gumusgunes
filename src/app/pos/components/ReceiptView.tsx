@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Printer, DollarSign, CreditCard } from 'lucide-react'
 import type { ReceiptData } from '../types'
 
@@ -10,8 +11,26 @@ type Props = {
 }
 
 export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
+  const [settings, setSettings] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    fetch('/api/admin/settings')
+      .then(r => r.json())
+      .then(d => { if (d.ok) setSettings(d.settings) })
+      .catch(() => {})
+  }, [])
 
   function printReceipt() {
+    const header = settings.receiptHeader || 'GÜMÜŞ GÜNEŞ'
+    const footer = settings.receiptFooter || 'Thank you for your purchase!'
+    const showLogo = settings.receiptShowLogo !== 'false'
+    const showTax = settings.receiptShowTax !== 'false'
+    const taxId = settings.receiptTaxId
+    const phone = settings.receiptPhone
+    const address = settings.receiptAddress
+    const showReturnPolicy = settings.receiptShowReturnPolicy !== 'false'
+    const returnDays = settings.receiptReturnPolicyDays || '30'
+
     const printWindow = window.open('', '_blank')
     if (!printWindow) return
     printWindow.document.write(`
@@ -36,11 +55,14 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
         </style></head>
         <body>
           <div class="text-center">
-            <img src="/gumusgunes-logo.jpeg" alt="" style="margin:0 auto 8px" />
-            <p style="font-size:18px;font-weight:600">Gümüş Güneş</p>
+            ${showLogo ? '<img src="/gumusgunes-logo.jpeg" alt="" style="margin:0 auto 8px" />' : ''}
+            <p style="font-size:18px;font-weight:600">${header}</p>
             <p class="text-xs">In-store Purchase</p>
             <p class="text-sm font-bold mt-2">${receipt.receiptNumber}</p>
             <p class="text-xs">${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            ${showTax && taxId ? `<p class="text-xs mt-2">Tax ID: ${taxId}</p>` : ''}
+            ${phone ? `<p class="text-xs">${phone}</p>` : ''}
+            ${address ? `<p class="text-xs">${address}</p>` : ''}
           </div>
           <div class="border-b p-4">
             ${receipt.items.map((item) => `
@@ -67,13 +89,24 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
               <div class="flex justify-between text-sm"><span>Card</span><span class="font-bold">E£${(receipt.cardAmount || 0).toFixed(2)}</span></div>
             ` : ''}
           </div>
-          <p class="text-center text-xs" style="margin-top:16px">Thank you for your purchase!</p>
+          ${showReturnPolicy ? `<p class="text-center text-xs" style="margin-top:16px">Returns accepted within ${returnDays} days</p>` : ''}
+          <p class="text-center text-xs" style="margin-top:4px">${footer}</p>
         </body>
       </html>
     `)
     printWindow.document.close()
     printWindow.print()
   }
+
+  const header = settings.receiptHeader || 'Gümüş Güneş'
+  const footer = settings.receiptFooter || 'Thank you for your purchase!'
+  const showLogo = settings.receiptShowLogo !== 'false'
+  const showTax = settings.receiptShowTax !== 'false'
+  const taxId = settings.receiptTaxId
+  const phone = settings.receiptPhone
+  const address = settings.receiptAddress
+  const showReturnPolicy = settings.receiptShowReturnPolicy !== 'false'
+  const returnDays = settings.receiptReturnPolicyDays || '30'
 
   return (
     <div className="flex items-start justify-center min-h-[60vh] pt-8" id="pos-receipt">
@@ -85,14 +118,19 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
         )}
         <div className="text-center p-6 border-b border-dashed border-white/10">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/40">
-              <img src="/gumusgunes-logo.jpeg" alt="" className="h-full w-full object-cover" />
-            </div>
-            <span className="font-display text-lg font-semibold text-silver-soft">Gümüş <span className="gold-text">Güneş</span></span>
+            {showLogo && (
+              <div className="h-8 w-8 rounded-full overflow-hidden ring-1 ring-gold/40">
+                <img src="/gumusgunes-logo.jpeg" alt="" className="h-full w-full object-cover" />
+              </div>
+            )}
+            <span className="font-display text-lg font-semibold text-silver-soft">{header}</span>
           </div>
           <p className="text-xs text-white/50">In-store Purchase</p>
           <p className="text-sm font-bold text-gold font-mono mt-2 tracking-wider">{receipt.receiptNumber}</p>
           <p className="text-xs text-white/40">{new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          {showTax && taxId && <p className="text-xs text-white/40 mt-1">Tax ID: {taxId}</p>}
+          {phone && <p className="text-xs text-white/40">{phone}</p>}
+          {address && <p className="text-xs text-white/40">{address}</p>}
         </div>
         <div className="p-4 space-y-2 border-b border-dashed border-white/10">
           {receipt.items.map((item, i) => (
@@ -138,6 +176,10 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
           )}
         </div>
         <div className="p-4 space-y-2">
+          {showReturnPolicy && (
+            <p className="text-center text-xs text-white/40">Returns accepted within {returnDays} days</p>
+          )}
+          <p className="text-center text-xs text-white/40">{footer}</p>
           <button onClick={printReceipt} className="w-full px-6 py-2.5 border border-white/10 rounded-lg text-sm text-silver-soft font-medium hover:bg-white/5 transition-all flex items-center justify-center gap-2">
             <Printer className="h-4 w-4" /> Print Receipt
           </button>

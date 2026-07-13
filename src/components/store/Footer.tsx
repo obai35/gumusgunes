@@ -30,22 +30,22 @@ export function Footer() {
 
   const defaultCols: FooterCol[] = [
     { title: t('footer.shop'), links: [
-      { label: t('categories.headingGold'), href: '#collections' },
-      { label: t('nav.categories'), href: '#categories' },
+      { label: t('categories.headingGold'), href: '/collections' },
+      { label: t('nav.categories'), href: '/products' },
     ]},
     { title: t('footer.about'), links: [
-      { label: t('footer.ourStory'), href: '#about' },
-      { label: t('footer.craftsmanship'), href: '#about' },
-      { label: t('footer.sustainability'), href: '#about' },
-      { label: t('footer.press'), href: '#about' },
-      { label: t('footer.careers'), href: '#about' },
+      { label: t('footer.ourStory'), href: '/about' },
+      { label: t('footer.craftsmanship'), href: '/about' },
+      { label: 'Shipping', href: '/shipping' },
+      { label: 'Returns', href: '/returns' },
+      { label: t('footer.faqs'), href: '/faq' },
     ]},
     { title: t('footer.care'), links: [
-      { label: t('footer.shippingReturns'), href: '#' },
-      { label: t('footer.ringSizing'), href: '#' },
-      { label: t('footer.jewelryCare'), href: '#' },
-      { label: t('footer.faqs'), href: '#' },
-      { label: t('footer.contactUs'), href: '#' },
+      { label: t('footer.shippingReturns'), href: '/shipping' },
+      { label: 'Returns & Exchanges', href: '/returns' },
+      { label: 'FAQ', href: '/faq' },
+      { label: t('footer.contactUs'), href: '/contact' },
+      { label: t('footer.ringSizing'), href: '/faq' },
     ], isCare: true },
   ]
 

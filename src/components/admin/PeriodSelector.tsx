@@ -2,7 +2,7 @@
 
 import { Calendar } from 'lucide-react'
 
-type Period = 'today' | 'week' | 'month' | 'custom'
+export type Period = 'today' | 'week' | 'month' | 'custom'
 
 type PeriodSelectorProps = {
   value: Period

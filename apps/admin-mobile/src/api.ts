@@ -88,8 +88,12 @@ export const api = {
     return request(`/api/admin/conversations${qs.length ? `?${qs.join('&')}` : ''}`)
   },
 
-  getConversation: (id: string) =>
-    request(`/api/admin/conversations/${id}`),
+  getConversation: (id: string, options?: { limit?: number; offset?: number }) => {
+    const qs: string[] = []
+    if (options?.limit) qs.push(`limit=${options.limit}`)
+    if (options?.offset) qs.push(`offset=${options.offset}`)
+    return request(`/api/admin/conversations/${id}${qs.length ? `?${qs.join('&')}` : ''}`, {}, 30000)
+  },
 
   claimConversation: (id: string) =>
     request(`/api/admin/conversations/${id}/claim`, { method: 'POST' }),

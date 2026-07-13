@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -40,26 +40,57 @@ export function ProductForm({ categories, initialData, productId }: {
   const [enhancing, setEnhancing] = useState(false)
   const [enhanceResult, setEnhanceResult] = useState<{ enhancedUrl: string; originalUrl: string } | null>(null)
   const [originalPreview, setOriginalPreview] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const originalPreviewRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (originalPreviewRef.current) {
+        URL.revokeObjectURL(originalPreviewRef.current)
+      }
+    }
+  }, [])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (originalPreviewRef.current) URL.revokeObjectURL(originalPreviewRef.current)
+    const url = URL.createObjectURL(file)
     setSelectedFile(file)
     setEnhanceResult(null)
-    setOriginalPreview(URL.createObjectURL(file))
+    setOriginalPreview(url)
+    originalPreviewRef.current = url
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault()
+    setIsDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (!file) return
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only image files are allowed')
+      return
+    }
+    if (originalPreviewRef.current) URL.revokeObjectURL(originalPreviewRef.current)
+    const url = URL.createObjectURL(file)
     setSelectedFile(file)
     setEnhanceResult(null)
-    setOriginalPreview(URL.createObjectURL(file))
+    setOriginalPreview(url)
+    originalPreviewRef.current = url
   }
 
   function handleDragOver(e: React.DragEvent) {
     e.preventDefault()
+  }
+
+  function handleDragEnter(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    setIsDragging(false)
   }
 
   async function handleEnhance() {
@@ -85,10 +116,9 @@ export function ProductForm({ categories, initialData, productId }: {
       }
       const data = await res.json()
       setEnhanceResult(data)
-      setForm(f => ({ ...f, imageUrl: data.enhancedUrl }))
       toast.success('Image enhanced successfully')
-    } catch (e: any) {
-      toast.error(e.message)
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'An error occurred')
     } finally {
       setEnhancing(false)
     }
@@ -159,7 +189,9 @@ export function ProductForm({ categories, initialData, productId }: {
           onClick={() => fileInputRef.current?.click()}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-gold/50 transition-colors"
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-gold/50 transition-colors ${isDragging ? 'border-gold' : 'border-border'}`}
         >
           {originalPreview ? (
             <img src={originalPreview} alt="Preview" className="max-h-40 mx-auto rounded-lg" />

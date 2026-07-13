@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ScrollView } from 'react-native'
 import Animated, { FadeIn } from 'react-native-reanimated'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -71,13 +71,19 @@ export default function ConversationsScreen({ navigation }: any) {
     load()
     const socket = getSocket()
     if (!socket) return
-    socket.on('message:new', load)
-    socket.on('conversation:waiting', load)
-    socket.on('conversation:updated', load)
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    const debouncedLoad = () => {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(load, 500)
+    }
+    socket.on('message:new', debouncedLoad)
+    socket.on('conversation:waiting', debouncedLoad)
+    socket.on('conversation:updated', debouncedLoad)
     return () => {
-      socket.off('message:new', load)
-      socket.off('conversation:waiting', load)
-      socket.off('conversation:updated', load)
+      if (debounceTimer) clearTimeout(debounceTimer)
+      socket.off('message:new', debouncedLoad)
+      socket.off('conversation:waiting', debouncedLoad)
+      socket.off('conversation:updated', debouncedLoad)
     }
   }, [load])
 

@@ -5,7 +5,7 @@ describe('enhanceImage prompt builder', () => {
     const { buildPrompt } = await import('./enhance-image')
     const prompt = buildPrompt('Silver Ring', 'ring')
     expect(prompt).toBe(
-      'Professional product photography of a Silver Ring, on a white marble surface with soft studio lighting, jewelry macro photography, 8K'
+      'Professional product photography of Silver Ring, on a white marble surface with soft studio lighting, jewelry macro photography, 8K'
     )
   })
 
@@ -13,7 +13,7 @@ describe('enhanceImage prompt builder', () => {
     const { buildPrompt } = await import('./enhance-image')
     const prompt = buildPrompt('Gold Chain Necklace', 'necklace')
     expect(prompt).toBe(
-      'Professional product photography of a Gold Chain Necklace, on a velvet display bust with soft studio lighting, jewelry photography, 8K'
+      'Professional product photography of Gold Chain Necklace, on a velvet display bust with soft studio lighting, jewelry photography, 8K'
     )
   })
 
@@ -21,7 +21,7 @@ describe('enhanceImage prompt builder', () => {
     const { buildPrompt } = await import('./enhance-image')
     const prompt = buildPrompt('Silver Bracelet', 'bracelet')
     expect(prompt).toBe(
-      'Professional product photography of a Silver Bracelet, on a clean white surface with natural lighting, jewelry photography, 8K'
+      'Professional product photography of Silver Bracelet, on a clean white surface with natural lighting, jewelry photography, 8K'
     )
   })
 
@@ -29,7 +29,7 @@ describe('enhanceImage prompt builder', () => {
     const { buildPrompt } = await import('./enhance-image')
     const prompt = buildPrompt('Gold Earrings', 'earrings')
     expect(prompt).toBe(
-      'Professional product photography of a Gold Earrings, on a minimalist display stand with soft studio lighting, jewelry photography, 8K'
+      'Professional product photography of Gold Earrings, on a minimalist display stand with soft studio lighting, jewelry photography, 8K'
     )
   })
 
@@ -37,7 +37,7 @@ describe('enhanceImage prompt builder', () => {
     const { buildPrompt } = await import('./enhance-image')
     const prompt = buildPrompt('Watch', 'unknown')
     expect(prompt).toBe(
-      'Professional product photography of a Watch, professional studio lighting, clean background, commercial product photography, 8K'
+      'Professional product photography of Watch, professional studio lighting, clean background, commercial product photography, 8K'
     )
   })
 
