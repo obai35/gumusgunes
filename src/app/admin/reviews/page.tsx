@@ -2,21 +2,13 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Search, X, Star, Download, ChevronLeft, ChevronRight, CheckCircle, XCircle, Trash2, RefreshCw, MessageSquareText } from 'lucide-react'
-import { Skeleton } from '@/components/ui/skeleton'
-
-function exportCSVRows(rows: Record<string, any>[], filename: string) {
-  if (rows.length === 0) return
-  const headers = Object.keys(rows[0])
-  const csv = [headers.join(','), ...rows.map(row => headers.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(','))].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+import { Star, RefreshCw, CheckCircle, XCircle, Trash2, MessageSquareText } from 'lucide-react'
+import { DataTable } from '@/components/admin/DataTable'
+import { Pagination } from '@/components/admin/Pagination'
+import { PageHeader } from '@/components/admin/PageHeader'
+import { FilterBar } from '@/components/admin/FilterBar'
+import { ExportButton } from '@/components/admin/ExportButton'
+import type { ColumnDef } from '@tanstack/react-table'
 
 function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
@@ -33,16 +25,11 @@ function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
 }
 
 type Review = {
-  id: string
-  productId: string
+  id: string; productId: string
   product: { name: string; slug: string }
-  authorName: string
-  authorEmail: string | null
-  rating: number
-  title: string
-  comment: string
-  isVerified: boolean
-  createdAt: string
+  authorName: string; authorEmail: string | null
+  rating: number; title: string; comment: string
+  isVerified: boolean; createdAt: string
 }
 
 export default function AdminReviews() {
@@ -52,6 +39,7 @@ export default function AdminReviews() {
   const [ratingFilter, setRatingFilter] = useState('')
   const [verifiedFilter, setVerifiedFilter] = useState('')
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
   const [total, setTotal] = useState(0)
   const [totalPages, setTotalPages] = useState(0)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -59,8 +47,10 @@ export default function AdminReviews() {
   const [toggling, setToggling] = useState<string | null>(null)
 
   function fetchReviews() {
+    setLoading(true)
     const params = new URLSearchParams()
     params.set('page', String(page))
+    params.set('limit', String(pageSize))
     if (searchQuery) params.set('search', searchQuery)
     if (ratingFilter) params.set('rating', ratingFilter)
     if (verifiedFilter) params.set('verified', verifiedFilter)
@@ -82,23 +72,16 @@ export default function AdminReviews() {
 
   useEffect(() => {
     setPage(1)
-  }, [searchQuery, ratingFilter, verifiedFilter])
+  }, [searchQuery, ratingFilter, verifiedFilter, pageSize])
 
   useEffect(() => {
     fetchReviews()
   }, [page])
 
-  function handleSearch() {
-    setPage(1)
-    fetchReviews()
-  }
-
   async function toggleVerified(id: string) {
     setToggling(id)
     try {
-      const res = await fetch(`/api/admin/reviews?id=${id}`, {
-        method: 'PUT',
-      })
+      const res = await fetch(`/api/admin/reviews?id=${id}`, { method: 'PUT' })
       const d = await res.json()
       if (d.ok) {
         setReviews(prev => prev.map(r => r.id === id ? d.review : r))
@@ -117,9 +100,7 @@ export default function AdminReviews() {
     if (!confirm('Delete this review permanently?')) return
     setDeleting(id)
     try {
-      const res = await fetch(`/api/admin/reviews?id=${id}`, {
-        method: 'DELETE',
-      })
+      const res = await fetch(`/api/admin/reviews?id=${id}`, { method: 'DELETE' })
       const d = await res.json()
       if (d.ok) {
         setReviews(prev => prev.filter(r => r.id !== id))
@@ -135,58 +116,104 @@ export default function AdminReviews() {
     }
   }
 
-  function handleExportCSV() {
-    const rows = Array.isArray(reviews) ? reviews.map(r => ({
-      Product: r.product.name,
-      Author: r.authorName,
-      Email: r.authorEmail || '',
-      Rating: r.rating,
-      Title: r.title,
-      Comment: r.comment,
-      Verified: r.isVerified ? 'Yes' : 'No',
-      Date: new Date(r.createdAt).toLocaleDateString(),
-    })) : []
-    exportCSVRows(rows, `reviews-${new Date().toISOString().split('T')[0]}.csv`)
-  }
-
   const stats = useMemo(() => {
     if (reviews.length === 0 && total === 0) return { totalReviews: 0, avgRating: 0, fiveStar: 0, pendingVerification: 0 }
-    const all = reviews
-    const avg = all.length > 0 ? all.reduce((s, r) => s + r.rating, 0) / all.length : 0
+    const avg = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
     return {
       totalReviews: total,
       avgRating: avg,
-      fiveStar: all.filter(r => r.rating === 5).length,
-      pendingVerification: all.filter(r => !r.isVerified).length,
+      fiveStar: reviews.filter(r => r.rating === 5).length,
+      pendingVerification: reviews.filter(r => !r.isVerified).length,
     }
   }, [reviews, total])
 
-  if (loading) return (
-    <div className="space-y-4">
-      {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="p-4 border border-border rounded-lg space-y-2">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-10 w-10 rounded-full" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <Skeleton className="h-3 w-full" />
-          <Skeleton className="h-3 w-5/6" />
+  const hasActiveFilters = !!(searchQuery || ratingFilter || verifiedFilter)
+
+  const columns: ColumnDef<Review>[] = [
+    {
+      accessorKey: 'product.name',
+      header: 'Product',
+      cell: ({ row }) => <span className="font-medium text-navy max-w-[180px] truncate block">{row.original.product.name}</span>,
+    },
+    {
+      accessorKey: 'authorName',
+      header: 'Author',
+      cell: ({ row }) => (
+        <div>
+          <span className="text-muted-foreground">{row.original.authorName}</span>
+          {row.original.authorEmail && <span className="text-xs block text-muted-foreground/70">{row.original.authorEmail}</span>}
         </div>
-      ))}
-    </div>
-  )
+      ),
+    },
+    {
+      accessorKey: 'rating',
+      header: 'Rating',
+      cell: ({ row }) => <StarRating rating={row.original.rating} />,
+    },
+    {
+      accessorKey: 'comment',
+      header: 'Comment',
+      cell: ({ row }) => <span className="text-muted-foreground max-w-[240px] truncate block">{row.original.comment}</span>,
+    },
+    {
+      accessorKey: 'isVerified',
+      header: 'Verified',
+      cell: ({ row }) => (
+        <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${row.original.isVerified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          {row.original.isVerified ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+          {row.original.isVerified ? 'Verified' : 'Unverified'}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Date',
+      cell: ({ row }) => <span className="text-muted-foreground text-xs">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="flex items-center justify-end gap-1">
+          <button
+            disabled={toggling === row.original.id}
+            onClick={e => { e.stopPropagation(); toggleVerified(row.original.id) }}
+            className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${row.original.isVerified ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
+            title={row.original.isVerified ? 'Unverify' : 'Verify'}
+          >
+            {toggling === row.original.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : row.original.isVerified ? <XCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
+          </button>
+          <button
+            disabled={deleting === row.original.id}
+            onClick={e => { e.stopPropagation(); deleteReview(row.original.id) }}
+            className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            title="Delete"
+          >
+            {deleting === row.original.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+          </button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-display font-semibold text-navy">Reviews</h1>
-        <button
-          onClick={handleExportCSV}
-          className="flex items-center gap-1.5 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-        >
-          <Download className="h-4 w-4" /> Export CSV
-        </button>
-      </div>
+      <PageHeader
+        title="Reviews"
+        actions={
+          <ExportButton
+            filename="reviews-export"
+            columns={[
+              { header: 'Product', key: 'product.name' },
+              { header: 'Author', key: 'authorName' },
+              { header: 'Rating', key: 'rating' },
+              { header: 'Comment', key: 'comment' },
+              { header: 'Verified', key: 'isVerified' },
+            ]}
+            data={reviews}
+          />
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
@@ -203,32 +230,32 @@ export default function AdminReviews() {
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
           <p className="text-xs text-muted-foreground mb-1">5-Star Reviews</p>
-          <p className="text-2xl font-bold text-navy">{reviews.filter(r => r.rating === 5).length}</p>
+          <p className="text-2xl font-bold text-navy">{stats.fiveStar}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
           <p className="text-xs text-muted-foreground mb-1">Pending Verification</p>
-          <p className="text-2xl font-bold text-amber-600">{reviews.filter(r => !r.isVerified).length}</p>
+          <p className="text-2xl font-bold text-amber-600">{stats.pendingVerification}</p>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-5 items-center">
+      <FilterBar
+        hasActiveFilters={hasActiveFilters}
+        onClearAll={() => { setSearchQuery(''); setRatingFilter(''); setVerifiedFilter(''); setPage(1) }}
+      >
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder="Search by product or author..."
-            className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
+            className="w-full pl-3 pr-8 py-2 rounded-lg border border-gray-200 text-sm"
           />
           {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); setPage(1) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy">
-              <X className="h-4 w-4" />
+            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy">
+              <XCircle className="h-4 w-4" />
             </button>
           )}
         </div>
-        <select value={ratingFilter} onChange={e => { setRatingFilter(e.target.value); setPage(1) }} className="px-3 py-2 rounded-lg border border-border text-sm">
+        <select value={ratingFilter} onChange={e => { setRatingFilter(e.target.value); setPage(1) }} className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600">
           <option value="">All Ratings</option>
           <option value="5">5 Stars</option>
           <option value="4">4 Stars</option>
@@ -236,120 +263,54 @@ export default function AdminReviews() {
           <option value="2">2 Stars</option>
           <option value="1">1 Star</option>
         </select>
-        <select value={verifiedFilter} onChange={e => { setVerifiedFilter(e.target.value); setPage(1) }} className="px-3 py-2 rounded-lg border border-border text-sm">
+        <select value={verifiedFilter} onChange={e => { setVerifiedFilter(e.target.value); setPage(1) }} className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600">
           <option value="">All Reviews</option>
           <option value="verified">Verified</option>
           <option value="unverified">Unverified</option>
         </select>
-        <button onClick={fetchReviews} className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy flex items-center gap-1">
+        <button onClick={fetchReviews} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:text-navy flex items-center gap-1">
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
         </button>
-        <span className="text-xs text-muted-foreground">{total} review{total !== 1 ? 's' : ''}</span>
-      </div>
+        <span className="text-xs text-muted-foreground ml-auto">{total} review{total !== 1 ? 's' : ''}</span>
+      </FilterBar>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-border">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Product</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Author</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rating</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Comment</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Verified</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Array.isArray(reviews) && reviews.map(review => (
-              <>
-                <tr
-                  key={review.id}
-                  className="border-b border-border/50 hover:bg-gray-50/50 cursor-pointer"
-                  onClick={() => setExpandedId(expandedId === review.id ? null : review.id)}
-                >
-                  <td className="px-4 py-3 font-medium text-navy max-w-[180px] truncate">{review.product.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {review.authorName}
-                    {review.authorEmail && <span className="text-xs block text-muted-foreground/70">{review.authorEmail}</span>}
-                  </td>
-                  <td className="px-4 py-3"><StarRating rating={review.rating} /></td>
-                  <td className="px-4 py-3 text-muted-foreground max-w-[240px]">
-                    <span className="line-clamp-1">{review.comment}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${review.isVerified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {review.isVerified ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-                      {review.isVerified ? 'Verified' : 'Unverified'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{new Date(review.createdAt).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        disabled={toggling === review.id}
-                        onClick={e => { e.stopPropagation(); toggleVerified(review.id) }}
-                        className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${review.isVerified ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
-                        title={review.isVerified ? 'Unverify' : 'Verify'}
-                      >
-                        {toggling === review.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : review.isVerified ? <XCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
-                      </button>
-                      <button
-                        disabled={deleting === review.id}
-                        onClick={e => { e.stopPropagation(); deleteReview(review.id) }}
-                        className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        title="Delete"
-                      >
-                        {deleting === review.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                {expandedId === review.id && (
-                  <tr key={`${review.id}-expanded`} className="bg-gray-50/50 border-b border-border/50">
-                    <td colSpan={7} className="px-4 py-3">
-                      <div className="flex items-start gap-3">
-                        <MessageSquareText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                        <div>
-                          {review.title && <p className="font-medium text-navy mb-1">{review.title}</p>}
-                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{review.comment}</p>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </>
-            ))}
-            {reviews.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No reviews found.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={reviews}
+        keyExtractor={(r) => r.id}
+        loading={loading}
+        onRowClick={(r) => setExpandedId(expandedId === r.id ? null : r.id)}
+        emptyTitle="No reviews found"
+        emptyDescription={searchQuery ? 'Try adjusting your search terms' : undefined}
+      />
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
-          <div className="flex gap-2">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage(p => p - 1)}
-              className="px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
-            >
-              <ChevronLeft className="h-4 w-4" /> Previous
-            </button>
-            <button
-              disabled={page >= totalPages}
-              onClick={() => setPage(p => p + 1)}
-              className="px-3 py-1.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
-            >
-              Next <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
+      {/* Expanded comment */}
+      {expandedId && (
+        <div className="bg-gray-50/50 border border-border rounded-xl p-4 mt-2 mb-4">
+          {(() => {
+            const review = reviews.find(r => r.id === expandedId)
+            if (!review) return null
+            return (
+              <div className="flex items-start gap-3">
+                <MessageSquareText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  {review.title && <p className="font-medium text-navy mb-1">{review.title}</p>}
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">{review.comment}</p>
+                </div>
+              </div>
+            )
+          })()}
         </div>
       )}
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={s => { setPageSize(s); setPage(1) }}
+      />
     </div>
   )
 }
