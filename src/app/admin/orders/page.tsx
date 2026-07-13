@@ -2,136 +2,233 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ArrowRight, Search, X } from 'lucide-react'
-import type { Order } from '@/lib/types'
-import { Skeleton } from '@/components/ui/skeleton'
+import { ArrowRight } from 'lucide-react'
+import { toast } from 'sonner'
+import { DataTable } from '@/components/admin/DataTable'
+import { FilterBar } from '@/components/admin/FilterBar'
+import { Pagination } from '@/components/admin/Pagination'
+import { BulkActionBar } from '@/components/admin/BulkActionBar'
+import { ExportButton } from '@/components/admin/ExportButton'
+import { PageHeader } from '@/components/admin/PageHeader'
+import { StatusBadge } from '@/components/admin/StatusBadge'
+import { useDebounce } from '@/hooks/useDebounce'
+import type { ColumnDef } from '@tanstack/react-table'
 
-const statusColor: Record<string, string> = {
-  pending: 'bg-gray-100 text-gray-700',
-  confirmed: 'bg-blue-100 text-blue-700',
-  processing: 'bg-yellow-100 text-yellow-700',
-  shipped: 'bg-purple-100 text-purple-700',
-  delivered: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-}
+const statusOptions = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Processing', value: 'processing' },
+  { label: 'Shipped', value: 'shipped' },
+  { label: 'Delivered', value: 'delivered' },
+  { label: 'Cancelled', value: 'cancelled' },
+]
+
+const paymentOptions = [
+  { label: 'Pending', value: 'pending' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Refunded', value: 'refunded' },
+  { label: 'Awaiting Verification', value: 'awaiting_verification' },
+]
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([])
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [paymentFilter, setPaymentFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [paymentFilter, setPaymentFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
+
+  const debouncedSearch = useDebounce(search, 300)
 
   useEffect(() => {
-    fetch('/api/admin/orders')
+    setLoading(true)
+    setSelectedIds(new Set())
+    const params = new URLSearchParams()
+    if (debouncedSearch) params.set('search', debouncedSearch)
+    if (statusFilter) params.set('status', statusFilter)
+    if (paymentFilter) params.set('paymentStatus', paymentFilter)
+    if (dateFrom) params.set('dateFrom', dateFrom)
+    if (dateTo) params.set('dateTo', dateTo)
+    params.set('page', String(page))
+    params.set('limit', String(pageSize))
+
+    fetch(`/api/admin/orders?${params.toString()}`)
       .then(r => r.json())
-      .then(d => { if (d.ok) setOrders(Array.isArray(d.orders) ? d.orders : []) })
+      .then(d => {
+        if (d.ok) {
+          setOrders(Array.isArray(d.orders) ? d.orders : [])
+          setTotal(d.total || 0)
+        }
+      })
+      .catch(() => toast.error('Failed to load orders'))
       .finally(() => setLoading(false))
-  }, [])
+  }, [debouncedSearch, statusFilter, paymentFilter, dateFrom, dateTo, page, pageSize])
 
-  const filtered = orders.filter(o => {
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase()
-      if (!o.orderNumber?.toLowerCase().includes(q) &&
-          !o.receiptNumber?.toLowerCase().includes(q) &&
-          !o.fullName?.toLowerCase().includes(q) &&
-          !o.email?.toLowerCase().includes(q)) return false
+  const handleBulkStatus = async (status: string) => {
+    setBulkUpdating(true)
+    try {
+      const res = await fetch('/api/admin/orders/bulk-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderIds: Array.from(selectedIds), status }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success(`Updated ${data.updated} orders to ${status}`)
+        setSelectedIds(new Set())
+        setOrders(prev => prev.map(o => selectedIds.has(o.id) ? { ...o, status } : o))
+      } else {
+        toast.error(data.error || 'Failed')
+      }
+    } catch {
+      toast.error('Failed to update orders')
+    } finally {
+      setBulkUpdating(false)
     }
-    if (statusFilter !== 'all' && o.status !== statusFilter) return false
-    if (paymentFilter !== 'all' && o.paymentStatus !== paymentFilter) return false
-    return true
-  })
+  }
 
-  if (loading) return (
-    <div className="space-y-3">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex gap-4 p-4 border border-border rounded-lg">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-3 w-1/2" />
-          </div>
+  const hasActiveFilters = !!(statusFilter || paymentFilter || dateFrom || dateTo || search)
+
+  const columns: ColumnDef<any>[] = [
+    {
+      accessorKey: 'orderNumber',
+      header: 'Order',
+      cell: ({ row }) => (
+        <div>
+          <span className="font-medium text-navy">{row.original.orderNumber}</span>
+          {row.original.receiptNumber && (
+            <span className="text-xs text-muted-foreground block">{row.original.receiptNumber}</span>
+          )}
         </div>
-      ))}
-    </div>
-  )
+      ),
+    },
+    {
+      accessorKey: 'fullName',
+      header: 'Customer',
+      cell: ({ row }) => (
+        <div>
+          <span className="text-muted-foreground">{row.original.fullName}</span>
+          <br />
+          <span className="text-xs text-muted-foreground">{row.original.email}</span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'createdAt',
+      header: 'Date',
+      enableSorting: true,
+      cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+    },
+    {
+      accessorKey: 'totalAmount',
+      header: 'Total',
+      enableSorting: true,
+      cell: ({ row }) => <span className="font-medium text-navy">${row.original.totalAmount.toFixed(2)}</span>,
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      enableSorting: true,
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      accessorKey: 'paymentStatus',
+      header: 'Payment',
+      cell: ({ row }) => <StatusBadge status={row.original.paymentStatus} />,
+    },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <div className="text-right">
+          <Link
+            href={`/admin/orders/${row.original.id}`}
+            className="text-gold hover:text-gold/80 inline-flex items-center gap-1 text-xs font-medium"
+          >
+            View <ArrowRight className="h-3 w-3" />
+          </Link>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Orders</h1>
+      <PageHeader title="Orders" />
 
-      {/* Search & Filters */}
-      <div className="flex flex-wrap gap-3 mb-5 items-center">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by order #, receipt, name, or email..."
-            className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy">
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-border text-sm">
-          <option value="all">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="confirmed">Confirmed</option>
-          <option value="processing">Processing</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
+      <FilterBar
+        status={statusFilter}
+        onStatusChange={v => { setStatusFilter(v); setPage(1) }}
+        statusOptions={statusOptions}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={v => { setDateFrom(v); setPage(1) }}
+        onDateToChange={v => { setDateTo(v); setPage(1) }}
+        hasActiveFilters={hasActiveFilters}
+        onClearAll={() => { setStatusFilter(''); setPaymentFilter(''); setDateFrom(''); setDateTo(''); setSearch(''); setPage(1) }}
+      >
+        <select
+          value={paymentFilter}
+          onChange={e => { setPaymentFilter(e.target.value); setPage(1) }}
+          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        >
+          <option value="">All Payments</option>
+          {paymentOptions.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
         </select>
-        <select value={paymentFilter} onChange={e => setPaymentFilter(e.target.value)} className="px-3 py-2 rounded-lg border border-border text-sm">
-          <option value="all">All Payments</option>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="refunded">Refunded</option>
-          <option value="awaiting_verification">Awaiting Verification</option>
-        </select>
-        <span className="text-xs text-muted-foreground">{filtered.length} order{filtered.length !== 1 ? 's' : ''}</span>
-      </div>
+        <ExportButton
+          filename="orders-export"
+          columns={[
+            { header: 'Order', key: 'orderNumber' },
+            { header: 'Customer', key: 'fullName' },
+            { header: 'Email', key: 'email' },
+            { header: 'Date', key: 'createdAt' },
+            { header: 'Total', key: 'totalAmount' },
+            { header: 'Status', key: 'status' },
+            { header: 'Payment', key: 'paymentStatus' },
+          ]}
+          data={orders}
+        />
+      </FilterBar>
 
-      <div className="bg-white rounded-xl border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-border">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Order</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Customer</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Total</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Payment</th>
-              <th className="text-right px-4 py-3 font-medium text-muted-foreground"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((order: any) => (
-              <tr key={order.id} className="border-b border-border/50 hover:bg-gray-50/50">
-                <td className="px-4 py-3 font-medium text-navy">{order.orderNumber}
-                  {order.receiptNumber && <span className="text-xs text-muted-foreground block">{order.receiptNumber}</span>}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">{order.fullName}<br /><span className="text-xs">{order.email}</span></td>
-                <td className="px-4 py-3 text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</td>
-                <td className="px-4 py-3 font-medium text-navy">${order.totalAmount.toFixed(2)}</td>
-                <td className="px-4 py-3"><span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[order.status] || 'bg-gray-100 text-gray-700'}`}>{order.status}</span></td>
-                <td className="px-4 py-3"><span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-100 text-gray-700">{order.paymentStatus}</span></td>
-                <td className="px-4 py-3 text-right">
-                  <Link href={`/admin/orders/${order.id}`} className="text-gold hover:text-gold/80 inline-flex items-center gap-1 text-xs font-medium">
-                    View <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">No orders found.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={orders}
+        keyExtractor={(o) => o.id}
+        loading={loading}
+        selectable
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        emptyTitle="No orders found"
+        emptyDescription="Try adjusting your search or filters"
+      />
+
+      <Pagination
+        page={page}
+        totalPages={Math.ceil(total / pageSize)}
+        totalItems={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={s => { setPageSize(s); setPage(1) }}
+      />
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        onClear={() => setSelectedIds(new Set())}
+        actions={[
+          { label: 'Mark Processing', onClick: () => handleBulkStatus('processing') },
+          { label: 'Mark Shipped', onClick: () => handleBulkStatus('shipped') },
+          { label: 'Mark Delivered', onClick: () => handleBulkStatus('delivered') },
+          { label: 'Mark Cancelled', onClick: () => handleBulkStatus('cancelled'), variant: 'destructive' },
+        ]}
+      />
     </div>
   )
 }
