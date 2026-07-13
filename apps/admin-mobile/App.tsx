@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
-import { NavigationContainer } from '@react-navigation/native'
+import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import * as Notifications from 'expo-notifications'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
 import LoginScreen from './src/screens/LoginScreen'
 import ConversationsScreen from './src/screens/ConversationsScreen'
 import SettingsScreen from './src/screens/SettingsScreen'
+import { createNotificationChannel, setLastNotificationResponse } from './src/notifications'
 
 const Stack = createNativeStackNavigator()
 
@@ -49,6 +51,32 @@ function LazyChatScreen(props: any) {
 
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null)
+  const navigationRef = useRef<NavigationContainerRef<any>>(null)
+  const notificationResponseListener = useRef<any>(null)
+
+  useEffect(() => {
+    createNotificationChannel()
+
+    notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data
+      const conversationId = data?.conversationId as string | undefined
+      if (conversationId && navigationRef.current?.isReady()) {
+        navigationRef.current.navigate('Chat' as never, { conversationId } as never)
+      }
+    })
+
+    Notifications.getLastNotificationResponseAsync().then(response => {
+      if (response) {
+        setLastNotificationResponse(response)
+      }
+    })
+
+    return () => {
+      if (notificationResponseListener.current) {
+        Notifications.removeNotificationSubscription(notificationResponseListener.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handler = (error: Error, isFatal: boolean) => {
@@ -72,34 +100,22 @@ export default function App() {
   return (
     <KeyboardProvider>
       <SafeAreaProvider>
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
           <StatusBar style="light" />
           <Stack.Navigator
             initialRouteName="Login"
             screenOptions={{
               headerStyle: { backgroundColor: '#0a0a0a' },
               headerTintColor: '#d4af37',
+              headerTitleStyle: { fontWeight: '600', fontSize: 18 },
               contentStyle: { backgroundColor: '#111' },
+              animation: 'fade',
             }}
           >
             <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen
-              name="Conversations"
-              component={ConversationsScreen}
-              options={({ navigation }) => ({
-                title: 'Conversations',
-                headerRight: () => (
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('Settings')}
-                    style={{ marginRight: 16 }}
-                  >
-                    <Text style={{ color: '#d4af37', fontSize: 22 }}>⚙</Text>
-                  </TouchableOpacity>
-                ),
-              })}
-            />
+            <Stack.Screen name="Conversations" component={ConversationsScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Chat" component={LazyChatScreen} options={{ title: 'Chat' }} />
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+            <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
           </Stack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>

@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
           where: { customerPhone: senderId, source: 'messenger' },
         })
 
+        const isNew = !conversation || conversation.status === 'CLOSED'
+
         if (!conversation) {
           conversation = await db.conversation.create({
             data: {
@@ -56,6 +58,15 @@ export async function POST(req: NextRequest) {
         })
 
         publish(conversation.id, { type: 'message:new', message, conversationId: conversation.id })
+
+        if (isNew) {
+          const { sendPushToAdmins } = await import('@/lib/push-notifications')
+          sendPushToAdmins({
+            title: 'New Messenger Message',
+            body: `Messenger ${senderId.slice(-4)} sent a message`,
+            data: { conversationId: conversation.id },
+          })
+        }
       }
 
       // Instagram DM messages
@@ -72,6 +83,8 @@ export async function POST(req: NextRequest) {
         let conversation = await db.conversation.findFirst({
           where: { customerPhone: senderId, source: 'instagram' },
         })
+
+        const isNew = !conversation || conversation.status === 'CLOSED'
 
         if (!conversation) {
           conversation = await db.conversation.create({
@@ -98,6 +111,15 @@ export async function POST(req: NextRequest) {
         })
 
         publish(conversation.id, { type: 'message:new', message, conversationId: conversation.id })
+
+        if (isNew) {
+          const { sendPushToAdmins } = await import('@/lib/push-notifications')
+          sendPushToAdmins({
+            title: 'New Instagram DM',
+            body: `Instagram ${senderId.slice(-4)} sent a message`,
+            data: { conversationId: conversation.id },
+          })
+        }
       }
     }
 

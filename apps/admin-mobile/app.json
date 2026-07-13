@@ -9,9 +9,6 @@
     "scheme": "gumusgunes-admin",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "cli": {
-      "appVersionSource": "remote"
-    },
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -28,6 +25,7 @@
         "backgroundColor": "#0a0a0a"
       },
       "permissions": [
+        "VIBRATE",
         "VIBRATE"
       ]
     },
@@ -47,7 +45,7 @@
     "updates": {
       "url": "https://u.expo.dev/66601809-ac07-42bd-8685-5e54a1dc3000",
       "enabled": true,
-      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
     },
     "extra": {
@@ -56,6 +54,9 @@
       "eas": {
         "projectId": "66601809-ac07-42bd-8685-5e54a1dc3000"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

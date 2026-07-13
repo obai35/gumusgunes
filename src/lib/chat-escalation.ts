@@ -106,4 +106,12 @@ export async function handleIncomingMessage({ from, text, name }: IncomingMessag
       data: { conversationId: conversation.id, customerName: name, customerPhone: from },
     }),
   }).catch(() => {})
+
+  // Notify admins via Push
+  const { sendPushToAdmins } = await import('@/lib/push-notifications')
+  sendPushToAdmins({
+    title: 'New WhatsApp Message',
+    body: `${name} sent a message via WhatsApp`,
+    data: { conversationId: conversation.id },
+  })
 }

@@ -1,14 +1,33 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native'
-import { GiftedChat, IMessage, Bubble } from 'react-native-gifted-chat'
+import { GiftedChat, IMessage, Bubble, InputToolbar } from 'react-native-gifted-chat'
+import { FontAwesome5 } from '@expo/vector-icons'
+import { colors, borderRadius } from '../theme'
+import Avatar from '../components/Avatar'
+import Badge from '../components/Badge'
 import { api } from '../api'
 import { getSocket } from '../socket'
+
+const sourceIcons: Record<string, string> = {
+  whatsapp: 'whatsapp',
+  messenger: 'facebook-messenger',
+  instagram: 'instagram',
+  website: 'globe',
+}
+
+const brandColors: Record<string, string> = {
+  whatsapp: '#25D366',
+  messenger: '#0084FF',
+  instagram: '#E4405F',
+  website: '#D4AF37',
+}
 
 export default function ChatScreen({ route, navigation }: any) {
   const { conversationId } = route.params
   const [messages, setMessages] = useState<IMessage[]>([])
   const [conversation, setConversation] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [isTyping, setIsTyping] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -55,7 +74,16 @@ export default function ChatScreen({ route, navigation }: any) {
     }
 
     socket.on('message:new', handleNewMessage)
-    return () => { socket.off('message:new', handleNewMessage) }
+    socket.on('conversation:typing', (data: any) => {
+      if (data.conversationId === conversationId) {
+        setIsTyping(data.isTyping)
+      }
+    })
+
+    return () => {
+      socket.off('message:new', handleNewMessage)
+      socket.off('conversation:typing')
+    }
   }, [conversationId, load])
 
   const handleClaim = async () => {
@@ -68,12 +96,16 @@ export default function ChatScreen({ route, navigation }: any) {
     }
   }
 
-  const handleClose = async () => {
-    Alert.alert('Close', 'Mark this conversation as closed?', [
+  const handleClose = () => {
+    Alert.alert('Close Conversation', 'Mark this conversation as closed?', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Close', style: 'destructive', onPress: async () => {
-        await api.closeConversation(conversationId)
-        navigation.goBack()
+        try {
+          await api.closeConversation(conversationId)
+          navigation.goBack()
+        } catch (err: any) {
+          Alert.alert('Error', err.message || 'Failed to close conversation')
+        }
       }},
     ])
   }
@@ -88,57 +120,162 @@ export default function ChatScreen({ route, navigation }: any) {
     }
   }
 
-  useEffect(() => {
-    if (conversation) {
-      navigation.setOptions({
-        title: conversation.customerName || 'Chat',
-        headerRight: () => (
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            {!conversation.assignedTo && (
-              <TouchableOpacity onPress={handleClaim} style={styles.claimBtn}>
-                <Text style={styles.claimText}>Claim</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        ),
-      })
-    }
-  }, [conversation, navigation])
+  const renderBubble = (props: any) => {
+    return (
+      <Bubble
+        {...props}
+        textStyle={{
+          right: { color: '#000' },
+          left: { color: colors.white },
+        }}
+        wrapperStyle={{
+          left: {
+            backgroundColor: colors.bubbleLeft,
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: colors.bubbleBorder,
+          },
+          right: {
+            backgroundColor: colors.gold,
+            borderRadius: 16,
+          },
+        }}
+        timeTextStyle={{
+          left: { color: colors.gray },
+          right: { color: 'rgba(0,0,0,0.6)', fontSize: 11 },
+        }}
+      />
+    )
+  }
 
-  if (loading) return <View style={styles.loading}><Text style={{ color: '#888' }}>Loading...</Text></View>
+  const renderTypingIndicator = () => {
+    if (!isTyping) return null
+    return (
+      <View style={styles.typingContainer}>
+        <View style={styles.typingDot} />
+        <View style={[styles.typingDot, styles.typingDotMiddle]} />
+        <View style={styles.typingDot} />
+        <Text style={styles.typingText}>Customer is typing...</Text>
+      </View>
+    )
+  }
+
+  if (loading) return <View style={styles.loading}><Text style={{ color: colors.grayLight }}>Loading...</Text></View>
 
   return (
-    <GiftedChat
-      messages={messages}
-      onSend={onSend}
-      user={{ _id: 'admin', name: 'You' }}
-      renderBubble={(props) => (
-        <Bubble
-          {...props}
-          textStyle={{ right: { color: '#fff' }, left: { color: '#fff' } }}
-          wrapperStyle={{
-            left: { backgroundColor: '#2a2a2a' },
-            right: { backgroundColor: '#d4af37' },
-          }}
-        />
+    <View style={styles.container}>
+      {conversation && (
+        <View style={styles.infoBar}>
+          <FontAwesome5 name={sourceIcons[conversation.source] || 'question'} size={20} color={brandColors[conversation.source] || '#888'} />
+          <Avatar name={conversation.customerName || '?'} size={36} />
+          <View style={styles.infoBody}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoName}>{conversation.customerName || 'Unknown'}</Text>
+              <View style={[styles.onlineDot, { backgroundColor: conversation.status === 'CLOSED' ? colors.gray : colors.green }]} />
+            </View>
+            <View style={styles.infoRow}>
+              <Badge status={conversation.status} />
+              {conversation.assignedAdmin?.name && (
+                <Text style={styles.assigned}>Assigned to {conversation.assignedAdmin.name}</Text>
+              )}
+            </View>
+          </View>
+        </View>
       )}
-      timeTextStyle={{ left: { color: '#888' }, right: { color: '#000' } }}
-      textInputProps={{
-        style: { color: '#fff', backgroundColor: '#1a1a1a', borderRadius: 20, paddingHorizontal: 16 },
-        placeholderTextColor: '#666',
-      }}
-      isLoadingEarlier={loading}
-    />
+
+      <GiftedChat
+        messages={messages}
+        onSend={onSend}
+        user={{ _id: 'admin', name: 'You' }}
+        renderBubble={renderBubble}
+        renderFooter={renderTypingIndicator}
+        renderInputToolbar={(props: any) => (
+          <View>
+            <View style={styles.actionBar}>
+              {(!conversation?.assignedAdmin) && (
+                <TouchableOpacity style={styles.claimBtn} onPress={handleClaim}>
+                  <Text style={styles.claimText}>Claim Conversation</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.closeBtn} onPress={handleClose}>
+                <Text style={styles.closeText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            <InputToolbar {...props} />
+          </View>
+        )}
+        textInputProps={{
+          style: {
+            color: colors.white,
+            backgroundColor: colors.inputBg,
+            borderRadius: 24,
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+            marginHorizontal: 8,
+          },
+          placeholderTextColor: colors.gray,
+        }}
+        timeTextStyle={{ left: { color: colors.gray }, right: { color: 'rgba(0,0,0,0.6)' } }}
+        isLoadingEarlier={loading}
+      />
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: '#111', justifyContent: 'center', alignItems: 'center' },
-  claimBtn: { backgroundColor: '#22c55e', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  claimText: { color: '#000', fontSize: 13, fontWeight: '600' },
-  closeBtn: { backgroundColor: '#ef4444', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  closeText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  container: { flex: 1, backgroundColor: colors.background },
+  loading: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' },
+  infoBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: colors.card,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.cardBorder,
+  },
+  infoBody: { flex: 1, marginLeft: 12 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 },
+  infoName: { color: colors.white, fontSize: 15, fontWeight: '600' },
+  onlineDot: { width: 8, height: 8, borderRadius: 4 },
+  assigned: { color: colors.grayLight, fontSize: 11 },
+  typingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 3,
+  },
+  typingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.gold,
+  },
+  typingDotMiddle: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.gold },
+  typingText: { color: colors.grayLight, fontSize: 12, marginLeft: 6 },
+  actionBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+    backgroundColor: colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: colors.cardBorder,
+  },
+  claimBtn: {
+    flex: 1,
+    backgroundColor: colors.green,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  claimText: { color: '#000', fontWeight: '600', fontSize: 14 },
+  closeBtn: {
+    backgroundColor: colors.red,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  closeText: { color: colors.white, fontWeight: '600', fontSize: 14 },
 })

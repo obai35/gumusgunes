@@ -339,6 +339,13 @@ async function handlePost(req: NextRequest) {
             data: { conversationId: convId, customerName: 'Website Visitor', customerPhone: null },
           }),
         }).catch(() => {})
+
+        const { sendPushToAdmins } = await import('@/lib/push-notifications')
+        sendPushToAdmins({
+          title: 'New Website Chat',
+          body: 'A website visitor needs assistance',
+          data: { conversationId: convId },
+        })
       }
     } catch (err) {
       console.error('Failed to persist chat:', err)
