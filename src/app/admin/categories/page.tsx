@@ -3,17 +3,15 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { useAdminAuth } from '@/lib/admin-auth-store'
-import { FolderTree, Plus, Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react'
+import { DataTable } from '@/components/admin/DataTable'
+import { PageHeader } from '@/components/admin/PageHeader'
+import { ExportButton } from '@/components/admin/ExportButton'
+import type { ColumnDef } from '@tanstack/react-table'
 
 type Category = {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  imageUrl: string | null
-  icon: string | null
-  isVisible: boolean
+  id: string; name: string; slug: string; description: string | null
+  imageUrl: string | null; icon: string | null; isVisible: boolean
   parentId: string | null
   parent: { id: string; name: string; slug: string } | null
   children: { id: string; name: string; slug: string; icon: string | null; imageUrl: string | null }[]
@@ -21,7 +19,6 @@ type Category = {
 }
 
 export default function CategoriesPage() {
-  const { user } = useAdminAuth()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -89,6 +86,17 @@ export default function CategoriesPage() {
     } catch { toast.error('Failed to delete') }
   }
 
+  async function toggleVisibility(cat: Category) {
+    const res = await fetch(`/api/admin/categories/${cat.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isVisible: !cat.isVisible }),
+    })
+    if (res.ok) {
+      setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, isVisible: !c.isVisible } : c))
+    } else toast.error('Failed to toggle visibility')
+  }
+
   function openEdit(cat: Category) {
     setName(cat.name); setSlug(cat.slug); setDescription(cat.description || '')
     setImageUrl(cat.imageUrl || ''); setIcon(cat.icon || ''); setParentId(cat.parentId || '')
@@ -97,98 +105,88 @@ export default function CategoriesPage() {
 
   const parents = categories.filter(c => !c.parentId)
 
+  const columns: ColumnDef<Category>[] = [
+    {
+      accessorKey: 'name',
+      header: 'Name',
+      cell: ({ row }) => (
+        <span className="font-semibold text-navy">
+          {row.original.icon && <span className="mr-2">{row.original.icon}</span>}
+          {row.original.name}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'slug',
+      header: 'Slug',
+      cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span>,
+    },
+    {
+      accessorKey: 'parent',
+      header: 'Parent',
+      cell: ({ row }) => <span className="text-muted-foreground">{row.original.parent?.name || '—'}</span>,
+    },
+    {
+      accessorKey: '_count.products',
+      header: 'Products',
+    },
+    {
+      accessorKey: 'isVisible',
+      header: 'Visible',
+      cell: ({ row }) => (
+        <button
+          onClick={() => toggleVisibility(row.original)}
+          className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${row.original.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+        >
+          {row.original.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          {row.original.isVisible ? 'Visible' : 'Hidden'}
+        </button>
+      ),
+    },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <button onClick={() => openEdit(row.original)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
+          <button onClick={() => handleDelete(row.original.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Categories</h1>
+      <PageHeader
+        title="Categories"
+        actions={
+          <div className="flex items-center gap-2">
+            <ExportButton
+              filename="categories-export"
+              columns={[
+                { header: 'Name', key: 'name' },
+                { header: 'Slug', key: 'slug' },
+                { header: 'Products', key: '_count.products' },
+                { header: 'Visible', key: 'isVisible' },
+              ]}
+              data={categories}
+            />
+            <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
+              <Plus className="h-4 w-4" /> New Category
+            </button>
+          </div>
+        }
+      />
 
-      <div className="flex justify-end mb-4">
-        <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-          <Plus className="h-4 w-4" /> New Category
-        </button>
-      </div>
-
-      <div className="bg-white rounded-xl border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
-              <th className="p-3 font-medium">Name</th>
-              <th className="p-3 font-medium">Slug</th>
-              <th className="p-3 font-medium">Parent</th>
-              <th className="p-3 font-medium">Products</th>
-              <th className="p-3 font-medium">Visible</th>
-              <th className="p-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parents.map(parent => (
-              <>
-                <tr key={parent.id} className="border-b border-border/50 bg-navy/5">
-                  <td className="p-3 font-semibold text-navy">{parent.icon && <span className="mr-2">{parent.icon}</span>}{parent.name}</td>
-                  <td className="p-3 text-muted-foreground font-mono text-xs">{parent.slug}</td>
-                  <td className="p-3 text-muted-foreground">—</td>
-                  <td className="p-3">{parent._count.products}</td>
-                  <td className="p-3">
-                    <button onClick={async () => {
-                      const res = await fetch(`/api/admin/categories/${parent.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ isVisible: !parent.isVisible }),
-                      })
-                      if (res.ok) {
-                        setCategories(prev => prev.map(c => c.id === parent.id ? { ...c, isVisible: !c.isVisible } : c))
-                      } else toast.error('Failed to toggle visibility')
-                    }} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${parent.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {parent.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                      {parent.isVisible ? 'Visible' : 'Hidden'}
-                    </button>
-                  </td>
-                  <td className="p-3">
-                    <div className="flex gap-2">
-                      <button onClick={() => openEdit(parent)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
-                      <button onClick={() => handleDelete(parent.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-                {categories.filter(c => c.parentId === parent.id).map(child => (
-                  <tr key={child.id} className="border-b border-border/50">
-                    <td className="p-3 pl-8 text-navy">
-                      {child.icon && <span className="mr-2">{child.icon}</span>}
-                      {child.name}
-                    </td>
-                    <td className="p-3 text-muted-foreground font-mono text-xs">{child.slug}</td>
-                    <td className="p-3 text-muted-foreground">{parent.name}</td>
-                    <td className="p-3">{child._count.products}</td>
-                    <td className="p-3">
-                      <button onClick={async () => {
-                        const res = await fetch(`/api/admin/categories/${child.id}`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ isVisible: !child.isVisible }),
-                        })
-                        if (res.ok) {
-                          setCategories(prev => prev.map(c => c.id === child.id ? { ...c, isVisible: !c.isVisible } : c))
-                        } else toast.error('Failed to toggle visibility')
-                      }} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${child.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {child.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                        {child.isVisible ? 'Visible' : 'Hidden'}
-                      </button>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
-                        <button onClick={() => openEdit(child)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
-                        <button onClick={() => handleDelete(child.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </>
-            ))}
-            {!loading && categories.length === 0 && (
-              <tr><td colSpan={6} className="p-6 text-center text-muted-foreground">No categories yet</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <DataTable
+        columns={columns}
+        data={categories}
+        keyExtractor={(c) => c.id}
+        loading={loading}
+        emptyTitle="No categories yet"
+        emptyDescription="Create your first category to organize products"
+        emptyAction={{ label: 'New Category', onClick: () => { resetForm(); setShowModal(true) } }}
+      />
 
       <AnimatePresence>
         {showModal && (
