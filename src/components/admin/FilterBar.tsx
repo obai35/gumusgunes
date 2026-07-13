@@ -1,0 +1,89 @@
+'use client'
+
+import { X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+type FilterOption = { label: string; value: string }
+
+type FilterBarProps = {
+  status?: string
+  onStatusChange?: (v: string) => void
+  statusOptions?: FilterOption[]
+  dateFrom?: string
+  dateTo?: string
+  onDateFromChange?: (v: string) => void
+  onDateToChange?: (v: string) => void
+  source?: string
+  onSourceChange?: (v: string) => void
+  sourceOptions?: FilterOption[]
+  children?: React.ReactNode
+  onClearAll?: () => void
+  hasActiveFilters?: boolean
+}
+
+export function FilterBar({
+  status, onStatusChange, statusOptions = [],
+  dateFrom, dateTo, onDateFromChange, onDateToChange,
+  source, onSourceChange, sourceOptions = [],
+  children,
+  onClearAll, hasActiveFilters = false,
+}: FilterBarProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-xl border border-gray-100">
+      {statusOptions.length > 0 && onStatusChange && (
+        <select
+          value={status || ''}
+          onChange={e => onStatusChange(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        >
+          <option value="">All Statuses</option>
+          {statusOptions.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      )}
+
+      {onDateFromChange && (
+        <input
+          type="date"
+          value={dateFrom || ''}
+          onChange={e => onDateFromChange(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          placeholder="From"
+        />
+      )}
+
+      {onDateToChange && (
+        <input
+          type="date"
+          value={dateTo || ''}
+          onChange={e => onDateToChange(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          placeholder="To"
+        />
+      )}
+
+      {sourceOptions.length > 0 && onSourceChange && (
+        <select
+          value={source || ''}
+          onChange={e => onSourceChange(e.target.value)}
+          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        >
+          <option value="">All Sources</option>
+          {sourceOptions.map(o => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      )}
+
+      {children}
+
+      {hasActiveFilters && onClearAll && (
+        <Button variant="ghost" size="sm" onClick={onClearAll} className="text-red-500 hover:text-red-700">
+          <X className="h-3 w-3 mr-1" />
+          Clear all
+        </Button>
+      )}
+    </div>
+  )
+}
