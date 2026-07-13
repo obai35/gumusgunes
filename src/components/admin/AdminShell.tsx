@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { AdminAuthGuard } from './AdminAuthGuard'
-import { Menu, X } from 'lucide-react'
+import { Menu } from 'lucide-react'
 import { PageTransition } from '@/components/ui/PageTransition'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Button } from '@/components/ui/button'
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -19,18 +21,25 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <>{children}</>
       ) : (
         <div className="flex min-h-screen bg-gray-50">
-          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          {sidebarOpen && (
-            <div className="fixed inset-0 bg-black/30 z-20 lg:hidden" onClick={() => setSidebarOpen(false)} />
-          )}
+          <div className="hidden lg:block">
+            <Sidebar />
+          </div>
+
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetContent side="left" className="p-0 w-64">
+              <Sidebar onClose={() => setSidebarOpen(false)} />
+            </SheetContent>
+          </Sheet>
+
           <main className="flex-1 p-6 overflow-auto min-w-0">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden mb-4 flex items-center gap-2 text-sm text-muted-foreground hover:text-navy"
-            >
-              <Menu className="h-5 w-5" />
-              Menu
-            </button>
+            <div className="lg:hidden mb-4">
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Menu className="h-4 w-4" />
+                  Menu
+                </Button>
+              </SheetTrigger>
+            </div>
             <AnimatePresence mode="wait">
               <PageTransition key={pathname}>
                 {children}
