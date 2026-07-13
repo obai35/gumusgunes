@@ -63,7 +63,8 @@ export function withAdmin(
       if (requiredPermission && !admin.isSuperAdmin && !admin.permissions.includes(requiredPermission)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
-      return await handler(req, { ...ctx, admin })
+      const params = ctx.params ? await ctx.params : ctx.params
+      return await handler(req, { params, admin })
     } catch (err) {
       console.error('[withAdmin] Unhandled error:', err)
       const message = err instanceof Error ? err.message : 'Internal server error'
