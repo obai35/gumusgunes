@@ -7,7 +7,7 @@ const csp = `
   font-src 'self' https://fonts.gstatic.com;
   img-src 'self' data: blob: https://*.googleusercontent.com https://*.stripe.com;
   connect-src 'self' https://*.stripe.com https://*.paypal.com https://*.upstash.io;
-  frame-src https://*.stripe.com https://*.paypal.com;
+  frame-src 'self' https://*.stripe.com https://*.paypal.com;
 `.replace(/\s{2,}/g, ' ').trim()
 
 const nextConfig: NextConfig = {
