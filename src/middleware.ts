@@ -22,17 +22,6 @@ function isValidOrigin(origin: string | null, requestOrigin?: string): boolean {
   )
 }
 
-function generateToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  const array = new Uint8Array(32)
-  crypto.getRandomValues(array)
-  for (let i = 0; i < 32; i++) {
-    result += chars[array[i] % chars.length]
-  }
-  return result
-}
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const start = Date.now()
@@ -70,28 +59,11 @@ export function middleware(request: NextRequest) {
     }
 
     if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
-      if (!request.cookies.has('csrf-token')) {
-        response.cookies.set('csrf-token', generateToken(), {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-        })
-      }
       return response
     }
 
     const referer = request.headers.get('referer')
     const ownOrigin = request.nextUrl.origin
-
-    if (!origin && !referer) {
-      return NextResponse.next()
-    }
-
-    if (!origin && !referer) {
-      console.warn('[CSRF] No origin or referer for', request.method, pathname)
-      return NextResponse.next()
-    }
 
     if (origin && !isValidOrigin(origin, ownOrigin)) {
       console.warn('[CSRF] Invalid origin:', origin, 'for', request.method, pathname)
@@ -109,13 +81,6 @@ export function middleware(request: NextRequest) {
         console.warn('[CSRF] Invalid referer URL:', referer, 'for', request.method, pathname)
         return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
       }
-    }
-
-    const csrfCookie = request.cookies.get('csrf-token')?.value
-    const csrfHeader = request.headers.get('x-csrf-token')
-    if (csrfCookie && csrfHeader !== csrfCookie) {
-      console.warn('[CSRF] Token mismatch for', request.method, pathname)
-      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 })
     }
 
     const duration = Date.now() - start
