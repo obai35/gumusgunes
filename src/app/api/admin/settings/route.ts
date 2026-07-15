@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { sanitize } from '@/lib/sanitize'
 import { withAdmin } from '@/lib/admin-permissions'
 
 const MAX_VALUE_LENGTH = 50000
@@ -77,8 +78,8 @@ export const PUT = withAdmin(async (req: NextRequest) => {
       }
       await db.siteSetting.upsert({
         where: { key },
-        update: { value },
-        create: { key, value },
+        update: { value: sanitize(value) },
+        create: { key, value: sanitize(value) },
       })
     }
     return NextResponse.json({ ok: true })

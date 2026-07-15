@@ -16,7 +16,7 @@ const handler = async (request: NextRequest) => {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const admin = await db.admin.findUnique({ where: { email: payload.email } })
+    const admin = await db.admin.findUnique({ where: { id: payload.sub } })
     if (!admin) {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withRateLimit } from '@/lib/rate-limit'
 import { hashPassword, signToken } from '@/lib/customer-auth'
+import { sanitize } from '@/lib/sanitize'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 
 const RegisterSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1).max(100).transform(sanitize),
   email: z.string().email(),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')

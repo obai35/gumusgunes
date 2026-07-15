@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withRateLimit } from '@/lib/rate-limit'
+import { sanitize } from '@/lib/sanitize'
 import { z } from 'zod'
 import sanitizeHtml from 'sanitize-html'
 
@@ -27,6 +28,7 @@ async function handlePost(req: NextRequest) {
 
     const sanitizedTitle = sanitizeHtml(rest.title, { allowedTags: [], allowedAttributes: {} })
     const sanitizedComment = sanitizeHtml(rest.comment, { allowedTags: [], allowedAttributes: {} })
+    const sanitizedName = sanitize(rest.authorName)
 
     const product = await db.product.findUnique({ where: { id: productId } })
     if (!product) {
@@ -34,7 +36,7 @@ async function handlePost(req: NextRequest) {
     }
 
     const review = await db.review.create({
-      data: { ...rest, title: sanitizedTitle, comment: sanitizedComment, productId, authorEmail: rest.authorEmail || null },
+      data: { ...rest, authorName: sanitizedName, title: sanitizedTitle, comment: sanitizedComment, productId, authorEmail: rest.authorEmail || null },
     })
 
     // Recalculate rating + reviewCount

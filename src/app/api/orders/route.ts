@@ -5,6 +5,7 @@ import { verifyToken } from '@/lib/customer-auth'
 import { getStripe } from '@/lib/stripe'
 import { encrypt } from '@/lib/encryption'
 import { addAlsoBought } from '@/lib/product-graph'
+import { sanitize } from '@/lib/sanitize'
 import { z } from 'zod'
 
 const OrderItemSchema = z.object({
@@ -13,15 +14,17 @@ const OrderItemSchema = z.object({
   price: z.number(),
 })
 
+const s = (min: number, max: number) => z.string().min(min).max(max).transform(sanitize)
+
 const OrderSchema = z.object({
   email: z.string().email(),
-  fullName: z.string().min(2).max(120),
+  fullName: s(2, 120),
   phone: z.string().optional().or(z.literal('')),
-  address: z.string().min(5).max(300),
-  city: z.string().min(1).max(120),
-  postalCode: z.string().min(1).max(20),
-  country: z.string().min(1).max(120),
-  notes: z.string().max(1000).optional().or(z.literal('')),
+  address: s(5, 300),
+  city: s(1, 120),
+  postalCode: s(1, 20),
+  country: s(1, 120),
+  notes: z.string().max(1000).optional().or(z.literal('')).transform(v => v ? sanitize(v) : v),
   paymentMethod: z.enum(['card', 'paypal', 'transfer', 'cod', 'instapay', 'vodafone-cash', 'orange-cash', 'etisalat-wallet', 'fawry']).default('card'),
   items: z.array(OrderItemSchema).min(1),
   subtotal: z.number(),

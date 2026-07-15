@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
 
-  const admin = await db.admin.findUnique({ where: { id: payload.adminId }, include: { roleRel: true } })
+  const admin = await db.admin.findUnique({ where: { id: payload.sub }, include: { roleRel: true } })
   if (!admin) {
     return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
   }

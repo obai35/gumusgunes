@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth-api'
+import { sanitize } from '@/lib/sanitize'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 
 const ProfileSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(100).transform(sanitize).optional(),
   phone: z.string().max(20).optional(),
   dateOfBirth: z.string().optional(),
   gender: z.enum(['MALE', 'FEMALE']).optional(),

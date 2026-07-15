@@ -35,18 +35,23 @@ export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | n
   if (!token) return null
   const payload = verifyAdminToken(token)
   if (!payload) return null
-  const cached = adminCache.get(payload.adminId)
+  const cached = adminCache.get(payload.sub)
   if (cached && cached.expiresAt > Date.now()) return cached.admin
   const admin = await db.admin.findUnique({
-    where: { id: payload.adminId },
+    where: { id: payload.sub },
     include: { roleRel: true },
   })
   if (!admin) return null
+
+  if (admin.tokenVersion !== undefined && payload.tokenVersion !== undefined && payload.tokenVersion < admin.tokenVersion) {
+    return null
+  }
+
   const role = admin.roleRel?.name || admin.role
   const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) as string[] : []
   const isSuperAdmin = role === 'superadmin' || role === 'super_admin' || role === 'admin'
   const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin }
-  adminCache.set(payload.adminId, { admin: result, expiresAt: Date.now() + CACHE_TTL })
+  adminCache.set(payload.sub, { admin: result, expiresAt: Date.now() + CACHE_TTL })
   return result
 }
 

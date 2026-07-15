@@ -5,6 +5,15 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
   .split(',')
   .map(o => o.trim())
 
+const CSRF_EXEMPT = [
+  '/api/csp-report',
+  '/api/payments/stripe/webhook',
+  '/api/whatsapp/webhook',
+  '/api/integrations/meta/webhook',
+]
+
+const MAX_BODY_BYTES = 500_000
+
 function isValidOrigin(origin: string | null, requestOrigin?: string): boolean {
   if (!origin) return false
   if (requestOrigin && origin === requestOrigin) return true
@@ -13,8 +22,20 @@ function isValidOrigin(origin: string | null, requestOrigin?: string): boolean {
   )
 }
 
+function generateToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
+  const array = new Uint8Array(32)
+  crypto.getRandomValues(array)
+  for (let i = 0; i < 32; i++) {
+    result += chars[array[i] % chars.length]
+  }
+  return result
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const start = Date.now()
 
   if (pathname.startsWith('/preview')) {
     const response = NextResponse.next()
@@ -22,16 +43,44 @@ export function middleware(request: NextRequest) {
     return response
   }
 
-  if (pathname === '/api/csp-report') {
+  if (CSRF_EXEMPT.some(p => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next()
   }
 
   if (pathname.startsWith('/api')) {
-    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
-      return NextResponse.next()
+    if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+      const contentLength = request.headers.get('content-length')
+      if (contentLength && parseInt(contentLength) > MAX_BODY_BYTES) {
+        return NextResponse.json({ error: 'Request too large' }, { status: 413 })
+      }
     }
 
+    const response = NextResponse.next()
     const origin = request.headers.get('origin')
+
+    if (origin && isValidOrigin(origin, request.nextUrl.origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin)
+      response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS')
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-csrf-token')
+      response.headers.set('Access-Control-Allow-Credentials', 'true')
+    }
+
+    if (request.method === 'OPTIONS') {
+      return response
+    }
+
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+      if (!request.cookies.has('csrf-token')) {
+        response.cookies.set('csrf-token', generateToken(), {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          path: '/',
+        })
+      }
+      return response
+    }
+
     const referer = request.headers.get('referer')
     const ownOrigin = request.nextUrl.origin
 
@@ -60,6 +109,18 @@ export function middleware(request: NextRequest) {
         console.warn('[CSRF] Invalid referer URL:', referer, 'for', request.method, pathname)
         return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
       }
+    }
+
+    const csrfCookie = request.cookies.get('csrf-token')?.value
+    const csrfHeader = request.headers.get('x-csrf-token')
+    if (csrfCookie && csrfHeader !== csrfCookie) {
+      console.warn('[CSRF] Token mismatch for', request.method, pathname)
+      return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 })
+    }
+
+    const duration = Date.now() - start
+    if (duration > 100) {
+      console.log(`[API] ${request.method} ${pathname} ${duration}ms`)
     }
   }
 

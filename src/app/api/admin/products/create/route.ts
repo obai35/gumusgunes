@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withAdmin } from '@/lib/admin-permissions'
+import { sanitize } from '@/lib/sanitize'
 import { db } from '@/lib/db'
 
 const CreateProductSchema = z.object({
-  name: z.string().min(1).max(200),
-  description: z.string().min(1),
+  name: z.string().min(1).max(200).transform(sanitize),
+  description: z.string().min(1).transform(sanitize),
   price: z.number().positive('Price must be greater than 0'),
   stock: z.number().int().nonnegative('Stock cannot be negative'),
   categoryId: z.string().uuid(),

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withRateLimit } from '@/lib/rate-limit'
+import { sanitize } from '@/lib/sanitize'
 import { z } from 'zod'
 
 const ChatSchema = z.object({
-  message: z.string().min(1, 'Message is required').max(2000),
+  message: z.string().min(1, 'Message is required').max(2000).transform(sanitize),
   conversationId: z.string().nullable().optional(),
 })
 
