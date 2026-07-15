@@ -44,6 +44,10 @@ model Product {
   fromRelations  ProductRelation[]  @relation("FromProduct")
   toRelations    ProductRelation[]  @relation("ToProduct")
   embedding      ProductEmbedding?
+  stockLevels    StockLevel[]
+  purchaseOrderItems PurchaseOrderItem[]
+  returnRequests     ReturnRequest[]
+  qcChecks           QC_Check[]
 
   @@index([categoryId, isActive])
   @@index([isActive, isFeatured])
@@ -165,6 +169,7 @@ model Order {
   shift          Shift?     @relation(fields: [shiftId], references: [id])
   items          OrderItem[]
   returns        Return[]
+  returnRequests ReturnRequest[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -324,10 +329,67 @@ model User {
   gender      Gender?
   totpSecret  String?
   totpEnabled Boolean     @default(false)
+  loyaltyPoints Int      @default(0)
+  loyaltyTierId String?
+  loyaltyTier   LoyaltyTier? @relation(fields: [loyaltyTierId], references: [id])
   createdAt   DateTime    @default(now())
   addresses   Address[]
   savedCards  SavedCard[]
   orders        Order[]
+  notes         CustomerNote[]
+  activityLogs  CustomerActivityLog[]
+  emailLogs     EmailLog[]
+}
+
+model CustomerSegment {
+  id        String   @id @default(cuid())
+  name      String
+  rules     Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LoyaltyTier {
+  id        String   @id @default(cuid())
+  name      String
+  minPoints Int
+  benefits  Json
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+}
+
+model CustomerNote {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adminId   String
+  note      String
+  createdAt DateTime @default(now())
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  subject   String
+  status    String   @default("sent")
+  sentAt    DateTime @default(now())
+}
+
+model CustomerActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model Address {
@@ -477,6 +539,7 @@ model Supplier {
   notes     String?
   createdAt DateTime  @default(now())
   expenses  Expense[]
+  purchaseOrders PurchaseOrder[]
 }
 
 model Expense {
@@ -629,6 +692,51 @@ model ActivityLog {
   @@index([adminId, createdAt])
 }
 
+model Webhook {
+  id              String             @id @default(cuid())
+  name            String
+  url             String
+  events          String             @default("[]")
+  isActive        Boolean            @default(true)
+  secret          String?
+  lastDeliveryAt  DateTime?
+  createdAt       DateTime           @default(now())
+  deliveries      WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id         String   @id @default(cuid())
+  webhookId  String
+  webhook    Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  event      String
+  status     String   @default("pending")
+  response   String?
+  duration   Int?
+  createdAt  DateTime @default(now())
+
+  @@index([webhookId, createdAt])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique
+  permissions String   @default("[]")
+  isActive    Boolean  @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  enabled     Boolean  @default(false)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model ResetToken {
   id        String    @id @default(uuid())
   email     String
@@ -701,6 +809,19 @@ model Account {
   journalLines JournalLine[]
 }
 
+model Budget {
+  id          String   @id @default(cuid())
+  accountCode String
+  month       Int      // 1-12
+  year        Int
+  amount      Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([accountCode, month, year])
+  @@index([year, month])
+}
+
 model JournalEntry {
   id          String        @id @default(cuid())
   date        DateTime      @default(now())
@@ -733,4 +854,312 @@ model OtpVerification {
   createdAt DateTime @default(now())
 
   @@index([email, code, type])
+}
+
+// ── Marketing & Sales ──
+
+model AbandonedCart {
+  id        String   @id @default(cuid())
+  userId    String?
+  email     String
+  name      String?
+  items     String   // JSON array
+  total     Float
+  reminderSentAt DateTime?
+  remindedCount Int      @default(0)
+  convertedOrderId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([email])
+  @@index([createdAt])
+}
+
+model EmailCampaign {
+  id          String    @id @default(cuid())
+  name        String
+  subject     String
+  content     String
+  segment     String    @default("all")
+  segmentIds  String?
+  status      String    @default("draft")
+  sentCount   Int       @default(0)
+  totalCount  Int       @default(0)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([status])
+}
+
+model CustomerPushToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  platform  String   @default("android")
+  userId    String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId])
+}
+
+model PushCampaign {
+  id          String    @id @default(cuid())
+  name        String
+  title       String
+  body        String
+  data        String?
+  segment     String    @default("all")
+  status      String    @default("draft")
+  sentCount   Int       @default(0)
+  totalCount  Int       @default(0)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([status])
+}
+
+model Referral {
+  id            String    @id @default(cuid())
+  referrerId    String
+  referredEmail String?
+  referredId    String?
+  code          String
+  rewardType    String    @default("discount")
+  rewardValue   Float     @default(0)
+  status        String    @default("pending")
+  createdAt     DateTime  @default(now())
+  rewardedAt    DateTime?
+  expiresAt     DateTime?
+  @@index([referrerId])
+  @@index([code])
+}
+
+model ReferralConfig {
+  id            String @id @default(cuid())
+  rewardType    String @default("discount")
+  rewardValue   Float  @default(10)
+  minOrder      Float  @default(0)
+  maxPerUser    Int    @default(10)
+  discountDays  Int    @default(30)
+  isActive      Boolean @default(true)
+  updatedAt     DateTime @updatedAt
+}
+
+model GiftCard {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  initialBalance Float  @default(0)
+  balance     Float     @default(0)
+  recipientEmail String?
+  recipientName String?
+  senderName  String?
+  message     String?
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  issuedAt    DateTime  @default(now())
+  redeemedAt  DateTime?
+  orderId     String?
+}
+
+model SaleCampaign {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  discountType  String  @default("PERCENTAGE")
+  discountValue Float
+  appliesTo   String    @default("all")
+  targetValue String?
+  minOrder    Float?
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean   @default(true)
+  bannerImage String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  @@index([isActive, startDate, endDate])
+}
+
+// ── Content Management ──
+
+model BlogPost {
+  id            String    @id @default(cuid())
+  title         String
+  slug          String    @unique
+  content       String
+  excerpt       String?
+  featuredImage String?
+  category      String?
+  status        String    @default("draft") // draft | published
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([slug])
+}
+
+model FaqEntry {
+  id        String  @id @default(cuid())
+  question  String
+  answer    String
+  category  String  @default("General")
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Banner {
+  id          String    @id @default(cuid())
+  title       String?
+  imageUrl    String
+  linkUrl     String?
+  textOverlay String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([startDate, endDate])
+}
+
+model StaticPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  content   String
+  status    String   @default("published") // draft | published
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug, status])
+}
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stockLevels StockLevel[]
+}
+
+model StockLevel {
+  id         String   @id @default(cuid())
+  warehouseId String
+  warehouse  Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity   Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([warehouseId, productId])
+  @@index([productId])
+}
+
+model PurchaseOrder {
+  id        String   @id @default(cuid())
+  poNumber  String   @unique
+  supplierId String
+  supplier  Supplier @relation(fields: [supplierId], references: [id])
+  notes     String?
+  status    String   @default("pending")
+  total     Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  items     PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id        String         @id @default(cuid())
+  poId      String
+  po        PurchaseOrder  @relation(fields: [poId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product        @relation(fields: [productId], references: [id])
+  quantity  Int
+  received  Int            @default(0)
+  unitCost  Float
+}
+
+model ReturnRequest {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  reason      String
+  status      String   @default("pending")
+  rmaNumber   String   @unique
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model QC_Template {
+  id        String   @id @default(cuid())
+  name      String
+  items     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  checks    QC_Check[]
+}
+
+model Currency {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  name         String
+  symbol       String
+  exchangeRate Float
+  isDefault    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Translation {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  en        String
+  ar        String
+  group     String   @default("general")
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model TaxRate {
+  id        String   @id @default(cuid())
+  name      String
+  rate      Float
+  country   String   @default("EG")
+  region    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model QC_Check {
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id])
+  templateId String?
+  template   QC_Template? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  passed     Boolean
+  notes      String?
+  checkedBy  String
+  createdAt  DateTime    @default(now())
 }

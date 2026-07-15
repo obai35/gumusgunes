@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/ui/skeleton'
+import { Skeleton, SkeletonTable } from '@/components/admin/Skeleton'
 
 export default function Loading() {
   return (
@@ -9,7 +9,7 @@ export default function Loading() {
         <Skeleton className="h-9 w-24 rounded-lg" />
         <Skeleton className="h-9 w-24 rounded-lg" />
       </div>
-      <Skeleton className="h-64 w-full rounded-xl" />
+      <SkeletonTable rows={5} cols={5} />
     </div>
   )
 }

@@ -204,6 +204,7 @@ export default function AdminOrders() {
         keyExtractor={(o) => o.id}
         loading={loading}
         selectable
+        responsiveCards
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         emptyTitle="No orders found"

@@ -9,6 +9,7 @@ import { NavigationProgress } from "@/components/ui/NavigationProgress";
 import { PageViewWrapper } from "@/components/ui/PageViewWrapper";
 import { StorefrontEffects } from "@/components/store/StorefrontEffects";
 import { NavigationLoadingProvider } from "@/components/store/NavigationLoadingProvider"
+import { CurrencyInit } from "@/components/store/CurrencyInit"
 
 
 const geistSans = Geist({
@@ -119,6 +120,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased bg-background text-foreground`}
       >
+        <CurrencyInit />
         <StorefrontEffects />
         <NavigationProgress />
         <AuthHydrator />

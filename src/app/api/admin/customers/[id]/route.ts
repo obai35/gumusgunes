@@ -8,6 +8,8 @@ export const GET = withAdmin(async (req: NextRequest, { params }: { params: { id
       where: { id: params.id },
       select: {
         id: true, name: true, email: true, phone: true, createdAt: true,
+        loyaltyPoints: true,
+        loyaltyTier: { select: { id: true, name: true, benefits: true } },
         orders: {
           orderBy: { createdAt: 'desc' },
           take: 50,

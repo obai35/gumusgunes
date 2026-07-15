@@ -53,7 +53,7 @@ export default function ShipmentsTab() {
       {filter === 'all' && (
         <div className="bg-white rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-border bg-gray-50/50"><th className="text-left px-4 py-3 text-muted-foreground font-medium">Order</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Customer</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Method</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Tracking</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Status</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Shipped</th></tr></thead>
+            <thead><tr className="border-b border-border bg-gray-50/50"><th className="text-left px-4 py-3 text-muted-foreground font-medium">Order</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Customer</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Method</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Tracking</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Status</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Shipped</th><th className="text-left px-4 py-3 text-muted-foreground font-medium">Label</th></tr></thead>
             <tbody>
               {Array.isArray(data.shipments) && data.shipments.map(s => (
                 <tr key={s.id} className="border-b border-border/50">
@@ -63,6 +63,9 @@ export default function ShipmentsTab() {
                   <td className="px-4 py-3 font-mono text-xs text-navy">{s.trackingNumber}</td>
                   <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs font-medium ${s.status === 'delivered' ? 'bg-green-50 text-green-700' : s.status === 'shipped' ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}>{s.status}</span></td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{s.shippedAt ? new Date(s.shippedAt).toLocaleDateString() : '—'}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => window.open(`/api/admin/shipping/shipments/${s.id}/label`, '_blank')} className="text-xs text-gold hover:text-gold/80 font-medium">Print Label</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

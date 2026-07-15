@@ -1,13 +1,9 @@
 'use client'
 
-import { useCurrency } from '@/lib/store'
-import { formatPrice as formatPriceBase } from '@/lib/format'
+import { useCurrencyStore } from '@/lib/currency-store'
+import { formatConvertedPrice } from '@/lib/currency-store'
 
-/**
- * Returns a formatPrice function bound to the user's selected currency.
- * SSR-safe: returns EGP formatting during server render, updates after hydration.
- */
 export function useFormatPrice() {
-  const { currency } = useCurrency()
-  return (value: number) => formatPriceBase(value, currency)
+  const { selected } = useCurrencyStore()
+  return (value: number) => formatConvertedPrice(value, selected)
 }

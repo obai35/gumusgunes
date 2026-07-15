@@ -3,12 +3,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, CheckCircle, DollarSign, Filter, X, Building2, CalendarDays, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2, RefreshCw } from 'lucide-react'
+import { Search, CheckCircle, DollarSign, Filter, X, Building2, Download, TrendingUp, TrendingDown, Receipt, Wallet, Banknote, CreditCard, ArrowUpRight, ArrowDownRight, Plus, Trash2 } from 'lucide-react'
 import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
 import JournalTab from './JournalTab'
 import AccountsTab from './AccountsTab'
 import TrialBalanceTab from './TrialBalanceTab'
+import ProfitLossTab from './ProfitLossTab'
+import BalanceSheetTab from './BalanceSheetTab'
+import AuditTab from './AuditTab'
+import AgingTab from './AgingTab'
+import TaxTab from './TaxTab'
+import BudgetTab from './BudgetTab'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
@@ -36,65 +43,25 @@ function exportCSVRows(rows: Record<string, any>[], filename: string) {
   URL.revokeObjectURL(url)
 }
 
+const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4', '#ec4899']
+
 function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
   if (!Array.isArray(data) || data.length === 0) return null
 
-  const max = Math.max(...data.map(d => d.revenue), 1)
   const isMonthly = data.length > 0 && data[0].date.length <= 7
-  const barWidth = 32
-  const gap = 6
-  const padding = { top: 10, bottom: 24, left: 0, right: 0 }
-  const chartH = 180
-  const svgW = Math.max(data.length * (barWidth + gap) + padding.left + padding.right, 400)
 
   return (
-    <div className="bg-white rounded-xl border border-border p-5 overflow-x-auto">
-      <h3 className="text-sm font-semibold text-navy mb-2">Revenue Trend</h3>
-      <svg width={svgW} height={chartH + padding.top + padding.bottom} className="overflow-visible">
-        {data.map((d, i) => {
-          const barH = (d.revenue / max) * chartH
-          const x = padding.left + i * (barWidth + gap)
-          const y = padding.top + chartH - barH
-          return (
-            <g key={d.date} className="group">
-              <rect
-                x={x} y={y} width={barWidth} height={barH}
-                className="fill-navy/60 hover:fill-navy transition-colors cursor-pointer" rx={3}
-              >
-                <title>{formatCurrency(d.revenue)}</title>
-              </rect>
-              <text
-                x={x + barWidth / 2} y={padding.top + chartH + 16}
-                textAnchor="middle" className="fill-muted-foreground" fontSize={9}
-              >
-                {isMonthly ? d.date.slice(5) : d.date.slice(5)}
-              </text>
-              <rect
-                x={x} y={y} width={barWidth} height={barH}
-                fill="transparent" className="cursor-pointer"
-                onMouseEnter={(e) => {
-                  const t = e.currentTarget.closest('g')?.querySelector('foreignObject')
-                  if (t) t.style.display = 'block'
-                }}
-                onMouseLeave={(e) => {
-                  const t = e.currentTarget.closest('g')?.querySelector('foreignObject')
-                  if (t) t.style.display = 'none'
-                }}
-              />
-              <foreignObject
-                x={Math.max(0, x - 20)} y={Math.max(0, y - 32)}
-                width="80" height="28"
-                style={{ display: 'none' }}
-                className="pointer-events-none"
-              >
-                <div className="bg-navy text-white text-xs px-2 py-1 rounded text-center shadow-lg">
-                  {formatCurrency(d.revenue)}
-                </div>
-              </foreignObject>
-            </g>
-          )
-        })}
-      </svg>
+    <div className="bg-white rounded-xl border border-border p-5">
+      <h3 className="text-sm font-semibold text-navy mb-4">Revenue Trend</h3>
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => isMonthly ? v.slice(5) : v.slice(5)} />
+          <YAxis tick={{ fontSize: 11 }} />
+          <Tooltip formatter={(v: number) => [formatCurrency(v), 'Revenue']} />
+          <Line type="monotone" dataKey="revenue" stroke="#1e3a5f" strokeWidth={2} dot={{ r: 3, fill: '#1e3a5f' }} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -182,7 +149,7 @@ export default function AccountingPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(['overview', 'journal', 'accounts', 'trial-balance', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
+        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'aging', 'tax', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -200,6 +167,12 @@ export default function AccountingPage() {
         {tab === 'journal' && <JournalTab />}
         {tab === 'accounts' && <AccountsTab />}
         {tab === 'trial-balance' && <TrialBalanceTab />}
+        {tab === 'pl' && <ProfitLossTab />}
+        {tab === 'balance-sheet' && <BalanceSheetTab />}
+        {tab === 'aging' && <AgingTab />}
+        {tab === 'tax' && <TaxTab />}
+        {tab === 'budget' && <BudgetTab />}
+        {tab === 'audit' && <AuditTab />}
         {tab === 'orders' && <OrdersTab />}
         {tab === 'branches' && <BranchesTab />}
         {tab === 'expenses' && <ExpensesTab refreshKey={refreshKey} />}
@@ -237,9 +210,6 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
       </div>
     )
   }
-
-  const maxPayment = Math.max(...Object.values(data.paymentBreakdown || { cash: 0 }) as number[], 1)
-  const maxBranch = Math.max(...Object.values(data.branchRevenue || {}) as number[], 1)
 
   function statCompare(current: number, compareKey: string) {
     if (!compareData) return null
@@ -325,6 +295,32 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
         <StatCard label="Expenses" value={formatCurrency(data.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
       </div>
 
+      {data.budgetComparison && data.budgetComparison.budgeted > 0 && (
+        <div className="bg-white rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">Budget vs Actual</p>
+            <span className={`text-xs font-medium ${data.budgetComparison.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {data.budgetComparison.variance >= 0 ? '+' : ''}{data.budgetComparison.variancePct}%
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-muted-foreground">Actual</span>
+                <span className="font-medium text-navy">{formatCurrency(data.budgetComparison.actual)}</span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((data.budgetComparison.actual / data.budgetComparison.budgeted) * 100, 100)}%` }} />
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Budget</p>
+              <p className="text-sm font-medium text-navy">{formatCurrency(data.budgetComparison.budgeted)}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <RevenueChart data={data.dailyRevenue || []} />
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -333,23 +329,41 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
             <CreditCard className="h-4 w-4 text-muted-foreground" />
             Payment Breakdown
           </h3>
-          <div className="space-y-3">
-            {[
-              { key: 'cash', label: 'Cash', color: 'bg-green-500' },
-              { key: 'card', label: 'Card', color: 'bg-blue-500' },
-              { key: 'split', label: 'Split', color: 'bg-purple-500' },
-              { key: 'bank_transfer', label: 'Bank Transfer', color: 'bg-amber-500' },
-              { key: 'instapay', label: 'InstaPay', color: 'bg-cyan-500' },
-              { key: 'wallet', label: 'Wallet', color: 'bg-pink-500' },
-            ].map(({ key, label, color }) => (
-              <div key={key}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">{label}</span>
+          <div className="flex items-center gap-4">
+            <ResponsiveContainer width={140} height={140}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Cash', value: data.paymentBreakdown?.cash || 0 },
+                    { name: 'Card', value: data.paymentBreakdown?.card || 0 },
+                    { name: 'Split', value: data.paymentBreakdown?.split || 0 },
+                    { name: 'Bank Transfer', value: data.paymentBreakdown?.bank_transfer || 0 },
+                    { name: 'InstaPay', value: data.paymentBreakdown?.instapay || 0 },
+                    { name: 'Wallet', value: data.paymentBreakdown?.wallet || 0 },
+                  ].filter(d => d.value > 0)}
+                  cx="50%" cy="50%" innerRadius={35} outerRadius={60}
+                  dataKey="value"
+                >
+                  {CHART_COLORS.map((c, i) => <Cell key={i} fill={c} />)}
+                </Pie>
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-1.5 flex-1">
+              {[
+                { key: 'cash', label: 'Cash', color: '#10b981' },
+                { key: 'card', label: 'Card', color: '#3b82f6' },
+                { key: 'split', label: 'Split', color: '#8b5cf6' },
+                { key: 'bank_transfer', label: 'Bank Transfer', color: '#f59e0b' },
+                { key: 'instapay', label: 'InstaPay', color: '#06b6d4' },
+                { key: 'wallet', label: 'Wallet', color: '#ec4899' },
+              ].map(({ key, label, color }) => (
+                <div key={key} className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />{label}</span>
                   <span className="font-medium text-navy">{formatCurrency(data.paymentBreakdown?.[key] || 0)}</span>
                 </div>
-                <MiniBar value={data.paymentBreakdown?.[key] || 0} max={maxPayment} color={color} />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
@@ -358,21 +372,19 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
             <Building2 className="h-4 w-4 text-muted-foreground" />
             Branch Revenue
           </h3>
-          <div className="space-y-3">
-            {Object.entries(data.branchRevenue || {}).length === 0 ? (
-              <p className="text-sm text-muted-foreground">No data for this period</p>
-            ) : (
-              Object.entries(data.branchRevenue || {}).map(([name, amount]) => (
-                <div key={name}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-muted-foreground">{name}</span>
-                    <span className="font-medium text-navy">{formatCurrency(amount as number)}</span>
-                  </div>
-                  <MiniBar value={amount as number} max={maxBranch} color="bg-navy" />
-                </div>
-              ))
-            )}
-          </div>
+          {Object.entries(data.branchRevenue || {}).length === 0 ? (
+            <p className="text-sm text-muted-foreground">No data for this period</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={Object.entries(data.branchRevenue || {}).map(([name, amount]) => ({ name, revenue: amount }))}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                <Bar dataKey="revenue" fill="#1e3a5f" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 

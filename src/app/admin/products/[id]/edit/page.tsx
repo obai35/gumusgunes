@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { ProductForm } from '../../ProductForm'
 import StockHistory from '../StockHistory'
+import { BarcodeGenerator } from '../BarcodeGenerator'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,7 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
         }}
       />
       <StockHistory productId={product.id} />
+      <BarcodeGenerator productId={product.id} sku={product.sku} />
     </div>
   )
 }

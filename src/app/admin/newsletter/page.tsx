@@ -182,6 +182,7 @@ export default function AdminNewsletter() {
         columns={columns}
         data={subscribers}
         loading={loading}
+        responsiveCards
         keyExtractor={item => item.id}
         emptyTitle="No subscribers found"
         emptyDescription="No newsletter subscribers match your search."

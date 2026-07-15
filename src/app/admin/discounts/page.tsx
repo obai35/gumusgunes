@@ -108,6 +108,7 @@ export default function AdminDiscounts() {
         data={discounts}
         keyExtractor={(d) => d.id}
         loading={loading}
+        responsiveCards
         emptyTitle="No discounts yet"
         emptyDescription="Create your first discount code"
         emptyAction={{ label: 'Create Discount', onClick: () => window.location.href = '/admin/discounts/new' }}

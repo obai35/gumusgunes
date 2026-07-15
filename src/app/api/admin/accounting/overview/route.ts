@@ -76,7 +76,7 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
     }),
   ])
 
-  const orderShiftIds = [...new Set(orders.map(o => o.shiftId).filter(Boolean))]
+  const orderShiftIds = [...new Set(orders.map(o => o.shiftId).filter(Boolean))] as string[]
   const shifts = orderShiftIds.length > 0
     ? await db.shift.findMany({
         where: { id: { in: orderShiftIds } },
@@ -193,6 +193,42 @@ export const GET = withAdmin(async (req: NextRequest) => {
       statusCounts,
       avgOrderValue: orders.length > 0 ? totalRevenue / orders.length : 0,
       dailyRevenue,
+    }
+
+    // Budget vs Actual
+    const budgetYear = start.getFullYear()
+    const budgetMonth = start.getMonth() + 1
+    const budgets = await db.budget.findMany({ where: { year: budgetYear, month: budgetMonth } })
+    let totalBudgeted = 0
+    let totalActual = 0
+    if (budgets.length > 0) {
+      const accountCodes = budgets.map(b => b.accountCode)
+      const budgetAccounts = await db.account.findMany({ where: { code: { in: accountCodes } }, select: { id: true, code: true, type: true } })
+      const accountByCode = new Map(budgetAccounts.map(a => [a.code, a]))
+      totalBudgeted = budgets.reduce((s, b) => s + b.amount, 0)
+
+      for (const b of budgets) {
+        const acc = accountByCode.get(b.accountCode)
+        if (!acc) continue
+        const lines = await db.journalLine.findMany({
+          where: {
+            accountId: acc.id,
+            entry: { date: { gte: start, lte: end } },
+          },
+          select: { debit: true, credit: true },
+        })
+        const debit = lines.reduce((s, l) => s + l.debit, 0)
+        const credit = lines.reduce((s, l) => s + l.credit, 0)
+        if (acc.type === 'expense') totalActual += debit - credit
+        else totalActual += credit - debit
+      }
+    }
+
+    result.budgetComparison = {
+      budgeted: totalBudgeted,
+      actual: totalActual,
+      variance: totalActual - totalBudgeted,
+      variancePct: totalBudgeted > 0 ? Math.round(((totalActual - totalBudgeted) / totalBudgeted) * 10000) / 100 : 0,
     }
 
     if (comparePeriod === 'previous') {

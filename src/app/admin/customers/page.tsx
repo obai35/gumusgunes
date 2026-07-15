@@ -108,6 +108,16 @@ export default function CustomersPage() {
       cell: ({ row }) => <span className="text-muted-foreground text-xs">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
     },
     {
+      accessorKey: 'loyaltyPoints',
+      header: 'Loyalty',
+      cell: ({ row }) => (
+        <span className="text-muted-foreground text-xs">
+          {row.original.loyaltyPoints ?? 0} pts
+          {row.original.loyaltyTier ? ` (${row.original.loyaltyTier.name})` : ''}
+        </span>
+      ),
+    },
+    {
       id: 'actions',
       header: '',
       cell: ({ row }) => (
@@ -187,6 +197,7 @@ export default function CustomersPage() {
         data={customers}
         keyExtractor={(c) => c.id}
         loading={loading}
+        responsiveCards
         onRowClick={(c) => toggleExpand(c.id)}
         emptyTitle="No customers found"
         emptyDescription={searchQuery ? 'Try adjusting your search terms' : undefined}

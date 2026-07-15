@@ -22,6 +22,8 @@ export const GET = withAdmin(async (req: NextRequest) => {
         where,
         select: {
           id: true, name: true, email: true, phone: true, createdAt: true,
+          loyaltyPoints: true,
+          loyaltyTier: { select: { id: true, name: true } },
           _count: { select: { orders: true } },
           orders: {
             select: { totalAmount: true, createdAt: true, status: true },
@@ -42,6 +44,8 @@ export const GET = withAdmin(async (req: NextRequest) => {
       email: c.email,
       phone: c.phone,
       createdAt: c.createdAt,
+      loyaltyPoints: c.loyaltyPoints,
+      loyaltyTier: c.loyaltyTier,
       orderCount: c._count.orders,
       totalSpend: 0,
       lastOrderDate: c.orders[0]?.createdAt || null,

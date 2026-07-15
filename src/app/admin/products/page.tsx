@@ -238,6 +238,7 @@ export default function AdminProducts() {
         keyExtractor={(p) => p.id}
         loading={loading}
         selectable
+        responsiveCards
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
         emptyTitle={searchQuery ? 'No products match your search' : 'No products yet'}

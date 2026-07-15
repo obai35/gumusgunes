@@ -6,6 +6,7 @@ import { useHydrated } from '@/hooks/use-hydrated'
 import { Header } from '@/components/store/Header'
 import { Hero } from '@/components/store/Hero'
 import { TrustBadges } from '@/components/store/TrustBadges'
+import { BannerSlider } from '@/components/store/BannerSlider'
 import { CategoryGrid } from '@/components/store/CategoryGrid'
 import { FeaturedProducts } from '@/components/store/FeaturedProducts'
 import { ProductGrid } from '@/components/store/ProductGrid'
@@ -14,6 +15,7 @@ import { AboutSection } from '@/components/store/AboutSection'
 import { Footer } from '@/components/store/Footer'
 import { DiamondLoading } from '@/components/store/DiamondLoading'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { VisibilityGate } from '@/components/store/VisibilityGate'
 import { useCart, useWishlist, useUI } from '@/lib/store'
 import { useTranslation } from '@/hooks/use-translation'
 import type { Product, Category } from '@/lib/types'
@@ -87,71 +89,80 @@ export default function HomeClient({
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
+      <BannerSlider />
 
       <main className="flex-1">
-        <ErrorBoundary><Hero /></ErrorBoundary>
-        <Suspense fallback={<SectionFallback />}><FlashSaleBanner /></Suspense>
-        <ErrorBoundary><TrustBadges /></ErrorBoundary>
-        <ErrorBoundary><CategoryGrid categories={categories} /></ErrorBoundary>
+        <VisibilityGate setting="section_hero"><ErrorBoundary><Hero /></ErrorBoundary></VisibilityGate>
+        <VisibilityGate setting="section_flashSale"><Suspense fallback={<SectionFallback />}><FlashSaleBanner /></Suspense></VisibilityGate>
+        <VisibilityGate setting="section_trustBadges"><ErrorBoundary><TrustBadges /></ErrorBoundary></VisibilityGate>
+        <VisibilityGate setting="section_categoryGrid"><ErrorBoundary><CategoryGrid categories={categories} /></ErrorBoundary></VisibilityGate>
 
-        {featured.length > 0 && (
+        <VisibilityGate setting="section_featuredProducts">
+          {featured.length > 0 && (
+            <ErrorBoundary>
+              <FeaturedProducts
+                id="featured"
+                eyebrow={t('page.featured.eyebrow')}
+                title={t('page.featured.title')}
+                products={featured}
+                ctaLabel={t('page.featured.cta')}
+                ctaHref="#collections"
+              />
+            </ErrorBoundary>
+          )}
+        </VisibilityGate>
+
+        <VisibilityGate setting="section_promoBanner"><ErrorBoundary><PromoBanner /></ErrorBoundary></VisibilityGate>
+
+        <VisibilityGate setting="section_bundleConfigurator"><Suspense fallback={<SectionFallback />}><BundleConfigurator /></Suspense></VisibilityGate>
+
+        <VisibilityGate setting="section_newArrivals">
+          {newArrivals.length > 0 && (
+            <ErrorBoundary>
+              <FeaturedProducts
+                id="new"
+                eyebrow={t('page.newArrivals.eyebrow')}
+                title={t('page.newArrivals.title')}
+                products={newArrivals}
+                ctaLabel={t('page.newArrivals.cta')}
+                ctaHref="#collections"
+              />
+            </ErrorBoundary>
+          )}
+        </VisibilityGate>
+
+        <VisibilityGate setting="section_productGrid">
           <ErrorBoundary>
-            <FeaturedProducts
-              id="featured"
-              eyebrow={t('page.featured.eyebrow')}
-              title={t('page.featured.title')}
-              products={featured}
-              ctaLabel={t('page.featured.cta')}
-              ctaHref="#collections"
+            <ProductGrid
+              categories={categories}
+              initialProducts={products}
             />
           </ErrorBoundary>
-        )}
+        </VisibilityGate>
 
-        <ErrorBoundary><PromoBanner /></ErrorBoundary>
+        <VisibilityGate setting="section_bestsellers">
+          {bestsellers.length > 0 && (
+            <ErrorBoundary>
+              <FeaturedProducts
+                id="bestsellers"
+                eyebrow={t('page.bestsellers.eyebrow')}
+                title={t('page.bestsellers.title')}
+                products={bestsellers}
+                ctaLabel={t('page.bestsellers.cta')}
+                ctaHref="#collections"
+              />
+            </ErrorBoundary>
+          )}
+        </VisibilityGate>
 
-        <Suspense fallback={<SectionFallback />}><BundleConfigurator /></Suspense>
+        <VisibilityGate setting="section_recentlyViewed"><Suspense fallback={<SectionFallback />}><RecentlyViewed allProducts={products} /></Suspense></VisibilityGate>
+        <VisibilityGate setting="section_giftFinder"><Suspense fallback={<SectionFallback />}><GiftFinder /></Suspense></VisibilityGate>
 
-        {newArrivals.length > 0 && (
-          <ErrorBoundary>
-            <FeaturedProducts
-              id="new"
-              eyebrow={t('page.newArrivals.eyebrow')}
-              title={t('page.newArrivals.title')}
-              products={newArrivals}
-              ctaLabel={t('page.newArrivals.cta')}
-              ctaHref="#collections"
-            />
-          </ErrorBoundary>
-        )}
-
-        <ErrorBoundary>
-          <ProductGrid
-            categories={categories}
-            initialProducts={products}
-          />
-        </ErrorBoundary>
-
-        {bestsellers.length > 0 && (
-          <ErrorBoundary>
-            <FeaturedProducts
-              id="bestsellers"
-              eyebrow={t('page.bestsellers.eyebrow')}
-              title={t('page.bestsellers.title')}
-              products={bestsellers}
-              ctaLabel={t('page.bestsellers.cta')}
-              ctaHref="#collections"
-            />
-          </ErrorBoundary>
-        )}
-
-        <Suspense fallback={<SectionFallback />}><RecentlyViewed allProducts={products} /></Suspense>
-        <Suspense fallback={<SectionFallback />}><GiftFinder /></Suspense>
-
-        <ErrorBoundary><AboutSection /></ErrorBoundary>
-        <Suspense fallback={<SectionFallback />}><CraftsmanshipTimeline /></Suspense>
-        <Suspense fallback={<SectionFallback />}><Testimonials /></Suspense>
-        <Suspense fallback={<SectionFallback />}><RewardsSection /></Suspense>
-        <Suspense fallback={<SectionFallback />}><Newsletter /></Suspense>
+        <VisibilityGate setting="section_aboutSection"><ErrorBoundary><AboutSection /></ErrorBoundary></VisibilityGate>
+        <VisibilityGate setting="section_craftsmanshipTimeline"><Suspense fallback={<SectionFallback />}><CraftsmanshipTimeline /></Suspense></VisibilityGate>
+        <VisibilityGate setting="section_testimonials"><Suspense fallback={<SectionFallback />}><Testimonials /></Suspense></VisibilityGate>
+        <VisibilityGate setting="section_rewardsSection"><Suspense fallback={<SectionFallback />}><RewardsSection /></Suspense></VisibilityGate>
+        <VisibilityGate setting="section_newsletter"><Suspense fallback={<SectionFallback />}><Newsletter /></Suspense></VisibilityGate>
       </main>
 
       <Footer />

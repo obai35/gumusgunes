@@ -140,6 +140,7 @@ export default function InventoryPage() {
           data={products}
           keyExtractor={(p) => p.id}
           loading={loading}
+          responsiveCards
           onRowClick={(p) => window.location.href = `/admin/products/${p.id}/edit`}
           emptyTitle="No products in inventory"
         />
@@ -154,6 +155,7 @@ export default function InventoryPage() {
           data={logs}
           keyExtractor={(l) => l.id}
           loading={loading}
+          responsiveCards
           emptyTitle="No recent activity"
         />
       </div>

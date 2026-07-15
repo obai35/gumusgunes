@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCurrency } from './page'
+import { Download } from 'lucide-react'
+import { generatePdf } from '@/lib/pdf-export'
 
 export default function TrialBalanceTab() {
   const [data, setData] = useState<any>(null)
@@ -23,7 +25,27 @@ export default function TrialBalanceTab() {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-border overflow-hidden">
+    <div>
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={async () => {
+            const rows: (string | number)[][] = data.accounts.map((acc: any) => [acc.code, acc.name, acc.type, formatCurrency(acc.totalDebit), formatCurrency(acc.totalCredit), formatCurrency(acc.balance)])
+            await generatePdf({
+              title: 'Trial Balance',
+              columns: ['Code', 'Account', 'Type', 'Debit', 'Credit', 'Balance'],
+              rows,
+              footers: [
+                { label: 'Grand Total Debit', value: formatCurrency(data.grandTotalDebit) },
+                { label: 'Grand Total Credit', value: formatCurrency(data.grandTotalCredit) },
+              ],
+            })
+          }}
+          className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Export PDF
+        </button>
+      </div>
+      <div className="bg-white rounded-xl border border-border overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
@@ -56,6 +78,7 @@ export default function TrialBalanceTab() {
           </tr>
         </tfoot>
       </table>
+    </div>
     </div>
   )
 }

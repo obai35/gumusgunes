@@ -1,4 +1,6 @@
 export type SectionKey = 'theme' | 'branding' | 'hero' | 'announcement' | 'promo' | 'navigation' | 'categories' | 'footer' | 'layout' | 'seo' | 'customCode'
+  | 'trustBadges' | 'aboutSection' | 'craftsmanshipTimeline'
+  | 'testimonials' | 'rewardsSection'
 
 export type NavItem = {
   id: string
@@ -36,4 +38,9 @@ export const EDITOR_SECTIONS: SectionConfig[] = [
   { key: 'layout', label: 'Layout', icon: 'Grid3x3' },
   { key: 'seo', label: 'SEO', icon: 'Search' },
   { key: 'customCode', label: 'Custom Code', icon: 'Code' },
+  { key: 'trustBadges', label: 'Trust Badges', icon: 'Shield' },
+  { key: 'aboutSection', label: 'About Section', icon: 'Info' },
+  { key: 'craftsmanshipTimeline', label: 'Craftsmanship Timeline', icon: 'Timeline' },
+  { key: 'testimonials', label: 'Testimonials', icon: 'MessageSquareText' },
+  { key: 'rewardsSection', label: 'Rewards Section', icon: 'Gift' },
 ]

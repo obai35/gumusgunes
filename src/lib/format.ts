@@ -1,24 +1,16 @@
-export type Currency = 'EGP' | 'USD' | 'EUR' | 'TRY'
+export type LocaleCode = 'en' | 'ar'
 
-export const CURRENCIES: { code: Currency; symbol: string; rate: number; locale: string; label: string }[] = [
-  { code: 'EGP', symbol: 'E£', rate: 48, locale: 'ar-EG', label: 'EGP E£' },
-  { code: 'USD', symbol: '$', rate: 1, locale: 'en-US', label: 'USD $' },
-  { code: 'EUR', symbol: '€', rate: 0.92, locale: 'de-DE', label: 'EUR €' },
-  { code: 'TRY', symbol: '₺', rate: 34.5, locale: 'tr-TR', label: 'TRY ₺' },
-]
-
-export function getCurrencyMeta(code: Currency) {
-  return CURRENCIES.find((c) => c.code === code) ?? CURRENCIES[0]
+export function getCurrencyMeta(code: string) {
+  return null
 }
 
-export function formatPrice(value: number, currency: Currency = 'EGP'): string {
-  const meta = getCurrencyMeta(currency)
-  const converted = value * meta.rate
-  return new Intl.NumberFormat(meta.locale, {
+export function formatPrice(value: number, currencyCode: string = 'EGP', symbol: string = 'E£', locale: string = 'ar-EG'): string {
+  const converted = value * 1
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: meta.code,
-    minimumFractionDigits: meta.code === 'TRY' ? 0 : 2,
-    maximumFractionDigits: meta.code === 'TRY' ? 0 : 2,
+    currency: currencyCode,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(converted)
 }
 
@@ -28,9 +20,7 @@ export function parseTags(tags: string | null | undefined): string[] {
     const parsed = JSON.parse(tags)
     if (Array.isArray(parsed)) return parsed
     return []
-  } catch {
-    return []
-  }
+  } catch { return [] }
 }
 
 export function parseImages(images: string | null | undefined): string[] {
@@ -39,16 +29,12 @@ export function parseImages(images: string | null | undefined): string[] {
     const parsed = JSON.parse(images)
     if (Array.isArray(parsed)) return parsed
     return []
-  } catch {
-    return []
-  }
+  } catch { return [] }
 }
 
 export function formatDate(date: string | Date): string {
   return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+    year: 'numeric', month: 'short', day: 'numeric',
   }).format(new Date(date))
 }
 

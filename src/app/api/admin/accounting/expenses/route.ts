@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { createExpenseJournalEntry } from '@/lib/accounting'
+import { logAudit } from '@/lib/audit'
 
 export const GET = withAdmin(async (req: NextRequest) => {
   try {
@@ -81,7 +82,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 }, 'accounting')
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, ctx: { params: any; admin: AdminInfo }) => {
   try {
     const { amount, description, paymentMethod, branchId, supplierId, invoiceNumber, notes } = await req.json()
     if (!amount || !description || !paymentMethod) {
@@ -103,6 +104,9 @@ export const POST = withAdmin(async (req: Request) => {
     } catch (journalErr) {
       console.error('Failed to create journal entry for expense:', journalErr)
     }
+    try {
+      await logAudit({ adminId: ctx.admin.id, action: 'create', resource: 'expense', resourceId: expense.id, details: { amount: expense.amount, description: expense.description } })
+    } catch {}
     return NextResponse.json({ ok: true, expense })
   } catch (e) {
     console.error('Expenses POST error:', e)
@@ -110,10 +114,14 @@ export const POST = withAdmin(async (req: Request) => {
   }
 }, 'accounting')
 
-export const DELETE = withAdmin(async (req: NextRequest) => {
+export const DELETE = withAdmin(async (req: NextRequest, ctx: { params: any; admin: AdminInfo }) => {
   try {
     const id = req.nextUrl.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+    try {
+      const exp = await db.expense.findUnique({ where: { id }, select: { amount: true, description: true } })
+      if (exp) await logAudit({ adminId: ctx.admin.id, action: 'delete', resource: 'expense', resourceId: id, details: { amount: exp.amount, description: exp.description } })
+    } catch {}
     await db.expense.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (e) {

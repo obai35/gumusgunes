@@ -12,6 +12,11 @@ import { FooterPanel } from './sections/FooterPanel'
 import { LayoutPanel } from './sections/LayoutPanel'
 import { SEOPanel } from './sections/SEOPanel'
 import { CustomCodePanel } from './sections/CustomCodePanel'
+import { TrustBadgesPanel } from './sections/TrustBadgesPanel'
+import { AboutSectionPanel } from './sections/AboutSectionPanel'
+import { CraftsmanshipTimelinePanel } from './sections/CraftsmanshipTimelinePanel'
+import { TestimonialsPanel } from './sections/TestimonialsPanel'
+import { RewardsSectionPanel } from './sections/RewardsSectionPanel'
 import type { SectionKey } from './types'
 import { Eye, EyeOff } from 'lucide-react'
 
@@ -35,6 +40,11 @@ const PANELS: Record<SectionKey, ComponentType> = {
   layout: LayoutPanel,
   seo: SEOPanel,
   customCode: CustomCodePanel,
+  trustBadges: TrustBadgesPanel,
+  aboutSection: AboutSectionPanel,
+  craftsmanshipTimeline: CraftsmanshipTimelinePanel,
+  testimonials: TestimonialsPanel,
+  rewardsSection: RewardsSectionPanel,
 }
 
 type Props = { section: SectionKey; settings: Record<string, string>; onSettingChange: (key: string, value: string) => void; onClose: () => void }
@@ -46,6 +56,11 @@ const SECTION_VISIBILITY_MAP: Partial<Record<SectionKey, string>> = {
   navigation: 'navigation',
   categories: 'categoryGrid',
   footer: 'footer',
+  trustBadges: 'trustBadges',
+  aboutSection: 'aboutSection',
+  craftsmanshipTimeline: 'craftsmanshipTimeline',
+  testimonials: 'testimonials',
+  rewardsSection: 'rewardsSection',
 }
 
 function canToggle(section: SectionKey): boolean {

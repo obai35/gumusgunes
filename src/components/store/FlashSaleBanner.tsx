@@ -1,115 +1,74 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Flame, Sparkles } from 'lucide-react'
-import { useCountdown } from '@/hooks/use-countdown'
-import { cn } from '@/lib/format'
-import { useTranslation } from '@/hooks/use-translation'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Clock, Zap } from 'lucide-react'
+import Link from 'next/link'
 
-// Sale ends 3 days from when the component first mounts (persists in sessionStorage)
-function getSaleEnd(): number {
-  if (typeof window === 'undefined') return Date.now() + 3 * 24 * 60 * 60 * 1000
-  const KEY = 'gg_flash_sale_end'
-  let end = window.sessionStorage.getItem(KEY)
-  if (!end) {
-    end = String(Date.now() + 3 * 24 * 60 * 60 * 1000)
-    window.sessionStorage.setItem(KEY, end)
-  }
-  return parseInt(end)
-}
-
-function TimeBox({ value, label }: { value: number; label: string }) {
-  const padded = String(value).padStart(2, '0')
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative">
-        <div className="bg-navy-deep/60 backdrop-blur-sm rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 min-w-[2.75rem] sm:min-w-[3.25rem] text-center ring-1 ring-gold/30">
-          <span className="font-display text-xl sm:text-2xl font-bold silver-text tabular-nums">
-            {padded}
-          </span>
-        </div>
-      </div>
-      <span className="text-[8px] sm:text-[9px] tracking-[0.15em] uppercase text-silver/50 mt-1">{label}</span>
-    </div>
-  )
-}
+type Sale = { id: string; name: string; discountValue: number; discountType: string; endsAt: string }
 
 export function FlashSaleBanner() {
-  const { t } = useTranslation()
-  const [saleEnd, setSaleEnd] = useState<number | null>(null)
+  const [sale, setSale] = useState<Sale | null>(null)
+  const [dismissed, setDismissed] = useState(false)
+  const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
-    setSaleEnd(getSaleEnd())
+    fetch('/api/admin/sales?page=1')
+      .then(r => r.json())
+      .then(d => {
+        const sales: Sale[] = (d.sales || []).filter((s: any) => {
+          const now = new Date()
+          return s.isActive && new Date(s.startDate) <= now && new Date(s.endDate) >= now
+        })
+        if (sales.length > 0) {
+          const active = sales[0]
+          setSale(active)
+          updateTimeLeft(active.endsAt)
+        }
+      })
+      .catch(() => {})
   }, [])
 
-  const { days, hours, minutes, seconds, isExpired } = useCountdown(saleEnd ?? 0)
+  useEffect(() => {
+    if (!sale) return
+    const interval = setInterval(() => updateTimeLeft(sale.endsAt), 1000)
+    return () => clearInterval(interval)
+  }, [sale])
 
-  if (isExpired || saleEnd === null) return null
+  function updateTimeLeft(endsAt: string) {
+    const diff = new Date(endsAt).getTime() - Date.now()
+    if (diff <= 0) { setTimeLeft('Ended'); return }
+    const h = Math.floor(diff / 3600000)
+    const m = Math.floor((diff % 3600000) / 60000)
+    const s = Math.floor((diff % 60000) / 1000)
+    setTimeLeft(`${h}h ${m}m ${s}s`)
+  }
+
+  if (!sale || dismissed) return null
 
   return (
-    <section data-editable="flash-sale" className="py-6 sm:py-8 bg-navy-deep relative overflow-hidden">
-      {/* Animated sparkles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(10)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            style={{ top: `${10 + (i * 9) % 80}%`, left: `${5 + (i * 11) % 90}%` }}
-            animate={{ opacity: [0, 1, 0], scale: [0, 1.2, 0] }}
-            transition={{ duration: 2, delay: i * 0.3, repeat: Infinity }}
-          >
-            <Sparkles className="h-2.5 w-2.5 text-gold/50" />
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.12)_0%,transparent_60%)] pointer-events-none" />
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-center">
-          {/* Label */}
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            <motion.div
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="h-10 w-10 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center"
-            >
-              <Flame className="h-5 w-5 text-gold" />
-            </motion.div>
-            <div className="text-left">
-              <p className="text-[10px] tracking-[0.25em] uppercase text-gold-soft font-medium">{t('flashSale.title')}</p>
-              <p className="font-display text-lg sm:text-xl font-semibold text-silver leading-tight">
-                <span className="gold-text">{t('flashSale.description')}</span>
-              </p>
-            </div>
+    <AnimatePresence>
+      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-gradient-to-r from-red-600 to-orange-500 text-white">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-3">
+            <Zap className="h-4 w-4" />
+            <span className="font-semibold">{sale.name}</span>
+            <span className="hidden sm:inline text-white/80">
+              {sale.discountType === 'PERCENTAGE' ? `${sale.discountValue}% OFF` : `$${sale.discountValue} OFF`}
+            </span>
+            <span className="flex items-center gap-1 text-white/80">
+              <Clock className="h-3.5 w-3.5" />
+              {timeLeft}
+            </span>
           </div>
-
-          {/* Divider */}
-          <div className="hidden sm:block h-12 w-px bg-silver/15" />
-
-          {/* Countdown */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <TimeBox value={days} label={t('flashSale.days')} />
-            <span className="font-display text-xl text-gold/60 -mt-3">:</span>
-            <TimeBox value={hours} label={t('flashSale.hrs')} />
-            <span className="font-display text-xl text-gold/60 -mt-3">:</span>
-            <TimeBox value={minutes} label={t('flashSale.min')} />
-            <span className="font-display text-xl text-gold/60 -mt-3">:</span>
-            <TimeBox value={seconds} label={t('flashSale.sec')} />
+          <div className="flex items-center gap-3">
+            <Link href="/shop" className="text-xs font-medium underline underline-offset-2 hover:no-underline">Shop Now</Link>
+            <button onClick={() => setDismissed(true)} className="text-white/80 hover:text-white">
+              <X className="h-4 w-4" />
+            </button>
           </div>
-
-          {/* CTA */}
-          <a
-            href="#bestsellers"
-            className="group inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow flex-shrink-0"
-          >
-            {t('flashSale.shopNow')}
-            <span className="group-hover:translate-x-0.5 transition-transform">→</span>
-          </a>
         </div>
-      </div>
-    </section>
+      </motion.div>
+    </AnimatePresence>
   )
 }

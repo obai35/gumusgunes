@@ -20,6 +20,7 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   security: 'Security', admins: 'Admins', customers: 'Customers', payments: 'Payments',
   shipping: 'Shipping', reviews: 'Reviews', newsletter: 'Newsletter', activity: 'Activity Log',
   chat: 'Admin Chat', seed: 'Seed Data', customer_service: 'Customer Service', social: 'Social Media',
+  marketing: 'Marketing', blog: 'Blog', faq: 'FAQ', banners: 'Banners', pages: 'Pages', media: 'Media Gallery',
 }
 
 export default function AdminsPage() {

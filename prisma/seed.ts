@@ -49,6 +49,23 @@ const paymentMethods = [
   { code: 'fawry', name: 'Fawry', nameAr: 'فوري', sortOrder: 9, isActive: false, config: enc({ reference: '' }) },
 ]
 
+async function seedCurrencies() {
+  const currencies = [
+    { code: 'EGP', name: 'Egyptian Pound', symbol: 'E£', exchangeRate: 1, isDefault: true, isActive: true },
+    { code: 'USD', name: 'US Dollar', symbol: '$', exchangeRate: 0.0208, isDefault: false, isActive: true },
+    { code: 'EUR', name: 'Euro', symbol: '€', exchangeRate: 0.0192, isDefault: false, isActive: true },
+    { code: 'TRY', name: 'Turkish Lira', symbol: '₺', exchangeRate: 0.718, isDefault: false, isActive: true },
+  ]
+  for (const c of currencies) {
+    await prisma.currency.upsert({
+      where: { code: c.code },
+      update: c,
+      create: c,
+    })
+  }
+  console.log('  ✓ Currencies seeded')
+}
+
 async function main() {
   console.log('Seeding governorates...')
   for (const g of governorates) {
@@ -69,6 +86,9 @@ async function main() {
     })
   }
   console.log(`Seeded ${paymentMethods.length} payment methods`)
+
+  console.log('Seeding currencies...')
+  await seedCurrencies()
 
   console.log('Seeding product knowledge graph...')
   try {

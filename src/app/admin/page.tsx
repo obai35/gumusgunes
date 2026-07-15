@@ -58,14 +58,14 @@ export default function AdminDashboard() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-display font-semibold text-navy">Dashboard</h1>
+        <h1 className="text-2xl font-display font-semibold text-foreground">Dashboard</h1>
         <PeriodSelector value={dashboardPeriod} onChange={setDashboardPeriod} />
       </div>
 
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-pulse">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-border p-5 h-24" />
+            <div key={i} className="bg-card rounded-xl border-border p-5 h-24" />
           ))}
         </div>
       ) : (
@@ -93,25 +93,25 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        <Link href="/admin/products/new" className="flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-navy">
+        <Link href="/admin/products/new" className="flex flex-col items-center justify-center gap-2 bg-card rounded-xl border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-foreground">
           <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center">
             <Plus className="h-5 w-5 text-gold" />
           </div>
           <span className="text-xs font-medium">New Product</span>
         </Link>
-        <Link href="/admin/orders" className="flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-navy">
+        <Link href="/admin/orders" className="flex flex-col items-center justify-center gap-2 bg-card rounded-xl border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-foreground">
           <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
             <Eye className="h-5 w-5 text-blue-600" />
           </div>
           <span className="text-xs font-medium">View Orders</span>
         </Link>
-        <Link href="/admin/pos" className="flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-navy">
+        <Link href="/admin/pos" className="flex flex-col items-center justify-center gap-2 bg-card rounded-xl border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-foreground">
           <div className="h-10 w-10 rounded-lg bg-green-50 flex items-center justify-center">
             <Wallet className="h-5 w-5 text-green-600" />
           </div>
           <span className="text-xs font-medium">Open POS</span>
         </Link>
-        <Link href="/admin/accounting" className="flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-navy">
+        <Link href="/admin/accounting" className="flex flex-col items-center justify-center gap-2 bg-card rounded-xl border-border p-4 hover:shadow-md hover:border-gold/30 transition-all text-foreground">
           <div className="h-10 w-10 rounded-lg bg-purple-50 flex items-center justify-center">
             <FileText className="h-5 w-5 text-purple-600" />
           </div>
@@ -127,9 +127,9 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-border p-5">
+        <div className="bg-card rounded-xl border-border p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-semibold text-navy flex items-center gap-2">
+            <h2 className="font-display font-semibold text-foreground flex items-center gap-2">
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               Recent Orders
             </h2>
@@ -139,9 +139,9 @@ export default function AdminDashboard() {
           </div>
           <OrdersList />
         </div>
-        <div className="bg-white rounded-xl border border-border p-5">
+        <div className="bg-card rounded-xl border-border p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-semibold text-navy flex items-center gap-2">
+            <h2 className="font-display font-semibold text-foreground flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               Low Stock Alerts
             </h2>
@@ -171,7 +171,7 @@ function OrdersList() {
   if (loading) {
     return (
       <div className="space-y-2 animate-pulse">
-        {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-50 rounded" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-12 bg-muted/50 rounded" />)}
       </div>
     )
   }
@@ -181,7 +181,7 @@ function OrdersList() {
       {orders.map((order: any) => (
         <div key={order.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
           <div>
-            <p className="text-sm font-medium text-navy">{order.orderNumber || order.receiptNumber || `#${order.id.slice(0, 8)}`}</p>
+            <p className="text-sm font-medium text-foreground">{order.orderNumber || order.receiptNumber || `#${order.id.slice(0, 8)}`}</p>
             <p className="text-xs text-muted-foreground">{order.fullName} · ${(order.totalAmount || 0).toFixed(2)}</p>
           </div>
           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -216,7 +216,7 @@ function LowStockList({ onTotal }: { onTotal?: (n: number) => void }) {
   if (loading) {
     return (
       <div className="space-y-2 animate-pulse">
-        {[1, 2, 3].map(i => <div key={i} className="h-12 bg-gray-50 rounded" />)}
+        {[1, 2, 3].map(i => <div key={i} className="h-12 bg-muted/50 rounded" />)}
       </div>
     )
   }
@@ -226,7 +226,7 @@ function LowStockList({ onTotal }: { onTotal?: (n: number) => void }) {
       {products.map((p: any) => (
         <div key={p.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
           <div>
-            <p className="text-sm font-medium text-navy">{p.name}</p>
+            <p className="text-sm font-medium text-foreground">{p.name}</p>
             <p className="text-xs text-muted-foreground">{p.sku}</p>
           </div>
           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
