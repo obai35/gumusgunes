@@ -176,9 +176,9 @@ export function CheckoutContent() {
     }
   }, [buildPayload, t])
 
-  const handleStripeSuccess = useCallback(() => {
-    submitOrder({ stripePaymentIntentId })
-  }, [submitOrder, stripePaymentIntentId])
+  const handleStripeSuccess = useCallback((paymentIntentId: string) => {
+    submitOrder({ stripePaymentIntentId: paymentIntentId })
+  }, [submitOrder])
 
   const handlePayPalSuccess = useCallback((id: string) => {
     setPaypalOrderId(id)

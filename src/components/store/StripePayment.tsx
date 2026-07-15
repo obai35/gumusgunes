@@ -30,7 +30,7 @@ function StripeForm({ amount, currency, onSuccess }: StripeFormProps) {
     if (!stripe || !elements) return
     setProcessing(true)
     setError('')
-    const { error: submitError } = await stripe.confirmPayment({
+    const { error: submitError, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: { return_url: window.location.origin + '/order/success' },
       redirect: 'if_required',
@@ -39,7 +39,7 @@ function StripeForm({ amount, currency, onSuccess }: StripeFormProps) {
       setError(submitError.message || 'Payment failed')
       setProcessing(false)
     } else {
-      onSuccess()
+      onSuccess(paymentIntent.id)
     }
   }
 

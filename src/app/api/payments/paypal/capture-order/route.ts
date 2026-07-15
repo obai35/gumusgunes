@@ -3,7 +3,6 @@ import { capturePayPalOrder } from '@/lib/paypal'
 import { z } from 'zod'
 
 const PayPalCaptureSchema = z.object({
-  orderId: z.string().uuid(),
   paypalOrderId: z.string().min(1),
 }).strict()
 
@@ -16,8 +15,8 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
-    const { orderId, paypalOrderId } = parsed.data
-    const capture = await capturePayPalOrder(orderId)
+    const { paypalOrderId } = parsed.data
+    const capture = await capturePayPalOrder(paypalOrderId)
     if (capture.status === 'COMPLETED') {
       return NextResponse.json({ status: 'COMPLETED' })
     }

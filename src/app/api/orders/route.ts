@@ -157,10 +157,10 @@ const orderHandler = async (req: NextRequest) => {
           : 'awaiting_verification'
 
     // Server-side payment verification
-    if (rest.paymentMethod === 'card' && rest.stripePaymentIntentId) {
+    if (rest.paymentMethod === 'card' && stripePaymentIntentId) {
       try {
-        const stripe = getStripe()
-        const paymentIntent = await stripe.paymentIntents.retrieve(rest.stripePaymentIntentId)
+        const stripe = await getStripe()
+        const paymentIntent = await stripe.paymentIntents.retrieve(stripePaymentIntentId)
         if (paymentIntent.status !== 'succeeded') {
           paymentStatus = 'pending'
         }
@@ -169,10 +169,10 @@ const orderHandler = async (req: NextRequest) => {
       }
     }
 
-    if (rest.paymentMethod === 'paypal' && rest.paypalOrderId) {
+    if (rest.paymentMethod === 'paypal' && paypalOrderId) {
       try {
         const { capturePayPalOrder } = await import('@/lib/paypal')
-        const result = await capturePayPalOrder(rest.paypalOrderId)
+        const result = await capturePayPalOrder(paypalOrderId)
         if (result.status !== 'COMPLETED') {
           paymentStatus = 'pending'
         }

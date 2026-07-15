@@ -3,7 +3,8 @@ import { createPayPalOrder } from '@/lib/paypal'
 import { z } from 'zod'
 
 const PayPalCreateSchema = z.object({
-  orderId: z.string().uuid(),
+  amount: z.number().positive(),
+  currency: z.string().optional(),
 }).strict()
 
 export async function POST(req: Request) {
@@ -16,8 +17,7 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
-    const { orderId } = parsed.data
-    const { amount, currency } = body
+    const { amount, currency } = parsed.data
     const order = await createPayPalOrder(amount, currency || 'EGP')
     return NextResponse.json({ id: order.id })
   } catch (error) {

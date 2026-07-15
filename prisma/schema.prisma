@@ -405,8 +405,10 @@ model Admin {
   totpSecret     String?
   totpEnabled    Boolean  @default(false)
   phone          String?
-  lastLoginAt    DateTime?
-  createdAt      DateTime @default(now())
+  lastLoginAt          DateTime?
+  failedLoginAttempts  Int      @default(0)
+  lockedUntil          DateTime?
+  createdAt            DateTime @default(now())
   processedOrders      Order[]
   processedReturns     Return[]
   stockTransfers       StockTransfer[]

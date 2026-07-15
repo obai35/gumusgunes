@@ -29,23 +29,22 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             <SheetContent side="left" className="p-0 w-64">
               <Sidebar onClose={() => setSidebarOpen(false)} />
             </SheetContent>
+            <main className="flex-1 p-6 overflow-auto min-w-0">
+              <div className="lg:hidden mb-4">
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    <Menu className="h-4 w-4" />
+                    Menu
+                  </Button>
+                </SheetTrigger>
+              </div>
+              <AnimatePresence mode="wait">
+                <PageTransition key={pathname}>
+                  {children}
+                </PageTransition>
+              </AnimatePresence>
+            </main>
           </Sheet>
-
-          <main className="flex-1 p-6 overflow-auto min-w-0">
-            <div className="lg:hidden mb-4">
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Menu className="h-4 w-4" />
-                  Menu
-                </Button>
-              </SheetTrigger>
-            </div>
-            <AnimatePresence mode="wait">
-              <PageTransition key={pathname}>
-                {children}
-              </PageTransition>
-            </AnimatePresence>
-          </main>
         </div>
       )}
     </AdminAuthGuard>

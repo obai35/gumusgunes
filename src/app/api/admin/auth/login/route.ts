@@ -34,16 +34,32 @@ const handler = async (req: NextRequest) => {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
+    if (admin.lockedUntil && admin.lockedUntil > new Date()) {
+      const retryAfter = Math.ceil((admin.lockedUntil.getTime() - Date.now()) / 1000)
+      return NextResponse.json(
+        { error: 'Account temporarily locked. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      )
+    }
+
     const valid = await verifyPassword(password, admin.password)
     if (!valid) {
+      const attempts = admin.failedLoginAttempts + 1
+      const lockData: any = { failedLoginAttempts: attempts }
+      if (attempts >= 10) {
+        lockData.lockedUntil = new Date(Date.now() + 15 * 60 * 1000)
+      }
+      await db.admin.update({ where: { id: admin.id }, data: lockData }).catch(() => {})
       await logAudit({
         adminId: admin.id,
         action: 'admin_login_failed',
         resource: 'auth',
-        details: { email, reason: 'invalid password' },
+        details: { email, reason: 'invalid password', attempts },
       })
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
+
+    await db.admin.update({ where: { id: admin.id }, data: { failedLoginAttempts: 0, lockedUntil: null } }).catch(() => {})
 
     if (admin.totpEnabled) {
       if (!totpToken) return NextResponse.json({ totpRequired: true, adminId: admin.id }, { status: 200 })
@@ -80,7 +96,7 @@ const handler = async (req: NextRequest) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      path: '/api',
+      path: '/',
       maxAge: 86400,
     })
 
@@ -90,4 +106,4 @@ const handler = async (req: NextRequest) => {
   }
 }
 
-export const POST = withRateLimit(handler, { limit: 5, window: '30s' })
+export const POST = withRateLimit(handler, { limit: 5, window: '30s', failClosed: true })

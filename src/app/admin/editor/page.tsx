@@ -38,12 +38,18 @@ export default function SiteEditor() {
 
   const persistSetting = useCallback(async (key: string, value: string) => {
     try {
-      await fetch('/api/admin/settings', {
+      const res = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [key]: value }),
       })
-    } catch { /* silent */ }
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        console.error('Failed to save setting', key, data.error || res.status)
+      }
+    } catch (e) {
+      console.error('Network error saving setting', key, e)
+    }
     postMessageToPreview(key, value)
   }, [postMessageToPreview])
 
@@ -65,7 +71,10 @@ export default function SiteEditor() {
       if (res.ok) {
         toast.success('Settings saved')
         iframeKey.current++
-      } else toast.error('Failed to save')
+      } else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || `Failed (${res.status})`)
+      }
     } catch { toast.error('Failed to save') }
     setSaving(false)
   }, [settings])

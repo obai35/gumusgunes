@@ -1,10 +1,39 @@
-const PAYPAL_API = process.env.PAYPAL_SANDBOX === 'true'
-  ? 'https://api-m.sandbox.paypal.com'
-  : 'https://api-m.paypal.com'
+import { db } from '@/lib/db'
+import { decrypt } from '@/lib/encryption'
+
+interface PayPalConfig {
+  clientId: string
+  secretKey: string
+  sandbox: boolean
+}
+
+async function getPayPalConfig(): Promise<PayPalConfig> {
+  try {
+    const method = await db.paymentMethod.findUnique({ where: { code: 'paypal' } })
+    if (method?.config) {
+      const config = JSON.parse(decrypt(method.config))
+      if (config.clientId && config.secretKey) {
+        return {
+          clientId: config.clientId,
+          secretKey: config.secretKey,
+          sandbox: config.sandbox === true,
+        }
+      }
+    }
+  } catch {}
+
+  return {
+    clientId: process.env.PAYPAL_CLIENT_ID || '',
+    secretKey: process.env.PAYPAL_CLIENT_SECRET || '',
+    sandbox: process.env.PAYPAL_SANDBOX === 'true',
+  }
+}
 
 async function getAccessToken() {
-  const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64')
-  const res = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
+  const config = await getPayPalConfig()
+  const api = config.sandbox ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com'
+  const auth = Buffer.from(`${config.clientId}:${config.secretKey}`).toString('base64')
+  const res = await fetch(`${api}/v1/oauth2/token`, {
     method: 'POST',
     headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'grant_type=client_credentials',
@@ -14,8 +43,10 @@ async function getAccessToken() {
 }
 
 export async function createPayPalOrder(amount: number, currency: string) {
+  const config = await getPayPalConfig()
+  const api = config.sandbox ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com'
   const token = await getAccessToken()
-  const res = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
+  const res = await fetch(`${api}/v2/checkout/orders`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -27,8 +58,10 @@ export async function createPayPalOrder(amount: number, currency: string) {
 }
 
 export async function capturePayPalOrder(orderId: string) {
+  const config = await getPayPalConfig()
+  const api = config.sandbox ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com'
   const token = await getAccessToken()
-  const res = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderId}/capture`, {
+  const res = await fetch(`${api}/v2/checkout/orders/${orderId}/capture`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
   })

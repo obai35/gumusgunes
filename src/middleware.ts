@@ -39,8 +39,13 @@ export function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
+    if (!origin && !referer) {
+      console.warn('[CSRF] No origin or referer for', request.method, pathname)
+      return NextResponse.next()
+    }
+
     if (origin && !isValidOrigin(origin, ownOrigin)) {
-      console.warn('[CSRF] Invalid origin:', origin)
+      console.warn('[CSRF] Invalid origin:', origin, 'for', request.method, pathname)
       return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
     }
 
@@ -48,11 +53,11 @@ export function middleware(request: NextRequest) {
       try {
         const refererUrl = new URL(referer)
         if (!isValidOrigin(refererUrl.origin, ownOrigin)) {
-          console.warn('[CSRF] Invalid referer:', referer)
+          console.warn('[CSRF] Invalid referer:', referer, 'for', request.method, pathname)
           return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
         }
       } catch {
-        console.warn('[CSRF] Invalid referer URL:', referer)
+        console.warn('[CSRF] Invalid referer URL:', referer, 'for', request.method, pathname)
         return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
       }
     }

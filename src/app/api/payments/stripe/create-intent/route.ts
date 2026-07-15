@@ -3,7 +3,8 @@ import { getStripe } from '@/lib/stripe'
 import { z } from 'zod'
 
 const StripeIntentSchema = z.object({
-  orderId: z.string().uuid(),
+  amount: z.number().positive(),
+  currency: z.string().optional(),
 }).strict()
 
 export async function POST(req: Request) {
@@ -16,9 +17,10 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
-    const { orderId } = parsed.data
-    const { amount, currency, idempotencyKey } = body
-    const paymentIntent = await getStripe().paymentIntents.create({
+    const { amount, currency } = parsed.data
+    const { idempotencyKey } = body
+    const stripe = await getStripe()
+    const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
       currency: currency?.toLowerCase() || 'egp',
       automatic_payment_methods: { enabled: true },

@@ -56,13 +56,22 @@ export default function AdminSettings() {
 
   async function handleSave() {
     setSaving(true)
-    const res = await fetch('/api/admin/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings),
-    })
-    if (res.ok) toast.success('Settings saved')
-    else toast.error('Failed to save')
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      })
+      if (res.ok) toast.success('Settings saved')
+      else {
+        const data = await res.json().catch(() => ({}))
+        toast.error(data.error || `Failed (${res.status})`)
+        console.error('Settings save failed:', res.status, data)
+      }
+    } catch (e) {
+      toast.error('Network error')
+      console.error('Settings save error:', e)
+    }
     setSaving(false)
   }
 

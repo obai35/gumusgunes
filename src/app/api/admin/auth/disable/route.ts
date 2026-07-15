@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { verifyTotpCode } from '@/lib/totp'
 import { db } from '@/lib/db'
 
-export async function POST(request: NextRequest) {
+const handler = async (request: NextRequest) => {
   const authHeader = request.headers.get('Authorization')
   if (!authHeader?.startsWith('Bearer ')) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -37,3 +38,5 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ success: true })
 }
+
+export const POST = withRateLimit(handler, { limit: 5, window: '60s', failClosed: true })

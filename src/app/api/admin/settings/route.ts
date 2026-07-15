@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 
-const SettingsSchema = z.object({
-  key: z.string().min(1).max(100),
-  value: z.string().min(0).max(5000),
-}).strict()
+const MAX_VALUE_LENGTH = 50000
 
 const DEFAULTS: Record<string, string> = {
   siteName: 'Gümüş Güneş',
@@ -70,17 +66,19 @@ export const PUT = withAdmin(async (req: NextRequest) => {
     const body = await req.json()
     const entries = Object.entries(body) as [string, string][]
     for (const [key, value] of entries) {
-      const parsed = SettingsSchema.safeParse({ key, value })
-      if (!parsed.success) {
+      if (!key || typeof key !== 'string' || key.length > 200) {
+        return NextResponse.json({ error: `Invalid key "${key}"` }, { status: 400 })
+      }
+      if (typeof value !== 'string' || value.length > MAX_VALUE_LENGTH) {
         return NextResponse.json(
-          { error: `Invalid input for key "${key}"`, details: parsed.error.flatten().fieldErrors },
+          { error: `Value for "${key}" exceeds ${MAX_VALUE_LENGTH} characters (${typeof value !== 'string' ? 'not a string' : value.length})` },
           { status: 400 }
         )
       }
       await db.siteSetting.upsert({
         where: { key },
-        update: { value: String(value) },
-        create: { key, value: String(value) },
+        update: { value },
+        create: { key, value },
       })
     }
     return NextResponse.json({ ok: true })

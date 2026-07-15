@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { verifyAdminToken } from '@/lib/admin-auth'
 import { db } from '@/lib/db'
 
-export async function GET(request: NextRequest) {
+const handler = async (request: NextRequest) => {
   try {
     const authHeader = request.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
@@ -36,3 +37,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Setup failed' }, { status: 500 })
   }
 }
+
+export const GET = withRateLimit(handler, { limit: 3, window: '60s', failClosed: true })
