@@ -7,6 +7,7 @@ import Avatar from '../components/Avatar'
 import Badge from '../components/Badge'
 import { api } from '../api'
 import { getSocket } from '../socket'
+import AgentAssignSheet from '../components/AgentAssignSheet'
 
 const sourceIcons: Record<string, string> = {
   whatsapp: 'whatsapp',
@@ -31,6 +32,7 @@ export default function ChatScreen({ route, navigation }: any) {
   const [sending, setSending] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
   const onSendRef = useRef(false)
+  const [showAssignSheet, setShowAssignSheet] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -99,6 +101,26 @@ export default function ChatScreen({ route, navigation }: any) {
       Alert.alert('Error', err.message)
     } finally {
       setClaiming(false)
+    }
+  }
+
+  const handleAssign = async (adminId: string) => {
+    try {
+      await api.assignConversation(conversationId, adminId)
+      setShowAssignSheet(false)
+      await load()
+    } catch (err: any) {
+      Alert.alert('Error', err.message)
+    }
+  }
+
+  const handleUnassign = async () => {
+    try {
+      await api.unassignConversation(conversationId)
+      setShowAssignSheet(false)
+      await load()
+    } catch (err: any) {
+      Alert.alert('Error', err.message)
     }
   }
 
@@ -194,8 +216,15 @@ export default function ChatScreen({ route, navigation }: any) {
             </View>
             <View style={styles.infoRow}>
               <Badge status={conversation.status} />
-              {conversation.assignedAdmin?.name && (
-                <Text style={styles.assigned}>Assigned to {conversation.assignedAdmin.name}</Text>
+              {conversation.assignedAdmin?.name ? (
+                <TouchableOpacity onPress={() => setShowAssignSheet(true)} style={styles.assignRow}>
+                  <Text style={styles.assigned}>Assigned to {conversation.assignedAdmin.name}</Text>
+                  <FontAwesome5 name="chevron-down" size={10} color={colors.grayLight} />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity onPress={() => setShowAssignSheet(true)}>
+                  <Text style={styles.assignLink}>Assign</Text>
+                </TouchableOpacity>
               )}
             </View>
           </View>
@@ -240,6 +269,14 @@ export default function ChatScreen({ route, navigation }: any) {
         }}
         timeTextStyle={{ left: { color: colors.gray }, right: { color: 'rgba(0,0,0,0.6)' } }}
         isLoadingEarlier={loading}
+      />
+      <AgentAssignSheet
+        visible={showAssignSheet}
+        currentAssignee={conversation?.assignedAdmin ? { id: conversation.assignedAdmin.id, name: conversation.assignedAdmin.name } : null}
+        conversationId={conversationId}
+        onAssign={handleAssign}
+        onUnassign={handleUnassign}
+        onClose={() => setShowAssignSheet(false)}
       />
     </View>
   )
@@ -301,4 +338,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeText: { color: colors.white, fontWeight: '600', fontSize: 14 },
+  assignRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  assignLink: { color: colors.gold, fontSize: 11, fontWeight: '600' },
 })
