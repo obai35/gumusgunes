@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 
-export const GET = withAdmin(async () => {
+const handler = withAdmin(async (req, { admin }) => {
   const admins = await db.admin.findMany({
     select: {
       id: true,
@@ -22,3 +22,5 @@ export const GET = withAdmin(async () => {
     }))
   )
 })
+
+export const GET = handler
