@@ -6,23 +6,31 @@ import { getPushPreferences } from './store'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => {
-    const prefs = await getPushPreferences()
-    const now = new Date()
-    const hours = now.getHours().toString().padStart(2, '0')
-    const minutes = now.getMinutes().toString().padStart(2, '0')
-    const current = `${hours}:${minutes}`
+    try {
+      const prefs = await getPushPreferences()
+      const now = new Date()
+      const hours = now.getHours().toString().padStart(2, '0')
+      const minutes = now.getMinutes().toString().padStart(2, '0')
+      const current = `${hours}:${minutes}`
 
-    let showAlert = true
-    if (prefs?.quietHoursEnabled) {
-      if (current >= prefs.quietHoursFrom || current < prefs.quietHoursTo) {
-        showAlert = false
+      let showAlert = true
+      if (prefs?.quietHoursEnabled) {
+        if (current >= prefs.quietHoursFrom || current < prefs.quietHoursTo) {
+          showAlert = false
+        }
       }
-    }
 
-    return {
-      shouldShowAlert: showAlert,
-      shouldPlaySound: showAlert && (prefs?.sound ?? true),
-      shouldSetBadge: true,
+      return {
+        shouldShowAlert: showAlert,
+        shouldPlaySound: showAlert && (prefs?.sound ?? true),
+        shouldSetBadge: true,
+      }
+    } catch {
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }
     }
   },
 })
@@ -70,13 +78,13 @@ export async function unregisterPushToken(token: string) {
   } catch {}
 }
 
-export function createNotificationChannel() {
+export function createNotificationChannel(): void {
   if (Platform.OS === 'android') {
     Notifications.setNotificationChannelAsync('conversations', {
       name: 'Conversations',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
       lightColor: '#D4AF37',
-    })
+    }).catch(() => {})
   }
 }

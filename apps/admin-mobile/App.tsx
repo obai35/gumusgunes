@@ -150,18 +150,19 @@ export default function App() {
     createNotificationChannel()
 
     notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      const data = response.notification.request.content.data
-      const conversationId = data?.conversationId as string | undefined
-      if (conversationId && navigationRef.current?.isReady()) {
-        navigationRef.current.navigate('Inbox', { screen: 'Chat', params: { conversationId } })
-      }
+      try {
+        const conversationId = response?.notification?.request?.content?.data?.conversationId as string | undefined
+        if (conversationId && navigationRef.current?.isReady()) {
+          navigationRef.current.navigate('Inbox', { screen: 'Chat', params: { conversationId } })
+        }
+      } catch {}
     })
 
     Notifications.getLastNotificationResponseAsync().then(response => {
       if (response) {
         setLastNotificationResponse(response)
       }
-    })
+    }).catch(() => {})
 
     return () => {
       if (notificationResponseListener.current) {
@@ -171,7 +172,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const handler = (error: Error, isFatal: boolean) => {
+    const handler = (error: Error, isFatal?: boolean) => {
       console.error('Fatal error:', error.message, error.stack)
       if (isFatal) setFatalError(error.message || 'Unknown error')
     }
