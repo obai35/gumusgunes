@@ -478,6 +478,7 @@ model Admin {
   assignedConversations Conversation[]
   sentMessages         Message[]
   pushTokens           PushToken[]
+  pushPreference       PushPreference?
 }
 
 model PushToken {
@@ -491,6 +492,21 @@ model PushToken {
 
   @@unique([adminId, token])
   @@index([adminId])
+}
+
+model PushPreference {
+  id                  String   @id @default(cuid())
+  adminId             String   @unique
+  admin               Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  newConversation     Boolean  @default(true)
+  newMessage          Boolean  @default(true)
+  assignmentChanged   Boolean  @default(true)
+  sound               Boolean  @default(true)
+  quietHoursEnabled   Boolean  @default(false)
+  quietHoursFrom      String   @default("22:00")
+  quietHoursTo        String   @default("08:00")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model InventoryLog {
