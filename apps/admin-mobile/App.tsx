@@ -142,54 +142,18 @@ function TabNavigator() {
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null)
   const navigationRef = useRef<NavigationContainerRef<any>>(null)
-  const notificationResponseListener = useRef<any>(null)
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const notif = await import('./src/notifications')
-        await notif.createNotificationChannel()
-        await notif.setupNotificationHandler()
-
-        const Notifications = await import('expo-notifications')
-
-        notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-          try {
-            const conversationId = response?.notification?.request?.content?.data?.conversationId as string | undefined
-            if (conversationId && navigationRef.current?.isReady()) {
-              navigationRef.current.navigate('Inbox', { screen: 'Chat', params: { conversationId } })
-            }
-          } catch {}
-        })
-
-        Notifications.getLastNotificationResponseAsync().then(response => {
-          if (response) {
-            notif.setLastNotificationResponse(response)
-          }
-        }).catch(() => {})
-      } catch {}
-    })()
-
-    return () => {
-      if (notificationResponseListener.current) {
-        import('expo-notifications').then(Notif => {
-          Notif.removeNotificationSubscription(notificationResponseListener.current)
-        }).catch(() => {})
-      }
-    }
-  }, [])
 
   useEffect(() => {
     const handler = (error: Error, isFatal?: boolean) => {
       console.error('Fatal error:', error.message, error.stack)
       if (isFatal) setFatalError(error.message || 'Unknown error')
     }
-    if (ErrorUtils?.setGlobalHandler) {
-      ErrorUtils.setGlobalHandler(handler)
+    if ((ErrorUtils as any)?.setGlobalHandler) {
+      (ErrorUtils as any).setGlobalHandler(handler)
     }
     return () => {
-      if (ErrorUtils?.setGlobalHandler) {
-        ErrorUtils.setGlobalHandler(undefined as any)
+      if ((ErrorUtils as any)?.setGlobalHandler) {
+        (ErrorUtils as any).setGlobalHandler(undefined)
       }
     }
   }, [])
