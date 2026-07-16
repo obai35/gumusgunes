@@ -17,7 +17,7 @@ export async function getToken(): Promise<string | null> {
 }
 
 export async function clearToken() {
-  await SecureStore.removeItemAsync('admin_token')
+  await (SecureStore as any).deleteItemAsync('admin_token')
 }
 
 export async function savePushPreferences(prefs: Record<string, any>) {
