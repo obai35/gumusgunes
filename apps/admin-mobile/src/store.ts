@@ -19,3 +19,16 @@ export async function getToken(): Promise<string | null> {
 export async function clearToken() {
   await SecureStore.removeItemAsync('admin_token')
 }
+
+export async function savePushPreferences(prefs: Record<string, any>) {
+  await SecureStore.setItemAsync('push_preferences', JSON.stringify(prefs))
+}
+
+export async function getPushPreferences(): Promise<Record<string, any> | null> {
+  try {
+    const data = await SecureStore.getItemAsync('push_preferences')
+    return data ? JSON.parse(data) : null
+  } catch {
+    return null
+  }
+}

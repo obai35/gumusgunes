@@ -118,4 +118,28 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ token }),
     }),
+
+  getConversationStats: () =>
+    request('/api/admin/conversations/stats'),
+
+  getAgents: () =>
+    request('/api/admin/conversations/agents'),
+
+  assignConversation: (id: string, adminId: string) =>
+    request(`/api/admin/conversations/${id}/assign`, {
+      method: 'POST',
+      body: JSON.stringify({ adminId }),
+    }),
+
+  unassignConversation: (id: string) =>
+    request(`/api/admin/conversations/${id}/unassign`, { method: 'POST' }),
+
+  getPushPreferences: () =>
+    request('/api/admin/push/preferences'),
+
+  updatePushPreferences: (prefs: Record<string, any>) =>
+    request('/api/admin/push/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(prefs),
+    }),
 }
