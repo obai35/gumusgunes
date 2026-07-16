@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 
-export const GET = withAdmin(async () => {
+const handler = withAdmin(async () => {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+
   const [
     totalConversations,
     activeConversations,
@@ -14,9 +17,7 @@ export const GET = withAdmin(async () => {
     db.conversation.count(),
     db.conversation.count({ where: { status: 'ACTIVE' } }),
     db.conversation.count({ where: { status: 'WAITING' } }),
-    db.message.count({
-      where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
-    }),
+    db.message.count({ where: { createdAt: { gte: todayStart } } }),
     db.conversation.groupBy({
       by: ['source'],
       _count: true,
@@ -32,6 +33,10 @@ export const GET = withAdmin(async () => {
   ])
 
   const total = byChannel.reduce((sum, c) => sum + c._count, 0)
+
+  // totalConversations already has same value, but we use byChannel.reduce
+  // here to ensure channel percentages always sum to 100 even if a
+  // conversation has an unknown/missing source
 
   return NextResponse.json({
     totalConversations,
@@ -50,3 +55,5 @@ export const GET = withAdmin(async () => {
     })),
   })
 })
+
+export const GET = handler
