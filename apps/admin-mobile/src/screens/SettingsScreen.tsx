@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, ActivityIndicator, Alert, ScrollView, StyleSheet } from 'react-native'
 import * as Updates from 'expo-updates'
+import { FontAwesome5 } from '@expo/vector-icons'
 import { colors, borderRadius, spacing } from '../theme'
 import Avatar from '../components/Avatar'
 import Card from '../components/Card'
@@ -153,6 +154,14 @@ export default function SettingsScreen({ navigation }: any) {
         )}
       </Card>
 
+      <Text style={styles.sectionTitle}>Preferences</Text>
+      <Card>
+        <TouchableOpacity onPress={() => navigation.navigate('NotificationPreferences')} style={styles.navRow}>
+          <Text style={styles.navRowText}>Notification Preferences</Text>
+          <FontAwesome5 name="chevron-right" size={14} color={colors.grayLight} />
+        </TouchableOpacity>
+      </Card>
+
       <Text style={styles.sectionTitle}>Account</Text>
       <Card>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
@@ -199,6 +208,8 @@ const styles = StyleSheet.create({
   secondaryBtnText: { color: colors.gold, fontWeight: '600', fontSize: 14 },
   downloadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12, gap: 8 },
   downloadingText: { color: colors.grayLight, fontSize: 12 },
+  navRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 4 },
+  navRowText: { color: colors.white, fontSize: 15, fontWeight: '500' },
   logoutBtn: { alignItems: 'center', paddingVertical: 4 },
   logoutText: { color: colors.red, fontSize: 16, fontWeight: '600' },
 })
