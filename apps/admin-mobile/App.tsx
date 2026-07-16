@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { FontAwesome5 } from '@expo/vector-icons'
 import * as Notifications from 'expo-notifications'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -9,9 +11,16 @@ import { KeyboardProvider } from 'react-native-keyboard-controller'
 import LoginScreen from './src/screens/LoginScreen'
 import ConversationsScreen from './src/screens/ConversationsScreen'
 import SettingsScreen from './src/screens/SettingsScreen'
+import DashboardScreen from './src/screens/DashboardScreen'
+import NotificationPreferencesScreen from './src/screens/NotificationPreferencesScreen'
 import { createNotificationChannel, setLastNotificationResponse } from './src/notifications'
+import { colors } from './src/theme'
 
-const Stack = createNativeStackNavigator()
+const RootStack = createNativeStackNavigator()
+const Tab = createBottomTabNavigator()
+const InboxStack = createNativeStackNavigator()
+const DashboardStack = createNativeStackNavigator()
+const SettingsStack = createNativeStackNavigator()
 
 let ChatScreen: React.ComponentType<any> | null = null
 
@@ -49,6 +58,89 @@ function LazyChatScreen(props: any) {
   return <Screen {...props} />
 }
 
+function InboxNavigator() {
+  return (
+    <InboxStack.Navigator screenOptions={{
+      headerStyle: { backgroundColor: '#0a0a0a' },
+      headerTintColor: '#d4af37',
+      headerTitleStyle: { fontWeight: '600', fontSize: 18 },
+      contentStyle: { backgroundColor: '#111' },
+      animation: 'fade',
+    }}>
+      <InboxStack.Screen name="ConversationsList" component={ConversationsScreen} options={{ headerShown: false }} />
+      <InboxStack.Screen name="Chat" component={LazyChatScreen} options={{ title: 'Chat' }} />
+    </InboxStack.Navigator>
+  )
+}
+
+function DashboardNavigator() {
+  return (
+    <DashboardStack.Navigator screenOptions={{
+      headerStyle: { backgroundColor: '#0a0a0a' },
+      headerTintColor: '#d4af37',
+      headerTitleStyle: { fontWeight: '600', fontSize: 18 },
+      contentStyle: { backgroundColor: '#111' },
+    }}>
+      <DashboardStack.Screen name="DashboardHome" component={DashboardScreen} options={{ headerShown: false }} />
+    </DashboardStack.Navigator>
+  )
+}
+
+function SettingsNavigator() {
+  return (
+    <SettingsStack.Navigator screenOptions={{
+      headerStyle: { backgroundColor: '#0a0a0a' },
+      headerTintColor: '#d4af37',
+      headerTitleStyle: { fontWeight: '600', fontSize: 18 },
+      contentStyle: { backgroundColor: '#111' },
+    }}>
+      <SettingsStack.Screen name="SettingsHome" component={SettingsScreen} options={{ headerShown: false }} />
+      <SettingsStack.Screen name="NotificationPreferences" component={NotificationPreferencesScreen} options={{ title: 'Notifications' }} />
+    </SettingsStack.Navigator>
+  )
+}
+
+function TabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#0a0a0a',
+          borderTopColor: '#222',
+          borderTopWidth: 1,
+          paddingBottom: 4,
+          paddingTop: 4,
+        },
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: colors.gray,
+      }}
+    >
+      <Tab.Screen
+        name="Inbox"
+        component={InboxNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="inbox" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Dashboard"
+        component={DashboardNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="chart-bar" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsNavigator}
+        options={{
+          tabBarIcon: ({ color, size }) => <FontAwesome5 name="cog" size={size} color={color} />,
+        }}
+      />
+    </Tab.Navigator>
+  )
+}
+
 export default function App() {
   const [fatalError, setFatalError] = useState<string | null>(null)
   const navigationRef = useRef<NavigationContainerRef<any>>(null)
@@ -61,7 +153,7 @@ export default function App() {
       const data = response.notification.request.content.data
       const conversationId = data?.conversationId as string | undefined
       if (conversationId && navigationRef.current?.isReady()) {
-        navigationRef.current.navigate('Chat' as never, { conversationId } as never)
+        navigationRef.current.navigate('Inbox', { screen: 'Chat', params: { conversationId } })
       }
     })
 
@@ -102,21 +194,10 @@ export default function App() {
       <SafeAreaProvider>
         <NavigationContainer ref={navigationRef}>
           <StatusBar style="light" />
-          <Stack.Navigator
-            initialRouteName="Login"
-            screenOptions={{
-              headerStyle: { backgroundColor: '#0a0a0a' },
-              headerTintColor: '#d4af37',
-              headerTitleStyle: { fontWeight: '600', fontSize: 18 },
-              contentStyle: { backgroundColor: '#111' },
-              animation: 'fade',
-            }}
-          >
-            <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Conversations" component={ConversationsScreen} options={{ headerShown: false }} />
-            <Stack.Screen name="Chat" component={LazyChatScreen} options={{ title: 'Chat' }} />
-            <Stack.Screen name="Settings" component={SettingsScreen} options={{ headerShown: false }} />
-          </Stack.Navigator>
+          <RootStack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
+            <RootStack.Screen name="Login" component={LoginScreen} />
+            <RootStack.Screen name="Main" component={TabNavigator} />
+          </RootStack.Navigator>
         </NavigationContainer>
       </SafeAreaProvider>
     </KeyboardProvider>

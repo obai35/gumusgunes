@@ -122,9 +122,6 @@ export default function ConversationsScreen({ navigation }: any) {
     <View style={styles.container}>
       <LinearGradient colors={['#0f0f0f', '#111']} style={styles.headerBar}>
         <Text style={styles.headerTitle}>Inbox</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-          <FontAwesome5 name="cog" size={20} color={colors.gold} />
-        </TouchableOpacity>
       </LinearGradient>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll} contentContainerStyle={styles.tabContent}>
