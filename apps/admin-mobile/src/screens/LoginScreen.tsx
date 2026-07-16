@@ -33,7 +33,7 @@ export default function LoginScreen({ navigation }: any) {
       await api.login(email, password)
       connectSocket().catch(() => {})
       registerForPushNotifications()
-      navigation.replace('Conversations')
+      navigation.replace('Main')
     } catch (err: any) {
       Alert.alert('Login Failed', err.message || 'Invalid credentials')
     } finally {
