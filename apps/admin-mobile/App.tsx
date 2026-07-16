@@ -4,7 +4,6 @@ import { NavigationContainer, NavigationContainerRef } from '@react-navigation/n
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { FontAwesome5 } from '@expo/vector-icons'
-import * as Notifications from 'expo-notifications'
 import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
@@ -13,7 +12,6 @@ import ConversationsScreen from './src/screens/ConversationsScreen'
 import SettingsScreen from './src/screens/SettingsScreen'
 import DashboardScreen from './src/screens/DashboardScreen'
 import NotificationPreferencesScreen from './src/screens/NotificationPreferencesScreen'
-import { createNotificationChannel, setLastNotificationResponse } from './src/notifications'
 import { colors } from './src/theme'
 
 const RootStack = createNativeStackNavigator()
@@ -147,26 +145,36 @@ export default function App() {
   const notificationResponseListener = useRef<any>(null)
 
   useEffect(() => {
-    createNotificationChannel()
-
-    notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+    (async () => {
       try {
-        const conversationId = response?.notification?.request?.content?.data?.conversationId as string | undefined
-        if (conversationId && navigationRef.current?.isReady()) {
-          navigationRef.current.navigate('Inbox', { screen: 'Chat', params: { conversationId } })
-        }
-      } catch {}
-    })
+        const notif = await import('./src/notifications')
+        await notif.createNotificationChannel()
+        await notif.setupNotificationHandler()
 
-    Notifications.getLastNotificationResponseAsync().then(response => {
-      if (response) {
-        setLastNotificationResponse(response)
-      }
-    }).catch(() => {})
+        const Notifications = await import('expo-notifications')
+
+        notificationResponseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+          try {
+            const conversationId = response?.notification?.request?.content?.data?.conversationId as string | undefined
+            if (conversationId && navigationRef.current?.isReady()) {
+              navigationRef.current.navigate('Inbox', { screen: 'Chat', params: { conversationId } })
+            }
+          } catch {}
+        })
+
+        Notifications.getLastNotificationResponseAsync().then(response => {
+          if (response) {
+            notif.setLastNotificationResponse(response)
+          }
+        }).catch(() => {})
+      } catch {}
+    })()
 
     return () => {
       if (notificationResponseListener.current) {
-        Notifications.removeNotificationSubscription(notificationResponseListener.current)
+        import('expo-notifications').then(Notif => {
+          Notif.removeNotificationSubscription(notificationResponseListener.current)
+        }).catch(() => {})
       }
     }
   }, [])

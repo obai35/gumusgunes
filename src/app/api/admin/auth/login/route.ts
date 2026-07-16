@@ -106,4 +106,4 @@ const handler = async (req: NextRequest) => {
   }
 }
 
-export const POST = withRateLimit(handler, { limit: 5, window: '30s', failClosed: true })
+export const POST = withRateLimit(handler, { limit: 5, window: '30s', failClosed: false })
