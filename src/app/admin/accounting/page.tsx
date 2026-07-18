@@ -16,7 +16,9 @@ import AuditTab from './AuditTab'
 import AgingTab from './AgingTab'
 import TaxTab from './TaxTab'
 import BudgetTab from './BudgetTab'
+import CashFlowTab from './CashFlowTab'
 import InvoicesTab from './InvoicesTab'
+import BillsTab from './BillsTab'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
@@ -150,7 +152,7 @@ export default function AccountingPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'aging', 'tax', 'invoices', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
+        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'cash-flow', 'aging', 'tax', 'invoices', 'bills', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -170,9 +172,11 @@ export default function AccountingPage() {
         {tab === 'trial-balance' && <TrialBalanceTab />}
         {tab === 'pl' && <ProfitLossTab />}
         {tab === 'balance-sheet' && <BalanceSheetTab />}
+        {tab === 'cash-flow' && <CashFlowTab />}
         {tab === 'aging' && <AgingTab />}
         {tab === 'tax' && <TaxTab />}
         {tab === 'invoices' && <InvoicesTab />}
+        {tab === 'bills' && <BillsTab />}
         {tab === 'budget' && <BudgetTab />}
         {tab === 'audit' && <AuditTab />}
         {tab === 'orders' && <OrdersTab />}
