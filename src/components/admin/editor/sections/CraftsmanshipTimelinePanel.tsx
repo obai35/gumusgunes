@@ -16,7 +16,8 @@ interface TimelineEntry {
 
 export function CraftsmanshipTimelinePanel() {
   const { settings, updateSetting } = useEditor()
-  const raw = settings.craftsmanshipTimeline ? JSON.parse(settings.craftsmanshipTimeline) : []
+  let raw: TimelineEntry[] = []
+  try { if (settings.craftsmanshipTimeline) raw = JSON.parse(settings.craftsmanshipTimeline) } catch {}
   const [entries, setEntries] = useState<TimelineEntry[]>(raw)
 
   const persist = (next: TimelineEntry[]) => {

@@ -19,7 +19,8 @@ interface Testimonial {
 
 export function TestimonialsPanel() {
   const { settings, updateSetting } = useEditor()
-  const raw = settings.testimonials ? JSON.parse(settings.testimonials) : []
+  let raw: Testimonial[] = []
+  try { if (settings.testimonials) raw = JSON.parse(settings.testimonials) } catch {}
   const [testimonials, setTestimonials] = useState<Testimonial[]>(raw)
 
   const persist = (next: Testimonial[]) => {

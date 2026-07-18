@@ -20,7 +20,8 @@ export function AboutSectionPanel() {
   const imageUrl = settings.aboutImageUrl ?? ''
   const mission = settings.aboutMission ?? ''
   const vision = settings.aboutVision ?? ''
-  const raw = settings.aboutStats ? JSON.parse(settings.aboutStats) : []
+  let raw: StatItem[] = []
+  try { if (settings.aboutStats) raw = JSON.parse(settings.aboutStats) } catch {}
   const [stats, setStats] = useState<StatItem[]>(raw)
 
   const persistStats = (next: StatItem[]) => {

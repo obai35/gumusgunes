@@ -22,7 +22,8 @@ const defaultBadges: TrustBadge[] = [
 
 export function TrustBadgesPanel() {
   const { settings, updateSetting } = useEditor()
-  const raw = settings.trustBadges ? JSON.parse(settings.trustBadges) : defaultBadges
+  let raw: TrustBadge[] = defaultBadges
+  try { if (settings.trustBadges) raw = JSON.parse(settings.trustBadges) } catch {}
   const [badges, setBadges] = useState<TrustBadge[]>(raw)
 
   const persist = (next: TrustBadge[]) => {

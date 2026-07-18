@@ -25,10 +25,12 @@ export function RewardsSectionPanel() {
   const title = settings.rewardsTitle ?? ''
   const pointsPerEGP = settings.rewardsPointsPerEGP ?? '1'
 
-  const tiersRaw = settings.rewardsTiers ? JSON.parse(settings.rewardsTiers) : []
+  let tiersRaw: Tier[] = []
+  try { if (settings.rewardsTiers) tiersRaw = JSON.parse(settings.rewardsTiers) } catch {}
   const [tiers, setTiers] = useState<Tier[]>(tiersRaw)
 
-  const catalogRaw = settings.rewardsCatalog ? JSON.parse(settings.rewardsCatalog) : []
+  let catalogRaw: RewardItem[] = []
+  try { if (settings.rewardsCatalog) catalogRaw = JSON.parse(settings.rewardsCatalog) } catch {}
   const [catalog, setCatalog] = useState<RewardItem[]>(catalogRaw)
 
   const persistTiers = (next: Tier[]) => {

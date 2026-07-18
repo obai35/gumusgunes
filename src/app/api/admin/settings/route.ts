@@ -48,6 +48,7 @@ const DEFAULTS: Record<string, string> = {
   receiptAddress: 'Grand Bazaar, Istanbul',
   receiptShowReturnPolicy: 'true',
   receiptReturnPolicyDays: '30',
+  trustBadges: '[{"id":"1","icon":"🔒","label":"Secure Checkout","active":true},{"id":"2","icon":"🛡️","label":"SSL Encrypted","active":true},{"id":"3","icon":"💰","label":"Money-Back Guarantee","active":true},{"id":"4","icon":"🚚","label":"Free Shipping","active":true}]',
 }
 
 export const GET = withAdmin(async () => {
