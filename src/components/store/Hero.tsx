@@ -12,11 +12,9 @@ export function Hero() {
   const [settings, setSettings] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const el = document.getElementById('__PREVIEW_DATA')
-      if (el?.textContent) {
-        setSettings(JSON.parse(el.textContent))
-      }
+    const el = typeof document !== 'undefined' ? document.getElementById('__PREVIEW_DATA') : null
+    if (el?.textContent) {
+      setSettings(JSON.parse(el.textContent))
       return
     }
     fetch('/api/site-settings')
