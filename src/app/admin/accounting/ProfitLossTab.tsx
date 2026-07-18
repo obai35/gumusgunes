@@ -75,6 +75,22 @@ export default function ProfitLossTab() {
           <Download className="h-4 w-4" /> CSV
         </button>
         <button
+          onClick={() => {
+            const rows = [
+              ['Type', 'Account', 'Amount'],
+              ...data.incomeItems.map((i: any) => ['Income', i.name, String(i.balance)]),
+              ...data.expenseItems.map((e: any) => ['Expense', e.name, String(e.balance)]),
+              ['', 'Net Profit', String(data.netProfit)],
+            ]
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+            const blob = new Blob([csv], { type: 'application/vnd.ms-excel' })
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `pnl-${year}.xls`; a.click()
+          }}
+          className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Excel
+        </button>
+        <button
           onClick={async () => {
             const rows: (string | number)[][] = [
               ...data.incomeItems.map((i: any) => ['Income', i.name, formatCurrency(i.balance)]),

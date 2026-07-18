@@ -301,7 +301,46 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
           onClick={handleExportCSV}
           className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5"
         >
-          <Download className="h-4 w-4" /> Export CSV
+          <Download className="h-4 w-4" /> CSV
+        </button>
+        <button
+          onClick={() => {
+            const rows = [['Metric', 'Value']]
+            for (const [key, val] of Object.entries({
+              'Total Revenue': data.totalRevenue, 'Net Revenue': data.netRevenue,
+              'Total Orders': data.totalOrders, 'Avg Order Value': data.avgOrderValue,
+              'Returns': data.totalReturns, 'Expenses': data.totalExpenses,
+              'Pending Orders': data.pendingOrders, 'Unreconciled Payments': data.unreconciledOrders,
+              'Open Shifts': data.openShifts,
+            })) rows.push([key, String(val)])
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+            const blob = new Blob([csv], { type: 'application/vnd.ms-excel' })
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `overview-${period}.xls`; a.click()
+          }}
+          className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Excel
+        </button>
+        <button
+          onClick={async () => {
+            const { generatePdf } = await import('@/lib/pdf-export')
+            const rows = [['Metric', 'Value'],
+              ['Period', period], ['Total Revenue', formatCurrency(data.totalRevenue)],
+              ['Net Revenue', formatCurrency(data.netRevenue)], ['Total Orders', String(data.totalOrders)],
+              ['Avg Order Value', formatCurrency(data.avgOrderValue)], ['Returns', formatCurrency(data.totalReturns)],
+              ['Expenses', formatCurrency(data.totalExpenses)], ['Pending Orders', String(data.pendingOrders)],
+              ['Unreconciled Payments', String(data.unreconciledOrders)], ['Open Shifts', String(data.openShifts)],
+            ]
+            await generatePdf({
+              title: 'Accounting Overview',
+              subtitle: PERIOD_LABELS[period],
+              columns: ['Metric', 'Value'],
+              rows,
+            })
+          }}
+          className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> PDF
         </button>
       </div>
 

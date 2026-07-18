@@ -56,6 +56,25 @@ export default function BalanceSheetTab() {
           <Download className="h-4 w-4" /> CSV
         </button>
         <button
+          onClick={() => {
+            const rows = [['Type', 'Account', 'Balance']]
+            for (const [type, items] of Object.entries(data.groups || {})) {
+              for (const item of items as any[]) {
+                rows.push([sectionColors[type]?.label || type, item.name, String(item.balance)])
+              }
+            }
+            rows.push(['', 'Total Assets', String(data.totalAssets)])
+            rows.push(['', 'Total Liabilities', String(data.totalLiabilities)])
+            rows.push(['', 'Total Equity', String(data.totalEquity)])
+            const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
+            const blob = new Blob([csv], { type: 'application/vnd.ms-excel' })
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'balance-sheet.xls'; a.click()
+          }}
+          className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" /> Excel
+        </button>
+        <button
           onClick={async () => {
             const rows: (string | number)[][] = []
             for (const [type, items] of Object.entries(data.groups || {})) {
