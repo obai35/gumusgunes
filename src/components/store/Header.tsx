@@ -30,11 +30,9 @@ export function Header() {
   const { navigateToCart } = usePageNavigation()
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const el = document.getElementById('__PREVIEW_DATA')
-      if (el?.textContent) {
-        setSettings(JSON.parse(el.textContent))
-      }
+    const el = typeof document !== 'undefined' ? document.getElementById('__PREVIEW_DATA') : null
+    if (el?.textContent) {
+      setSettings(JSON.parse(el.textContent))
       fetch('/api/categories').then(r => r.json()).then(d => { if (d.ok) setCategories(d.categories) }).catch(() => {})
       return
     }
