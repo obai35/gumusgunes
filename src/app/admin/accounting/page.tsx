@@ -16,6 +16,7 @@ import AuditTab from './AuditTab'
 import AgingTab from './AgingTab'
 import TaxTab from './TaxTab'
 import BudgetTab from './BudgetTab'
+import InvoicesTab from './InvoicesTab'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
@@ -149,7 +150,7 @@ export default function AccountingPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'aging', 'tax', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
+        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'aging', 'tax', 'invoices', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -171,6 +172,7 @@ export default function AccountingPage() {
         {tab === 'balance-sheet' && <BalanceSheetTab />}
         {tab === 'aging' && <AgingTab />}
         {tab === 'tax' && <TaxTab />}
+        {tab === 'invoices' && <InvoicesTab />}
         {tab === 'budget' && <BudgetTab />}
         {tab === 'audit' && <AuditTab />}
         {tab === 'orders' && <OrdersTab />}
