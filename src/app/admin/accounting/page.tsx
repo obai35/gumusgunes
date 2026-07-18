@@ -153,7 +153,7 @@ export default function AccountingPage() {
       </div>
 
       <div className="flex gap-1 border-b border-border">
-        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'cash-flow', 'aging', 'tax', 'invoices', 'bills', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
+        {(['overview', 'journal', 'accounts', 'trial-balance', 'pl', 'balance-sheet', 'cash-flow', 'aging', 'tax', 'invoices', 'bills', 'inventory-valuation', 'budget', 'audit', 'orders', 'branches', 'expenses', 'reports'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -178,6 +178,7 @@ export default function AccountingPage() {
         {tab === 'tax' && <TaxTab />}
         {tab === 'invoices' && <InvoicesTab />}
         {tab === 'bills' && <BillsTab />}
+        {tab === 'inventory-valuation' && <InventoryValuationTab />}
         {tab === 'budget' && <BudgetTab />}
         {tab === 'audit' && <AuditTab />}
         {tab === 'orders' && <OrdersTab />}
@@ -193,6 +194,7 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
   const [localCompare, setLocalCompare] = useState(false)
   const [compareData, setCompareData] = useState<any>(null)
   const [ratios, setRatios] = useState<any>(null)
+  const [drillDown, setDrillDown] = useState<{ type: string; data: any } | null>(null)
 
   useEffect(() => {
     fetch('/api/admin/accounting/ratios')
@@ -257,12 +259,12 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
     exportCSVRows(rows, `overview-${period}.csv`)
   }
 
-  function StatCard({ label, value, icon: Icon, color, bg, compareKey }: {
-    label: string; value: string | number; icon: any; color: string; bg: string; compareKey?: string
+  function StatCard({ label, value, icon: Icon, color, bg, compareKey, onClick }: {
+    label: string; value: string | number; icon: any; color: string; bg: string; compareKey?: string; onClick?: () => void
   }) {
     const cmp = compareKey ? statCompare(parseFloat(String(value).replace(/[^0-9.-]/g, '')), compareKey) : null
     return (
-      <div className="bg-white rounded-xl border border-border p-4 hover:shadow-md transition-shadow">
+      <div className={`bg-white rounded-xl border border-border p-4 hover:shadow-lg transition-shadow ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
         <div className="flex items-center gap-2 mb-2">
           <div className={`p-1.5 rounded-lg ${bg}`}>
             <Icon className={`h-4 w-4 ${color}`} />
@@ -302,11 +304,11 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" compareKey="compareRevenue" />
-        <StatCard label="Net Revenue" value={formatCurrency(data.netRevenue)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" compareKey="compareNetRevenue" />
-        <StatCard label="Total Orders" value={data.totalOrders} icon={Receipt} color="text-navy" bg="bg-blue-50" compareKey="compareTotalOrders" />
-        <StatCard label="Avg Order" value={formatCurrency(data.avgOrderValue)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" />
-        <StatCard label="Returns" value={formatCurrency(data.totalReturns)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" />
+        <StatCard label="Total Revenue" value={formatCurrency(data.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" compareKey="compareRevenue" onClick={() => setDrillDown({ type: 'Total Revenue', data: { revenue: data.totalRevenue, period } })} />
+        <StatCard label="Net Revenue" value={formatCurrency(data.netRevenue)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" compareKey="compareNetRevenue" onClick={() => setDrillDown({ type: 'Net Revenue', data: { netRevenue: data.netRevenue, totalRevenue: data.totalRevenue, returns: data.totalReturns, expenses: data.totalExpenses, period } })} />
+        <StatCard label="Total Orders" value={data.totalOrders} icon={Receipt} color="text-navy" bg="bg-blue-50" compareKey="compareTotalOrders" onClick={() => setDrillDown({ type: 'Orders', data: { totalOrders: data.totalOrders, pendingOrders: data.pendingOrders, period } })} />
+        <StatCard label="Avg Order" value={formatCurrency(data.avgOrderValue)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" onClick={() => setDrillDown({ type: 'Avg Order Value', data: { avgOrderValue: data.avgOrderValue, totalRevenue: data.totalRevenue, totalOrders: data.totalOrders, period } })} />
+        <StatCard label="Returns" value={formatCurrency(data.totalReturns)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" onClick={() => setDrillDown({ type: 'Returns', data: { totalReturns: data.totalReturns, period } })} />
         <StatCard label="Expenses" value={formatCurrency(data.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
       </div>
 
@@ -484,6 +486,16 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
           </div>
         </div>
       </div>
+
+      {drillDown && (
+        <div className="bg-gray-50 rounded-xl border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-navy">Drill-down: {drillDown.type}</h4>
+            <button onClick={() => setDrillDown(null)} className="text-xs text-muted-foreground hover:text-navy">Close</button>
+          </div>
+          <pre className="text-xs text-muted-foreground max-h-60 overflow-auto">{JSON.stringify(drillDown.data, null, 2)}</pre>
+        </div>
+      )}
     </div>
   )
 }
