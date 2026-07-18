@@ -22,7 +22,7 @@ export function VisibilityGate({ setting, children }: Props) {
     fetch('/api/site-settings')
       .then(r => r.json())
       .then(data => {
-        setVisible(data[setting] !== 'hidden')
+        setVisible((data.settings?.[setting] ?? 'visible') !== 'hidden')
       })
       .catch(() => {})
   }, [setting])
