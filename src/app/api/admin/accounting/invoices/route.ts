@@ -1,0 +1,75 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
+
+export const GET = withAdmin(async (req: NextRequest) => {
+  const status = req.nextUrl.searchParams.get('status') || ''
+  const search = req.nextUrl.searchParams.get('search') || ''
+  const page = parseInt(req.nextUrl.searchParams.get('page') || '1')
+  const limit = 20
+  const skip = (page - 1) * limit
+
+  const where: any = {}
+  if (status) where.status = status
+  if (search) where.OR = [
+    { invoiceNumber: { contains: search, mode: 'insensitive' } },
+    { customerName: { contains: search, mode: 'insensitive' } },
+    { customerEmail: { contains: search, mode: 'insensitive' } },
+  ]
+
+  const [invoices, total] = await Promise.all([
+    db.invoice.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit, include: { items: true } }),
+    db.invoice.count({ where }),
+  ])
+  return NextResponse.json({ invoices, total, page, totalPages: Math.ceil(total / limit) })
+}, 'accounting')
+
+export const POST = withAdmin(async (req: NextRequest) => {
+  const body = await req.json()
+  const count = await db.invoice.count()
+  const invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`
+
+  if (body.orderId) {
+    const order = await db.order.findUnique({ where: { id: body.orderId }, include: { items: { include: { product: true } } } })
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    const invoice = await db.invoice.create({
+      data: {
+        invoiceNumber,
+        orderId: order.id,
+        customerName: order.fullName,
+        customerEmail: order.email,
+        customerPhone: order.phone,
+        customerAddress: order.address,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        shipping: order.shipping,
+        total: order.totalAmount,
+        status: 'draft',
+        items: { create: order.items.map(i => ({ productId: i.productId, name: i.product?.name || `Product ${i.productId.slice(0, 8)}`, quantity: i.quantity, unitPrice: i.price, total: i.price * i.quantity })) },
+      },
+      include: { items: true },
+    })
+    return NextResponse.json({ invoice })
+  }
+
+  const invoice = await db.invoice.create({
+    data: {
+      invoiceNumber,
+      customerName: body.customerName,
+      customerEmail: body.customerEmail,
+      customerPhone: body.customerPhone,
+      customerAddress: body.customerAddress,
+      subtotal: body.subtotal,
+      tax: body.tax || 0,
+      shipping: body.shipping || 0,
+      total: body.total,
+      status: 'draft',
+      issuedAt: new Date(),
+      dueAt: body.dueAt ? new Date(body.dueAt) : null,
+      notes: body.notes,
+      items: { create: (body.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity, unitPrice: i.unitPrice, total: i.quantity * i.unitPrice })) },
+    },
+    include: { items: true },
+  })
+  return NextResponse.json({ invoice })
+}, 'accounting')
