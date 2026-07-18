@@ -6,14 +6,15 @@ interface Badge {
   id: string
   icon: string
   label: string
+  desc: string
   active: boolean
 }
 
 const defaultBadges: Badge[] = [
-  { id: '1', icon: '🔒', label: 'Secure Checkout', active: true },
-  { id: '2', icon: '🛡️', label: 'SSL Encrypted', active: true },
-  { id: '3', icon: '💰', label: 'Money-Back Guarantee', active: true },
-  { id: '4', icon: '🚚', label: 'Free Shipping', active: true },
+  { id: '1', icon: '🔒', label: 'Secure Checkout', desc: 'SSL encrypted payment', active: true },
+  { id: '2', icon: '🛡️', label: 'Warranty Covered', desc: 'On every piece', active: true },
+  { id: '3', icon: '💰', label: 'Money-Back Guarantee', desc: '30-day returns', active: true },
+  { id: '4', icon: '🚚', label: 'Free Shipping', desc: 'On orders over $50', active: true },
 ]
 
 export function TrustBadges() {
@@ -60,6 +61,7 @@ export function TrustBadges() {
               </div>
               <div>
                 <h3 className="font-display text-base font-semibold text-navy mb-0.5">{b.label}</h3>
+                <p className="text-sm text-gray-500">{b.desc}</p>
               </div>
             </div>
           ))}

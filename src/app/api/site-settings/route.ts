@@ -60,6 +60,7 @@ const DEFAULTS: Record<string, string> = {
   aboutMission: '',
   aboutVision: '',
   aboutStats: '[]',
+  trustBadges: '[{"id":"1","icon":"🔒","label":"Secure Checkout","desc":"SSL encrypted payment","active":true},{"id":"2","icon":"🛡️","label":"Warranty Covered","desc":"On every piece","active":true},{"id":"3","icon":"💰","label":"Money-Back Guarantee","desc":"30-day returns","active":true},{"id":"4","icon":"🚚","label":"Free Shipping","desc":"On orders over $50","active":true}]',
 }
 
 export async function GET(req: NextRequest) {

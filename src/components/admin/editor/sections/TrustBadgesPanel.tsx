@@ -10,14 +10,15 @@ interface TrustBadge {
   id: string
   icon: string
   label: string
+  desc: string
   active: boolean
 }
 
 const defaultBadges: TrustBadge[] = [
-  { id: '1', icon: '🔒', label: 'Secure Checkout', active: true },
-  { id: '2', icon: '🛡️', label: 'SSL Encrypted', active: true },
-  { id: '3', icon: '💰', label: 'Money-Back Guarantee', active: true },
-  { id: '4', icon: '🚚', label: 'Free Shipping', active: true },
+  { id: '1', icon: '🔒', label: 'Secure Checkout', desc: 'SSL encrypted payment', active: true },
+  { id: '2', icon: '🛡️', label: 'Warranty Covered', desc: 'On every piece', active: true },
+  { id: '3', icon: '💰', label: 'Money-Back Guarantee', desc: '30-day returns', active: true },
+  { id: '4', icon: '🚚', label: 'Free Shipping', desc: 'On orders over $50', active: true },
 ]
 
 export function TrustBadgesPanel() {
@@ -74,6 +75,10 @@ export function TrustBadgesPanel() {
             <div>
               <label className="text-xs text-gray-500">Label</label>
               <Input value={badge.label} onChange={e => update(badge.id, 'label', e.target.value)} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs text-gray-500">Description</label>
+              <Input value={badge.desc} onChange={e => update(badge.id, 'desc', e.target.value)} />
             </div>
           </div>
         </div>
