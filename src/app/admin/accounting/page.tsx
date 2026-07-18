@@ -19,6 +19,7 @@ import BudgetTab from './BudgetTab'
 import CashFlowTab from './CashFlowTab'
 import InvoicesTab from './InvoicesTab'
 import BillsTab from './BillsTab'
+import InventoryValuationTab from './InventoryValuationTab'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
 
@@ -191,6 +192,14 @@ export default function AccountingPage() {
 function OverviewTab({ data, loading, period, compareEnabled, customStart, customEnd }: { data: any; loading: boolean; period: Period; compareEnabled: boolean; customStart: string; customEnd: string }) {
   const [localCompare, setLocalCompare] = useState(false)
   const [compareData, setCompareData] = useState<any>(null)
+  const [ratios, setRatios] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/accounting/ratios')
+      .then(r => { if (!r.ok) throw new Error(); return r.json() })
+      .then(d => setRatios(d))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!localCompare) { setCompareData(null); return }
@@ -328,6 +337,40 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
       )}
 
       <RevenueChart data={data.dailyRevenue || []} />
+
+      {ratios && (
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-navy mb-4">Financial Ratios</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Object.entries(ratios.profitability || {}).map(([key, r]: [string, any]) => (
+              <div key={key} className="p-3 rounded-lg bg-gray-50">
+                <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
+                <p className={`text-lg font-bold ${r.benchmark !== undefined ? (r.value >= r.benchmark ? 'text-green-600' : 'text-red-600') : 'text-navy'}`}>
+                  {(r.value * 100).toFixed(1)}%
+                </p>
+                {r.benchmark !== undefined && (
+                  <p className="text-xs text-muted-foreground mt-0.5">Benchmark: {(r.benchmark * 100).toFixed(0)}%</p>
+                )}
+              </div>
+            ))}
+            {Object.entries(ratios.liquidity || {}).map(([key, r]: [string, any]) => (
+              <div key={key} className="p-3 rounded-lg bg-gray-50">
+                <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
+                <p className={`text-lg font-bold ${r.benchmark !== undefined ? (r.value >= r.benchmark ? 'text-green-600' : 'text-red-600') : 'text-navy'}`}>
+                  {r.value.toFixed(2)}
+                </p>
+                {r.benchmark !== undefined && <p className="text-xs text-muted-foreground mt-0.5">Benchmark: {r.benchmark.toFixed(1)}</p>}
+              </div>
+            ))}
+            {Object.entries(ratios.efficiency || {}).map(([key, r]: [string, any]) => (
+              <div key={key} className="p-3 rounded-lg bg-gray-50">
+                <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
+                <p className="text-lg font-bold text-navy">{r.value.toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-border p-5">
