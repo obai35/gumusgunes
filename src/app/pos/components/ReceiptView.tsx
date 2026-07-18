@@ -12,6 +12,7 @@ type Props = {
 
 export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
   const [settings, setSettings] = useState<Record<string, string>>({})
+  const [receiptType, setReceiptType] = useState<'normal' | 'gift'>('normal')
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -91,6 +92,47 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
           </div>
           ${showReturnPolicy ? `<p class="text-center text-xs" style="margin-top:16px">Returns accepted within ${returnDays} days</p>` : ''}
           <p class="text-center text-xs" style="margin-top:4px">${footer}</p>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.print()
+  }
+
+  function printGiftReceipt() {
+    const header = settings.receiptHeader || 'GÜMÜŞ GÜNEŞ'
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+    printWindow.document.write(`
+      <html>
+        <head><title>Gift Receipt — ${receipt.receiptNumber}</title>
+        <style>
+          body { font-family: monospace; padding: 20px; max-width: 320px; margin: 0 auto; }
+          .text-center { text-align: center; }
+          .border-b { border-bottom: 1px dashed #ccc; }
+          .p-4 { padding: 16px; }
+          .mb-2 { margin-bottom: 8px; }
+          .text-lg { font-size: 18px; }
+          .text-sm { font-size: 13px; }
+          .text-xs { font-size: 11px; }
+          .font-bold { font-weight: bold; }
+          img { width: 32px; height: 32px; border-radius: 50%; }
+          @media print { @page { margin: 8mm; } }
+        </style></head>
+        <body>
+          <div class="text-center">
+            <img src="/gumusgunes-logo.jpeg" alt="" style="margin:0 auto 8px" />
+            <p style="font-size:18px;font-weight:600">${header}</p>
+            <p class="text-xs">Gift Receipt</p>
+            <p class="text-sm font-bold mt-2">${receipt.receiptNumber}</p>
+            <p class="text-xs">${new Date().toLocaleDateString()}</p>
+          </div>
+          <div class="border-b p-4">
+            ${receipt.items.map((item) => `
+              <div class="text-sm font-bold">${item.product.name}</div>
+            `).join('')}
+          </div>
+          <p class="text-center text-xs" style="margin-top:16px">Thank you! No refund without original receipt.</p>
         </body>
       </html>
     `)
@@ -180,8 +222,26 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
             <p className="text-center text-xs text-white/40">Returns accepted within {returnDays} days</p>
           )}
           <p className="text-center text-xs text-white/40">{footer}</p>
-          <button onClick={printReceipt} className="w-full px-6 py-2.5 border border-white/10 rounded-lg text-sm text-silver-soft font-medium hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-            <Printer className="h-4 w-4" /> Print Receipt
+          <div className="flex gap-2">
+            <button
+              onClick={() => setReceiptType('normal')}
+              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border ${
+                receiptType === 'normal' ? 'bg-gold/20 text-gold border-gold/40' : 'border-white/10 text-white/50 hover:text-silver-soft'
+              }`}
+            >
+              Normal
+            </button>
+            <button
+              onClick={() => setReceiptType('gift')}
+              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-all border ${
+                receiptType === 'gift' ? 'bg-gold/20 text-gold border-gold/40' : 'border-white/10 text-white/50 hover:text-silver-soft'
+              }`}
+            >
+              Gift
+            </button>
+          </div>
+          <button onClick={receiptType === 'gift' ? printGiftReceipt : printReceipt} className="w-full px-6 py-2.5 border border-white/10 rounded-lg text-sm text-silver-soft font-medium hover:bg-white/5 transition-all flex items-center justify-center gap-2">
+            <Printer className="h-4 w-4" /> Print {receiptType === 'gift' ? 'Gift' : ''} Receipt
           </button>
           <button onClick={onNewSale} className="w-full px-6 py-2.5 bg-gradient-to-r from-gold/90 to-gold text-navy-deep rounded-lg text-sm font-bold hover:from-gold hover:to-gold/90 transition-all shadow-lg shadow-gold/20">New Sale</button>
         </div>
