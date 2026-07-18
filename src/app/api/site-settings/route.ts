@@ -54,6 +54,12 @@ const DEFAULTS: Record<string, string> = {
   borderRadius: '8',
   buttonStyle: 'solid',
   loyaltyPointsRate: '100',
+  aboutTitle: 'From Our Atelier',
+  aboutContent: 'Every Gümüş Güneş piece begins as an idea sketched in our Istanbul atelier, overlooking the waters of the Bosphorus.\n\nEvery piece we create is a conversation between two elements: the ancient brilliance of the moon and the modern artistry of Istanbul. Our master craftsmen have spent decades perfecting techniques passed down through generations within the Grand Bazaar.\n\nWe believe luxury should be intimate — a quiet kind of beauty that feels personal, not performative. From our atelier to your hands, each piece carries the warmth of the hands that shaped it.',
+  aboutImageUrl: '/products/about-craft.jpg',
+  aboutMission: '',
+  aboutVision: '',
+  aboutStats: '[]',
 }
 
 export async function GET(req: NextRequest) {
