@@ -41,6 +41,7 @@ const DEFAULTS: Record<string, string> = {
   footerTwitter: 'https://twitter.com/gumusgunes',
   footerYoutube: 'https://youtube.com/@gumusgunes',
   footerCopyright: 'Gümüş Güneş Jewellery Ltd. All rights reserved.',
+  trustBadges: '[{"id":"1","icon":"🔒","label":"Secure Checkout","active":true},{"id":"2","icon":"🛡️","label":"SSL Encrypted","active":true},{"id":"3","icon":"💰","label":"Money-Back Guarantee","active":true},{"id":"4","icon":"🚚","label":"Free Shipping","active":true}]',
 }
 
 export default async function PreviewPage() {
