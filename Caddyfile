@@ -1,4 +1,7 @@
+# Production: replace :81 with your domain (e.g. gumusgunes.com) and uncomment the tls directive
+# Caddy will auto-provision TLS from Let's Encrypt when a domain is used.
 :81 {
+    # tls internal # use for staging; remove "internal" for production with a real domain
     handle {
         header {
             Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -6,6 +9,7 @@
             X-Frame-Options "SAMEORIGIN"
             Referrer-Policy "strict-origin-when-cross-origin"
             Permissions-Policy "camera=(), microphone=(), geolocation=()"
+            Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://accounts.google.com https://www.google.com https://www.gstatic.com; frame-src https://js.stripe.com https://www.paypal.com https://accounts.google.com; connect-src 'self' https://api.stripe.com https://www.paypal.com https://accounts.google.com; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
         }
         reverse_proxy localhost:3000
     }

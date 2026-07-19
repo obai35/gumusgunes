@@ -5,9 +5,14 @@ import path from 'path'
 const PROJECT_ROOT = process.cwd()
 const MAX_OUTPUT = 10 * 1024 * 1024
 
+const BLOCKED_PATHS = ['.env', '.env.local', '.env.vercel', '.env.production', 'server.log', 'cookies.txt', 'node_modules']
+
 function safePath(p: string): string {
   const resolved = path.resolve(PROJECT_ROOT, p)
   if (!resolved.startsWith(PROJECT_ROOT)) throw new Error('Path outside project directory')
+  for (const blocked of BLOCKED_PATHS) {
+    if (resolved.toLowerCase().includes(blocked.toLowerCase())) throw new Error('Reading this file is not allowed')
+  }
   return resolved
 }
 
@@ -152,7 +157,7 @@ export function grantApproval(tool: string): void {
   PENDING_APPROVALS.set(tool, { timestamp: Date.now() })
 }
 
-const SAFE_TOOLS = new Set(['readFile', 'searchCode', 'readDir', 'readLog', 'listApiRoutes', 'getSystemInfo', 'gitStatus', 'gitDiff'])
+const SAFE_TOOLS = new Set(['searchCode', 'readDir', 'readLog', 'listApiRoutes', 'getSystemInfo', 'gitStatus', 'gitDiff'])
 
 export function isToolSafe(name: string): boolean {
   return SAFE_TOOLS.has(name)

@@ -10,6 +10,8 @@ interface RateLimitOptions {
   failClosed?: boolean
 }
 
+const DEFAULT_FAIL_CLOSED = true
+
 function getRedis() {
   return Redis.fromEnv()
 }
@@ -43,7 +45,7 @@ export function withRateLimit<T extends (...args: any[]) => any>(
       return handler(req, ...args)
     } catch (err) {
       logger.warn({ err }, 'Rate limit unavailable')
-      if (options.failClosed) {
+      if (options.failClosed ?? DEFAULT_FAIL_CLOSED) {
         return NextResponse.json(
           { error: 'Rate limiting unavailable' },
           { status: 429 }

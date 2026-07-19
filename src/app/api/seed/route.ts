@@ -431,8 +431,10 @@ export async function POST(req: NextRequest) {
     // Seed branch stock for POS — auto-create a default branch if none exists
     let branch = await db.branch.findFirst()
     if (!branch) {
+      const branchPassword = process.env.SEED_BRANCH_PASSWORD
+      if (!branchPassword) throw new Error('SEED_BRANCH_PASSWORD must be set for seeding')
       branch = await db.branch.create({
-        data: { name: 'Main Branch', email: 'main@gumusgunes.com', password: 'seed' },
+        data: { name: 'Main Branch', email: 'main@gumusgunes.com', password: branchPassword },
       })
     }
     for (const p of products) {
@@ -449,11 +451,13 @@ export async function POST(req: NextRequest) {
     // Seed default admin account
     const existingAdmin = await db.admin.findUnique({ where: { email: 'admin@gumusgunes.com' } })
     if (!existingAdmin) {
+      const seedAdminPassword = process.env.SEED_ADMIN_PASSWORD
+      if (!seedAdminPassword) throw new Error('SEED_ADMIN_PASSWORD must be set for seeding')
       await db.admin.create({
         data: {
           email: 'admin@gumusgunes.com',
           name: 'Admin',
-          password: await hashPassword('admin123'),
+          password: await hashPassword(seedAdminPassword),
           role: 'superadmin',
         },
       })

@@ -1,8 +1,16 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 
+const EMIT_API_KEY = process.env.SOCKET_EMIT_API_KEY
+
 const httpServer = createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/emit') {
+    const auth = req.headers['authorization']
+    if (!EMIT_API_KEY || auth !== `Bearer ${EMIT_API_KEY}`) {
+      res.writeHead(401)
+      res.end('unauthorized')
+      return
+    }
     let body = ''
     req.on('data', chunk => body += chunk)
     req.on('end', () => {
@@ -22,8 +30,10 @@ const httpServer = createServer((req, res) => {
   res.end()
 })
 
+const ALLOWED_SOCKET_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000').split(',').map(o => o.trim())
+
 const io = new Server(httpServer, {
-  cors: { origin: '*', methods: ['GET', 'POST'] },
+  cors: { origin: ALLOWED_SOCKET_ORIGINS, methods: ['GET', 'POST'] },
 })
 
 io.use((socket, next) => {
@@ -31,7 +41,9 @@ io.use((socket, next) => {
   if (!token) return next(new Error('Authentication required'))
   try {
     const jwt = require('jsonwebtoken')
-    const payload = jwt.verify(token, process.env.ADMIN_JWT_SECRET || '')
+    const secret = process.env.ADMIN_JWT_SECRET
+    if (!secret) return next(new Error('Server configuration error: JWT secret not set'))
+    const payload = jwt.verify(token, secret)
     ;(socket as any).admin = payload
     next()
   } catch {

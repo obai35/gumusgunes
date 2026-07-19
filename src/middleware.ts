@@ -87,11 +87,24 @@ export function middleware(request: NextRequest) {
     if (duration > 100) {
       console.log(`[API] ${request.method} ${pathname} ${duration}ms`)
     }
+
+    return response
   }
 
-  return NextResponse.next()
+  const pageRes = NextResponse.next()
+  pageRes.headers.set('Content-Security-Policy', [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://accounts.google.com https://www.google.com https://www.gstatic.com",
+    "frame-src https://js.stripe.com https://www.paypal.com https://accounts.google.com",
+    "connect-src 'self' https://api.stripe.com https://www.paypal.com https://accounts.google.com",
+    "img-src 'self' data: blob: https:",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "report-uri /api/csp-report",
+  ].join('; '))
+  return pageRes
 }
 
 export const config = {
-  matcher: ['/preview', '/api/:path*'],
+  matcher: ['/', '/((?!api/|_next/|static/|favicon.ico).*)'],
 }

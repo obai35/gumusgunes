@@ -45,6 +45,7 @@ local-*
 .z-ai-config
 *.log
 dev.log
+cookies.txt
 dev.out.log
 test
 prompt

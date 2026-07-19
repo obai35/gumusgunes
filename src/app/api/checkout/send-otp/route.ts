@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOtpVerification, sendOtpEmail } from '@/lib/otp'
+import { withRateLimit } from '@/lib/rate-limit'
 
-export async function POST(req: NextRequest) {
+const handler = async (req: NextRequest) => {
   try {
     const { email } = await req.json()
 
@@ -18,3 +19,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Failed to send verification code' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 3, window: '60s', identifier: (req) => req.headers.get('x-forwarded-for') || 'unknown' })

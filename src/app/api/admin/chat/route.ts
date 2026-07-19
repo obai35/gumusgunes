@@ -14,11 +14,10 @@ You have tools available to help you help the admin. For each request:
 4. For dangerous actions (writing files, running commands, etc.), explain what you need to do and why — these will be sent for admin approval
 
 Available tools:
-- readFile(path): Read any file in the project
+- readFile(path): Read a file in the project (requires approval — sensitive files blocked)
 - searchCode(query): Search codebase by pattern
 - readDir(path): List directory contents
 - readLog(lines?): Read server log
-- dbQuery(sql): Run SELECT queries on the database
 - listApiRoutes(): List all API endpoints
 - listDbModels(): List database models and fields
 - getSystemInfo(): Server info (uptime, memory, Node version)
@@ -44,11 +43,10 @@ Language rules:
 - Be professional but friendly`
 
 const TOOL_DEFINITIONS = [
-  { type: 'function', function: { name: 'readFile', description: 'Read file contents from the project', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } } },
+  { type: 'function', function: { name: 'readFile', description: 'Read a file from the project (sensitive files blocked; requires admin approval)', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } } },
   { type: 'function', function: { name: 'searchCode', description: 'Search codebase by pattern', parameters: { type: 'object', properties: { query: { type: 'string' }, path: { type: 'string' } }, required: ['query'] } } },
   { type: 'function', function: { name: 'readDir', description: 'List directory contents', parameters: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'] } } },
   { type: 'function', function: { name: 'readLog', description: 'Read server log (last N lines)', parameters: { type: 'object', properties: { lines: { type: 'number' } } } } },
-  { type: 'function', function: { name: 'dbQuery', description: 'Run a SELECT SQL query on the database', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } } },
   { type: 'function', function: { name: 'listApiRoutes', description: 'List all API endpoints', parameters: { type: 'object', properties: {} } } },
   { type: 'function', function: { name: 'listDbModels', description: 'List database models and their fields', parameters: { type: 'object', properties: {} } } },
   { type: 'function', function: { name: 'getSystemInfo', description: 'Get server system info', parameters: { type: 'object', properties: {} } } },
@@ -158,6 +156,7 @@ const chatHandler = async (req: NextRequest, ctx: { params: any }) => {
           }
         } else {
           const descriptions: Record<string, string> = {
+            readFile: `Read file: ${args.path}`,
             writeFile: `Write file: ${args.path}`,
             editFile: `Edit file: ${args.path}`,
             runCommand: `Run command: ${args.command}`,

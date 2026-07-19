@@ -35,9 +35,9 @@ export default async function StaticPageView({ params }: { params: Promise<{ slu
 
           <h1 className="text-3xl sm:text-4xl font-display font-semibold text-navy mb-8">{page.title}</h1>
 
-          <div
+          <SafeHtml
+            html={page.content}
             className="prose prose-gray max-w-none prose-headings:text-navy prose-a:text-gold prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl"
-            dangerouslySetInnerHTML={{ __html: page.content }}
           />
         </div>
       </main>

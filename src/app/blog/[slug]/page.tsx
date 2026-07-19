@@ -6,6 +6,7 @@ import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import { SafeHtml } from '@/components/ui/SafeHtml'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
@@ -59,9 +60,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             )}
           </header>
 
-          <div
+          <SafeHtml
+            html={post.content}
             className="prose prose-gray max-w-none prose-headings:text-navy prose-a:text-gold prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl"
-            dangerouslySetInnerHTML={{ __html: post.content }}
           />
 
           {post.excerpt && (

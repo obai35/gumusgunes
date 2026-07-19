@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { Send, Pencil } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { sanitizeHtmlContent } from '@/components/ui/SafeHtml'
 
 export default function CampaignDetailPage() {
   const params = useParams(); const router = useRouter()
@@ -42,7 +43,7 @@ export default function CampaignDetailPage() {
         ) : (
           <><div><span className="text-sm font-medium text-navy block mb-1">Subject:</span><span className="text-sm text-muted-foreground">{campaign.subject}</span></div>
           <div><span className="text-sm font-medium text-navy block mb-1">Segment:</span><span className="text-sm text-muted-foreground capitalize">{campaign.segment}</span></div>
-          <div><span className="text-sm font-medium text-navy block mb-1">Content:</span><div className="border border-border rounded-lg p-4 mt-1 bg-white max-h-96 overflow-y-auto" dangerouslySetInnerHTML={{ __html: campaign.content }} /></div>
+          <div><span className="text-sm font-medium text-navy block mb-1">Content:</span><div className="border border-border rounded-lg p-4 mt-1 bg-white max-h-96 overflow-y-auto" dangerouslySetInnerHTML={{ __html: sanitizeHtmlContent(campaign.content) }} /></div>
           {campaign.status === 'draft' && <div className="flex gap-3 pt-2"><button onClick={() => setEditing(true)} className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:text-navy"><Pencil className="h-4 w-4" /> Edit</button><button onClick={handleSend} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-gold text-navy-deep rounded-lg text-sm font-medium disabled:opacity-50"><Send className="h-4 w-4" /> Send Now</button></div>}
         </>
         )}

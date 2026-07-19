@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import { sanitize } from '@/lib/sanitize'
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -11,6 +12,8 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+const MAX_FIELD_LENGTH = 1000
+
 export async function POST(req: NextRequest) {
   try {
     const { name, email, subject, message } = await req.json()
@@ -19,18 +22,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'All fields are required' }, { status: 400 })
     }
 
+    if ([name, subject, message].some(f => f.length > MAX_FIELD_LENGTH) || email.length > 320) {
+      return NextResponse.json({ ok: false, error: 'Input too long' }, { status: 400 })
+    }
+
+    const cleanName = sanitize(name).replace(/[\r\n]/g, '')
+    const cleanEmail = sanitize(email).replace(/[\r\n]/g, '')
+    const cleanSubject = sanitize(subject).replace(/[\r\n]/g, '')
+    const cleanMessage = sanitize(message)
+
     const to = process.env.CONTACT_EMAIL || 'concierge@gumusgunes.com'
 
     await transporter.sendMail({
-      from: `"${name}" <${email}>`,
+      from: `"${cleanName}" <${cleanEmail}>`,
       to,
-      subject: `[Contact Form] ${subject}`,
+      subject: `[Contact Form] ${cleanSubject}`,
       html: `
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Name:</strong> ${cleanName}</p>
+        <p><strong>Email:</strong> ${cleanEmail}</p>
+        <p><strong>Subject:</strong> ${cleanSubject}</p>
         <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
+        <p>${cleanMessage.replace(/\n/g, '<br>')}</p>
       `,
     })
 

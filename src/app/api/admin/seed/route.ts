@@ -19,7 +19,10 @@ export const POST = withAdmin(async (req, { admin }) => {
   }
 
   const email = process.env.ADMIN_SEED_EMAIL || 'admin@gumusgunes.com'
-  const password = process.env.ADMIN_SEED_PASSWORD || 'admin123'
+  const password = process.env.ADMIN_SEED_PASSWORD
+  if (!password) {
+    return NextResponse.json({ error: 'ADMIN_SEED_PASSWORD environment variable must be set' }, { status: 500 })
+  }
   const existing = await prisma.admin.findUnique({ where: { email } })
   if (existing) return NextResponse.json({ message: 'Admin already exists' })
   const newAdmin = await prisma.admin.create({
