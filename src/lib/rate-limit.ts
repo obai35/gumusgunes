@@ -10,7 +10,9 @@ interface RateLimitOptions {
   failClosed?: boolean
 }
 
-const DEFAULT_FAIL_CLOSED = true
+function hasRedisConfig(): boolean {
+  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)
+}
 
 function getRedis() {
   return Redis.fromEnv()
@@ -21,6 +23,10 @@ export function withRateLimit<T extends (...args: any[]) => any>(
   options: RateLimitOptions
 ): T {
   const wrapped = async function (this: any, req: Request, ...args: unknown[]) {
+    if (!hasRedisConfig()) {
+      logger.warn('Rate limiting skipped: UPSTASH_REDIS_REST_URL/REST_TOKEN not configured')
+      return handler(req, ...args)
+    }
     try {
       const redis = getRedis()
       const identifier = options.identifier?.(req) ?? req.headers.get('x-forwarded-for') ?? 'unknown'
@@ -45,13 +51,10 @@ export function withRateLimit<T extends (...args: any[]) => any>(
       return handler(req, ...args)
     } catch (err) {
       logger.warn({ err }, 'Rate limit unavailable')
-      if (options.failClosed ?? DEFAULT_FAIL_CLOSED) {
-        return NextResponse.json(
-          { error: 'Rate limiting unavailable' },
-          { status: 429 }
-        )
-      }
-      return handler(req, ...args)
+      return NextResponse.json(
+        { error: 'Rate limiting unavailable' },
+        { status: 429 }
+      )
     }
   }
   return wrapped as T
