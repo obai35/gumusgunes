@@ -6,6 +6,7 @@ import { getStripe } from '@/lib/stripe'
 import { encrypt } from '@/lib/encryption'
 import { addAlsoBought } from '@/lib/product-graph'
 import { sanitize } from '@/lib/sanitize'
+import { autoAccountOrderPayment } from '@/lib/auto-accounting'
 import { z } from 'zod'
 
 const OrderItemSchema = z.object({
@@ -227,6 +228,10 @@ const orderHandler = async (req: NextRequest) => {
     const boughtIds = order.items.map((i: any) => i.productId)
     if (boughtIds.length >= 2) {
       addAlsoBought(boughtIds).catch(console.error)
+    }
+
+    if (order.paymentStatus === 'paid') {
+      autoAccountOrderPayment(order.id).catch(console.error)
     }
 
     return NextResponse.json({ ok: true, order })

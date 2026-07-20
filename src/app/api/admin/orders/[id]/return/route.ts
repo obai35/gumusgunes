@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { autoAccountReturn } from '@/lib/auto-accounting'
 
 export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
@@ -74,6 +75,8 @@ export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: st
 
       return ret
     })
+
+    autoAccountReturn(result.id).catch(console.error)
 
     return NextResponse.json(result)
   } catch {

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { db } from '@/lib/db'
+import { autoAccountOrderPayment } from '@/lib/auto-accounting'
 
 export async function POST(req: Request) {
   const sig = req.headers.get('stripe-signature')!
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
         where: { id: existing.id },
         data: { paymentStatus: 'paid', status: 'processing', paymentVerifiedAt: new Date() },
       })
+      await autoAccountOrderPayment(existing.id)
     }
   }
 
