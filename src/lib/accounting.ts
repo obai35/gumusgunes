@@ -125,6 +125,32 @@ export async function createSaleJournalEntry(order: {
   paymentMethod: string
   createdAt: Date
 }) {
+  if (order.paymentMethod === 'split') {
+    const hasCash = order.cashAmount != null && order.cashAmount > 0
+    const hasCard = order.cardAmount != null && order.cardAmount > 0
+    const splitTotal = (order.cashAmount ?? 0) + (order.cardAmount ?? 0)
+    if (!hasCash && !hasCard) {
+      throw new AccountingError('Split payment must specify cashAmount or cardAmount', 'INVALID_AMOUNT')
+    }
+    if (Math.abs(splitTotal - order.totalAmount) > 0.01) {
+      throw new AccountingError(
+        `Split amounts (${splitTotal}) do not match total (${order.totalAmount})`,
+        'INVALID_AMOUNT'
+      )
+    }
+    const lines: { accountCode: string; debit?: number; credit?: number }[] = []
+    if (hasCash) lines.push({ accountCode: ACCOUNTS.cash, debit: order.cashAmount! })
+    if (hasCard) lines.push({ accountCode: ACCOUNTS.cash, debit: order.cardAmount! })
+    lines.push({ accountCode: ACCOUNTS.salesRevenue, credit: order.totalAmount })
+    return createJournalEntry({
+      date: order.createdAt,
+      description: `Sale #${order.id.slice(0, 8)}`,
+      reference: order.id,
+      type: 'sale',
+      orderId: order.id,
+      lines,
+    })
+  }
   const debitAccount = getDebitAccount(order.paymentMethod)
   return createJournalEntry({
     date: order.createdAt,

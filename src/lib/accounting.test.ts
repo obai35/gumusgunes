@@ -200,3 +200,33 @@ describe('createRefundJournalEntry edge cases', () => {
     expect(creditLine.accountId).toBe('a-bank')
   })
 })
+
+describe('split payments', () => {
+  it('creates 2 debit lines for split cash+card payment', async () => {
+    const entry = await createSaleJournalEntry({
+      id: 'order-split',
+      totalAmount: 1000,
+      paymentMethod: 'split',
+      cashAmount: 400,
+      cardAmount: 600,
+      createdAt: new Date(),
+    })
+    const lines = entry.lines.create
+    const debitLines = lines.filter((l: any) => l.debit > 0)
+    expect(debitLines).toHaveLength(2)
+    expect(debitLines[0].debit + debitLines[1].debit).toBe(1000)
+  })
+
+  it('rejects split without cashAmount and cardAmount', async () => {
+    await expect(
+      createSaleJournalEntry({
+        id: 'order-bad-split',
+        totalAmount: 1000,
+        paymentMethod: 'split',
+        cashAmount: null,
+        cardAmount: null,
+        createdAt: new Date(),
+      })
+    ).rejects.toThrow(AccountingError)
+  })
+})
