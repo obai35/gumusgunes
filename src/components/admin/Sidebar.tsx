@@ -34,6 +34,7 @@ const links: LinkDef[] = [
   { href: '/admin/pos', label: 'POS', icon: ShoppingCart, permission: 'pos' },
   { href: '/admin/shipping', label: 'Shipping', icon: Truck, permission: 'shipping' },
   { href: '/admin/categories', label: 'Categories', icon: FolderTree, permission: 'categories' },
+  { href: '/admin/brands', label: 'Brands', icon: Tag, permission: 'brands' },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquareText, permission: 'reviews' },
   { href: '/admin/returns', label: 'Returns', icon: RefreshCw, permission: 'orders' },
   { href: '/admin/social', label: 'Social', icon: Share2, permission: 'social' },

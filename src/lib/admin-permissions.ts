@@ -4,7 +4,7 @@ import { db } from './db'
 
 export const ALL_PERMISSIONS = [
   'dashboard', 'accounting', 'orders', 'receipts', 'products', 'inventory',
-  'discounts', 'stock_transfers', 'branches', 'pos', 'editor', 'categories',
+  'discounts', 'stock_transfers', 'branches', 'pos', 'editor', 'categories', 'brands',
   'settings', 'security', 'admins', 'customers', 'payments', 'shipping',
   'reviews', 'newsletter', 'activity', 'chat', 'seed', 'customer_service', 'social',
   'marketing',
