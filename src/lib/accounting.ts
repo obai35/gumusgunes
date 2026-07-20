@@ -125,7 +125,7 @@ export async function createSaleJournalEntry(order: {
   paymentMethod: string
   createdAt: Date
 }) {
-  const debitAccount = order.paymentMethod === 'bank_transfer' ? ACCOUNTS.bank : ACCOUNTS.cash
+  const debitAccount = getDebitAccount(order.paymentMethod)
   return createJournalEntry({
     date: order.createdAt,
     description: `Sale #${order.id.slice(0, 8)}`,
@@ -145,7 +145,7 @@ export async function createRefundJournalEntry(order: {
   paymentMethod: string
   createdAt: Date
 }) {
-  const creditAccount = order.paymentMethod === 'bank_transfer' ? ACCOUNTS.bank : ACCOUNTS.cash
+  const creditAccount = getDebitAccount(order.paymentMethod)
   return createJournalEntry({
     date: order.createdAt,
     description: `Refund for #${order.id.slice(0, 8)}`,
