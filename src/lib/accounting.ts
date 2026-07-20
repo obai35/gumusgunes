@@ -1,5 +1,15 @@
 import { db } from '@/lib/db'
 
+export class AccountingError extends Error {
+  constructor(
+    message: string,
+    public code: 'INVALID_ACCOUNT' | 'UNBALANCED_ENTRY' | 'INVALID_AMOUNT' | 'DUPLICATE_ENTRY'
+  ) {
+    super(message)
+    this.name = 'AccountingError'
+  }
+}
+
 type AccountCodes = {
   cash: string
   bank: string
@@ -28,6 +38,42 @@ const ACCOUNTS: AccountCodes = {
   },
 }
 
+const PAYMENT_METHOD_TO_ASSET: Record<string, string> = {
+  cash: '1000',
+  card: '1000',
+  bank_transfer: '1100',
+  instapay: '1000',
+  wallet: '1000',
+  cod: '1200',
+}
+
+function getDebitAccount(method: string): string {
+  if (method === 'split') {
+    throw new AccountingError('Split payments use cashAmount/cardAmount fields', 'INVALID_AMOUNT')
+  }
+  const account = PAYMENT_METHOD_TO_ASSET[method]
+  if (!account) {
+    throw new AccountingError(`Unknown payment method: ${method}`, 'INVALID_ACCOUNT')
+  }
+  return account
+}
+
+async function validateEntry(lines: { accountCode: string; debit?: number; credit?: number }[]) {
+  for (const l of lines) {
+    if ((l.debit ?? 0) < 0 || (l.credit ?? 0) < 0) {
+      throw new AccountingError('Negative amounts not allowed', 'INVALID_AMOUNT')
+    }
+  }
+  const totalDebit = lines.reduce((s, l) => s + (l.debit ?? 0), 0)
+  const totalCredit = lines.reduce((s, l) => s + (l.credit ?? 0), 0)
+  if (Math.abs(totalDebit - totalCredit) > 0.001) {
+    throw new AccountingError(
+      `Unbalanced entry: debits (${totalDebit}) ≠ credits (${totalCredit})`,
+      'UNBALANCED_ENTRY'
+    )
+  }
+}
+
 async function getAccountId(code: string): Promise<string> {
   const account = await db.account.findUnique({ where: { code } })
   if (!account) throw new Error(`Account not found: ${code}`)
@@ -49,6 +95,8 @@ export async function createJournalEntry(data: {
     debit: l.debit || 0,
     credit: l.credit || 0,
   }))
+
+  await validateEntry(data.lines)
 
   const totalDebit = lines.reduce((s, l) => s + l.debit, 0)
   const totalCredit = lines.reduce((s, l) => s + l.credit, 0)
