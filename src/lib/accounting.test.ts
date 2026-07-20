@@ -3,6 +3,7 @@ import {
   createSaleJournalEntry,
   createRefundJournalEntry,
   createJournalEntry,
+  createExpenseJournalEntry,
   AccountingError,
 } from './accounting'
 
@@ -27,6 +28,11 @@ const accounts: Record<string, { id: string; code: string }> = {
   '4000': { id: 'a-rev', code: '4000' },
   '4100': { id: 'a-ret', code: '4100' },
   '5000': { id: 'a-cogs', code: '5000' },
+  '5100': { id: 'a-salaries', code: '5100' },
+  '5200': { id: 'a-rent', code: '5200' },
+  '5300': { id: 'a-utils', code: '5300' },
+  '5400': { id: 'a-supplies', code: '5400' },
+  '5500': { id: 'a-other', code: '5500' },
 }
 
 beforeEach(() => {
@@ -228,5 +234,46 @@ describe('split payments', () => {
         createdAt: new Date(),
       })
     ).rejects.toThrow(AccountingError)
+  })
+})
+
+describe('createExpenseJournalEntry', () => {
+  it('routes salaries expense to salaries account', async () => {
+    const entry = await createExpenseJournalEntry({
+      id: 'exp-1',
+      amount: 5000,
+      paymentMethod: 'cash',
+      description: 'Monthly salaries for staff',
+      createdAt: new Date(),
+    })
+    const lines = entry.lines.create
+    const debitLine = lines.find((l: any) => l.debit > 0)
+    expect(debitLine.accountId).toBe('a-salaries')
+  })
+
+  it('routes rent expense to rent account', async () => {
+    const entry = await createExpenseJournalEntry({
+      id: 'exp-2',
+      amount: 2000,
+      paymentMethod: 'bank_transfer',
+      description: 'Office rent payment',
+      createdAt: new Date(),
+    })
+    const lines = entry.lines.create
+    const debitLine = lines.find((l: any) => l.debit > 0)
+    expect(debitLine.accountId).toBe('a-rent')
+  })
+
+  it('falls back to other for unknown expense types', async () => {
+    const entry = await createExpenseJournalEntry({
+      id: 'exp-3',
+      amount: 500,
+      paymentMethod: 'cash',
+      description: 'Miscellaneous purchase',
+      createdAt: new Date(),
+    })
+    const lines = entry.lines.create
+    const debitLine = lines.find((l: any) => l.debit > 0)
+    expect(debitLine.accountId).toBe('a-other')
   })
 })

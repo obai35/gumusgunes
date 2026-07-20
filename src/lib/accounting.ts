@@ -47,6 +47,21 @@ const PAYMENT_METHOD_TO_ASSET: Record<string, string> = {
   cod: '1200',
 }
 
+const EXPENSE_KEYWORDS: Record<string, string> = {
+  salaries: '5100',
+  rent: '5200',
+  utilities: '5300',
+  supplies: '5400',
+}
+
+function getExpenseAccount(description: string): string {
+  const lower = description.toLowerCase()
+  for (const [keyword, code] of Object.entries(EXPENSE_KEYWORDS)) {
+    if (lower.includes(keyword)) return code
+  }
+  return ACCOUNTS.expenses.other
+}
+
 function getDebitAccount(method: string): string {
   if (method === 'split') {
     throw new AccountingError('Split payments use cashAmount/cardAmount fields', 'INVALID_AMOUNT')
@@ -193,7 +208,7 @@ export async function createExpenseJournalEntry(expense: {
   createdAt: Date
 }) {
   const creditAccount = expense.paymentMethod === 'bank_transfer' ? ACCOUNTS.bank : ACCOUNTS.cash
-  const debitAccount = ACCOUNTS.expenses.other
+  const debitAccount = getExpenseAccount(expense.description)
 
   return createJournalEntry({
     date: expense.createdAt,
