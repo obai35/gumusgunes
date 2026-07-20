@@ -7,21 +7,39 @@ const CreateCategorySchema = z.object({
   name: z.string().min(1).max(100),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens'),
   description: z.string().optional(),
-  parentId: z.string().uuid().nullable().optional(),
-  image: z.string().url().optional(),
+  icon: z.string().optional(),
+  parentId: z.string().nullable().optional(),
+  image: z.string().optional(),
+  isVisible: z.boolean().optional(),
 }).strict()
 
 export const GET = withAdmin(async (req: NextRequest) => {
-  const categories = await db.category.findMany({
-    orderBy: { name: 'asc' },
-    include: {
-      _count: { select: { products: true } },
-      parent: { select: { id: true, name: true, slug: true } },
-      children: { select: { id: true, name: true, slug: true, icon: true, imageUrl: true } },
-    },
-  })
+  const { searchParams } = new URL(req.url)
+  const search = searchParams.get('search') || ''
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+  const limitParam = searchParams.get('limit')
+  const take = limitParam ? Math.min(parseInt(limitParam), 200) : 50
+  const skip = (page - 1) * take
 
-  return NextResponse.json(categories)
+  const where: any = {}
+  if (search) where.name = { contains: search, mode: 'insensitive' }
+
+  const [categories, total] = await Promise.all([
+    db.category.findMany({
+      where,
+      orderBy: { name: 'asc' },
+      take,
+      skip,
+      include: {
+        _count: { select: { products: true } },
+        parent: { select: { id: true, name: true, slug: true } },
+        children: { select: { id: true, name: true, slug: true, icon: true, imageUrl: true } },
+      },
+    }),
+    db.category.count({ where }),
+  ])
+
+  return NextResponse.json({ ok: true, categories, total, page, totalPages: Math.ceil(total / take) })
 }, 'categories')
 
 export const POST = withAdmin(async (req: NextRequest) => {
@@ -34,14 +52,14 @@ export const POST = withAdmin(async (req: NextRequest) => {
         { status: 400 }
       )
     }
-    const { name, slug, description, parentId, image } = parsed.data
+    const { name, slug, description, icon, parentId, image, isVisible } = parsed.data
     const imageUrl = image
 
     const existing = await db.category.findUnique({ where: { slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
     const category = await db.category.create({
-      data: { name, slug, description, imageUrl, parentId: parentId || null },
+      data: { name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible },
     })
 
     return NextResponse.json(category)

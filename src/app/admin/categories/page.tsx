@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, X, Eye, EyeOff } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Search, Eye, EyeOff } from 'lucide-react'
 import { DataTable } from '@/components/admin/DataTable'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { Pagination } from '@/components/admin/Pagination'
 import { ExportButton } from '@/components/admin/ExportButton'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { ColumnDef } from '@tanstack/react-table'
 
 type Category = {
@@ -20,7 +22,13 @@ type Category = {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
+  const [allParents, setAllParents] = useState<{ id: string; name: string; parentId: string | null }[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
   const [showModal, setShowModal] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -32,12 +40,42 @@ export default function CategoriesPage() {
   const [formVisible, setFormVisible] = useState(true)
   const [saving, setSaving] = useState(false)
 
+  const debouncedSearch = useDebounce(searchQuery, 300)
+
+  const fetchCategories = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (debouncedSearch) params.set('search', debouncedSearch)
+      params.set('page', String(page))
+      params.set('limit', String(pageSize))
+      const res = await fetch(`/api/admin/categories?${params}`)
+      const data = await res.json()
+      if (data.ok) {
+        setCategories(Array.isArray(data.categories) ? data.categories : [])
+        setTotal(data.total)
+        setTotalPages(data.totalPages)
+      } else {
+        toast.error(data.error || 'Failed to load categories')
+      }
+    } catch {
+      toast.error('Failed to load categories')
+    } finally {
+      setLoading(false)
+    }
+  }, [debouncedSearch, page, pageSize])
+
   useEffect(() => {
-    fetch('/api/admin/categories')
+    fetchCategories()
+  }, [fetchCategories])
+
+  useEffect(() => {
+    fetch('/api/admin/categories?limit=200')
       .then(r => r.json())
-      .then(data => setCategories(Array.isArray(data) ? data : []))
-      .catch(() => toast.error('Failed to load categories'))
-      .finally(() => setLoading(false))
+      .then(data => {
+        if (data.ok) setAllParents(data.categories || [])
+      })
+      .catch(() => {})
   }, [])
 
   function resetForm() {
@@ -62,8 +100,7 @@ export default function CategoriesPage() {
       if (res.ok) {
         toast.success(editId ? 'Category updated' : 'Category created')
         resetForm(); setShowModal(false)
-        const updated = await fetch('/api/admin/categories').then(r => r.json())
-        setCategories(Array.isArray(updated) ? updated : [])
+        fetchCategories()
       } else {
         const e = await res.json()
         toast.error(e.error || 'Failed')
@@ -78,7 +115,7 @@ export default function CategoriesPage() {
       const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
       if (res.ok) {
         toast.success('Category deleted')
-        setCategories(prev => prev.filter(c => c.id !== id))
+        fetchCategories()
       } else {
         const e = await res.json()
         toast.error(e.error || 'Failed to delete')
@@ -103,7 +140,7 @@ export default function CategoriesPage() {
     setFormVisible(cat.isVisible); setEditId(cat.id); setShowModal(true)
   }
 
-  const parents = categories.filter(c => !c.parentId)
+  const parents = allParents.filter(c => !c.parentId)
 
   const columns: ColumnDef<Category>[] = [
     {
@@ -178,14 +215,38 @@ export default function CategoriesPage() {
         }
       />
 
+      <div className="relative mb-4 max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          value={searchQuery}
+          onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
+          placeholder="Search categories..."
+          className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
+        />
+        {searchQuery && (
+          <button type="button" onClick={() => { setSearchQuery(''); setPage(1) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-navy">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
       <DataTable
         columns={columns}
         data={categories}
         keyExtractor={(c) => c.id}
         loading={loading}
-        emptyTitle="No categories yet"
-        emptyDescription="Create your first category to organize products"
-        emptyAction={{ label: 'New Category', onClick: () => { resetForm(); setShowModal(true) } }}
+        emptyTitle={searchQuery ? 'No categories match your search' : 'No categories yet'}
+        emptyDescription={searchQuery ? 'Try adjusting your search terms' : 'Create your first category to organize products'}
+        emptyAction={searchQuery ? undefined : { label: 'New Category', onClick: () => { resetForm(); setShowModal(true) } }}
+      />
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={s => { setPageSize(s); setPage(1) }}
       />
 
       <AnimatePresence>
