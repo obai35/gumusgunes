@@ -58,7 +58,7 @@ function getDebitAccount(method: string): string {
   return account
 }
 
-async function validateEntry(lines: { accountCode: string; debit?: number; credit?: number }[]) {
+function validateEntry(lines: { accountCode: string; debit?: number; credit?: number }[]) {
   for (const l of lines) {
     if ((l.debit ?? 0) < 0 || (l.credit ?? 0) < 0) {
       throw new AccountingError('Negative amounts not allowed', 'INVALID_AMOUNT')
@@ -89,14 +89,14 @@ export async function createJournalEntry(data: {
   expenseId?: string
   lines: { accountCode: string; debit?: number; credit?: number }[]
 }) {
+  validateEntry(data.lines)
+
   const accountIds = await Promise.all(data.lines.map(l => getAccountId(l.accountCode)))
   const lines = data.lines.map((l, i) => ({
     accountId: accountIds[i],
     debit: l.debit || 0,
     credit: l.credit || 0,
   }))
-
-  await validateEntry(data.lines)
 
   const totalDebit = lines.reduce((s, l) => s + l.debit, 0)
   const totalCredit = lines.reduce((s, l) => s + l.credit, 0)
