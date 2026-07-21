@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { createSaleJournalEntry, createExpenseJournalEntry } from '@/lib/accounting'
+import { recordCOGS } from '@/lib/cogs'
 import { logAudit } from '@/lib/audit'
 
 export const POST = withAdmin(async (req: Request, { admin }: { params: any; admin: AdminInfo }) => {
@@ -38,9 +39,36 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
     }
   }
 
+  let cogsCount = 0
+  const deliveredOrders = await db.order.findMany({
+    where: {
+      status: 'delivered',
+      paymentStatus: 'paid',
+      items: { some: { actualCost: { gt: 0 } } },
+    },
+    select: { id: true },
+  })
+  for (const order of deliveredOrders) {
+    try {
+      const existing = await db.journalEntry.findFirst({ where: { orderId: order.id, type: 'cogs' } })
+      if (!existing) {
+        await recordCOGS(order.id)
+        cogsCount++
+      }
+    } catch (err) {
+      console.error(`[sync] COGS error for ${order.id}:`, err)
+      results.errors++
+    }
+  }
+
   try {
-    await logAudit({ adminId: admin.id, action: 'sync', resource: 'journal', details: { synced: results } })
+    await logAudit({ adminId: admin.id, action: 'sync', resource: 'journal', details: { synced: results, cogsCreated: cogsCount } })
   } catch {}
 
-  return NextResponse.json({ ok: true, synced: results })
+  return NextResponse.json({
+    ok: true,
+    synced: results,
+    cogsCreated: cogsCount,
+    total: results.orders + results.expenses + cogsCount,
+  })
 }, 'accounting')
