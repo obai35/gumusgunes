@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 import { autoAccountOrderPayment } from '@/lib/auto-accounting'
+import { recordCOGS } from '@/lib/cogs'
 
 const ALLOWED_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'] as const
 const ALLOWED_PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'] as const
@@ -32,6 +33,10 @@ async function handler(req: Request) {
 
     if (field === 'status' && value === 'delivered' && order.paymentStatus === 'paid') {
       autoAccountOrderPayment(orderId).catch(console.error)
+    }
+
+    if (field === 'status' && value === 'delivered') {
+      recordCOGS(orderId).catch(console.error)
     }
 
     return NextResponse.json({ success: true })

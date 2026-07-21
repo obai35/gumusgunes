@@ -18,6 +18,7 @@ type AccountCodes = {
   salesRevenue: string
   salesReturns: string
   cogs: string
+  taxPayable: string
   expenses: Record<string, string>
 }
 
@@ -29,6 +30,7 @@ const ACCOUNTS: AccountCodes = {
   salesRevenue: '4000',
   salesReturns: '4100',
   cogs: '5000',
+  taxPayable: '2100',
   expenses: {
     salaries: '5100',
     rent: '5200',
@@ -37,6 +39,12 @@ const ACCOUNTS: AccountCodes = {
     other: '5500',
   },
 }
+
+export { ACCOUNTS }
+
+export const TAX_PAYABLE_ACCOUNT = '2100'
+export const FX_GAIN_ACCOUNT = '4600'
+export const FX_LOSS_ACCOUNT = '5600'
 
 const PAYMENT_METHOD_TO_ASSET: Record<string, string> = {
   cash: '1000',
@@ -99,7 +107,7 @@ export async function createJournalEntry(data: {
   date: Date
   description: string
   reference?: string
-  type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening'
+  type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening' | 'cogs'
   orderId?: string
   expenseId?: string
   lines: { accountCode: string; debit?: number; credit?: number }[]
