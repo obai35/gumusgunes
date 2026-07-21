@@ -17,8 +17,8 @@ export default function ReconciliationTab() {
   useEffect(() => {
     fetch('/api/admin/accounting/bank-accounts')
       .then(r => r.json())
-      .then(d => { setAccounts(d.accounts || []); if (d.accounts?.length) setSelectedAccount(d.accounts[0].id) })
-      .catch(() => toast.error('Failed to load bank accounts'))
+      .then(d => { setAccounts(d.accounts || []); setLoading(false); if (d.accounts?.length) setSelectedAccount(d.accounts[0].id) })
+      .catch(() => { toast.error('Failed to load bank accounts'); setLoading(false) })
   }, [])
 
   useEffect(() => {
