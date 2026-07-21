@@ -67,13 +67,49 @@ export const GET = withAdmin(async (req: NextRequest) => {
       .map(([month, data]) => ({ month, ...data }))
       .sort((a, b) => a.month.localeCompare(b.month))
 
+    const taxPayableAccount = await db.account.findUnique({ where: { code: '2100' } })
+
+    let actual: { total: number; monthly: { month: string; amount: number }[] } | null = null
+
+    if (taxPayableAccount) {
+      const lines = await db.journalLine.findMany({
+        where: {
+          accountId: taxPayableAccount.id,
+          entry: {
+            date: { gte: from, lte: to },
+            status: 'approved',
+          },
+        },
+        include: { entry: { select: { date: true } } },
+      })
+
+      const actualMonthly: Record<string, number> = {}
+      let actualTotal = 0
+
+      for (const line of lines) {
+        const month = `${line.entry.date.getFullYear()}-${String(line.entry.date.getMonth() + 1).padStart(2, '0')}`
+        actualMonthly[month] = (actualMonthly[month] || 0) + line.credit - line.debit
+        actualTotal += line.credit - line.debit
+      }
+
+      actual = {
+        total: actualTotal,
+        monthly: Object.entries(actualMonthly)
+          .map(([month, amount]) => ({ month, amount }))
+          .sort((a, b) => a.month.localeCompare(b.month)),
+      }
+    }
+
     return NextResponse.json({
       period: { from: from.toISOString(), to: to.toISOString() },
       taxRate,
-      totalTaxable,
-      totalExempt,
-      totalTaxCollected,
-      taxOwed: totalTaxCollected,
+      estimated: {
+        totalTaxable,
+        totalExempt,
+        totalTaxCollected,
+        taxOwed: totalTaxCollected,
+      },
+      actual,
       monthlyBreakdown,
     })
   } catch (e) {
