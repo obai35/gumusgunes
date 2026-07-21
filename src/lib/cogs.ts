@@ -68,7 +68,7 @@ export async function recordPurchaseCOGS(purchaseOrderId: string): Promise<void>
   }
 }
 
-export async function getInventoryValuation(): Promise<{ products: any[]; totalValue: number }> {
+export async function getInventoryValuation(): Promise<{ items: any[]; totalProducts: number; totalValue: number; totalCOGS: number; grossMargin: number }> {
   const products = await db.product.findMany({
     where: { isActive: true, stock: { gt: 0 } },
     select: { id: true, name: true, sku: true, costPrice: true, stock: true, price: true },
@@ -85,8 +85,11 @@ export async function getInventoryValuation(): Promise<{ products: any[]; totalV
   }))
 
   const totalValue = items.reduce((s, i) => s + i.totalValue, 0)
+  const totalSellPrice = products.reduce((s, p) => s + p.stock * p.price, 0)
+  const totalCOGS = totalValue
+  const grossMargin = totalSellPrice > 0 ? ((totalSellPrice - totalCOGS) / totalSellPrice) * 100 : 0
 
-  return { products: items, totalValue }
+  return { items, totalProducts: items.length, totalValue, totalCOGS, grossMargin }
 }
 
 export async function getCOGSReport(startDate: Date, endDate: Date): Promise<{ entries: any[]; totalCOGS: number }> {

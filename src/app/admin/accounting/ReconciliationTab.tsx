@@ -12,6 +12,7 @@ export default function ReconciliationTab() {
   const [loading, setLoading] = useState(true)
   const [selectedTx, setSelectedTx] = useState<any>(null)
   const [suggestions, setSuggestions] = useState<any[]>([])
+  const [matchEntryId, setMatchEntryId] = useState('')
 
   useEffect(() => {
     fetch('/api/admin/accounting/bank-accounts')
@@ -121,7 +122,7 @@ export default function ReconciliationTab() {
                     <td className="p-3 text-center">{tx.isReconciled ? <CheckCircle className="h-4 w-4 text-green-600 inline" /> : <XCircle className="h-4 w-4 text-amber-400 inline" />}</td>
                     <td className="p-3">
                       {!tx.isReconciled && (
-                        <button onClick={() => setSelectedTx(selectedTx?.id === tx.id ? null : tx)} className="text-xs text-navy hover:text-gold">
+                        <button onClick={() => { setSelectedTx(selectedTx?.id === tx.id ? null : tx); setMatchEntryId('') }} className="text-xs text-navy hover:text-gold">
                           {selectedTx?.id === tx.id ? 'Cancel' : 'Match'}
                         </button>
                       )}
@@ -139,8 +140,8 @@ export default function ReconciliationTab() {
           <h4 className="text-sm font-semibold text-navy mb-3">Match Transaction: {selectedTx.description}</h4>
           <p className="text-xs text-muted-foreground mb-3">Amount: {formatCurrency(selectedTx.debit + selectedTx.credit)}</p>
           <p className="text-xs text-muted-foreground mb-2">Match with journal entry:</p>
-          <input type="text" placeholder="Enter journal entry ID..." className="w-full px-3 py-2 border border-border rounded-lg text-sm mb-3" />
-          <button onClick={() => handleMatch(selectedTx.id, 'manual')} className="px-4 py-1.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">Match</button>
+          <input type="text" placeholder="Enter journal entry ID..." value={matchEntryId} onChange={e => setMatchEntryId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm mb-3" />
+          <button onClick={() => handleMatch(selectedTx.id, matchEntryId)} disabled={!matchEntryId} className="px-4 py-1.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">Match</button>
         </div>
       )}
     </div>

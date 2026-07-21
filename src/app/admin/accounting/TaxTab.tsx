@@ -33,7 +33,7 @@ export default function TaxTab() {
       'Tax Collected': m.taxCollected,
       Orders: m.count,
     }))
-    rows.push({ Month: 'Total', 'Taxable Sales': data.totalTaxable, 'Tax Collected': data.totalTaxCollected, Orders: rows.reduce((s: number, r: any) => s + r.Orders, 0) })
+    rows.push({ Month: 'Total', 'Taxable Sales': data.estimated.totalTaxable, 'Tax Collected': data.estimated.totalTaxCollected, Orders: rows.reduce((s: number, r: any) => s + r.Orders, 0) })
     const csv = ['Month,Taxable Sales,Tax Collected,Orders', ...rows.map(r => `"${r.Month}",${r['Taxable Sales']},${r['Tax Collected']},${r.Orders}`)].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `tax-report-${year}.csv`; a.click()
@@ -57,15 +57,15 @@ export default function TaxTab() {
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Taxable Sales</p>
-          <p className="text-2xl font-bold text-navy">{formatCurrency(data.totalTaxable)}</p>
+          <p className="text-2xl font-bold text-navy">{formatCurrency(data.estimated.totalTaxable)}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Tax Exempt</p>
-          <p className="text-2xl font-bold text-muted-foreground">{formatCurrency(data.totalExempt)}</p>
+          <p className="text-2xl font-bold text-muted-foreground">{formatCurrency(data.estimated.totalExempt)}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Tax Owed</p>
-          <p className="text-2xl font-bold text-amber-600 flex items-center gap-1"><Landmark className="h-5 w-5" />{formatCurrency(data.taxOwed)}</p>
+          <p className="text-2xl font-bold text-amber-600 flex items-center gap-1"><Landmark className="h-5 w-5" />{formatCurrency(data.estimated.taxOwed)}</p>
         </div>
       </div>
 
