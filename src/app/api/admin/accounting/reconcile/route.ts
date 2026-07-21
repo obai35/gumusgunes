@@ -10,10 +10,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
       return NextResponse.json({ error: 'orderId required' }, { status: 400 })
     }
 
-    const order = await db.order.findUnique({
-      where: { id: orderId },
-      include: { journalEntries: { where: { type: 'reconciliation' } } },
-    })
+    const order = await db.order.findUnique({ where: { id: orderId } })
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
@@ -23,7 +20,10 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
       return NextResponse.json({ error: 'Order is not paid' }, { status: 400 })
     }
 
-    if (order.journalEntries.length > 0) {
+    const existingEntry = await db.journalEntry.findFirst({
+      where: { orderId, type: 'reconciliation' },
+    })
+    if (existingEntry) {
       return NextResponse.json({ ok: true, alreadyReconciled: true })
     }
 
