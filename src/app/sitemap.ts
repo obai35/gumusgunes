@@ -4,16 +4,24 @@ import type { MetadataRoute } from 'next'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_URL || 'https://gumusgunes.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await db.product.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true },
-    take: 5000,
-  })
+  let products: { slug: string; updatedAt: Date }[] = []
+  let categories: { slug: string; createdAt: Date }[] = []
 
-  const categories = await db.category.findMany({
-    where: { isVisible: true },
-    select: { slug: true, createdAt: true },
-  })
+  try {
+    ;[products, categories] = await Promise.all([
+      db.product.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+        take: 5000,
+      }),
+      db.category.findMany({
+        where: { isVisible: true },
+        select: { slug: true, createdAt: true },
+      }),
+    ])
+  } catch {
+    // DB unreachable during build — serve static pages only
+  }
 
   const staticPages = [
     { url: BASE_URL, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 1.0 },
