@@ -7,18 +7,19 @@ import { useAdminAuth } from '@/lib/admin-auth-store'
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, loading } = useAdminAuth()
+  const { user, loading, initialized } = useAdminAuth()
   const isLogin = pathname === '/admin/login'
 
   useEffect(() => {
     if (isLogin) return
-    if (loading) return
+    if (!initialized) return
     if (!user) {
       router.replace('/admin/login')
     }
-  }, [user, router, pathname, loading, isLogin])
+  }, [user, router, pathname, initialized, isLogin])
 
   if (isLogin) return <>{children}</>
-  if (loading || !user) return null
+  if (!initialized && !user) return null
+  if (!user) return null
   return <>{children}</>
 }
