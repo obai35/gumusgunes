@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, X, ArrowRight, DollarSign, Package, Star } from 'lucide-react'
 import { toast } from 'sonner'
@@ -24,6 +25,7 @@ type Product = {
 }
 
 export default function AdminProducts() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -243,7 +245,7 @@ export default function AdminProducts() {
         onSelectionChange={setSelectedIds}
         emptyTitle={searchQuery ? 'No products match your search' : 'No products yet'}
         emptyDescription={searchQuery ? 'Try adjusting your search terms' : 'Add your first product to get started'}
-        emptyAction={searchQuery ? undefined : { label: 'Add Product', onClick: () => window.location.href = '/admin/products/new' }}
+        emptyAction={searchQuery ? undefined : { label: 'Add Product', onClick: () => router.push('/admin/products/new') }}
       />
 
       <Pagination
