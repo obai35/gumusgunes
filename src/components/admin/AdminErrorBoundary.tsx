@@ -20,6 +20,11 @@ export class AdminErrorBoundary extends Component<Props, State> {
     console.error('Component stack:', info.componentStack)
   }
 
+  static getDerivedStateFromProps(_: Props, state: State) {
+    if (state.error) return { error: null }
+    return null
+  }
+
   render() {
     if (this.state.error) {
       return (
