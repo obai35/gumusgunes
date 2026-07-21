@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
 import { AdminAuthGuard } from './AdminAuthGuard'
+import { AdminErrorBoundary } from './AdminErrorBoundary'
 import { Menu } from 'lucide-react'
 import { PageTransition } from '@/components/ui/PageTransition'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
@@ -42,11 +43,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                     </Button>
                   </SheetTrigger>
                 </div>
-                <AnimatePresence mode="wait">
-                  <PageTransition key={pathname}>
-                    {children}
-                  </PageTransition>
-                </AnimatePresence>
+                <AdminErrorBoundary key={pathname}>
+                  <AnimatePresence mode="wait">
+                    <PageTransition key={pathname}>
+                      {children}
+                    </PageTransition>
+                  </AnimatePresence>
+                </AdminErrorBoundary>
               </main>
             </Sheet>
             {!isLogin && <MobileBottomNav />}

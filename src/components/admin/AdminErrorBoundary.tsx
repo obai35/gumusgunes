@@ -3,12 +3,12 @@
 import { Component, type ReactNode } from 'react'
 
 type Props = { children: ReactNode }
-type State = { error: Error | null; prevChildren: ReactNode | null }
+type State = { error: Error | null }
 
 export class AdminErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { error: null, prevChildren: null }
+    this.state = { error: null }
   }
 
   static getDerivedStateFromError(error: Error) {
@@ -18,13 +18,6 @@ export class AdminErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, info: { componentStack?: string }) {
     console.error('AdminShell error caught by AdminErrorBoundary:', error)
     console.error('Component stack:', info.componentStack)
-  }
-
-  static getDerivedStateFromProps(props: Props, state: State) {
-    if (state.error && props.children !== state.prevChildren) {
-      return { error: null, prevChildren: props.children }
-    }
-    return { prevChildren: props.children }
   }
 
   render() {
