@@ -26,6 +26,7 @@ model Product {
   rating             Float               @default(0)
   reviewCount        Int                 @default(0)
   stock              Int                 @default(0)
+  costPrice          Float?
   tags               String // JSON array of tags
   isActive           Boolean             @default(true)
   isFeatured         Boolean             @default(false)
@@ -190,6 +191,7 @@ model OrderItem {
   quantity  Int
   price     Float
   discount  Float?
+  actualCost Float?
 }
 
 model Return {
@@ -482,6 +484,8 @@ model Admin {
   pushTokens             PushToken[]
   pushPreference         PushPreference?
   bankTransactionMatches BankTransaction[]
+  payrollRuns           PayrollRun[]
+  approvedEntries       JournalEntry[]
 }
 
 model PushToken {
@@ -950,11 +954,24 @@ model JournalEntry {
   description         String
   reference           String?
   type                String // sale, refund, expense, reconciliation, opening
+  status              String            @default("approved") // draft, pending, approved, rejected
+  currency            String            @default("EGP")
+  exchangeRate        Float             @default(1)
+  fxGainLoss          Float?
+  approvedById        String?
+  approvedAt          DateTime?
+  rejectedReason      String?
+  reversesId          String?
+  reverseEntry        JournalEntry?     @relation("ReverseEntry", fields: [reversesId], references: [id])
+  reversedBy          JournalEntry[]    @relation("ReverseEntry")
+  approvedBy          Admin?            @relation(fields: [approvedById], references: [id])
   orderId             String?
   expenseId           String?
   createdAt           DateTime          @default(now())
   lines               JournalLine[]
   matchedTransactions BankTransaction[]
+
+  @@index([status])
 }
 
 model JournalLine {
@@ -1291,4 +1308,75 @@ model QC_Check {
   notes      String?
   checkedBy  String
   createdAt  DateTime     @default(now())
+}
+
+model ScheduledReport {
+  id            String    @id @default(cuid())
+  name          String
+  type          String // pl, balance_sheet, cash_flow, tax, aging, custom
+  config        String    @default("{}")
+  schedule      String // daily, weekly, monthly, custom_cron
+  cronExpression String?
+  recipients    String    @default("[]")
+  format        String    @default("pdf")
+  lastSentAt    DateTime?
+  nextRunAt     DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([nextRunAt])
+  @@index([isActive])
+}
+
+model Employee {
+  id                String   @id @default(cuid())
+  name              String
+  email             String?
+  phone             String?
+  position          String?
+  salary            Float    @default(0)
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankName          String?
+  taxId             String?
+  notes             String?
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  payrollItems      PayrollItem[]
+}
+
+model PayrollRun {
+  id            String        @id @default(cuid())
+  periodStart   DateTime
+  periodEnd     DateTime
+  totalSalaries Float         @default(0)
+  totalDeductions Float       @default(0)
+  totalNet      Float         @default(0)
+  status        String        @default("draft") // draft, approved, paid
+  processedById String?
+  processedBy   Admin?        @relation(fields: [processedById], references: [id])
+  paidAt        DateTime?
+  notes         String?
+  items         PayrollItem[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model PayrollItem {
+  id         String      @id @default(cuid())
+  runId      String
+  run        PayrollRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  salary     Float       @default(0)
+  deductions Float       @default(0)
+  bonus      Float       @default(0)
+  netPay     Float       @default(0)
+  notes      String?
+
+  @@index([runId])
 }
