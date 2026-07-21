@@ -1,28 +1,24 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 
 export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user } = useAdminAuth()
-  const [checking, setChecking] = useState(true)
+  const { user, loading } = useAdminAuth()
+  const isLogin = pathname === '/admin/login'
 
   useEffect(() => {
-    if (pathname === '/admin/login') {
-      setChecking(false)
-      return
-    }
+    if (isLogin) return
+    if (loading) return
     if (!user) {
       router.replace('/admin/login')
-    } else {
-      setChecking(false)
     }
-  }, [user, router, pathname])
+  }, [user, router, pathname, loading, isLogin])
 
-  if (checking) return null
-
+  if (isLogin) return <>{children}</>
+  if (loading || !user) return null
   return <>{children}</>
 }
