@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Download, Scale, CheckCircle, XCircle } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 import { generatePdf } from '@/lib/pdf-export'
 
 export default function BalanceSheetTab() {

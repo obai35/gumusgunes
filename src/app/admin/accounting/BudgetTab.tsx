@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Download, Plus, Trash2, X } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']

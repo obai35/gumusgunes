@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 import { Download } from 'lucide-react'
 import { generatePdf } from '@/lib/pdf-export'
 

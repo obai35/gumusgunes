@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Download, Package, DollarSign, TrendingUp } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 export default function InventoryValuationTab() {
   const [data, setData] = useState<any>(null)

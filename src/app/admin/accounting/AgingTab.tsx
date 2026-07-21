@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Download, Clock, AlertTriangle } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 const bucketColors: Record<string, string> = {
   '0-30': 'bg-green-100 text-green-700 border-green-200',

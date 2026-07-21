@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 export default function JournalTab() {
   const [data, setData] = useState<any>(null)

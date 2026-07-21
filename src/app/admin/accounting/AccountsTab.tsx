@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 const typeColors: Record<string, string> = {
   asset: 'text-green-600', liability: 'text-blue-600',

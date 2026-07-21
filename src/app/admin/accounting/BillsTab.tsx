@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, Search, Download, CheckCircle, XCircle, Clock } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700', approved: 'bg-blue-100 text-blue-700',

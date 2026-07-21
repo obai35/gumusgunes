@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TrendingUp, TrendingDown, DollarSign, Download, BarChart3 } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 import { generatePdf } from '@/lib/pdf-export'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from 'recharts'
 

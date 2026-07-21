@@ -21,10 +21,9 @@ import ReconciliationTab from './ReconciliationTab'
 import InvoicesTab from './InvoicesTab'
 import BillsTab from './BillsTab'
 import InventoryValuationTab from './InventoryValuationTab'
+import { formatCurrency } from './format'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
-
-export function formatCurrency(v: number | undefined | null) { return v != null ? `E£${v.toFixed(2)}` : 'E£0.00' }
 
 function MiniBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? (value / max) * 100 : 0
@@ -1115,12 +1114,12 @@ function ReportsTab() {
   const [data, setData] = useState<any>(null)
   const [type, setType] = useState('daily')
 
-  useEffect(() => {
-    fetch(`/api/admin/accounting/reports?type=${type}`)
-      .then((r) => { if (!r.ok) throw new Error(); return r.json() })
-      .then(setData)
-      .catch(() => toast.error('Failed to load reports'))
-  }, [type])
+   useEffect(() => {
+     fetch(`/api/admin/accounting/reports?type=${type}`)
+       .then((r) => { if (!r.ok) throw new Error(); return r.json() })
+       .then(d => setData(d))
+       .catch(() => { toast.error('Failed to load reports'); setData({ periods: [], summary: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 } }) })
+   }, [type])
 
   function handleExportCSV() {
     if (!data?.periods) return

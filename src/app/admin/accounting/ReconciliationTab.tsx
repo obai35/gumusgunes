@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Upload, CheckCircle, XCircle, Link2 } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 export default function ReconciliationTab() {
   const [accounts, setAccounts] = useState<any[]>([])

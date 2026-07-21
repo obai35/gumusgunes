@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, Search, Download, Send, CheckCircle, XCircle } from 'lucide-react'
-import { formatCurrency } from './page'
+import { formatCurrency } from './format'
 
 const statusColors: Record<string, string> = {
   draft: 'bg-gray-100 text-gray-700', sent: 'bg-blue-100 text-blue-700',
