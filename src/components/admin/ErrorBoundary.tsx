@@ -3,17 +3,24 @@
 import { Component, type ReactNode } from 'react'
 
 interface Props { children: ReactNode; fallback?: ReactNode; onRetry?: () => void }
-interface State { hasError: boolean; error: Error | null }
+interface State { hasError: boolean; error: Error | null; prevChildren: ReactNode | null }
 
 export class ErrorBoundary extends Component<Props, State> {
-  state: State = { hasError: false, error: null }
+  state: State = { hasError: false, error: null, prevChildren: null }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, info: { componentStack?: string }) {
     console.error('ErrorBoundary caught:', error, info.componentStack)
+  }
+
+  static getDerivedStateFromProps(props: Props, state: State): Partial<State> | null {
+    if (state.hasError && props.children !== state.prevChildren) {
+      return { hasError: false, error: null, prevChildren: props.children }
+    }
+    return { prevChildren: props.children }
   }
 
   handleRetry = () => {

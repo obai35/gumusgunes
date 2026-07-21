@@ -3,12 +3,12 @@
 import { Component, type ReactNode } from 'react'
 
 type Props = { children: ReactNode }
-type State = { error: Error | null }
+type State = { error: Error | null; prevChildren: ReactNode | null }
 
 export class AdminErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { error: null }
+    this.state = { error: null, prevChildren: null }
   }
 
   static getDerivedStateFromError(error: Error) {
@@ -20,9 +20,11 @@ export class AdminErrorBoundary extends Component<Props, State> {
     console.error('Component stack:', info.componentStack)
   }
 
-  static getDerivedStateFromProps(_: Props, state: State) {
-    if (state.error) return { error: null }
-    return null
+  static getDerivedStateFromProps(props: Props, state: State) {
+    if (state.error && props.children !== state.prevChildren) {
+      return { error: null, prevChildren: props.children }
+    }
+    return { prevChildren: props.children }
   }
 
   render() {

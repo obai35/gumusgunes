@@ -49,7 +49,7 @@ export default function SalesHeatmapTab() {
 
   if (loading) return <div className="space-y-3"><Skeleton className="h-24 w-full" /><Skeleton className="h-80 w-full" /></div>
 
-  const maxVal = data ? (mode === 'revenue' ? data.maxRevenue : Math.max(...data.days.flatMap((d: any) => (d.hours || []).map((h: any) => h.count)), 1)) : 1
+  const maxVal = data ? (mode === 'revenue' ? data.maxRevenue : Math.max(...data.grid.flatMap((d: any) => d.hours.map((h: any) => h.count)), 1)) : 1
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -78,9 +78,9 @@ export default function SalesHeatmapTab() {
           columns={
             data ? [{ header: 'Day/Hour', key: 'day' }, ...Array.from({ length: 24 }, (_, i) => ({ header: HOUR_LABELS[i], key: String(i) }))] : []
           }
-          data={data ? data.days.map((d: any) => {
+          data={data ? data.grid.map((d: any) => {
             const row: any = { day: d.day }
-            (d.hours || []).forEach((h: any) => { row[String(h.hour)] = mode === 'revenue' ? h.revenue : h.count })
+            d.hours.forEach((h: any) => { row[String(h.hour)] = mode === 'revenue' ? h.revenue : h.count })
             return row
           }) : []}
         />
@@ -126,10 +126,10 @@ export default function SalesHeatmapTab() {
               </tr>
             </thead>
             <tbody>
-              {data.days.map((d: any) => (
+              {data.grid.map((d: any) => (
                 <tr key={d.day}>
                   <td className="p-1 font-medium text-navy text-left">{d.day}</td>
-                  {(d.hours || []).map((h: any) => {
+                  {d.hours.map((h: any) => {
                     const val = mode === 'revenue' ? h.revenue : h.count
                     return (
                       <td
