@@ -18,7 +18,9 @@ model Product {
   compareAtPrice     Float?
   sku                String              @unique
   categoryId         String
-  category           Category            @relation(fields: [categoryId], references: [id])
+  category          Category            @relation(fields: [categoryId], references: [id])
+  brandId           String?
+  brand             Brand?              @relation(fields: [brandId], references: [id])
   imageUrl           String
   images             String // JSON array of image URLs
   material           String
@@ -52,11 +54,24 @@ model Product {
   invoiceItems       InvoiceItem[]
 
   @@index([categoryId, isActive])
+  @@index([brandId])
   @@index([isActive, isFeatured])
   @@index([isActive, isNew])
   @@index([isActive, isBestseller])
   @@index([price])
   @@index([createdAt])
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String
+  nameAr    String?
+  slug      String    @unique
+  logo      String?
+  isVisible Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
 // ── Accounting / Double-Entry ──

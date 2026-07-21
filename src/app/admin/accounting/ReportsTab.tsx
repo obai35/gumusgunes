@@ -676,22 +676,25 @@ export default function ReportsTab() {
     if (reportType === 'cash-flow') {
       const cf = data[0]
       if (!cf) return <p className="text-sm text-muted-foreground">No cash flow data available</p>
+      const opNet = cf.operating?.netOperating ?? 0
+      const invNet = cf.investing?.netInvesting ?? 0
+      const finNet = cf.financing?.netFinancing ?? 0
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard label="Operating" value={formatCurrency(cf.operating || 0)} icon={TrendingUp} color={cf.operating >= 0 ? 'text-green-600' : 'text-red-600'} bg={cf.operating >= 0 ? 'bg-green-50' : 'bg-red-50'} />
-            <StatCard label="Investing" value={formatCurrency(cf.investing || 0)} icon={Banknote} color={cf.investing >= 0 ? 'text-green-600' : 'text-orange-600'} bg={cf.investing >= 0 ? 'bg-green-50' : 'bg-orange-50'} />
-            <StatCard label="Financing" value={formatCurrency(cf.financing || 0)} icon={CreditCard} color={cf.financing >= 0 ? 'text-green-600' : 'text-purple-600'} bg={cf.financing >= 0 ? 'bg-green-50' : 'bg-purple-50'} />
-            <StatCard label="Net Change" value={formatCurrency(cf.netChange || 0)} icon={DollarSign} color={cf.netChange >= 0 ? 'text-green-600' : 'text-red-600'} bg={cf.netChange >= 0 ? 'bg-green-50' : 'bg-red-50'} />
+            <StatCard label="Operating" value={formatCurrency(opNet)} icon={TrendingUp} color={opNet >= 0 ? 'text-green-600' : 'text-red-600'} bg={opNet >= 0 ? 'bg-green-50' : 'bg-red-50'} />
+            <StatCard label="Investing" value={formatCurrency(invNet)} icon={Banknote} color={invNet >= 0 ? 'text-green-600' : 'text-orange-600'} bg={invNet >= 0 ? 'bg-green-50' : 'bg-orange-50'} />
+            <StatCard label="Financing" value={formatCurrency(finNet)} icon={CreditCard} color={finNet >= 0 ? 'text-green-600' : 'text-purple-600'} bg={finNet >= 0 ? 'bg-green-50' : 'bg-purple-50'} />
+            <StatCard label="Net Change" value={formatCurrency(cf.netCashFlow ?? 0)} icon={DollarSign} color={(cf.netCashFlow ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'} bg={(cf.netCashFlow ?? 0) >= 0 ? 'bg-green-50' : 'bg-red-50'} />
           </div>
-          {cf.operatingDetails && cf.operatingDetails.length > 0 && (
+          {cf.operating?.items?.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
               <h3 className="text-sm font-semibold text-navy mb-4">Operating Activities</h3>
               <div className="space-y-2">
-                {cf.operatingDetails.map((d: any, i: number) => (
+                {cf.operating.items.map((d: any, i: number) => (
                   <div key={i} className="flex justify-between py-1.5 border-b border-border/50 last:border-0">
-                    <span className="text-sm text-navy">{d.description || d.name || d.category}</span>
-                    <span className={`text-sm font-medium ${(d.amount || d.value || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(d.amount || d.value || 0)}</span>
+                    <span className="text-sm text-navy">{d.label}</span>
+                    <span className={`text-sm font-medium ${(d.amount ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(d.amount ?? 0)}</span>
                   </div>
                 ))}
               </div>
