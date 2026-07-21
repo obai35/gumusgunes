@@ -17,7 +17,7 @@ export const useAdminAuth = create<AdminAuthState>()((set) => ({
   user: null,
   loading: true,
   totpPending: null,
-  adminLogin: (user) => set({ user, totpPending: null }),
+  adminLogin: (user) => set({ user, loading: false, totpPending: null }),
   logout: () => set({ user: null, totpPending: null }),
   setTotpPending: (data) => set({ totpPending: data }),
   fetchUser: async () => {
@@ -27,10 +27,16 @@ export const useAdminAuth = create<AdminAuthState>()((set) => ({
         const data = await res.json()
         set({ user: data.admin, loading: false })
       } else {
-        set({ user: null, loading: false })
+        set((s) => {
+          if (s.user) return { loading: false }
+          return { user: null, loading: false }
+        })
       }
     } catch {
-      set({ user: null, loading: false })
+      set((s) => {
+        if (s.user) return { loading: false }
+        return { user: null, loading: false }
+      })
     }
   },
 }))
