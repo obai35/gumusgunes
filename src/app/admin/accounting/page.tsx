@@ -21,6 +21,7 @@ import ReconciliationTab from './ReconciliationTab'
 import InvoicesTab from './InvoicesTab'
 import BillsTab from './BillsTab'
 import InventoryValuationTab from './InventoryValuationTab'
+import ReportsTab from './ReportsTab'
 import { formatCurrency } from './format'
 
 type Period = 'day' | 'week' | 'month' | 'year' | 'custom'
@@ -1110,81 +1111,4 @@ function AddExpenseModal({ onClose, onSaved, branches }: { onClose: () => void; 
   )
 }
 
-function ReportsTab() {
-  const [data, setData] = useState<any>(null)
-  const [type, setType] = useState('daily')
 
-   useEffect(() => {
-     fetch(`/api/admin/accounting/reports?type=${type}`)
-       .then((r) => { if (!r.ok) throw new Error(); return r.json() })
-       .then(d => setData(d))
-       .catch(() => { toast.error('Failed to load reports'); setData({ periods: [], summary: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 } }) })
-   }, [type])
-
-  function handleExportCSV() {
-    if (!data?.periods) return
-    const rows = data.periods.map((p: any) => ({
-      Period: p.period,
-      Revenue: p.revenue,
-      Orders: p.orderCount,
-      'Avg Order Value': p.avgOrderValue,
-    }))
-    exportCSVRows(rows, `reports-${type}.csv`)
-  }
-
-  return (
-    <div>
-      <div className="flex gap-2 mb-4">
-        {['daily', 'weekly', 'monthly'].map((t) => (
-          <button key={t} onClick={() => setType(t)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${type === t ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-        <button onClick={handleExportCSV} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
-          <Download className="h-4 w-4" /> Export CSV
-        </button>
-      </div>
-      {!data ? <div className="space-y-4"><div className="grid grid-cols-3 gap-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div><Skeleton className="h-48 w-full" /></div> : (
-        <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border border-border p-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Revenue</p>
-              <p className="text-2xl font-bold text-navy">{formatCurrency(data.summary.totalRevenue)}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-border p-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Orders</p>
-              <p className="text-2xl font-bold text-navy">{data.summary.totalOrders}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-border p-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Avg Order Value</p>
-              <p className="text-2xl font-bold text-navy">{formatCurrency(data.summary.avgOrderValue)}</p>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
-                  <th className="p-3 font-medium">Period</th>
-                  <th className="p-3 font-medium text-right">Revenue</th>
-                  <th className="p-3 font-medium text-right">Orders</th>
-                  <th className="p-3 font-medium text-right">Avg Order</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Array.isArray(data.periods) && data.periods.map((p: any) => (
-                  <tr key={p.period} className="border-b border-border/50">
-                    <td className="p-3 font-medium text-navy">{p.period}</td>
-                    <td className="p-3 text-right text-navy">{formatCurrency(p.revenue)}</td>
-                    <td className="p-3 text-right text-muted-foreground">{p.orderCount}</td>
-                    <td className="p-3 text-right text-navy">{formatCurrency(p.avgOrderValue)}</td>
-                  </tr>
-                ))}
-                {(!Array.isArray(data.periods) || data.periods.length === 0) && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">No data</td></tr>}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
