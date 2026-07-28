@@ -9,8 +9,126 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ── Multi-Tenant Store ──
+
+model Store {
+  id                   String    @id @default(cuid())
+  name                 String
+  slug                 String    @unique
+  email                String
+  phone                String?
+  address              String?
+  logo                 String?
+  favicon              String?
+  primaryDomain        String?   @unique
+  customDomains        String    @default("[]")
+  plan                 String    @default("free") // free, starter, business, enterprise, lifetime
+  trialEndsAt          DateTime?
+  subscriptionStatus   String    @default("active") // active, trialing, past_due, canceled, paused
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  isActive             Boolean   @default(true)
+  isSetupComplete      Boolean   @default(false)
+  themeSettings        String    @default("{}") // JSON: colors, fonts, CSS vars, layout
+  metadata             String    @default("{}") // JSON: extra config
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  products             Product[]
+  categories           Category[]
+  brands               Brand[]
+  orders               Order[]
+  users                User[]
+  admins               Admin[]
+  roles                Role[]
+  siteSettings         SiteSetting[]
+  discounts            Discount[]
+  newsletters          Newsletter[]
+  branches             Branch[]
+  paymentMethods       PaymentMethod[]
+  shippingMethods      ShippingMethod[]
+  governorates         Governorate[]
+  suppliers            Supplier[]
+  expenses             Expense[]
+  shifts               Shift[]
+  blogPosts            BlogPost[]
+  faqEntries           FaqEntry[]
+  banners              Banner[]
+  staticPages          StaticPage[]
+  activityLogs         ActivityLog[]
+  webhooks             Webhook[]
+  apiKeys              ApiKey[]
+  featureFlags         FeatureFlag[]
+  socialAccounts       SocialAccount[]
+  socialPosts          SocialPost[]
+  socialDrafts         SocialDraft[]
+  socialCampaigns      SocialCampaign[]
+  loyaltyTiers         LoyaltyTier[]
+  customerSegments     CustomerSegment[]
+  abandonedCarts       AbandonedCart[]
+  emailCampaigns       EmailCampaign[]
+  pushCampaigns        PushCampaign[]
+  saleCampaigns        SaleCampaign[]
+  giftCards            GiftCard[]
+  referrals            Referral[]
+  referrerConfigs      ReferralConfig[]
+  accounts             Account[]
+  budgets              Budget[]
+  bankAccounts         BankAccount[]
+  invoices             Invoice[]
+  bills                Bill[]
+  journalEntries       JournalEntry[]
+  currencies           Currency[]
+  translations         Translation[]
+  taxRates             TaxRate[]
+  warehouses           Warehouse[]
+  employees            Employee[]
+  payrollRuns          PayrollRun[]
+  conversations        Conversation[]
+  scheduledReports     ScheduledReport[]
+  qcTemplates          QC_Template[]
+  returnRequests       ReturnRequest[]
+  purchaseOrders       PurchaseOrder[]
+  addresses            Address[]
+  backInStock          BackInStock[]
+  bankTransactions     BankTransaction[]
+  billItems            BillItem[]
+  branchStocks         BranchStock[]
+  customerActivityLogs CustomerActivityLog[]
+  customerNotes        CustomerNote[]
+  customerPushTokens   CustomerPushToken[]
+  emailLogs            EmailLog[]
+  inventoryLogs        InventoryLog[]
+  invoiceItems         InvoiceItem[]
+  journalLines         JournalLine[]
+  messages             Message[]
+  orderItems           OrderItem[]
+  otpVerifications     OtpVerification[]
+  payrollItems         PayrollItem[]
+  productEmbeddings    ProductEmbedding[]
+  productRelations     ProductRelation[]
+  pushPreferences      PushPreference[]
+  pushTokens           PushToken[]
+  qcChecks             QC_Check[]
+  purchaseOrderItems   PurchaseOrderItem[]
+  resetTokens          ResetToken[]
+  returnItems          ReturnItem[]
+  returns              Return[]
+  reviews              Review[]
+  savedCards           SavedCard[]
+  shipments            Shipment[]
+  shippingRates        ShippingRate[]
+  shippingRules        ShippingRule[]
+  stockLevels          StockLevel[]
+  stockTransfers       StockTransfer[]
+  webhookDeliveries    WebhookDelivery[]
+  wishlistItems        WishlistItem[]
+}
+
 model Product {
   id                 String              @id @default(cuid())
+  storeId            String
+  store              Store               @relation(fields: [storeId], references: [id])
   name               String
   slug               String              @unique
   description        String
@@ -18,9 +136,9 @@ model Product {
   compareAtPrice     Float?
   sku                String              @unique
   categoryId         String
-  category          Category            @relation(fields: [categoryId], references: [id])
-  brandId           String?
-  brand             Brand?              @relation(fields: [brandId], references: [id])
+  category           Category            @relation(fields: [categoryId], references: [id])
+  brandId            String?
+  brand              Brand?              @relation(fields: [brandId], references: [id])
   imageUrl           String
   images             String // JSON array of image URLs
   material           String
@@ -64,6 +182,8 @@ model Product {
 
 model Brand {
   id        String    @id @default(cuid())
+  storeId   String
+  store     Store     @relation(fields: [storeId], references: [id])
   name      String
   nameAr    String?
   slug      String    @unique
@@ -72,6 +192,8 @@ model Brand {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   products  Product[]
+
+  @@index([storeId])
 }
 
 // ── Accounting / Double-Entry ──
@@ -87,6 +209,8 @@ enum RelationType {
 
 model ProductRelation {
   id        String       @id @default(cuid())
+  storeId   String
+  store     Store        @relation(fields: [storeId], references: [id])
   fromId    String
   from      Product      @relation("FromProduct", fields: [fromId], references: [id], onDelete: Cascade)
   toId      String
@@ -99,19 +223,26 @@ model ProductRelation {
   @@unique([fromId, toId, type])
   @@index([fromId, type, weight])
   @@index([toId, type])
+  @@index([storeId])
 }
 
 model ProductEmbedding {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   productId String   @unique
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   vector    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model Category {
   id          String     @id @default(cuid())
+  storeId     String
+  store       Store      @relation(fields: [storeId], references: [id])
   name        String
   slug        String     @unique
   description String?
@@ -123,10 +254,14 @@ model Category {
   children    Category[] @relation("CategoryHierarchy")
   products    Product[]
   createdAt   DateTime   @default(now())
+
+  @@index([storeId])
 }
 
 model Review {
   id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
   productId   String
   product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   authorName  String
@@ -138,10 +273,13 @@ model Review {
   createdAt   DateTime @default(now())
 
   @@index([productId, createdAt])
+  @@index([storeId])
 }
 
 model Order {
   id                    String          @id @default(cuid())
+  storeId               String
+  store                 Store           @relation(fields: [storeId], references: [id])
   orderNumber           String          @unique
   receiptNumber         String?         @unique
   userId                String?
@@ -195,22 +333,29 @@ model Order {
   @@index([status])
   @@index([userId])
   @@index([createdAt])
+  @@index([storeId])
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
-  discount  Float?
+  id         String  @id @default(cuid())
+  storeId    String
+  store      Store   @relation(fields: [storeId], references: [id])
+  orderId    String
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
+  quantity   Int
+  price      Float
+  discount   Float?
   actualCost Float?
+
+  @@index([storeId])
 }
 
 model Return {
   id              String       @id @default(cuid())
+  storeId         String
+  store           Store        @relation(fields: [storeId], references: [id])
   orderId         String
   order           Order        @relation(fields: [orderId], references: [id])
   shiftId         String?
@@ -226,29 +371,41 @@ model Return {
   processedByName String?
   createdAt       DateTime     @default(now())
   items           ReturnItem[]
+
+  @@index([storeId])
 }
 
 model ReturnItem {
   id           String  @id @default(cuid())
+  storeId      String
+  store        Store   @relation(fields: [storeId], references: [id])
   returnId     String
   return       Return  @relation(fields: [returnId], references: [id], onDelete: Cascade)
   productId    String
   product      Product @relation(fields: [productId], references: [id])
   quantity     Int
   refundAmount Float
+
+  @@index([storeId])
 }
 
 model Governorate {
   id            String         @id @default(cuid())
+  storeId       String
+  store         Store          @relation(fields: [storeId], references: [id])
   name          String         @unique
   nameAr        String
   shippingRates ShippingRate[]
   shippingRules ShippingRule[]
   discounts     Discount[]
+
+  @@index([storeId])
 }
 
 model ShippingMethod {
   id            String         @id @default(cuid())
+  storeId       String
+  store         Store          @relation(fields: [storeId], references: [id])
   name          String
   estimatedDays String
   isActive      Boolean        @default(true)
@@ -257,10 +414,14 @@ model ShippingMethod {
   shipments     Shipment[]
   rules         ShippingRule[]
   orders        Order[]
+
+  @@index([storeId])
 }
 
 model ShippingRate {
   id            String         @id @default(cuid())
+  storeId       String
+  store         Store          @relation(fields: [storeId], references: [id])
   methodId      String
   method        ShippingMethod @relation(fields: [methodId], references: [id], onDelete: Cascade)
   governorateId String
@@ -268,10 +429,13 @@ model ShippingRate {
   price         Float
 
   @@unique([methodId, governorateId])
+  @@index([storeId])
 }
 
 model ShippingRule {
   id            String          @id @default(cuid())
+  storeId       String
+  store         Store           @relation(fields: [storeId], references: [id])
   name          String
   methodId      String?
   method        ShippingMethod? @relation(fields: [methodId], references: [id], onDelete: SetNull)
@@ -284,10 +448,14 @@ model ShippingRule {
   startDate     DateTime?
   endDate       DateTime?
   createdAt     DateTime        @default(now())
+
+  @@index([storeId])
 }
 
 model Shipment {
   id                  String         @id @default(cuid())
+  storeId             String
+  store               Store          @relation(fields: [storeId], references: [id])
   orderId             String         @unique
   order               Order          @relation(fields: [orderId], references: [id])
   methodId            String
@@ -301,27 +469,38 @@ model Shipment {
   notes               String?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
+
+  @@index([storeId])
 }
 
 model Newsletter {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   email     String   @unique
   name      String?
   createdAt DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model WishlistItem {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   sessionId String
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
   @@unique([sessionId, productId])
+  @@index([storeId])
 }
 
 model BackInStock {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   email     String
   productId String
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -329,6 +508,7 @@ model BackInStock {
   createdAt DateTime @default(now())
 
   @@unique([email, productId])
+  @@index([storeId])
 }
 
 enum Gender {
@@ -338,6 +518,8 @@ enum Gender {
 
 model User {
   id            String                @id @default(cuid())
+  storeId       String
+  store         Store                 @relation(fields: [storeId], references: [id])
   email         String                @unique
   password      String
   name          String
@@ -358,19 +540,27 @@ model User {
   notes         CustomerNote[]
   activityLogs  CustomerActivityLog[]
   emailLogs     EmailLog[]
+
+  @@index([storeId])
 }
 
 model CustomerSegment {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   name      String
   rules     Json
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model LoyaltyTier {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   name      String
   minPoints Int
   benefits  Json
@@ -378,29 +568,41 @@ model LoyaltyTier {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   users     User[]
+
+  @@index([storeId])
 }
 
 model CustomerNote {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   adminId   String
   note      String
   createdAt DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model EmailLog {
   id      String   @id @default(cuid())
+  storeId String
+  store   Store    @relation(fields: [storeId], references: [id])
   userId  String
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   type    String
   subject String
   status  String   @default("sent")
   sentAt  DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model CustomerActivityLog {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   action    String
@@ -409,10 +611,13 @@ model CustomerActivityLog {
   createdAt DateTime @default(now())
 
   @@index([userId, createdAt])
+  @@index([storeId])
 }
 
 model Address {
   id         String   @id @default(cuid())
+  storeId    String
+  store      Store    @relation(fields: [storeId], references: [id])
   userId     String
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   fullName   String
@@ -424,10 +629,14 @@ model Address {
   country    String   @default("EG")
   isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model SavedCard {
   id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   nickname    String?
@@ -435,10 +644,14 @@ model SavedCard {
   expiryMonth Int
   expiryYear  Int
   createdAt   DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model BranchStock {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   branchId  String
   branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
   productId String
@@ -448,10 +661,13 @@ model BranchStock {
   updatedAt DateTime @updatedAt
 
   @@unique([branchId, productId])
+  @@index([storeId])
 }
 
 model StockTransfer {
   id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
   fromType    String // warehouse, branch
   fromId      String? // branchId if fromType=branch
   toType      String // warehouse, branch
@@ -465,18 +681,25 @@ model StockTransfer {
   createdAt   DateTime @default(now())
 
   @@index([createdById, createdAt])
+  @@index([storeId])
 }
 
 model Role {
   id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
   name        String   @unique
   permissions String   @default("[]")
   createdAt   DateTime @default(now())
   admins      Admin[]
+
+  @@index([storeId])
 }
 
 model Admin {
   id                     String            @id @default(cuid())
+  storeId                String
+  store                  Store             @relation(fields: [storeId], references: [id])
   email                  String            @unique
   name                   String
   password               String
@@ -499,12 +722,16 @@ model Admin {
   pushTokens             PushToken[]
   pushPreference         PushPreference?
   bankTransactionMatches BankTransaction[]
-  payrollRuns           PayrollRun[]
-  approvedEntries       JournalEntry[]
+  payrollRuns            PayrollRun[]
+  approvedEntries        JournalEntry[]
+
+  @@index([storeId])
 }
 
 model PushToken {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   token     String
   platform  String   @default("android")
   adminId   String
@@ -514,10 +741,13 @@ model PushToken {
 
   @@unique([adminId, token])
   @@index([adminId])
+  @@index([storeId])
 }
 
 model PushPreference {
   id                String   @id @default(cuid())
+  storeId           String
+  store             Store    @relation(fields: [storeId], references: [id])
   adminId           String   @unique
   admin             Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
   newConversation   Boolean  @default(true)
@@ -529,10 +759,14 @@ model PushPreference {
   quietHoursTo      String   @default("08:00")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model InventoryLog {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   productId String
   product   Product  @relation(fields: [productId], references: [id])
   type      String
@@ -541,10 +775,13 @@ model InventoryLog {
   createdAt DateTime @default(now())
 
   @@index([productId, createdAt])
+  @@index([storeId])
 }
 
 model Discount {
   id            String       @id @default(cuid())
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
   code          String       @unique
   type          String
   value         Float
@@ -560,16 +797,24 @@ model Discount {
   createdAt     DateTime     @default(now())
   orders        Order[]
   socialPosts   SocialPost[]
+
+  @@index([storeId])
 }
 
 model SiteSetting {
-  id    String @id @default(cuid())
-  key   String @unique
-  value String
+  id      String @id @default(cuid())
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+  key     String @unique
+  value   String
+
+  @@index([storeId])
 }
 
 model Supplier {
   id             String          @id @default(cuid())
+  storeId        String
+  store          Store           @relation(fields: [storeId], references: [id])
   name           String
   phone          String?
   email          String?
@@ -579,10 +824,14 @@ model Supplier {
   expenses       Expense[]
   purchaseOrders PurchaseOrder[]
   bills          Bill[]
+
+  @@index([storeId])
 }
 
 model Expense {
   id            String    @id @default(cuid())
+  storeId       String
+  store         Store     @relation(fields: [storeId], references: [id])
   shiftId       String?
   shift         Shift?    @relation(fields: [shiftId], references: [id])
   branchId      String?
@@ -595,10 +844,14 @@ model Expense {
   invoiceNumber String?
   notes         String?
   createdAt     DateTime  @default(now())
+
+  @@index([storeId])
 }
 
 model Shift {
   id                String    @id @default(cuid())
+  storeId           String
+  store             Store     @relation(fields: [storeId], references: [id])
   branchId          String
   branch            Branch    @relation(fields: [branchId], references: [id])
   startedAt         DateTime  @default(now())
@@ -620,10 +873,13 @@ model Shift {
   returns           Return[]
 
   @@index([branchId, isOpen])
+  @@index([storeId])
 }
 
 model Branch {
   id        String        @id @default(cuid())
+  storeId   String
+  store     Store         @relation(fields: [storeId], references: [id])
   name      String
   email     String        @unique
   password  String
@@ -634,10 +890,14 @@ model Branch {
   shifts    Shift[]
   stocks    BranchStock[]
   expenses  Expense[]
+
+  @@index([storeId])
 }
 
 model PaymentMethod {
   id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id])
   code          String   @unique
   name          String
   nameAr        String?
@@ -648,10 +908,14 @@ model PaymentMethod {
   config        String   @default("{}")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model SocialAccount {
   id           String       @id @default(cuid())
+  storeId      String
+  store        Store        @relation(fields: [storeId], references: [id])
   platform     String // instagram | facebook
   accountId    String // platform user ID
   accountName  String // display name
@@ -660,10 +924,14 @@ model SocialAccount {
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
   posts        SocialPost[]
+
+  @@index([storeId])
 }
 
 model SocialPost {
   id             String          @id @default(cuid())
+  storeId        String
+  store          Store           @relation(fields: [storeId], references: [id])
   accountId      String?
   account        SocialAccount?  @relation(fields: [accountId], references: [id])
   campaignId     String?
@@ -688,10 +956,13 @@ model SocialPost {
 
   @@index([status, scheduledAt])
   @@index([accountId, status])
+  @@index([storeId])
 }
 
 model SocialDraft {
   id         String   @id @default(cuid())
+  storeId    String
+  store      Store    @relation(fields: [storeId], references: [id])
   title      String?
   mediaUrls  String // JSON array
   caption    String?
@@ -701,10 +972,14 @@ model SocialDraft {
   platforms  String // JSON array
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model SocialCampaign {
   id            String       @id @default(cuid())
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
   name          String
   goal          String // awareness | engagement | sales | followers
   budget        Float?
@@ -716,10 +991,14 @@ model SocialCampaign {
   posts         SocialPost[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
+
+  @@index([storeId])
 }
 
 model ActivityLog {
   id         String   @id @default(cuid())
+  storeId    String
+  store      Store    @relation(fields: [storeId], references: [id])
   adminId    String?
   adminName  String?
   action     String // create, update, delete, login, logout
@@ -729,10 +1008,13 @@ model ActivityLog {
   createdAt  DateTime @default(now())
 
   @@index([adminId, createdAt])
+  @@index([storeId])
 }
 
 model Webhook {
   id             String            @id @default(cuid())
+  storeId        String
+  store          Store             @relation(fields: [storeId], references: [id])
   name           String
   url            String
   events         String            @default("[]")
@@ -741,10 +1023,14 @@ model Webhook {
   lastDeliveryAt DateTime?
   createdAt      DateTime          @default(now())
   deliveries     WebhookDelivery[]
+
+  @@index([storeId])
 }
 
 model WebhookDelivery {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   webhookId String
   webhook   Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
   event     String
@@ -754,30 +1040,41 @@ model WebhookDelivery {
   createdAt DateTime @default(now())
 
   @@index([webhookId, createdAt])
+  @@index([storeId])
 }
 
 model ApiKey {
   id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
   name        String
   key         String    @unique
   permissions String    @default("[]")
   isActive    Boolean   @default(true)
   lastUsedAt  DateTime?
   createdAt   DateTime  @default(now())
+
+  @@index([storeId])
 }
 
 model FeatureFlag {
   id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
   key         String   @unique
   name        String
   enabled     Boolean  @default(false)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model ResetToken {
   id        String    @id @default(uuid())
+  storeId   String
+  store     Store     @relation(fields: [storeId], references: [id])
   email     String
   token     String    @unique
   expiresAt DateTime
@@ -786,6 +1083,7 @@ model ResetToken {
 
   @@index([email])
   @@index([token])
+  @@index([storeId])
 }
 
 // ── WhatsApp Multi-Agent Chat ──
@@ -804,6 +1102,8 @@ enum MessageRole {
 
 model Conversation {
   id            String             @id @default(cuid())
+  storeId       String
+  store         Store              @relation(fields: [storeId], references: [id])
   customerName  String?
   customerPhone String?
   status        ConversationStatus @default(ACTIVE)
@@ -816,10 +1116,13 @@ model Conversation {
 
   @@index([status, updatedAt])
   @@index([assignedTo])
+  @@index([storeId])
 }
 
 model Message {
   id             String       @id @default(cuid())
+  storeId        String
+  store          Store        @relation(fields: [storeId], references: [id])
   conversationId String
   content        String
   role           MessageRole
@@ -830,12 +1133,15 @@ model Message {
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@index([conversationId, createdAt])
+  @@index([storeId])
 }
 
 // ── Accounting / Double-Entry ──
 
 model Account {
   id           String        @id @default(cuid())
+  storeId      String
+  store        Store         @relation(fields: [storeId], references: [id])
   code         String        @unique
   name         String
   nameAr       String?
@@ -846,10 +1152,14 @@ model Account {
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
   journalLines JournalLine[]
+
+  @@index([storeId])
 }
 
 model Budget {
   id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
   accountCode String
   month       Int // 1-12
   year        Int
@@ -859,10 +1169,13 @@ model Budget {
 
   @@unique([accountCode, month, year])
   @@index([year, month])
+  @@index([storeId])
 }
 
 model BankAccount {
   id             String            @id @default(cuid())
+  storeId        String
+  store          Store             @relation(fields: [storeId], references: [id])
   name           String
   accountNumber  String
   bankName       String
@@ -871,10 +1184,14 @@ model BankAccount {
   isActive       Boolean           @default(true)
   createdAt      DateTime          @default(now())
   transactions   BankTransaction[]
+
+  @@index([storeId])
 }
 
 model BankTransaction {
   id              String        @id @default(cuid())
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id])
   bankAccountId   String
   bankAccount     BankAccount   @relation(fields: [bankAccountId], references: [id])
   transactionDate DateTime
@@ -890,10 +1207,14 @@ model BankTransaction {
   matchedBy       Admin?        @relation(fields: [matchedById], references: [id])
   isReconciled    Boolean       @default(false)
   createdAt       DateTime      @default(now())
+
+  @@index([storeId])
 }
 
 model Invoice {
   id              String        @id @default(cuid())
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id])
   invoiceNumber   String        @unique
   orderId         String?
   order           Order?        @relation(fields: [orderId], references: [id])
@@ -916,10 +1237,13 @@ model Invoice {
 
   @@index([status])
   @@index([customerEmail])
+  @@index([storeId])
 }
 
 model InvoiceItem {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   invoiceId String
   invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   productId String?
@@ -928,10 +1252,14 @@ model InvoiceItem {
   quantity  Int
   unitPrice Float
   total     Float
+
+  @@index([storeId])
 }
 
 model Bill {
   id            String     @id @default(cuid())
+  storeId       String
+  store         Store      @relation(fields: [storeId], references: [id])
   billNumber    String     @unique
   supplierId    String?
   supplier      Supplier?  @relation(fields: [supplierId], references: [id])
@@ -951,20 +1279,27 @@ model Bill {
 
   @@index([status])
   @@index([supplierId])
+  @@index([storeId])
 }
 
 model BillItem {
   id        String @id @default(cuid())
+  storeId   String
+  store     Store  @relation(fields: [storeId], references: [id])
   billId    String
   bill      Bill   @relation(fields: [billId], references: [id], onDelete: Cascade)
   name      String
   quantity  Int
   unitPrice Float
   total     Float
+
+  @@index([storeId])
 }
 
 model JournalEntry {
   id                  String            @id @default(cuid())
+  storeId             String
+  store               Store             @relation(fields: [storeId], references: [id])
   date                DateTime          @default(now())
   description         String
   reference           String?
@@ -987,20 +1322,27 @@ model JournalEntry {
   matchedTransactions BankTransaction[]
 
   @@index([status])
+  @@index([storeId])
 }
 
 model JournalLine {
   id        String       @id @default(cuid())
+  storeId   String
+  store     Store        @relation(fields: [storeId], references: [id])
   entryId   String
   accountId String
   debit     Float        @default(0)
   credit    Float        @default(0)
   entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   account   Account      @relation(fields: [accountId], references: [id])
+
+  @@index([storeId])
 }
 
 model OtpVerification {
   id         String    @id @default(cuid())
+  storeId    String
+  store      Store     @relation(fields: [storeId], references: [id])
   email      String
   code       String
   type       String    @default("checkout")
@@ -1009,12 +1351,15 @@ model OtpVerification {
   createdAt  DateTime  @default(now())
 
   @@index([email, code, type])
+  @@index([storeId])
 }
 
 // ── Marketing & Sales ──
 
 model AbandonedCart {
   id               String    @id @default(cuid())
+  storeId          String
+  store            Store     @relation(fields: [storeId], references: [id])
   userId           String?
   email            String
   name             String?
@@ -1028,10 +1373,13 @@ model AbandonedCart {
 
   @@index([email])
   @@index([createdAt])
+  @@index([storeId])
 }
 
 model EmailCampaign {
   id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
   name        String
   subject     String
   content     String
@@ -1046,10 +1394,13 @@ model EmailCampaign {
   updatedAt   DateTime  @updatedAt
 
   @@index([status])
+  @@index([storeId])
 }
 
 model CustomerPushToken {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   token     String   @unique
   platform  String   @default("android")
   userId    String?
@@ -1058,10 +1409,13 @@ model CustomerPushToken {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([storeId])
 }
 
 model PushCampaign {
   id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
   name        String
   title       String
   body        String
@@ -1076,10 +1430,13 @@ model PushCampaign {
   updatedAt   DateTime  @updatedAt
 
   @@index([status])
+  @@index([storeId])
 }
 
 model Referral {
   id            String    @id @default(cuid())
+  storeId       String
+  store         Store     @relation(fields: [storeId], references: [id])
   referrerId    String
   referredEmail String?
   referredId    String?
@@ -1093,10 +1450,13 @@ model Referral {
 
   @@index([referrerId])
   @@index([code])
+  @@index([storeId])
 }
 
 model ReferralConfig {
   id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id])
   rewardType   String   @default("discount")
   rewardValue  Float    @default(10)
   minOrder     Float    @default(0)
@@ -1104,10 +1464,14 @@ model ReferralConfig {
   discountDays Int      @default(30)
   isActive     Boolean  @default(true)
   updatedAt    DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model GiftCard {
   id             String    @id @default(cuid())
+  storeId        String
+  store          Store     @relation(fields: [storeId], references: [id])
   code           String    @unique
   initialBalance Float     @default(0)
   balance        Float     @default(0)
@@ -1120,10 +1484,14 @@ model GiftCard {
   issuedAt       DateTime  @default(now())
   redeemedAt     DateTime?
   orderId        String?
+
+  @@index([storeId])
 }
 
 model SaleCampaign {
   id            String   @id @default(cuid())
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id])
   name          String
   slug          String   @unique
   description   String?
@@ -1140,12 +1508,15 @@ model SaleCampaign {
   updatedAt     DateTime @updatedAt
 
   @@index([isActive, startDate, endDate])
+  @@index([storeId])
 }
 
 // ── Content Management ──
 
 model BlogPost {
   id            String    @id @default(cuid())
+  storeId       String
+  store         Store     @relation(fields: [storeId], references: [id])
   title         String
   slug          String    @unique
   content       String
@@ -1159,10 +1530,13 @@ model BlogPost {
 
   @@index([status, publishedAt])
   @@index([slug])
+  @@index([storeId])
 }
 
 model FaqEntry {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   question  String
   answer    String
   category  String   @default("General")
@@ -1172,10 +1546,13 @@ model FaqEntry {
   updatedAt DateTime @updatedAt
 
   @@index([sortOrder])
+  @@index([storeId])
 }
 
 model Banner {
   id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
   title       String?
   imageUrl    String
   linkUrl     String?
@@ -1189,10 +1566,13 @@ model Banner {
 
   @@index([isActive, sortOrder])
   @@index([startDate, endDate])
+  @@index([storeId])
 }
 
 model StaticPage {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   slug      String   @unique
   title     String
   content   String
@@ -1201,10 +1581,13 @@ model StaticPage {
   updatedAt DateTime @updatedAt
 
   @@index([slug, status])
+  @@index([storeId])
 }
 
 model Warehouse {
   id          String       @id @default(cuid())
+  storeId     String
+  store       Store        @relation(fields: [storeId], references: [id])
   name        String
   code        String       @unique
   address     String?
@@ -1212,10 +1595,14 @@ model Warehouse {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   stockLevels StockLevel[]
+
+  @@index([storeId])
 }
 
 model StockLevel {
   id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
   warehouseId String
   warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
   productId   String
@@ -1226,10 +1613,13 @@ model StockLevel {
 
   @@unique([warehouseId, productId])
   @@index([productId])
+  @@index([storeId])
 }
 
 model PurchaseOrder {
   id         String              @id @default(cuid())
+  storeId    String
+  store      Store               @relation(fields: [storeId], references: [id])
   poNumber   String              @unique
   supplierId String
   supplier   Supplier            @relation(fields: [supplierId], references: [id])
@@ -1239,10 +1629,14 @@ model PurchaseOrder {
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
   items      PurchaseOrderItem[]
+
+  @@index([storeId])
 }
 
 model PurchaseOrderItem {
   id        String        @id @default(cuid())
+  storeId   String
+  store     Store         @relation(fields: [storeId], references: [id])
   poId      String
   po        PurchaseOrder @relation(fields: [poId], references: [id], onDelete: Cascade)
   productId String
@@ -1250,10 +1644,14 @@ model PurchaseOrderItem {
   quantity  Int
   received  Int           @default(0)
   unitCost  Float
+
+  @@index([storeId])
 }
 
 model ReturnRequest {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   orderId   String
   order     Order    @relation(fields: [orderId], references: [id])
   productId String
@@ -1268,20 +1666,27 @@ model ReturnRequest {
 
   @@index([orderId])
   @@index([status])
+  @@index([storeId])
 }
 
 model QC_Template {
   id        String     @id @default(cuid())
+  storeId   String
+  store     Store      @relation(fields: [storeId], references: [id])
   name      String
   items     String
   isActive  Boolean    @default(true)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   checks    QC_Check[]
+
+  @@index([storeId])
 }
 
 model Currency {
   id           String   @id @default(cuid())
+  storeId      String
+  store        Store    @relation(fields: [storeId], references: [id])
   code         String   @unique
   name         String
   symbol       String
@@ -1290,20 +1695,28 @@ model Currency {
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model Translation {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   key       String   @unique
   en        String
   ar        String
   group     String   @default("general")
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+
+  @@index([storeId])
 }
 
 model TaxRate {
   id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
   name      String
   rate      Float
   country   String   @default("EG")
@@ -1311,10 +1724,14 @@ model TaxRate {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([storeId])
 }
 
 model QC_Check {
   id         String       @id @default(cuid())
+  storeId    String
+  store      Store        @relation(fields: [storeId], references: [id])
   productId  String
   product    Product      @relation(fields: [productId], references: [id])
   templateId String?
@@ -1323,75 +1740,90 @@ model QC_Check {
   notes      String?
   checkedBy  String
   createdAt  DateTime     @default(now())
+
+  @@index([storeId])
 }
 
 model ScheduledReport {
-  id            String    @id @default(cuid())
-  name          String
-  type          String // pl, balance_sheet, cash_flow, tax, aging, custom
-  config        String    @default("{}")
-  schedule      String // daily, weekly, monthly, custom_cron
+  id             String    @id @default(cuid())
+  storeId        String
+  store          Store     @relation(fields: [storeId], references: [id])
+  name           String
+  type           String // pl, balance_sheet, cash_flow, tax, aging, custom
+  config         String    @default("{}")
+  schedule       String // daily, weekly, monthly, custom_cron
   cronExpression String?
-  recipients    String    @default("[]")
-  format        String    @default("pdf")
-  lastSentAt    DateTime?
-  nextRunAt     DateTime?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  recipients     String    @default("[]")
+  format         String    @default("pdf")
+  lastSentAt     DateTime?
+  nextRunAt      DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([nextRunAt])
   @@index([isActive])
+  @@index([storeId])
 }
 
 model Employee {
-  id                String   @id @default(cuid())
+  id                String        @id @default(cuid())
+  storeId           String
+  store             Store         @relation(fields: [storeId], references: [id])
   name              String
   email             String?
   phone             String?
   position          String?
-  salary            Float    @default(0)
+  salary            Float         @default(0)
   bankAccountName   String?
   bankAccountNumber String?
   bankName          String?
   taxId             String?
   notes             String?
-  isActive          Boolean        @default(true)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
   payrollItems      PayrollItem[]
+
+  @@index([storeId])
 }
 
 model PayrollRun {
-  id            String        @id @default(cuid())
-  periodStart   DateTime
-  periodEnd     DateTime
-  totalSalaries Float         @default(0)
-  totalDeductions Float       @default(0)
-  totalNet      Float         @default(0)
-  status        String        @default("draft") // draft, approved, paid
-  processedById String?
-  processedBy   Admin?        @relation(fields: [processedById], references: [id])
-  paidAt        DateTime?
-  notes         String?
-  items         PayrollItem[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  storeId         String
+  store           Store         @relation(fields: [storeId], references: [id])
+  periodStart     DateTime
+  periodEnd       DateTime
+  totalSalaries   Float         @default(0)
+  totalDeductions Float         @default(0)
+  totalNet        Float         @default(0)
+  status          String        @default("draft") // draft, approved, paid
+  processedById   String?
+  processedBy     Admin?        @relation(fields: [processedById], references: [id])
+  paidAt          DateTime?
+  notes           String?
+  items           PayrollItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([status])
+  @@index([storeId])
 }
 
 model PayrollItem {
-  id         String      @id @default(cuid())
+  id         String     @id @default(cuid())
+  storeId    String
+  store      Store      @relation(fields: [storeId], references: [id])
   runId      String
-  run        PayrollRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
+  run        PayrollRun @relation(fields: [runId], references: [id], onDelete: Cascade)
   employeeId String
-  employee   Employee    @relation(fields: [employeeId], references: [id], onDelete: Restrict)
-  salary     Float       @default(0)
-  deductions Float       @default(0)
-  bonus      Float       @default(0)
-  netPay     Float       @default(0)
+  employee   Employee   @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  salary     Float      @default(0)
+  deductions Float      @default(0)
+  bonus      Float      @default(0)
+  netPay     Float      @default(0)
   notes      String?
 
   @@index([runId])
+  @@index([storeId])
 }

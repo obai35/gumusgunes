@@ -59,20 +59,42 @@ async function seedCurrencies() {
   for (const c of currencies) {
     await prisma.currency.upsert({
       where: { code: c.code },
-      update: c,
-      create: c,
+      update: { ...c, storeId: DEFAULT_STORE_ID },
+      create: { ...c, storeId: DEFAULT_STORE_ID },
     })
   }
   console.log('  ✓ Currencies seeded')
 }
 
+let DEFAULT_STORE_ID: string
+
+async function seedDefaultStore() {
+  const existing = await prisma.store.findFirst()
+  if (existing) {
+    DEFAULT_STORE_ID = existing.id
+    console.log(`Using existing store: ${existing.name} (${existing.id})`)
+    return
+  }
+  const store = await prisma.store.create({
+    data: {
+      name: 'Default Store',
+      slug: 'default',
+      email: 'admin@example.com',
+    },
+  })
+  DEFAULT_STORE_ID = store.id
+  console.log(`Created default store: ${store.name} (${store.id})`)
+}
+
 async function main() {
+  await seedDefaultStore()
+
   console.log('Seeding governorates...')
   for (const g of governorates) {
     await prisma.governorate.upsert({
       where: { name: g.name },
       update: {},
-      create: g,
+      create: { ...g, storeId: DEFAULT_STORE_ID },
     })
   }
   console.log(`Seeded ${governorates.length} governorates`)
@@ -82,7 +104,7 @@ async function main() {
     await prisma.paymentMethod.upsert({
       where: { code: pm.code },
       update: { config: pm.config },
-      create: pm,
+      create: { ...pm, storeId: DEFAULT_STORE_ID },
     })
   }
   console.log(`Seeded ${paymentMethods.length} payment methods`)
