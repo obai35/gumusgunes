@@ -21,6 +21,7 @@ export type AdminInfo = {
   role: string
   permissions: string[]
   isSuperAdmin: boolean
+  storeId: string
 }
 
 const adminCache = new Map<string, { admin: AdminInfo; expiresAt: number }>()
@@ -55,7 +56,8 @@ export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | n
   const role = admin.roleRel?.name || admin.role
   const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) as string[] : []
   const isSuperAdmin = role === 'superadmin' || role === 'super_admin' || role === 'admin'
-  const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin }
+  const storeId = payload.storeId || admin.storeId
+  const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin, storeId }
   adminCache.set(adminId, { admin: result, expiresAt: Date.now() + CACHE_TTL })
   return result
 }

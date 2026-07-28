@@ -6,6 +6,7 @@ export { hashPassword, verifyPassword }
 interface AdminTokenPayload {
   sub: string
   email: string
+  storeId: string
   tokenVersion: number
   iat?: number
   exp?: number
@@ -17,9 +18,9 @@ function getAdminJwtSecret(): string {
   return secret
 }
 
-export function signAdminToken(adminId: string, email: string, tokenVersion: number): string {
+export function signAdminToken(adminId: string, email: string, storeId: string, tokenVersion: number): string {
   return jwt.sign(
-    { sub: adminId, email, tokenVersion } as AdminTokenPayload,
+    { sub: adminId, email, storeId, tokenVersion } as AdminTokenPayload,
     getAdminJwtSecret(),
     { expiresIn: '24h' }
   )

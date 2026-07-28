@@ -88,11 +88,12 @@ const handler = async (req: NextRequest) => {
 
     db.admin.update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } }).catch(() => {})
 
-    const token = signAdminToken(admin.id, admin.email, admin.tokenVersion || 0)
+    const token = signAdminToken(admin.id, admin.email, admin.storeId, admin.tokenVersion || 0)
     const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) : []
+    const store = await db.store.findUnique({ where: { id: admin.storeId }, select: { id: true, name: true } })
 
     const response = NextResponse.json({
-      user: { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions }
+      user: { id: admin.id, email: admin.email, name: admin.name, role: admin.roleRel?.name || 'admin', permissions, storeId: admin.storeId, storeName: store?.name || '' }
     })
 
     response.cookies.set('__session_admin', token, {

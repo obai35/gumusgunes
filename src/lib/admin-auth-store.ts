@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-type AdminUser = { id: string; email: string; name: string; role?: string; permissions?: string[] }
+type AdminUser = { id: string; email: string; name: string; role?: string; permissions?: string[]; storeId?: string; storeName?: string }
 type AdminAuthState = {
   user: AdminUser | null
   loading: boolean

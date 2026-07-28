@@ -38,6 +38,7 @@ export async function auditWithSnapshot(data: {
   action: string
   resource: string
   resourceId: string
+  storeId?: string
   before: Record<string, unknown>
   after?: Record<string, unknown>
 }): Promise<void> {
@@ -50,7 +51,7 @@ export async function auditWithSnapshot(data: {
         action: data.action,
         resource: data.resource,
         resourceId: data.resourceId,
-        storeId: await getDefaultStoreId(),
+        storeId: data.storeId ?? (await getDefaultStoreId()),
         details: JSON.stringify({ before: data.before, after: data.after }),
       },
     })
@@ -64,6 +65,7 @@ export async function getAuditTrail(params: {
   resourceId?: string
   action?: string
   adminId?: string
+  storeId?: string
   limit?: number
   offset?: number
 }): Promise<{ logs: Array<Record<string, unknown>>; total: number }> {
@@ -72,6 +74,7 @@ export async function getAuditTrail(params: {
   if (params.resourceId) where.resourceId = params.resourceId
   if (params.action) where.action = params.action
   if (params.adminId) where.adminId = params.adminId
+  if (params.storeId) where.storeId = params.storeId
 
   const [logs, total] = await Promise.all([
     db.activityLog.findMany({

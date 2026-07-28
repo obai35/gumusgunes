@@ -73,18 +73,26 @@ export const Sidebar = memo(function Sidebar({ open, onClose }: SidebarProps) {
   return (
     <>
       <aside className={`w-64 min-h-screen bg-navy-deep text-silver flex flex-col shrink-0 max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-30 max-lg:transition-transform max-lg:duration-200 ${open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full'}`}>
-        <div className="flex items-center justify-between gap-2 px-6 py-6 border-b border-silver/10">
-          <div className="flex items-center gap-2">
-            <Sun className="h-6 w-6 text-gold" />
-            <span className="font-display text-lg font-semibold">Admin</span>
+          <div className="px-6 py-6 border-b border-silver/10">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Sun className="h-6 w-6 text-gold" />
+              <span className="font-display text-lg font-semibold">Admin</span>
+            </div>
+            {onClose && (
+              <button onClick={onClose} className="lg:hidden text-silver/60 hover:text-silver">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            )}
           </div>
-          {onClose && (
-            <button onClick={onClose} className="lg:hidden text-silver/60 hover:text-silver">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
+          {user?.storeName && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-silver/50">
+              <Store className="h-3 w-3" />
+              <span className="truncate">{user.storeName}</span>
+            </div>
           )}
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          </div>
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           {visibleLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/admin' && pathname.startsWith(link.href))
             return (
