@@ -1,11 +1,20 @@
 import { db } from '@/lib/db'
 import { logger } from './logger'
 
+let _defaultStoreId: string | null = null
+async function getDefaultStoreId(): Promise<string> {
+  if (_defaultStoreId) return _defaultStoreId
+  const store = await db.store.findFirst()
+  _defaultStoreId = store?.id ?? ''
+  return _defaultStoreId
+}
+
 export async function logAudit(params: {
   adminId: string
   action: string
   resource: string
   resourceId?: string
+  storeId?: string
   details?: Record<string, unknown>
 }) {
   try {
@@ -15,6 +24,7 @@ export async function logAudit(params: {
         action: params.action,
         resource: params.resource,
         resourceId: params.resourceId,
+        storeId: params.storeId ?? (await getDefaultStoreId()),
         details: params.details ? JSON.stringify(params.details) : null,
       },
     })
@@ -40,6 +50,7 @@ export async function auditWithSnapshot(data: {
         action: data.action,
         resource: data.resource,
         resourceId: data.resourceId,
+        storeId: await getDefaultStoreId(),
         details: JSON.stringify({ before: data.before, after: data.after }),
       },
     })

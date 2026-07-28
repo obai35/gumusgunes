@@ -8,12 +8,24 @@ async function main() {
   const password = 'admin123'
   const hashed = await bcrypt.hash(PASSWORD_PEPPER + password, 12)
 
+  // Find or create default store
+  let store = await prisma.store.findFirst()
+  if (!store) {
+    store = await prisma.store.create({
+      data: { name: 'Default Store', slug: 'default', email: 'admin@example.com' },
+    })
+    console.log('Created default store:', store.id)
+  } else {
+    console.log('Using existing store:', store.id)
+  }
+
   // Create super admin role
   const role = await prisma.role.upsert({
     where: { name: 'super_admin' },
-    update: {},
+    update: { storeId: store.id },
     create: {
       name: 'super_admin',
+      storeId: store.id,
       permissions: JSON.stringify([
         'dashboard', 'accounting', 'orders', 'products', 'customers', 'inventory', 'admins',
         'branches', 'categories', 'discounts', 'reviews', 'settings',
@@ -31,6 +43,7 @@ async function main() {
       email: 'admin@gumusgunes.com',
       name: 'Admin',
       password: hashed,
+      storeId: store.id,
       role: 'super_admin',
       roleId: role.id,
       phone: '+905551234567',
@@ -47,6 +60,7 @@ async function main() {
       name: 'Main Branch',
       email: 'branch@gumusgunes.com',
       password: branchPassword,
+      storeId: store.id,
       phone: '+905551234568',
       address: 'Grand Bazaar, Istanbul',
       isActive: true,

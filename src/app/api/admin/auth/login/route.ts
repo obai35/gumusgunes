@@ -54,6 +54,7 @@ const handler = async (req: NextRequest) => {
         adminId: admin.id,
         action: 'admin_login_failed',
         resource: 'auth',
+        storeId: admin.storeId,
         details: { email, reason: 'invalid password', attempts },
       })
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
@@ -69,6 +70,7 @@ const handler = async (req: NextRequest) => {
           adminId: admin.id,
           action: 'admin_login_failed',
           resource: 'auth',
+          storeId: admin.storeId,
           details: { email, reason: 'invalid 2fa code' },
         })
         return NextResponse.json({ error: 'Invalid 2FA code' }, { status: 401 })
@@ -80,6 +82,7 @@ const handler = async (req: NextRequest) => {
       action: 'admin_login',
       resource: 'auth',
       resourceId: admin.id,
+      storeId: admin.storeId,
       details: { email: admin.email },
     })
 
