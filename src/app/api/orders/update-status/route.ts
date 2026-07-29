@@ -36,7 +36,7 @@ async function handler(req: Request) {
     }
 
     if (field === 'status' && value === 'delivered') {
-      recordCOGS(orderId).catch(console.error)
+      await recordCOGS(orderId)
     }
 
     return NextResponse.json({ success: true })

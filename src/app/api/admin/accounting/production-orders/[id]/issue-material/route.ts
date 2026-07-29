@@ -32,5 +32,10 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }: any) =
     },
   })
 
+  await sdb.product.update({
+    where: { id: body.productId },
+    data: { stock: { decrement: body.quantity } },
+  })
+
   return NextResponse.json(item, { status: 201 })
 })

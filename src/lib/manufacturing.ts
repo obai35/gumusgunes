@@ -1,5 +1,7 @@
 import { storeDb } from './store-scoped'
-import { createJournalEntry } from './accounting'
+import { createJournalEntry, ACCOUNTS } from './accounting'
+
+export const DEFAULT_OVERHEAD_RATE = 0.2
 
 export interface BomCostResult {
   totalMaterialCost: number
@@ -83,7 +85,7 @@ export async function completeProductionOrder(orderId: string, storeId: string) 
 
   const totalMaterial = order.materials.reduce((s, m) => s + m.totalCost, 0)
   const totalLabor = order.laborEntries.reduce((s, l) => s + l.totalCost, 0)
-  const totalOverhead = totalLabor * 0.2
+  const totalOverhead = totalLabor * DEFAULT_OVERHEAD_RATE
   const totalCost = totalMaterial + totalLabor + totalOverhead
   const goodQty = order.outputs.filter(o => !o.isScrap).reduce((s, o) => s + o.quantity, 0)
   const unitCost = goodQty > 0 ? totalCost / goodQty : 0
@@ -100,17 +102,14 @@ export async function completeProductionOrder(orderId: string, storeId: string) 
     },
   })
 
-  const wipAccount = '1320'
-  const fgAccount = '1330'
-
   await createJournalEntry({
     storeId,
     date: new Date(),
     description: `Production complete: ${order.product.name} (${order.orderNumber})`,
     type: 'production',
     lines: [
-      { accountCode: fgAccount, debit: totalCost, credit: 0 },
-      { accountCode: wipAccount, debit: 0, credit: totalCost },
+      { accountCode: ACCOUNTS.finishedGoods, debit: totalCost, credit: 0 },
+      { accountCode: ACCOUNTS.wip, debit: 0, credit: totalCost },
     ],
   })
 

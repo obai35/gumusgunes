@@ -18,6 +18,7 @@ type LinkDef = { href: string; label: string; icon: any; permission?: string }
 const links: LinkDef[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard' },
   { href: '/admin/accounting', label: 'Accounting', icon: Calculator, permission: 'accounting' },
+  { href: '/admin/pricing', label: 'Pricing', icon: Calculator, permission: 'pricing' },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3, permission: 'reports' },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, permission: 'orders' },
   { href: '/admin/receipts', label: 'Receipts', icon: Receipt, permission: 'receipts' },

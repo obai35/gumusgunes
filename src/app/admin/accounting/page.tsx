@@ -408,12 +408,15 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
               <p className="text-lg font-bold text-green-600">{formatCurrency(data.totalRevenue)}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">COGS (Est.)</p>
-              <p className="text-lg font-bold text-amber-600">{formatCurrency(data.totalRevenue * 0.6)}</p>
+              <p className="text-xs text-muted-foreground">COGS {data.totalCOGS === undefined && '(Est.)'}</p>
+              <p className="text-lg font-bold text-amber-600">{formatCurrency(data.totalCOGS ?? data.totalRevenue * 0.6)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Gross Margin</p>
-              <p className="text-lg font-bold text-purple-600">{formatCurrency(data.totalRevenue * 0.4)} (40%)</p>
+              <p className="text-lg font-bold text-purple-600">
+                {formatCurrency(data.totalRevenue - (data.totalCOGS ?? data.totalRevenue * 0.6))}
+                {data.grossMargin !== undefined && <> ({data.grossMargin.toFixed(1)}%)</>}
+              </p>
             </div>
           </div>
         </div>

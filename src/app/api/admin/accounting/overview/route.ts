@@ -177,11 +177,23 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       statusCounts[o.status] = (statusCounts[o.status] || 0) + 1
     }
 
+    const cogsLines = await sdb.journalLine.findMany({
+      where: {
+        entry: { type: 'cogs', date: { gte: start, lte: end } },
+        account: { code: '5000' },
+      },
+      select: { debit: true },
+    })
+    const totalCOGS = cogsLines.reduce((s, l) => s + l.debit, 0)
+    const grossMargin = totalRevenue > 0 ? ((totalRevenue - totalCOGS) / totalRevenue) * 100 : 0
+
     const result: Record<string, any> = {
       period,
       dateRange: { start: start.toISOString(), end: end.toISOString() },
       totalOrders: orders.length,
       totalRevenue,
+      totalCOGS,
+      grossMargin,
       totalReturns,
       totalExpenses,
       netRevenue,

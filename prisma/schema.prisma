@@ -135,6 +135,9 @@ model Store {
   productionOrderMaterials ProductionOrderMaterial[]
   productionOrderLabors    ProductionOrderLabor[]
   productionOrderOutputs  ProductionOrderOutput[]
+  priceLists           PriceList[]
+  priceListItems       PriceListItem[]
+  costHistory          CostHistory[]
 }
 
 model Product {
@@ -186,6 +189,8 @@ model Product {
   bomItems           BomItem[]
   productionOrders   ProductionOrder[]
   orderMaterials     ProductionOrderMaterial[]
+  priceListItems     PriceListItem[]
+  costHistory        CostHistory[]
 
   @@index([categoryId, isActive])
   @@index([brandId])
@@ -2115,4 +2120,64 @@ model DepreciationEntry {
 
   @@index([assetId])
   @@index([periodDate])
+}
+
+// ── Pricing System ──
+
+model PriceList {
+  id        String          @id @default(cuid())
+  storeId   String
+  store     Store           @relation(fields: [storeId], references: [id])
+  name      String
+  slug      String          @unique
+  description String?
+  type      String          @default("markup") // markup, fixed
+  value     Float?          // default markup % if type=markup
+  currency  String          @default("EGP")
+  isDefault Boolean         @default(false)
+  isActive  Boolean         @default(true)
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  items     PriceListItem[]
+
+  @@index([storeId])
+}
+
+model PriceListItem {
+  id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
+  priceListId String
+  priceList   PriceList @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price       Float
+  minQuantity Int       @default(1)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([priceListId, productId])
+  @@index([storeId])
+}
+
+model CostHistory {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  unitCost    Float
+  quantity    Int
+  totalCost   Float
+  beforeCost  Float?
+  afterCost   Float?
+  reference   String?  // PO#, production order#, adjustment note
+  referenceId String?  // link to source entity (PO, production order, etc.)
+  type        String   // purchase, manufactured, manual_adjustment, landed_cost_adjustment
+  note        String?
+  createdAt   DateTime @default(now())
+
+  @@index([productId, createdAt])
+  @@index([storeId])
 }

@@ -42,6 +42,7 @@ export async function recordCOGS(orderId: string): Promise<void> {
   if (existing) return
 
   await createJournalEntry({
+    storeId: order.storeId,
     date: new Date(),
     description: `COGS for #${orderId.slice(0, 8)}`,
     reference: orderId,

@@ -21,7 +21,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       },
       include: {
         items: {
-          include: { product: { select: { categoryId: true, price: true } } },
+          include: { product: { select: { categoryId: true, price: true, costPrice: true } } },
         },
       },
       orderBy: { createdAt: 'asc' },
@@ -40,8 +40,8 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
 
       for (const item of order.items) {
         const revenue = item.price * item.quantity
-        const unitCost = item.product?.price || 0
-        const cost = unitCost * item.quantity * 0.6
+        const unitCost = item.product?.costPrice ?? item.product?.price * 0.6 ?? 0
+        const cost = unitCost * item.quantity
         monthlyData[monthKey].revenue += revenue
         monthlyData[monthKey].cost += cost
         monthlyData[monthKey].orders++

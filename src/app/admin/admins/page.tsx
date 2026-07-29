@@ -21,6 +21,8 @@ const PERMISSION_LABELS: Record<Permission, string> = {
   shipping: 'Shipping', reviews: 'Reviews', newsletter: 'Newsletter', activity: 'Activity Log',
   chat: 'Admin Chat', seed: 'Seed Data', customer_service: 'Customer Service', social: 'Social Media',
   marketing: 'Marketing', blog: 'Blog', faq: 'FAQ', banners: 'Banners', pages: 'Pages', media: 'Media Gallery',
+  brands: 'Brands', reports: 'Reports', system: 'System',
+  pricing: 'Pricing',
 }
 
 export default function AdminsPage() {

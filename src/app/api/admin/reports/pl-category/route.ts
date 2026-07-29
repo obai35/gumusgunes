@@ -48,8 +48,8 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
         const items = cat.products.flatMap(p => p.orderItems)
         const revenue = items.reduce((s, i) => s + (i.price * i.quantity), 0)
         const cost = items.reduce((s, i) => {
-          const unitCost = i.product?.price || 0
-          return s + (unitCost * i.quantity * 0.6)
+          const unitCost = i.product?.costPrice ?? i.product?.price * 0.6 ?? 0
+          return s + (unitCost * i.quantity)
         }, 0)
         const grossProfit = revenue - cost
         const margin = revenue > 0 ? (grossProfit / revenue) * 100 : 0

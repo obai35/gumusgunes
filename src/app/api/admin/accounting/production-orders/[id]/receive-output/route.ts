@@ -33,6 +33,11 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }: any) =
         note: `Received from production order ${params.id}`,
       },
     })
+
+    await sdb.product.update({
+      where: { id: order.productId },
+      data: { stock: { increment: body.quantity } },
+    })
   }
 
   const goodQty = order.outputs.filter(o => !o.isScrap).reduce((s, o) => s + o.quantity, 0) + (body.isScrap ? 0 : body.quantity)

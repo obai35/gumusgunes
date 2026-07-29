@@ -16,6 +16,8 @@ type AccountCodes = {
   ar: string
   ap: string
   inventory: string
+  wip: string
+  finishedGoods: string
   fixedAssets: string
   accumulatedDepreciation: string
   salesRevenue: string
@@ -43,6 +45,8 @@ const ACCOUNTS: AccountCodes = {
   ar: '1200',
   ap: '2000',
   inventory: '1300',
+  wip: '1320',
+  finishedGoods: '1330',
   fixedAssets: '1500',
   accumulatedDepreciation: '1600',
   salesRevenue: '4000',

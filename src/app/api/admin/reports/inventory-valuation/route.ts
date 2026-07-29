@@ -30,7 +30,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       const lastSold = p.orderItems[0]?.order?.createdAt || null
       const daysSinceLastSale = lastSold ? Math.floor((Date.now() - lastSold.getTime()) / (24 * 60 * 60 * 1000)) : null
       const totalStock = p.stocks.reduce((s, st) => s + st.quantity, 0)
-      const costPrice = p.price * 0.6
+      const costPrice = p.costPrice ?? p.price * 0.6
       const retailValue = totalStock * p.price
       const costValue = totalStock * costPrice
       const isSlowMoving = daysSinceLastSale !== null && daysSinceLastSale >= slowDays
