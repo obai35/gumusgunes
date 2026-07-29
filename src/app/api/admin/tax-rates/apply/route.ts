@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { getApplicableTaxRate, calculateTax } from '@/lib/tax'
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest) => {
   try {
     const { country, region, subtotal, shipping } = await req.json()
     const tax = await getApplicableTaxRate(country || 'EG', region)
@@ -12,4 +13,4 @@ export async function POST(req: NextRequest) {
     console.error('POST /api/admin/tax-rates/apply error:', err)
     return NextResponse.json({ ok: false, error: 'Failed' }, { status: 500 })
   }
-}
+})

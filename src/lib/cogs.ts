@@ -1,4 +1,5 @@
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { createJournalEntry } from './accounting'
 
 export async function updateProductCost(productId: string, newCost: number): Promise<void> {
@@ -68,8 +69,9 @@ export async function recordPurchaseCOGS(purchaseOrderId: string): Promise<void>
   }
 }
 
-export async function getInventoryValuation(): Promise<{ items: any[]; totalProducts: number; totalValue: number; totalCOGS: number; grossMargin: number }> {
-  const products = await db.product.findMany({
+export async function getInventoryValuation(storeId?: string): Promise<{ items: any[]; totalProducts: number; totalValue: number; totalCOGS: number; grossMargin: number }> {
+  const qb = storeId ? storeDb(storeId) as typeof db : db
+  const products = await qb.product.findMany({
     where: { isActive: true, stock: { gt: 0 } },
     select: { id: true, name: true, sku: true, costPrice: true, stock: true, price: true },
     orderBy: { name: 'asc' },
