@@ -33,3 +33,20 @@ export const PUT = withAdmin(async (req: NextRequest, { admin, params }: any) =>
   })
   return NextResponse.json(item)
 })
+
+export const PATCH = withAdmin(async (req: NextRequest, { admin, params }: any) => {
+  const sdb = storeDb(admin.storeId)
+  const body = await req.json()
+  const data: any = {}
+  if (body.status) {
+    data.status = body.status
+    if (body.status === 'in_progress') data.actualStart = new Date()
+    if (body.status === 'completed') data.actualEnd = new Date()
+  }
+  if (body.notes !== undefined) data.notes = body.notes
+  const item = await sdb.productionOrder.update({
+    where: { id: params.id },
+    data,
+  })
+  return NextResponse.json(item)
+})

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
@@ -17,6 +17,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     include: {
       product: true,
       workCenter: true,
+      routing: true,
       materials: { include: { product: true } },
       laborEntries: true,
       outputs: true,
@@ -52,6 +53,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       orderNumber,
       productId: body.productId,
       bomId: body.bomId,
+      routingId: body.routingId,
       workCenterId: body.workCenterId,
       quantity: body.quantity,
       plannedStart: body.plannedStart ? new Date(body.plannedStart) : undefined,

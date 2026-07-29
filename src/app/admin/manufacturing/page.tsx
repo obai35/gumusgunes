@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -149,7 +150,7 @@ function ProductionOrdersView() {
     setLoading(true)
     Promise.all([
       fetch('/api/admin/accounting/production-orders').then(r => r.json()),
-      fetch('/api/admin/products').then(r => r.json()).catch(() => []),
+      fetch('/api/admin/products').then(r => r.json()).then(d => d.products).catch(() => []),
       fetch('/api/admin/accounting/work-centers').then(r => r.json()).catch(() => []),
       fetch('/api/admin/accounting/routings').then(r => r.json()).catch(() => []),
     ]).then(([o, p, w, r]) => {
@@ -183,7 +184,7 @@ function ProductionOrdersView() {
       body: JSON.stringify({ status }),
     })
     if (!res.ok) { toast.error('Failed'); return }
-    if (status === 'started') {
+    if (status === 'in_progress') {
       const routing = orders.find(o => o.id === id)?.routingId
       if (routing) {
         const steps = await fetch(`/api/admin/accounting/routings/${routing}`).then(r => r.json())
@@ -355,7 +356,7 @@ function RoutingsView() {
     setLoading(true)
     Promise.all([
       fetch('/api/admin/accounting/routings').then(r => r.json()),
-      fetch('/api/admin/products').then(r => r.json()).catch(() => []),
+      fetch('/api/admin/products').then(r => r.json()).then(d => d.products).catch(() => []),
     ]).then(([r, p]) => {
       setItems(Array.isArray(r) ? r : [])
       setProducts(Array.isArray(p) ? p : [])
@@ -587,7 +588,7 @@ function BomsView() {
     setLoading(true)
     Promise.all([
       fetch('/api/admin/accounting/boms').then(r => r.json()).catch(() => []),
-      fetch('/api/admin/products').then(r => r.json()).catch(() => []),
+      fetch('/api/admin/products').then(r => r.json()).then(d => d.products).catch(() => []),
     ]).then(([b, p]) => {
       setItems(Array.isArray(b) ? b : [])
       setProducts(Array.isArray(p) ? p : [])
