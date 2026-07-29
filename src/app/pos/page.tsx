@@ -294,6 +294,8 @@ export default function POSPage() {
           paymentMethod: data.order?.paymentMethod || pos.paymentMethod,
           cashAmount: data.order?.cashAmount || null,
           cardAmount: data.order?.cardAmount || null,
+          taxRate: pos.taxRate,
+          taxAmount: data.order?.tax ?? pos.taxAmount,
         })
         toast.success('Order completed!')
       } else {

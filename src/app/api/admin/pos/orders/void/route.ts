@@ -22,15 +22,11 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
 
       for (const item of order.items) {
         if (branchId) {
-          const existing = await tx.branchStock.findUnique({
+          await tx.branchStock.upsert({
             where: { branchId_productId: { branchId, productId: item.productId } },
+            create: { branchId, productId: item.productId, quantity: item.quantity },
+            update: { quantity: { increment: item.quantity } },
           })
-          if (existing) {
-            await tx.branchStock.update({
-              where: { branchId_productId: { branchId, productId: item.productId } },
-              data: { quantity: { increment: item.quantity } },
-            })
-          }
         } else {
           await tx.product.update({
             where: { id: item.productId },

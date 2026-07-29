@@ -1,17 +1,8 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
-import { storeDb } from '@/lib/store-scoped'
 import crypto from 'crypto'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
-
-function generateReceiptNumber(): string {
-  const now = new Date()
-  const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-  const seq = crypto.randomUUID().slice(0, 6).toUpperCase()
-  return `R-${datePart}-${seq}`
-}
-
-const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
+import { VALID_PAYMENT_METHODS, generateReceiptNumber, formatEGP } from '@/lib/pos-utils'
 
 export const POST = withAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
@@ -49,7 +40,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       const cash = cashAmount || 0
       const card = cardAmount || 0
       if (Math.abs((cash + card) - totalAmount) > 0.01) {
-        return NextResponse.json({ error: `Split amounts must equal total $${totalAmount.toFixed(2)}` }, { status: 400 })
+        return NextResponse.json({ error: `Split amounts must equal total ${formatEGP(totalAmount)}` }, { status: 400 })
       }
     }
 

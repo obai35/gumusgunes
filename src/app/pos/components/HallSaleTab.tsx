@@ -3,28 +3,7 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Printer } from 'lucide-react'
-
-type HallSaleData = {
-  shift: {
-    id: string
-    startedAt: string
-    closedAt: string | null
-    startingCash: number
-    endingCash: number | null
-    orderCount: number
-    isOpen: boolean
-  }
-  incomeByMethod: Record<string, number>
-  refundsByMethod: Record<string, number>
-  expensesByMethod: Record<string, number>
-  totalIncome: number
-  totalRefunds: number
-  totalExpenses: number
-  netTotal: number
-  expectedCash: number
-  actualEndingCash: number
-  difference: number
-}
+import type { HallSaleData } from '../types'
 
 const PAYMENT_LABELS: Record<string, string> = {
   cash: 'Cash',

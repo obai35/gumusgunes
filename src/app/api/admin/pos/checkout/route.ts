@@ -1,17 +1,8 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
-
-const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
-
-function generateReceiptNumber(): string {
-  const now = new Date()
-  const datePart = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`
-  const seq = crypto.randomUUID().slice(0, 6).toUpperCase()
-  return `R-${datePart}-${seq}`
-}
+import { VALID_PAYMENT_METHODS, generateReceiptNumber } from '@/lib/pos-utils'
 
 export const POST = withAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
@@ -260,7 +251,7 @@ export const PUT = withAdmin(async (req: Request, { admin }) => {
 
       const returnNumber = `RET-${order.orderNumber}`
       const notes = refundMethod === 'split' && cashRefundAmount !== undefined && cardRefundAmount !== undefined
-        ? `Split refund: $${cashRefundAmount.toFixed(2)} cash, $${cardRefundAmount.toFixed(2)} card`
+        ? `Split refund: EGP ${cashRefundAmount.toFixed(2)} cash, EGP ${cardRefundAmount.toFixed(2)} card`
         : null
       return tx.return.create({
         data: {
