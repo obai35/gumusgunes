@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/obai/Desktop/website/store-builder/src/app/layout.tsx"],"sourcesContent":["import type { Metadata } from 'next'\nimport '../globals.css'\n\nexport const metadata: Metadata = {\n  title: 'Store Builder',\n  description: 'White-label store provisioning system',\n}\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"en\">\n      <body className=\"min-h-screen bg-background antialiased\">{children}</body>\n    </html>\n  )\n}"],"names":["metadata","title","description","RootLayout","children","lang","className"],"mappings":";;;;;;;;;AAGO,MAAMA,WAAqB;IAChCC,OAAO;IACPC,aAAa;AACf;AAEe,SAASC,WAAW,EAAEC,QAAQ,EAAiC;IAC5E,qBACE,kQAAC;QAAKC,MAAK;kBACT,cAAA,kQAAC;YAAKC,WAAU;sBAA0CF;;;;;;;;;;;AAGhE"}},
-    {"offset": {"line": 42, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/obai/Desktop/website/store-builder/node_modules/next/dist/server/route-modules/app-page/vendored/rsc/react-jsx-dev-runtime.js"],"sourcesContent":["\"use strict\";\nmodule.exports = require('../../module.compiled').vendored['react-rsc'].ReactJsxDevRuntime;\n\n//# sourceMappingURL=react-jsx-dev-runtime.js.map"],"names":["module","exports","vendored","ReactJsxDevRuntime"],"mappings":"AACAA,OAAOC,OAAO,GAAG,kJAAiCC,QAAQ,CAAC,YAAY,CAACC,kBAAkB","ignoreList":[0]}}]
-}

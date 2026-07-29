@@ -14,11 +14,13 @@ type AccountCodes = {
   cash: string
   bank: string
   ar: string
+  ap: string
   inventory: string
   salesRevenue: string
   salesReturns: string
   cogs: string
   taxPayable: string
+  salaryPayable: string
   expenses: Record<string, string>
 }
 
@@ -26,11 +28,13 @@ const ACCOUNTS: AccountCodes = {
   cash: '1000',
   bank: '1100',
   ar: '1200',
+  ap: '2000',
   inventory: '1300',
   salesRevenue: '4000',
   salesReturns: '4100',
   cogs: '5000',
   taxPayable: '2100',
+  salaryPayable: '2200',
   expenses: {
     salaries: '5100',
     rent: '5200',
@@ -248,3 +252,5 @@ export async function createReconciliationJournalEntry(order: {
     ],
   })
 }
+
+

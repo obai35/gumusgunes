@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/obai/Desktop/website/node_modules/next/node_modules/%40swc/helpers/cjs/_interop_require_default.cjs"],"sourcesContent":["\"use strict\";\n\nfunction _interop_require_default(obj) {\n    return obj && obj.__esModule ? obj : { default: obj };\n}\nexports._ = _interop_require_default;\n"],"names":["_interop_require_default","obj","__esModule","default","exports","_"],"mappings":"AAEA,SAASA,yBAAyBC,GAAG;IACjC,OAAOA,OAAOA,IAAIC,UAAU,GAAGD,MAAM;QAAEE,SAASF;IAAI;AACxD;AACAG,QAAQC,CAAC,GAAGL","ignoreList":[0]}}]
-}
