@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash, timingSafeEqual } from 'crypto'
 
 const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || ''
+const META_APP_SECRET = process.env.META_APP_SECRET || ''
+
+async function verifyMetaSignature(req: NextRequest, rawBody: string): Promise<boolean> {
+  if (!META_APP_SECRET) return true
+  const signature = req.headers.get('x-hub-signature-256')
+  if (!signature) return false
+  const expected = 'sha256=' + createHash('sha256').update(META_APP_SECRET + rawBody).digest('hex')
+  try {
+    return timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  } catch {
+    return false
+  }
+}
 
 export async function GET(req: NextRequest) {
   const mode = req.nextUrl.searchParams.get('hub.mode')
@@ -15,7 +29,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
+    const rawBody = await req.text()
+    if (!(await verifyMetaSignature(req, rawBody))) {
+      console.warn('[Meta Webhook] Invalid signature')
+      return NextResponse.json({ ok: false, error: 'Invalid signature' }, { status: 401 })
+    }
+    const body = JSON.parse(rawBody)
 
     for (const entry of body.entry || []) {
       // Messenger messages

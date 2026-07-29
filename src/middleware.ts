@@ -22,18 +22,22 @@ function isValidOrigin(origin: string | null, requestOrigin?: string): boolean {
   )
 }
 
+function setSecurityHeaders(headers: Headers) {
+  headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  headers.set('X-Content-Type-Options', 'nosniff')
+  headers.set('X-Frame-Options', 'SAMEORIGIN')
+  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()')
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const start = Date.now()
 
-  if (pathname.startsWith('/preview')) {
-    const response = NextResponse.next()
-    response.headers.set('X-Frame-Options', 'SAMEORIGIN')
-    return response
-  }
-
   if (CSRF_EXEMPT.some(p => pathname === p || pathname.startsWith(p + '/'))) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    setSecurityHeaders(response.headers)
+    return response
   }
 
   if (pathname.startsWith('/api')) {
@@ -45,6 +49,7 @@ export function middleware(request: NextRequest) {
     }
 
     const response = NextResponse.next()
+    setSecurityHeaders(response.headers)
     const origin = request.headers.get('origin')
 
     if (origin && isValidOrigin(origin, request.nextUrl.origin)) {
@@ -92,6 +97,7 @@ export function middleware(request: NextRequest) {
   }
 
   const pageRes = NextResponse.next()
+  setSecurityHeaders(pageRes.headers)
   pageRes.headers.set('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.paypal.com https://accounts.google.com https://www.google.com https://www.gstatic.com",
