@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { usePosAuth } from '@/lib/pos-auth-store'
 import { usePos } from './hooks/usePos'
+import { usePosStore } from './stores/posStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import PosLayout from './components/PosLayout'
 import BarcodeInput from './components/BarcodeInput'
@@ -104,40 +105,53 @@ export default function POSPage() {
 
   useEffect(() => { registerSW() }, [])
 
+  const fetchProducts = useCallback(async (pageNum: number, append: boolean) => {
+    const store = usePosStore.getState()
+    if (store.isLoadingProducts) return
+    pos.setLoadingProducts(true)
+    try {
+      const params = new URLSearchParams({ search: store.search, page: String(pageNum) })
+      const branchId = user?.branchId || usePosAuth.getState().user?.branchId
+      if (branchId) params.set('branchId', branchId)
+      if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
+      const res = await fetch(`/api/admin/pos/products?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        if (data.ok) {
+          pos.setProductPage(data.items, data.total, data.page, data.totalPages, append)
+          if (pageNum === 1) cacheProducts(data.items)
+        }
+      } else if (!offlineMode) {
+        const cached = await getCachedProducts()
+        if (cached.length > 0 && !append) pos.setProductPage(cached, cached.length, 1, 1)
+      }
+    } catch {
+      if (!offlineMode) {
+        const cached = await getCachedProducts()
+        if (cached.length > 0 && !append) pos.setProductPage(cached, cached.length, 1, 1)
+      }
+    }
+    pos.setLoadingProducts(false)
+  }, [user?.branchId, selectedCategoryId, offlineMode, pos])
+
   useEffect(() => {
-    const controller = new AbortController()
-    const timer = setTimeout(async () => {
-      if (offlineMode) {
-        try {
-          const cached = await getCachedProducts()
-          if (cached.length > 0) {
-            pos.setProducts(cached)
-            return
-          }
-        } catch {}
-      }
-      try {
-        const params = new URLSearchParams({ search: pos.search })
-        const branchId = user?.branchId || usePosAuth.getState().user?.branchId
-        if (branchId) params.set('branchId', branchId)
-        if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
-        const res = await fetch(`/api/admin/pos/products?${params}`, { signal: controller.signal })
-        if (res.ok) {
-          const data = await res.json()
-          pos.setProducts(data)
-          cacheProducts(data)
-        }
-      } catch {
-        if (!offlineMode) {
-          try {
-            const cached = await getCachedProducts()
-            if (cached.length > 0) pos.setProducts(cached)
-          } catch {}
-        }
-      }
+    if (offlineMode) {
+      getCachedProducts().then(cached => {
+        if (cached.length > 0) pos.setProductPage(cached, cached.length, 1, 1)
+      })
+      return
+    }
+    const timer = setTimeout(() => {
+      fetchProducts(1, false)
     }, pos.search.length < 1 && !selectedCategoryId ? 0 : 300)
-    return () => { clearTimeout(timer); controller.abort() }
-  }, [pos.search, user?.branchId, selectedCategoryId, offlineMode])
+    return () => clearTimeout(timer)
+  }, [pos.search, user?.branchId, selectedCategoryId, offlineMode, fetchProducts, pos])
+
+  const loadMore = useCallback(() => {
+    const store = usePosStore.getState()
+    if (store.isLoadingProducts || store.currentPage >= store.totalPages) return
+    fetchProducts(store.currentPage + 1, true)
+  }, [fetchProducts])
 
   const handleStartShift = useCallback(async () => {
     if (!user?.branchId) return
@@ -479,6 +493,9 @@ export default function POSPage() {
               categories={categories}
               selectedCategoryId={selectedCategoryId}
               onCategoryChange={handleCategoryChange}
+              hasMore={pos.currentPage < pos.totalPages}
+              loading={pos.isLoadingProducts}
+              onLoadMore={loadMore}
             />
             <button
               onClick={() => setShowCustomPrice(true)}

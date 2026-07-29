@@ -19,16 +19,13 @@ function BarcodeInput({ onProductFound, onFocusSearch }: Props) {
     if (!value.trim()) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(value.trim())}`)
+      const res = await fetch(`/api/admin/pos/products?sku=${encodeURIComponent(value.trim())}`)
       if (res.ok) {
-        const products: Product[] = await res.json()
-        const exact = products.find(
-          (p) => p.sku.toLowerCase() === value.trim().toLowerCase()
-        )
-        if (exact) {
-          onProductFound(exact)
+        const data = await res.json()
+        if (data.ok && data.items.length > 0) {
+          onProductFound(data.items[0])
           setValue('')
-          toast.success(`Added ${exact.name}`)
+          toast.success(`Added ${data.items[0].name}`)
         } else {
           toast.error('No product found with that SKU')
         }

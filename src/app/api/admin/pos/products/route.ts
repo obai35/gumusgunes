@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
@@ -9,6 +8,24 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const search = req.nextUrl.searchParams.get('search') || ''
     const branchId = req.nextUrl.searchParams.get('branchId')
     const categoryId = req.nextUrl.searchParams.get('categoryId')
+    const sku = req.nextUrl.searchParams.get('sku') || ''
+    const page = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') || '1'))
+    const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') || '50')))
+    const skip = (page - 1) * limit
+
+    if (sku) {
+      const product = await sdb.product.findFirst({
+        where: { sku: { equals: sku }, isActive: true },
+        select: { id: true, name: true, price: true, stock: true, imageUrl: true, sku: true },
+      })
+      if (!product) return NextResponse.json({ ok: true, items: [], total: 0, page: 1, totalPages: 0 })
+      let stock = product.stock
+      if (branchId) {
+        const bs = await sdb.branchStock.findUnique({ where: { branchId_productId: { branchId, productId: product.id } } })
+        stock = bs?.quantity || 0
+      }
+      return NextResponse.json({ ok: true, items: [{ ...product, stock }], total: 1, page: 1, totalPages: 1 })
+    }
 
     const where: any = { isActive: true }
     if (search) {
@@ -29,16 +46,28 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       where.id = { in: [...branchStockMap.keys()] }
     }
 
-    const products = await sdb.product.findMany({
-      where,
-      select: { id: true, name: true, price: true, stock: true, imageUrl: true, sku: true },
-      take: 20,
-      orderBy: { name: 'asc' },
-    })
-    const result = branchStockMap
+    const [products, total] = await Promise.all([
+      sdb.product.findMany({
+        where,
+        select: { id: true, name: true, price: true, stock: true, imageUrl: true, sku: true },
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+      }),
+      sdb.product.count({ where }),
+    ])
+
+    const items = branchStockMap
       ? products.map(p => ({ ...p, stock: branchStockMap!.get(p.id) || 0 }))
       : products
-    return NextResponse.json(result)
+
+    return NextResponse.json({
+      ok: true,
+      items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    })
   } catch (err) {
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }

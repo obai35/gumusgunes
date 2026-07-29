@@ -7,6 +7,10 @@ type Customer = { id: string; name: string; email: string; phone: string | null 
 type PosState = {
   search: string
   products: Product[]
+  totalProducts: number
+  currentPage: number
+  totalPages: number
+  isLoadingProducts: boolean
   cart: CartItem[]
   discountCode: string
   appliedDiscount: AppliedDiscount | null
@@ -22,7 +26,8 @@ type PosState = {
   taxRate: number
 
   setSearch: (search: string) => void
-  setProducts: (products: Product[]) => void
+  setProductPage: (products: Product[], total: number, page: number, totalPages: number, append?: boolean) => void
+  setLoadingProducts: (loading: boolean) => void
   addToCart: (product: Product) => void
   updateQuantity: (productId: string, delta: number) => void
   removeFromCart: (productId: string) => void
@@ -59,6 +64,10 @@ type PosState = {
 export const usePosStore = create<PosState>((set, get) => ({
   search: '',
   products: [],
+  totalProducts: 0,
+  currentPage: 1,
+  totalPages: 0,
+  isLoadingProducts: false,
   cart: [],
   discountCode: '',
   appliedDiscount: null,
@@ -74,7 +83,19 @@ export const usePosStore = create<PosState>((set, get) => ({
   taxRate: 0,
 
   setSearch: (search) => set({ search }),
-  setProducts: (products) => set({ products }),
+  setProductPage: (products, total, page, totalPages, append) => {
+    if (append) {
+      set((state) => ({
+        products: [...state.products, ...products],
+        totalProducts: total,
+        currentPage: page,
+        totalPages,
+      }))
+    } else {
+      set({ products, totalProducts: total, currentPage: page, totalPages })
+    }
+  },
+  setLoadingProducts: (loading) => set({ isLoadingProducts: loading }),
 
   addToCart: (product) => {
     set((state) => {
@@ -209,6 +230,9 @@ export const usePosStore = create<PosState>((set, get) => ({
       receipt: null,
       search: '',
       products: [],
+      totalProducts: 0,
+      currentPage: 1,
+      totalPages: 0,
       paymentMethod: 'cash',
       cashAmount: '',
       cardAmount: '',
