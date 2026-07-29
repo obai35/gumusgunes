@@ -58,7 +58,7 @@ export async function autoAccountReturn(returnId: string): Promise<void> {
       where: { id: returnId },
       include: {
         order: {
-          select: { id: true, refundedAmount: true, paymentMethod: true, createdAt: true },
+          select: { id: true, refundedAmount: true, totalAmount: true, paymentMethod: true, createdAt: true, tax: true },
         },
       },
     })
@@ -75,8 +75,10 @@ export async function autoAccountReturn(returnId: string): Promise<void> {
     await createRefundJournalEntry({
       id: ret.order.id,
       refundedAmount: ret.order.refundedAmount,
+      totalAmount: ret.order.totalAmount,
       paymentMethod: normalizePaymentMethod(ret.order.paymentMethod),
       createdAt: ret.order.createdAt,
+      tax: ret.order.tax,
     })
     console.log(`[auto-accounting] Refund entry created for return ${returnId}`)
   } catch (err) {

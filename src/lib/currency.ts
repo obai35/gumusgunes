@@ -1,39 +1,43 @@
 import { db } from '@/lib/db'
 import { FX_GAIN_ACCOUNT, FX_LOSS_ACCOUNT } from './accounting'
 
-export async function convertCurrency(
-  amount: number,
-  fromCurrency: string,
-  toCurrency: string
-): Promise<{ convertedAmount: number; rate: number }> {
-  if (fromCurrency === toCurrency) {
-    return { convertedAmount: amount, rate: 1 }
+export const BASE_CURRENCY = 'EGP'
+
+let ratesCache: { code: string; exchangeRate: number }[] | null = null
+let ratesCacheTime = 0
+const CACHE_TTL = 300_000
+
+export async function getExchangeRate(currency: string): Promise<number> {
+  if (currency === BASE_CURRENCY) return 1
+  const now = Date.now()
+  if (!ratesCache || now - ratesCacheTime > CACHE_TTL) {
+    ratesCache = await db.currency.findMany({
+      where: { isActive: true },
+      select: { code: true, exchangeRate: true },
+    })
+    ratesCacheTime = now
   }
-  const rate = await getExchangeRate(toCurrency)
-  return { convertedAmount: parseFloat((amount * rate).toFixed(2)), rate }
+  const found = ratesCache.find(c => c.code === currency)
+  if (!found) return 1
+  return found.exchangeRate
 }
 
-export async function recordFXGainLoss(
-  journalEntryId: string,
-  originalAmount: number,
-  convertedAmount: number,
-  currency: string
-): Promise<void> {
-  if (currency === 'EGP') return
-
-  const difference = convertedAmount - originalAmount
-  if (Math.abs(difference) < 0.01) return
-
-  console.log(
-    `[FX] Entry ${journalEntryId}: ${difference > 0 ? 'gain' : 'loss'} of ${Math.abs(difference)} ${currency}`
-  )
+export function convertToBase(amount: number, fromCurrency: string, exchangeRate: number): number {
+  if (fromCurrency === BASE_CURRENCY) return amount
+  return amount * exchangeRate
 }
 
-export async function getExchangeRate(currencyCode: string): Promise<number> {
-  if (currencyCode === 'EGP') return 1
+export function fxGainLoss(
+  recognizedAmount: number,
+  settledAmount: number,
+): { amount: number; accountCode: string } | null {
+  const diff = settledAmount - recognizedAmount
+  if (Math.abs(diff) < 0.01) return null
+  if (diff > 0) return { amount: diff, accountCode: FX_GAIN_ACCOUNT }
+  return { amount: Math.abs(diff), accountCode: FX_LOSS_ACCOUNT }
+}
 
-  const currency = await db.currency.findUnique({ where: { code: currencyCode } })
-  if (!currency || !currency.isActive) return 1
-
-  return currency.exchangeRate
+export function invalidateRatesCache(): void {
+  ratesCache = null
+  ratesCacheTime = 0
 }

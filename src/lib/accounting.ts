@@ -21,6 +21,8 @@ type AccountCodes = {
   cogs: string
   taxPayable: string
   salaryPayable: string
+  fxGain: string
+  fxLoss: string
   expenses: Record<string, string>
 }
 
@@ -35,6 +37,8 @@ const ACCOUNTS: AccountCodes = {
   cogs: '5000',
   taxPayable: '2100',
   salaryPayable: '2200',
+  fxGain: '4600',
+  fxLoss: '5600',
   expenses: {
     salaries: '5100',
     rent: '5200',
@@ -114,6 +118,9 @@ export async function createJournalEntry(data: {
   type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening' | 'cogs'
   orderId?: string
   expenseId?: string
+  currency?: string
+  exchangeRate?: number
+  fxGainLoss?: number
   lines: { accountCode: string; debit?: number; credit?: number }[]
 }) {
   validateEntry(data.lines)
@@ -136,6 +143,9 @@ export async function createJournalEntry(data: {
       type: data.type,
       orderId: data.orderId,
       expenseId: data.expenseId,
+      currency: data.currency ?? 'EGP',
+      exchangeRate: data.exchangeRate ?? 1,
+      fxGainLoss: data.fxGainLoss,
       lines: { create: lines },
     },
     include: { lines: { include: { account: true } } },
@@ -152,6 +162,8 @@ export async function createSaleJournalEntry(order: {
   paymentMethod: string
   createdAt: Date
   tax?: number
+  currency?: string
+  exchangeRate?: number
 }) {
   const creditLines: { accountCode: string; credit: number }[] = []
   const taxAmount = order.tax ?? 0
@@ -182,6 +194,8 @@ export async function createSaleJournalEntry(order: {
       reference: order.id,
       type: 'sale',
       orderId: order.id,
+      currency: order.currency,
+      exchangeRate: order.exchangeRate,
       lines,
     })
   }
@@ -196,6 +210,8 @@ export async function createSaleJournalEntry(order: {
     reference: order.id,
     type: 'sale',
     orderId: order.id,
+    currency: order.currency,
+    exchangeRate: order.exchangeRate,
     lines,
   })
 }
@@ -203,20 +219,32 @@ export async function createSaleJournalEntry(order: {
 export async function createRefundJournalEntry(order: {
   id: string
   refundedAmount: number
+  totalAmount?: number
   paymentMethod: string
   createdAt: Date
+  tax?: number
 }) {
   const creditAccount = getDebitAccount(order.paymentMethod)
+  const taxAmount = order.tax ?? 0
+  const totalAmt = order.totalAmount ?? order.refundedAmount
+  const taxRate = totalAmt > 0 ? taxAmount / totalAmt : 0
+  const refundTax = order.refundedAmount * taxRate
+  const refundNet = order.refundedAmount - refundTax
+
+  const lines: { accountCode: string; debit?: number; credit?: number }[] = [
+    { accountCode: ACCOUNTS.salesReturns, debit: refundNet },
+    { accountCode: creditAccount, credit: order.refundedAmount },
+  ]
+  if (refundTax > 0) {
+    lines.push({ accountCode: ACCOUNTS.taxPayable, debit: refundTax })
+  }
   return createJournalEntry({
     date: order.createdAt,
     description: `Refund for #${order.id.slice(0, 8)}`,
     reference: order.id,
     type: 'refund',
     orderId: order.id,
-    lines: [
-      { accountCode: ACCOUNTS.salesReturns, debit: order.refundedAmount },
-      { accountCode: creditAccount, credit: order.refundedAmount },
-    ],
+    lines,
   })
 }
 
