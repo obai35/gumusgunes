@@ -226,6 +226,45 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       }
     }
 
+    // Cash position
+    const cashAccounts = await sdb.account.findMany({
+      where: { code: { in: ['1000', '1100'] } },
+      include: {
+        journalLines: {
+          where: { entry: { date: { lte: end } } },
+          select: { debit: true, credit: true },
+        },
+      },
+    })
+    const cashPosition: Record<string, { code: string; name: string; balance: number }> = {}
+    for (const acc of cashAccounts) {
+      const debit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
+      const credit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
+      cashPosition[acc.code] = { code: acc.code, name: acc.name, balance: debit - credit }
+    }
+    result.cashPosition = cashPosition
+
+    // Expense breakdown
+    const expenseAccounts = await sdb.account.findMany({
+      where: { type: 'expense' },
+      include: {
+        journalLines: {
+          where: {
+            entry: { date: { gte: start, lte: end } },
+          },
+          select: { debit: true, credit: true },
+        },
+      },
+    })
+    const expenseBreakdown = expenseAccounts
+      .map(acc => {
+        const debit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
+        const credit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
+        return { code: acc.code, name: acc.name, nameAr: acc.nameAr, balance: debit - credit }
+      })
+      .filter(a => a.balance > 0)
+    result.expenseBreakdown = expenseBreakdown
+
     result.budgetComparison = {
       budgeted: totalBudgeted,
       actual: totalActual,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
+import { applyStatusFilter } from '@/lib/approval'
 
 function getDateRange(period: string, year?: string, month?: string): { start: Date; end: Date } {
   const now = new Date()
@@ -34,6 +35,44 @@ function getDateRange(period: string, year?: string, month?: string): { start: D
   return { start, end }
 }
 
+async function fetchPL(sdb: ReturnType<typeof storeDb>, start: Date, end: Date, statusFilter?: string | null) {
+  const entryWhere: Record<string, unknown> = {
+    date: { gte: start, lte: end },
+  }
+  applyStatusFilter(entryWhere, statusFilter)
+
+  const accounts = await sdb.account.findMany({
+    where: { type: { in: ['income', 'expense'] } },
+    orderBy: { code: 'asc' },
+    include: {
+      journalLines: {
+        where: { entry },
+        select: { debit: true, credit: true },
+      },
+    },
+  })
+
+  const incomeAccounts = accounts.filter(a => a.type === 'income')
+  const expenseAccounts = accounts.filter(a => a.type === 'expense')
+
+  const incomeItems = incomeAccounts.map(acc => {
+    const totalCredit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
+    const totalDebit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
+    return { code: acc.code, name: acc.name, nameAr: acc.nameAr, balance: totalCredit - totalDebit }
+  })
+
+  const expenseItems = expenseAccounts.map(acc => {
+    const totalDebit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
+    const totalCredit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
+    return { code: acc.code, name: acc.name, nameAr: acc.nameAr, balance: totalDebit - totalCredit }
+  })
+
+  const totalIncome = incomeItems.reduce((s, i) => s + i.balance, 0)
+  const totalExpenses = expenseItems.reduce((s, e) => s + e.balance, 0)
+
+  return { incomeItems, expenseItems, totalIncome, totalExpenses, netProfit: totalIncome - totalExpenses }
+}
+
 export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
     const sdb = storeDb(admin.storeId)
@@ -43,41 +82,16 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const month = sp.get('month') || String(new Date().getMonth() + 1)
     const comparison = sp.get('comparison')
 
+    const statusFilter = sp.get('status')
     const { start, end } = getDateRange(period, year, month)
 
-    const accounts = await sdb.account.findMany({
-      where: { type: { in: ['income', 'expense'] } },
-      orderBy: { code: 'asc' },
-      include: {
-        journalLines: {
-          where: {
-            entry: {
-              date: { gte: start, lte: end },
-            },
-          },
-          select: { debit: true, credit: true },
-        },
-      },
-    })
-
-    const incomeAccounts = accounts.filter(a => a.type === 'income')
-    const expenseAccounts = accounts.filter(a => a.type === 'expense')
-
-    const incomeItems = incomeAccounts.map(acc => {
-      const totalCredit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
-      const totalDebit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
-      return { code: acc.code, name: acc.name, nameAr: acc.nameAr, balance: totalCredit - totalDebit }
-    })
-
-    const expenseItems = expenseAccounts.map(acc => {
-      const totalDebit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
-      const totalCredit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
-      return { code: acc.code, name: acc.name, nameAr: acc.nameAr, balance: totalDebit - totalCredit }
-    })
-
-    const totalIncome = incomeItems.reduce((s, i) => s + i.balance, 0)
-    const totalExpenses = expenseItems.reduce((s, e) => s + e.balance, 0)
-    const netProfit = totalIncome - totalExpenses
+    const {
+      incomeItems,
+      expenseItems,
+      totalIncome,
+      totalExpenses,
+      netProfit,
+    } = await fetchPL(sdb, start, end, statusFilter)
 
     let monthlyComparison: { month: string; income: number; expenses: number; net: number }[] | null = null
 
@@ -90,36 +104,44 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
         months.push({ month: `${y}-${String(m).padStart(2, '0')}`, start: ms, end: me })
       }
 
-      const allIncome = await sdb.account.findMany({
-        where: { type: 'income' },
-        select: { id: true, code: true, name: true },
-      })
-      const allExpense = await sdb.account.findMany({
-        where: { type: 'expense' },
-        select: { id: true, code: true, name: true },
-      })
-
       monthlyComparison = []
       for (const m of months) {
-        const [incomeLines, expenseLines] = await Promise.all([
-          sdb.journalLine.findMany({
-            where: {
-              accountId: { in: allIncome.map(a => a.id) },
-              entry: { date: { gte: m.start, lte: m.end } },
-            },
-            select: { debit: true, credit: true },
-          }),
-          sdb.journalLine.findMany({
-            where: {
-              accountId: { in: allExpense.map(a => a.id) },
-              entry: { date: { gte: m.start, lte: m.end } },
-            },
-            select: { debit: true, credit: true },
-          }),
-        ])
-        const inc = incomeLines.reduce((s, l) => s + l.credit - l.debit, 0)
-        const exp = expenseLines.reduce((s, l) => s + l.debit - l.credit, 0)
-        monthlyComparison.push({ month: m.month, income: inc, expenses: exp, net: inc - exp })
+        const mData = await fetchPL(sdb, m.start, m.end, statusFilter)
+        monthlyComparison.push({
+          month: m.month,
+          income: mData.totalIncome,
+          expenses: mData.totalExpenses,
+          net: mData.netProfit,
+        })
+      }
+    }
+
+    let yoyComparison: {
+      lastYear: { income: number; expenses: number; net: number }
+      current: { income: number; expenses: number; net: number }
+      change: { incomePct: number; expensesPct: number; netPct: number }
+    } | null = null
+
+    if (comparison === 'yoy') {
+      const prevYear = parseInt(year) - 1
+      const prevStart = new Date(start)
+      prevStart.setFullYear(prevYear)
+      const prevEnd = new Date(end)
+      prevEnd.setFullYear(prevYear)
+
+      const [currentPL, prevPL] = await Promise.all([
+        fetchPL(sdb, start, end, statusFilter),
+        fetchPL(sdb, prevStart, prevEnd, statusFilter),
+      ])
+
+      yoyComparison = {
+        current: { income: currentPL.totalIncome, expenses: currentPL.totalExpenses, net: currentPL.netProfit },
+        lastYear: { income: prevPL.totalIncome, expenses: prevPL.totalExpenses, net: prevPL.netProfit },
+        change: {
+          incomePct: prevPL.totalIncome > 0 ? ((currentPL.totalIncome - prevPL.totalIncome) / prevPL.totalIncome) * 100 : 0,
+          expensesPct: prevPL.totalExpenses > 0 ? ((currentPL.totalExpenses - prevPL.totalExpenses) / prevPL.totalExpenses) * 100 : 0,
+          netPct: prevPL.netProfit > 0 ? ((currentPL.netProfit - prevPL.netProfit) / prevPL.netProfit) * 100 : 0,
+        },
       }
     }
 
@@ -134,6 +156,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       totalExpenses,
       netProfit,
       monthlyComparison,
+      yoyComparison,
     })
   } catch (e) {
     console.error('P&L GET error:', e)

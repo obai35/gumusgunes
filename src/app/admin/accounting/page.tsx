@@ -203,6 +203,10 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
   const [compareData, setCompareData] = useState<any>(null)
   const [ratios, setRatios] = useState<any>(null)
   const [drillDown, setDrillDown] = useState<{ type: string; data: any } | null>(null)
+  const cp1000 = (data.cashPosition as any)?.['1000']?.balance || 0
+  const cp1100 = (data.cashPosition as any)?.['1100']?.balance || 0
+  const totalLiquid = cp1000 + cp1100
+  const expenseTotal = (data.expenseBreakdown || []).reduce((s: number, e: any) => s + e.balance, 0)
 
   useEffect(() => {
     fetch('/api/admin/accounting/ratios')
@@ -502,6 +506,71 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
                 <Bar dataKey="revenue" fill="#1e3a5f" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+            Cash Position
+          </h3>
+          <div className="flex items-center gap-6">
+            <div className="relative w-24 h-24">
+              <svg viewBox="0 0 100 100" className="w-24 h-24 -rotate-90">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#059669" strokeWidth="8" strokeDasharray={`${251.2 * Math.min(cp1000 / Math.max(totalLiquid, 1), 1)} 251.2`} strokeLinecap="round" />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-bold text-navy">{formatCurrency(totalLiquid)}</span>
+              </div>
+            </div>
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Cash</span>
+                <span className="font-medium text-navy">{formatCurrency(cp1000)}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" />Bank</span>
+                <span className="font-medium text-navy">{formatCurrency(cp1100)}</span>
+              </div>
+              <div className="pt-1 border-t border-border">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span>Total Liquid</span>
+                  <span className="text-navy">{formatCurrency(totalLiquid)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-border p-5">
+          <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2">
+            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            Expense Breakdown
+          </h3>
+          {(data.expenseBreakdown || []).length === 0 ? (
+            <p className="text-sm text-muted-foreground">No expenses this period</p>
+          ) : (
+            <div className="space-y-2">
+              {data.expenseBreakdown.slice(0, 8).map((exp: any) => {
+                const pct = expenseTotal > 0 ? (exp.balance / expenseTotal) * 100 : 0
+                return (
+                  <div key={exp.code}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-navy font-medium truncate">{exp.nameAr || exp.name}</span>
+                      <span className="font-semibold text-navy">{formatCurrency(exp.balance)}</span>
+                    </div>
+                    <MiniBar value={exp.balance} max={expenseTotal} color="bg-rose-500" />
+                    <span className="text-[10px] text-muted-foreground">{pct.toFixed(1)}%</span>
+                  </div>
+                )
+              })}
+              {(data.expenseBreakdown?.length || 0) > 8 && (
+                <p className="text-xs text-muted-foreground text-center pt-1">+{data.expenseBreakdown.length - 8} more</p>
+              )}
+            </div>
           )}
         </div>
       </div>

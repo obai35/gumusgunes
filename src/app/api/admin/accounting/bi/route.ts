@@ -3,12 +3,14 @@ import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 import { getInventoryValuation, getCOGSReport } from '@/lib/cogs'
+import { applyStatusFilter } from '@/lib/approval'
 
 export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
     const sdb = storeDb(admin.storeId)
     const url = new URL(req.url)
     const period = url.searchParams.get('period') || 'month'
+    const statusFilter = url.searchParams.get('status')
 
     const now = new Date()
     let start = new Date(now)
@@ -75,9 +77,14 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
       }),
     ])
 
-    // Compute revenue from sale journal entries (Prisma nested aggregate workaround)
+    const saleEntryWhere: Record<string, unknown> = {
+      type: 'sale',
+      date: { gte: start, lte: end },
+    }
+    applyStatusFilter(saleEntryWhere, statusFilter)
+
     const saleEntries = await sdb.journalEntry.findMany({
-      where: { type: 'sale', date: { gte: start, lte: end } },
+      where: saleEntryWhere,
       include: { lines: { include: { account: true } } },
     })
     const revenue = saleEntries.reduce((sum, entry) => {
