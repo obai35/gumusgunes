@@ -24,6 +24,15 @@ type AccountCodes = {
   fxGain: string
   fxLoss: string
   expenses: Record<string, string>
+  interCompany: {
+    dueFrom: string
+    dueTo: string
+    investment: string
+    nci: string
+    consolidationDiff: string
+    icRevenue: string
+    icExpense: string
+  }
 }
 
 const ACCOUNTS: AccountCodes = {
@@ -45,6 +54,15 @@ const ACCOUNTS: AccountCodes = {
     utilities: '5300',
     supplies: '5400',
     other: '5500',
+  },
+  interCompany: {
+    dueFrom: '1400',
+    dueTo: '2300',
+    investment: '3200',
+    nci: '3400',
+    consolidationDiff: '3500',
+    icRevenue: '4200',
+    icExpense: '5700',
   },
 }
 
@@ -115,7 +133,8 @@ export async function createJournalEntry(data: {
   date: Date
   description: string
   reference?: string
-  type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening' | 'cogs'
+  storeId?: string
+  type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening' | 'cogs' | 'production' | 'interCompany' | 'consolidation'
   orderId?: string
   expenseId?: string
   currency?: string
@@ -141,6 +160,7 @@ export async function createJournalEntry(data: {
       description: data.description,
       reference: data.reference,
       type: data.type,
+      storeId: data.storeId ?? '',
       orderId: data.orderId,
       expenseId: data.expenseId,
       currency: data.currency ?? 'EGP',

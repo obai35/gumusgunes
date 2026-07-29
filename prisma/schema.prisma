@@ -123,6 +123,17 @@ model Store {
   stockTransfers       StockTransfer[]
   webhookDeliveries    WebhookDelivery[]
   wishlistItems        WishlistItem[]
+  groups               Group[]
+  groupEntities        GroupEntity[]
+  icTxnsFrom           InterCompanyTransaction[] @relation("ICFromStore")
+  icTxnsTo             InterCompanyTransaction[] @relation("ICToStore")
+  workCenters          WorkCenter[]
+  billOfMaterials      BillOfMaterial[]
+  bomItems             BomItem[]
+  productionOrders     ProductionOrder[]
+  productionOrderMaterials ProductionOrderMaterial[]
+  productionOrderLabors    ProductionOrderLabor[]
+  productionOrderOutputs  ProductionOrderOutput[]
 }
 
 model Product {
@@ -170,6 +181,10 @@ model Product {
   returnRequests     ReturnRequest[]
   qcChecks           QC_Check[]
   invoiceItems       InvoiceItem[]
+  billOfMaterials    BillOfMaterial[]
+  bomItems           BomItem[]
+  productionOrders   ProductionOrder[]
+  orderMaterials     ProductionOrderMaterial[]
 
   @@index([categoryId, isActive])
   @@index([brandId])
@@ -724,6 +739,8 @@ model Admin {
   bankTransactionMatches BankTransaction[]
   payrollRuns            PayrollRun[]
   approvedEntries        JournalEntry[]
+  productionOrders       ProductionOrder[]
+  consolidationRuns      ConsolidationRun[]
 
   @@index([storeId])
 }
@@ -1826,4 +1843,230 @@ model PayrollItem {
 
   @@index([runId])
   @@index([storeId])
+}
+
+// ── Manufacturing / Production ──
+
+model WorkCenter {
+  id              String            @id @default(cuid())
+  storeId         String
+  store           Store             @relation(fields: [storeId], references: [id])
+  name            String
+  description     String?
+  hourlyRate      Float             @default(0)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  productionOrders ProductionOrder[]
+
+  @@index([storeId])
+}
+
+model BillOfMaterial {
+  id        String    @id @default(cuid())
+  storeId   String
+  store     Store     @relation(fields: [storeId], references: [id])
+  productId String
+  product   Product   @relation(fields: [productId], references: [id])
+  version   String    @default("1.0")
+  quantity  Float     @default(1)
+  isActive  Boolean   @default(true)
+  notes     String?
+  items     BomItem[]
+  orders    ProductionOrder[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([productId, version])
+  @@index([storeId])
+}
+
+model BomItem {
+  id        String         @id @default(cuid())
+  storeId   String
+  store     Store          @relation(fields: [storeId], references: [id])
+  bomId     String
+  bom       BillOfMaterial @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product        @relation(fields: [productId], references: [id])
+  quantity  Float          @default(1)
+  unitCost  Float?
+  scrapPct  Float          @default(0)
+  createdAt DateTime       @default(now())
+
+  @@index([bomId])
+  @@index([storeId])
+}
+
+model ProductionOrder {
+  id                  String                    @id @default(cuid())
+  storeId             String
+  store               Store                     @relation(fields: [storeId], references: [id])
+  orderNumber         String                    @unique
+  productId           String
+  product             Product                   @relation(fields: [productId], references: [id])
+  bomId               String?
+  bom                 BillOfMaterial?           @relation(fields: [bomId], references: [id])
+  workCenterId        String?
+  workCenter          WorkCenter?               @relation(fields: [workCenterId], references: [id])
+  quantity            Int                       @default(1)
+  completedQty        Int                       @default(0)
+  scrappedQty         Int                       @default(0)
+  status              String                    @default("draft")
+  plannedStart        DateTime?
+  actualStart         DateTime?
+  actualEnd           DateTime?
+  standardCost        Float                     @default(0)
+  actualMaterialCost  Float                     @default(0)
+  actualLaborCost     Float                     @default(0)
+  actualOverheadCost  Float                     @default(0)
+  notes               String?
+  createdById         String?
+  createdBy           Admin?                    @relation(fields: [createdById], references: [id])
+  materials           ProductionOrderMaterial[]
+  laborEntries        ProductionOrderLabor[]
+  outputs             ProductionOrderOutput[]
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+
+  @@index([status])
+  @@index([storeId])
+  @@index([productId])
+}
+
+model ProductionOrderMaterial {
+  id        String          @id @default(cuid())
+  storeId   String
+  store     Store           @relation(fields: [storeId], references: [id])
+  orderId   String
+  order     ProductionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product         @relation(fields: [productId], references: [id])
+  quantity  Float           @default(0)
+  unitCost  Float           @default(0)
+  totalCost Float           @default(0)
+  createdAt DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([storeId])
+}
+
+model ProductionOrderLabor {
+  id          String          @id @default(cuid())
+  storeId     String
+  store       Store           @relation(fields: [storeId], references: [id])
+  orderId     String
+  order       ProductionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  hours       Float           @default(0)
+  rate        Float           @default(0)
+  totalCost   Float           @default(0)
+  description String?
+  createdAt   DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([storeId])
+}
+
+model ProductionOrderOutput {
+  id        String          @id @default(cuid())
+  storeId   String
+  store     Store           @relation(fields: [storeId], references: [id])
+  orderId   String
+  order     ProductionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  quantity  Int             @default(0)
+  unitCost  Float           @default(0)
+  totalCost Float           @default(0)
+  isScrap   Boolean         @default(false)
+  createdAt DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([storeId])
+}
+
+// ── Multi-Entity Consolidation ──
+
+model Group {
+  id        String   @id @default(cuid())
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  name      String
+  slug      String   @unique
+  currency  String   @default("EGP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entities            GroupEntity[]
+  interCompanyTxns    InterCompanyTransaction[]
+  consolidationRuns   ConsolidationRun[]
+
+  @@index([storeId])
+}
+
+model GroupEntity {
+  id                   String   @id @default(cuid())
+  groupId              String
+  group                Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  entityStoreId        String
+  entityStore          Store    @relation(fields: [entityStoreId], references: [id])
+  ownershipPct         Float    @default(100)
+  consolidationMethod  String   @default("full") // full, equity
+  isPrimary            Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([groupId, entityStoreId])
+  @@index([groupId])
+}
+
+model InterCompanyTransaction {
+  id             String   @id @default(cuid())
+  groupId        String
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromStoreId    String
+  fromStore      Store    @relation("ICFromStore", fields: [fromStoreId], references: [id])
+  toStoreId      String
+  toStore        Store    @relation("ICToStore", fields: [toStoreId], references: [id])
+  amount         Float
+  currency       String   @default("EGP")
+  exchangeRate   Float    @default(1)
+  description    String
+  reference      String?
+  type           String   // sale, purchase, loan, dividend, service_fee, expense_allocation
+  status         String   @default("pending") // pending, settled, eliminated
+  journalEntryId String?
+  date           DateTime @default(now())
+  eliminatedAt   DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([groupId])
+  @@index([fromStoreId])
+  @@index([toStoreId])
+  @@index([status])
+}
+
+model ConsolidationRun {
+  id              String   @id @default(cuid())
+  groupId         String
+  group           Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  periodStart     DateTime
+  periodEnd       DateTime
+  status          String   @default("running") // running, completed, failed
+  totalEntities   Int      @default(0)
+  eliminatedTxns  Int      @default(0)
+  fxAdjustments   Int      @default(0)
+  totalRevenue    Float    @default(0)
+  totalExpenses   Float    @default(0)
+  netIncome       Float    @default(0)
+  totalAssets     Float    @default(0)
+  totalLiabilities Float   @default(0)
+  totalEquity     Float    @default(0)
+  errorMessage    String?
+  runById         String?
+  runBy           Admin?   @relation(fields: [runById], references: [id])
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([groupId])
+  @@index([status])
 }

@@ -28,6 +28,14 @@ const accounts = [
   { code: '5300', name: 'Utilities', nameAr: 'المرافق', type: 'expense' },
   { code: '5400', name: 'Supplies', nameAr: 'المستلزمات', type: 'expense' },
   { code: '5500', name: 'Other Expenses', nameAr: 'مصروفات أخرى', type: 'expense' },
+  // Inter-Company
+  { code: '1400', name: 'Due from Affiliates', nameAr: 'مديونيات الجهات الشقيقة', type: 'asset' },
+  { code: '2300', name: 'Due to Affiliates', nameAr: 'دائنون جهات شقيقة', type: 'liability' },
+  { code: '3200', name: 'Investment in Subsidiaries', nameAr: 'استثمارات في الشركات التابعة', type: 'equity' },
+  { code: '3400', name: 'Non-Controlling Interest', nameAr: 'حصة الأقلية', type: 'equity' },
+  { code: '3500', name: 'Consolidation Difference', nameAr: 'فروق الدمج', type: 'equity' },
+  { code: '4200', name: 'Inter-Company Revenue', nameAr: 'إيرادات بين الشركات', type: 'income' },
+  { code: '5700', name: 'Inter-Company Expense', nameAr: 'مصروفات بين الشركات', type: 'expense' },
 ]
 
 async function main() {

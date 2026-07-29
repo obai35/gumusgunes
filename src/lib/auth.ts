@@ -26,10 +26,12 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) { token.id = user.id; token.email = user.email }
+      const admin = await db.admin.findUnique({ where: { id: token.id as string } })
+      if (admin) token.storeId = admin.storeId
       return token
     },
     async session({ session, token }) {
-      if (session.user) { session.user.id = token.id as string }
+      if (session.user) { session.user.id = token.id as string; session.user.storeId = token.storeId as string }
       return session
     },
   },

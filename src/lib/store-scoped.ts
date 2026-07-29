@@ -20,6 +20,9 @@ const MODELS_WITH_STORE_ID = new Set([
   'SavedCard', 'CustomerPushToken', 'PushToken', 'PushPreference',
   'ResetToken', 'OtpVerification', 'EmailLog', 'CustomerActivityLog',
   'ProductRelation', 'ProductEmbedding',
+  'BillOfMaterial', 'BomItem', 'ProductionOrder', 'ProductionOrderMaterial',
+  'ProductionOrderLabor', 'ProductionOrderOutput', 'WorkCenter',
+  'Group', 'GroupEntity', 'InterCompanyTransaction', 'ConsolidationRun',
 ])
 
 export function storeDb(storeId: string) {
@@ -43,14 +46,14 @@ export function storeDb(storeId: string) {
           ])
 
           if (WHERE_OPS.has(operation)) {
-            args.where = { ...args?.where, storeId }
+            ;(args as any).where = { ...(args as any)?.where, storeId }
           } else if (operation === 'create') {
-            args.data = { ...args?.data, storeId }
+            ;(args as any).data = { ...(args as any)?.data, storeId }
           } else if (operation === 'createMany') {
-            args.data = (args.data as any[]).map(d => ({ ...d, storeId }))
+            ;(args as any).data = ((args as any).data as any[]).map(d => ({ ...d, storeId }))
           } else if (operation === 'upsert') {
-            args.where = { ...args?.where, storeId }
-            args.create = { ...args?.create, storeId }
+            ;(args as any).where = { ...(args as any)?.where, storeId }
+            ;(args as any).create = { ...(args as any)?.create, storeId }
           }
 
           return query(args)
