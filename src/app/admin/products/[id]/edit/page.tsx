@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { ProductForm } from '../../ProductForm'
 import StockHistory from '../StockHistory'
 import { BarcodeGenerator } from '../BarcodeGenerator'
+import ProductPriceEditor from '../ProductPriceEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +29,7 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
         }}
       />
       <StockHistory productId={product.id} />
+      <ProductPriceEditor productId={product.id} costPrice={product.costPrice} price={product.price} />
       <BarcodeGenerator productId={product.id} sku={product.sku} />
     </div>
   )

@@ -80,8 +80,9 @@ export default function PricingPage() {
       </div>
 
       <div className="rounded-lg border">
-        <div className="border-b px-4 py-3 font-semibold flex items-center gap-2">
-          <History className="h-4 w-4" /> Recent Cost History
+        <div className="border-b px-4 py-3 font-semibold flex items-center gap-2 justify-between">
+          <span className="flex items-center gap-2"><History className="h-4 w-4" /> Recent Cost History</span>
+          <Link href="/admin/pricing/cost-history" className="text-xs font-normal text-primary hover:underline">View All</Link>
         </div>
         <div className="divide-y">
           {recent.map((e) => (

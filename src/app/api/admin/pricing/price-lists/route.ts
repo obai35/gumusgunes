@@ -4,10 +4,20 @@ import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 export const GET = withAdmin(async (req, { admin }) => {
+  const { searchParams } = new URL(req.url)
+  const productId = searchParams.get('productId')
   const tx = storeDb(admin.storeId)
   const data = await tx.priceList.findMany({
     orderBy: { sortOrder: 'asc' },
-    include: { _count: { select: { items: true } } },
+    include: {
+      _count: { select: { items: true } },
+      ...(productId ? {
+        items: {
+          where: { productId },
+          include: { product: { select: { id: true, name: true, sku: true, price: true, costPrice: true, imageUrl: true } } },
+        },
+      } : {}),
+    },
   })
   return NextResponse.json(data)
 }, 'pricing')
