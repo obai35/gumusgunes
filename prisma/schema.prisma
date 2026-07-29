@@ -138,6 +138,13 @@ model Store {
   priceLists           PriceList[]
   priceListItems       PriceListItem[]
   costHistory          CostHistory[]
+  costPools            CostPool[]
+  pricingFormulas      PricingFormula[]
+  productCostBreakdowns ProductCostBreakdown[]
+  routings             Routing[]
+  routingSteps         RoutingStep[]
+  productionOperations ProductionOperation[]
+  prodOpLabors         ProdOpLabor[]
 }
 
 model Product {
@@ -191,6 +198,8 @@ model Product {
   orderMaterials     ProductionOrderMaterial[]
   priceListItems     PriceListItem[]
   costHistory        CostHistory[]
+  costBreakdown      ProductCostBreakdown?
+  routings           Routing[]
 
   @@index([categoryId, isActive])
   @@index([brandId])
@@ -853,21 +862,23 @@ model Supplier {
 }
 
 model Expense {
-  id            String    @id @default(cuid())
+  id            String     @id @default(cuid())
   storeId       String
-  store         Store     @relation(fields: [storeId], references: [id])
+  store         Store      @relation(fields: [storeId], references: [id])
   shiftId       String?
-  shift         Shift?    @relation(fields: [shiftId], references: [id])
+  shift         Shift?     @relation(fields: [shiftId], references: [id])
   branchId      String?
-  branch        Branch?   @relation(fields: [branchId], references: [id])
+  branch        Branch?    @relation(fields: [branchId], references: [id])
   supplierId    String?
-  supplier      Supplier? @relation(fields: [supplierId], references: [id])
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id])
+  costPoolId    String?
+  costPool      CostPool?  @relation(fields: [costPoolId], references: [id])
   amount        Float
   paymentMethod String
   description   String
   invoiceNumber String?
   notes         String?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime   @default(now())
 
   @@index([storeId])
 }
@@ -1808,6 +1819,7 @@ model Employee {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   payrollItems      PayrollItem[]
+  prodOpLabors      ProdOpLabor[]
 
   @@index([storeId])
 }
@@ -1865,6 +1877,8 @@ model WorkCenter {
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   productionOrders ProductionOrder[]
+  routingSteps     RoutingStep[]
+  operations       ProductionOperation[]
 
   @@index([storeId])
 }
@@ -1881,6 +1895,7 @@ model BillOfMaterial {
   notes     String?
   items     BomItem[]
   orders    ProductionOrder[]
+  routings  Routing[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -1914,6 +1929,8 @@ model ProductionOrder {
   product             Product                   @relation(fields: [productId], references: [id])
   bomId               String?
   bom                 BillOfMaterial?           @relation(fields: [bomId], references: [id])
+  routingId           String?
+  routing             Routing?                  @relation(fields: [routingId], references: [id])
   workCenterId        String?
   workCenter          WorkCenter?               @relation(fields: [workCenterId], references: [id])
   quantity            Int                       @default(1)
@@ -1933,6 +1950,7 @@ model ProductionOrder {
   materials           ProductionOrderMaterial[]
   laborEntries        ProductionOrderLabor[]
   outputs             ProductionOrderOutput[]
+  operations          ProductionOperation[]
   createdAt           DateTime                  @default(now())
   updatedAt           DateTime                  @updatedAt
 
@@ -2179,5 +2197,157 @@ model CostHistory {
   createdAt   DateTime @default(now())
 
   @@index([productId, createdAt])
+  @@index([storeId])
+}
+
+// ── Cost Pool & Overhead Allocation ──
+
+model CostPool {
+  id          String    @id @default(cuid())
+  storeId     String
+  store       Store     @relation(fields: [storeId], references: [id])
+  name        String
+  category    String    // mfg_overhead, admin_overhead, selling_overhead
+  basis       String    // labor_pct, material_pct, total_pct, direct_pct, fixed_amount
+  rate        Float     // percentage or fixed amount
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expenses    Expense[]
+
+  @@index([storeId])
+}
+
+// ── Pricing Formulas ──
+
+model PricingFormula {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  name        String
+  slug        String
+  description String?
+  type        String   // margin, markup_multiplier, fixed_amount
+  value       Float    // margin %, markup multiplier, or fixed amount
+  isDefault   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([storeId, slug])
+  @@index([storeId])
+}
+
+// ── Product Cost Breakdown ──
+
+model ProductCostBreakdown {
+  id              String   @id @default(cuid())
+  storeId         String
+  store           Store    @relation(fields: [storeId], references: [id])
+  productId       String   @unique
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  materialCost    Float    @default(0)
+  laborCost       Float    @default(0)
+  mfgOverhead     Float    @default(0)
+  adminOverhead   Float    @default(0)
+  sellingOverhead Float    @default(0)
+  totalCost       Float    @default(0)
+  currentPrice    Float?
+  margin          Float?
+  lastAllocatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([storeId])
+}
+
+// ── Manufacturing Routing (operation sequence) ──
+
+model Routing {
+  id          String        @id @default(cuid())
+  storeId     String
+  store       Store         @relation(fields: [storeId], references: [id])
+  name        String
+  description String?
+  productId   String?
+  product     Product?      @relation(fields: [productId], references: [id])
+  bomId       String?
+  bom         BillOfMaterial? @relation(fields: [bomId], references: [id])
+  isActive    Boolean       @default(true)
+  steps       RoutingStep[]
+  orders      ProductionOrder[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([storeId])
+}
+
+model RoutingStep {
+  id            String       @id @default(cuid())
+  storeId       String
+  store         Store        @relation(fields: [storeId], references: [id])
+  routingId     String
+  routing       Routing      @relation(fields: [routingId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  workCenterId  String?
+  workCenter    WorkCenter?  @relation(fields: [workCenterId], references: [id])
+  sortOrder     Int          @default(0)
+  standardHours Float        @default(0)
+  setupHours    Float        @default(0)
+  isActive      Boolean      @default(true)
+  operations    ProductionOperation[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([routingId])
+  @@index([storeId])
+}
+
+// ── Production Operation Tracking ──
+
+model ProductionOperation {
+  id            String          @id @default(cuid())
+  storeId       String
+  store         Store           @relation(fields: [storeId], references: [id])
+  orderId       String
+  order         ProductionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stepId        String?
+  step          RoutingStep?    @relation(fields: [stepId], references: [id])
+  name          String
+  workCenterId  String?
+  workCenter    WorkCenter?     @relation(fields: [workCenterId], references: [id])
+  status        String          @default("pending") // pending, in_progress, completed, skipped
+  sortOrder     Int             @default(0)
+  standardHours Float           @default(0)
+  actualHours   Float           @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  notes         String?
+  laborEntries  ProdOpLabor[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([storeId])
+}
+
+model ProdOpLabor {
+  id          String              @id @default(cuid())
+  storeId     String
+  store       Store               @relation(fields: [storeId], references: [id])
+  operationId String
+  operation   ProductionOperation @relation(fields: [operationId], references: [id], onDelete: Cascade)
+  employeeId  String?
+  employee    Employee?           @relation(fields: [employeeId], references: [id])
+  hours       Float               @default(0)
+  rate        Float               @default(0)
+  totalCost   Float               @default(0)
+  description String?
+  createdAt   DateTime            @default(now())
+
+  @@index([operationId])
   @@index([storeId])
 }

@@ -11,14 +11,19 @@ import {
   LayoutDashboard, ShoppingBag, Package, Warehouse, ShoppingCart, CreditCard, Tag, LogOut, Sun, Receipt, Settings,
   Store, Users, Shield, Calculator, ArrowLeftRight, FolderTree, UserCircle, MessageSquareText, Mail,
   Truck, Share2, Headset, FileText, Image, HelpCircle, RefreshCw, ClipboardCheck, BarChart3,
-  Activity, Webhook, Key, Database, Flag, HeartPulse,
+  Activity, Webhook, Key, Database, Flag, HeartPulse, Factory, CircleDollarSign, GanttChartSquare,
 } from 'lucide-react'
 
 type LinkDef = { href: string; label: string; icon: any; permission?: string }
 const links: LinkDef[] = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard' },
   { href: '/admin/accounting', label: 'Accounting', icon: Calculator, permission: 'accounting' },
-  { href: '/admin/pricing', label: 'Pricing', icon: Calculator, permission: 'pricing' },
+  { href: '/admin/manufacturing', label: 'Manufacturing', icon: Factory, permission: 'manufacturing' },
+  { href: '/admin/pricing', label: 'Pricing', icon: CircleDollarSign, permission: 'pricing' },
+  { href: '/admin/pricing/cost-pools', label: '  Cost Pools', icon: CircleDollarSign, permission: 'pricing' },
+  { href: '/admin/pricing/formulas', label: '  Formulas', icon: Calculator, permission: 'pricing' },
+  { href: '/admin/pricing/cost-cards', label: '  Cost Cards', icon: GanttChartSquare, permission: 'pricing' },
+  { href: '/admin/pricing/lists', label: '  Price Lists', icon: Tag, permission: 'pricing' },
   { href: '/admin/reports', label: 'Reports', icon: BarChart3, permission: 'reports' },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, permission: 'orders' },
   { href: '/admin/receipts', label: 'Receipts', icon: Receipt, permission: 'receipts' },

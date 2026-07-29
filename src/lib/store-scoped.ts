@@ -25,6 +25,8 @@ const MODELS_WITH_STORE_ID = new Set([
   'Group', 'GroupEntity', 'InterCompanyTransaction', 'ConsolidationRun',
   'FixedAsset', 'DepreciationEntry',
   'PriceList', 'PriceListItem', 'CostHistory',
+  'CostPool', 'PricingFormula', 'ProductCostBreakdown',
+  'Routing', 'RoutingStep', 'ProductionOperation', 'ProdOpLabor',
 ])
 
 export function storeDb(storeId: string) {
