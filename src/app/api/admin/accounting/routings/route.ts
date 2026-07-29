@@ -8,7 +8,7 @@ export const GET = withAdmin(async (req, { admin }) => {
     include: {
       product: { select: { id: true, name: true, sku: true } },
       steps: { orderBy: { sortOrder: 'asc' }, include: { workCenter: true } },
-      _count: { select: { productionOrders: true } },
+      _count: { select: { orders: true } },
     },
     orderBy: { updatedAt: 'desc' },
   })

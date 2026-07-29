@@ -5,6 +5,7 @@ export interface AuditEntry {
   action: string
   resource: string
   resourceId?: string
+  storeId?: string
   details?: Record<string, unknown>
 }
 
@@ -15,6 +16,7 @@ export async function logAudit(entry: AuditEntry): Promise<void> {
       action: entry.action,
       resource: entry.resource,
       resourceId: entry.resourceId,
+      storeId: entry.storeId ?? '',
       details: entry.details ? JSON.stringify(entry.details) : undefined,
     },
   })

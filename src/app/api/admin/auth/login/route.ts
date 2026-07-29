@@ -29,6 +29,7 @@ const handler = async (req: NextRequest) => {
         adminId: 'unknown',
         action: 'admin_login_failed',
         resource: 'auth',
+        storeId: 'unknown',
         details: { email, reason: 'invalid credentials' },
       })
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
