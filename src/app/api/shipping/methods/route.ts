@@ -1,12 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const url = new URL(req.url)
   const governorateId = url.searchParams.get('governorateId')
   if (!governorateId) return NextResponse.json({ error: 'governorateId is required' }, { status: 400 })
 
-  const rates = await db.shippingRate.findMany({
+  const { db: sdb } = await storefrontDb(req)
+  const rates = await sdb.shippingRate.findMany({
     where: { governorateId, method: { isActive: true } },
     include: { method: { select: { id: true, name: true, estimatedDays: true } } },
     orderBy: { price: 'asc' },

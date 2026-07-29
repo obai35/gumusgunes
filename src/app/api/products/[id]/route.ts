@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { db: sdb } = await storefrontDb(_req)
     const { id } = await params
     // Support both id and slug lookups
-    const product = await db.product.findFirst({
+    const product = await sdb.product.findFirst({
       where: {
         OR: [{ id }, { slug: id }],
         isActive: true,
@@ -34,7 +36,7 @@ export async function GET(
     }
 
     // Suggest related products from the same category
-    const related = await db.product.findMany({
+    const related = await sdb.product.findMany({
       where: {
         categoryId: product.categoryId,
         id: { not: product.id },

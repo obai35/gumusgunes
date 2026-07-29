@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { withRateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
@@ -10,6 +11,7 @@ const Schema = z.object({
 
 async function handlePost(req: NextRequest) {
   try {
+    const { db: sdb } = await storefrontDb(req)
     const body = await req.json()
     const parsed = Schema.safeParse(body)
     if (!parsed.success) {
@@ -19,14 +21,14 @@ async function handlePost(req: NextRequest) {
       )
     }
 
-    const existing = await db.newsletter.findUnique({
+    const existing = await sdb.newsletter.findUnique({
       where: { email: parsed.data.email.toLowerCase() },
     })
     if (existing) {
       return NextResponse.json({ ok: true, alreadySubscribed: true })
     }
 
-    await db.newsletter.create({
+    await sdb.newsletter.create({
       data: {
         email: parsed.data.email.toLowerCase(),
         name: parsed.data.name || null,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { withRateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
@@ -10,6 +11,7 @@ const Schema = z.object({
 
 async function handlePost(req: NextRequest) {
   try {
+    const { db: sdb } = await storefrontDb(req)
     const body = await req.json()
     const parsed = Schema.safeParse(body)
     if (!parsed.success) {
@@ -21,7 +23,7 @@ async function handlePost(req: NextRequest) {
 
     const { email, productId } = parsed.data
 
-    const product = await db.product.findUnique({ where: { id: productId } })
+    const product = await sdb.product.findUnique({ where: { id: productId } })
     if (!product) {
       return NextResponse.json({ ok: false, error: 'Product not found' }, { status: 404 })
     }
@@ -36,14 +38,14 @@ async function handlePost(req: NextRequest) {
     }
 
     // Idempotent: if already subscribed, acknowledge
-    const existing = await db.backInStock.findUnique({
+    const existing = await sdb.backInStock.findUnique({
       where: { email_productId: { email: email.toLowerCase(), productId } },
     })
     if (existing) {
       return NextResponse.json({ ok: true, alreadySubscribed: true })
     }
 
-    await db.backInStock.create({
+    await sdb.backInStock.create({
       data: { email: email.toLowerCase(), productId },
     })
 

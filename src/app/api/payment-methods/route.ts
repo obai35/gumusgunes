@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { decrypt } from '@/lib/encryption'
 
-export async function GET() {
-  const methods = await db.paymentMethod.findMany({
+export async function GET(req: NextRequest) {
+  const { db: sdb } = await storefrontDb(req)
+  const methods = await sdb.paymentMethod.findMany({
     where: { isActive: true },
     orderBy: { sortOrder: 'asc' },
   })

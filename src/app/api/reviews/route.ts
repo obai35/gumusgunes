@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { withRateLimit } from '@/lib/rate-limit'
 import { sanitize } from '@/lib/sanitize'
 import { z } from 'zod'
@@ -16,6 +17,7 @@ const ReviewSchema = z.object({
 
 async function handlePost(req: NextRequest) {
   try {
+    const { db: sdb } = await storefrontDb(req)
     const body = await req.json()
     const parsed = ReviewSchema.safeParse(body)
     if (!parsed.success) {
@@ -30,22 +32,22 @@ async function handlePost(req: NextRequest) {
     const sanitizedComment = sanitizeHtml(rest.comment, { allowedTags: [], allowedAttributes: {} })
     const sanitizedName = sanitize(rest.authorName)
 
-    const product = await db.product.findUnique({ where: { id: productId } })
+    const product = await sdb.product.findUnique({ where: { id: productId } })
     if (!product) {
       return NextResponse.json({ ok: false, error: 'Product not found' }, { status: 404 })
     }
 
-    const review = await db.review.create({
+    const review = await sdb.review.create({
       data: { ...rest, authorName: sanitizedName, title: sanitizedTitle, comment: sanitizedComment, productId, authorEmail: rest.authorEmail || null },
     })
 
     // Recalculate rating + reviewCount
-    const agg = await db.review.aggregate({
+    const agg = await sdb.review.aggregate({
       where: { productId },
       _avg: { rating: true },
       _count: true,
     })
-    await db.product.update({
+    await sdb.product.update({
       where: { id: productId },
       data: {
         rating: Math.round((agg._avg.rating ?? 0) * 10) / 10,

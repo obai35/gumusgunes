@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { Prisma } from '@prisma/client'
 
 export async function GET(req: NextRequest) {
   try {
+    const { db: sdb } = await storefrontDb(req)
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category') // slug
     const featured = searchParams.get('featured')
@@ -17,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.ProductWhereInput = { isActive: true }
     if (category && category !== 'all') {
-      const cat = await db.category.findUnique({ where: { slug: category }, include: { children: { select: { id: true } } } })
+      const cat = await sdb.category.findUnique({ where: { slug: category }, include: { children: { select: { id: true } } } })
       if (cat) {
         const childIds = cat.children.map(c => c.id)
         where.categoryId = childIds.length > 0 ? { in: [cat.id, ...childIds] } : cat.id
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
             ? { rating: 'desc' }
             : { createdAt: 'desc' }
 
-    const products = await db.product.findMany({
+    const products = await sdb.product.findMany({
       where,
       orderBy,
       select: {

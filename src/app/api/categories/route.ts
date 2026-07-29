@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 
 export async function GET(req: NextRequest) {
   try {
+    const { db: sdb } = await storefrontDb(req)
     const flat = req.nextUrl.searchParams.get('flat') === 'true'
 
-    const categories = await db.category.findMany({
+    const categories = await sdb.category.findMany({
       where: { isVisible: true },
       orderBy: { name: 'asc' },
       include: {

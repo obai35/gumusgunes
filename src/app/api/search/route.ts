@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { withRateLimit } from '@/lib/rate-limit'
 
 async function handleGet(req: NextRequest) {
   try {
+    const { db: sdb } = await storefrontDb(req)
     const { searchParams } = new URL(req.url)
     const q = (searchParams.get('q') || '').trim().toLowerCase()
     if (!q) {
       return NextResponse.json({ ok: true, products: [], suggestions: [] })
     }
 
-    const products = await db.product.findMany({
+    const products = await sdb.product.findMany({
       where: {
         isActive: true,
         OR: [
@@ -30,7 +32,7 @@ async function handleGet(req: NextRequest) {
       orderBy: { isBestseller: 'desc' },
     })
 
-    const categories = await db.category.findMany({
+    const categories = await sdb.category.findMany({
       where: {
         OR: [
           { name: { contains: q } },
