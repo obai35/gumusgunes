@@ -92,6 +92,7 @@ model Store {
   addresses            Address[]
   backInStock          BackInStock[]
   bankTransactions     BankTransaction[]
+  fixedAssets          FixedAsset[]
   billItems            BillItem[]
   branchStocks         BranchStock[]
   customerActivityLogs CustomerActivityLog[]
@@ -741,6 +742,7 @@ model Admin {
   approvedEntries        JournalEntry[]
   productionOrders       ProductionOrder[]
   consolidationRuns      ConsolidationRun[]
+  fixedAssets            FixedAsset[]
 
   @@index([storeId])
 }
@@ -2069,4 +2071,48 @@ model ConsolidationRun {
 
   @@index([groupId])
   @@index([status])
+}
+
+model FixedAsset {
+  id                   String   @id @default(cuid())
+  storeId              String
+  store                Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  name                 String
+  nameAr               String?
+  assetNumber          String
+  category             String   @default("equipment") // equipment, furniture, vehicles, buildings, computers, leasehold
+  purchaseDate         DateTime
+  purchaseCost         Float
+  salvageValue         Float    @default(0)
+  usefulLifeYears      Int
+  depreciationMethod   String   @default("straight-line") // straight-line, declining-balance, sum-of-years
+  currentBookValue     Float
+  accumulatedDepreciation Float @default(0)
+  status               String   @default("active") // active, disposed, fully-depreciated
+  disposalDate         DateTime?
+  disposalProceeds     Float?
+  notes                String?
+  createdById          String?
+  createdBy            Admin?   @relation(fields: [createdById], references: [id])
+  depreciationEntries  DepreciationEntry[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([storeId, assetNumber])
+  @@index([storeId, status])
+  @@index([storeId, category])
+}
+
+model DepreciationEntry {
+  id        String   @id @default(cuid())
+  assetId   String
+  asset     FixedAsset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  periodDate DateTime
+  amount    Float
+  journalEntryId String?
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([assetId])
+  @@index([periodDate])
 }

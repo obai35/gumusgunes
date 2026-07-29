@@ -16,6 +16,8 @@ type AccountCodes = {
   ar: string
   ap: string
   inventory: string
+  fixedAssets: string
+  accumulatedDepreciation: string
   salesRevenue: string
   salesReturns: string
   cogs: string
@@ -41,6 +43,8 @@ const ACCOUNTS: AccountCodes = {
   ar: '1200',
   ap: '2000',
   inventory: '1300',
+  fixedAssets: '1500',
+  accumulatedDepreciation: '1600',
   salesRevenue: '4000',
   salesReturns: '4100',
   cogs: '5000',
@@ -54,6 +58,7 @@ const ACCOUNTS: AccountCodes = {
     utilities: '5300',
     supplies: '5400',
     other: '5500',
+    depreciation: '5800',
   },
   interCompany: {
     dueFrom: '1400',
@@ -134,7 +139,7 @@ export async function createJournalEntry(data: {
   description: string
   reference?: string
   storeId?: string
-  type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening' | 'cogs' | 'production' | 'interCompany' | 'consolidation'
+  type: 'sale' | 'refund' | 'expense' | 'reconciliation' | 'opening' | 'cogs' | 'production' | 'interCompany' | 'consolidation' | 'purchasing' | 'depreciation' | 'asset-acquisition' | 'budget'
   orderId?: string
   expenseId?: string
   currency?: string

@@ -23,6 +23,7 @@ const MODELS_WITH_STORE_ID = new Set([
   'BillOfMaterial', 'BomItem', 'ProductionOrder', 'ProductionOrderMaterial',
   'ProductionOrderLabor', 'ProductionOrderOutput', 'WorkCenter',
   'Group', 'GroupEntity', 'InterCompanyTransaction', 'ConsolidationRun',
+  'FixedAsset', 'DepreciationEntry',
 ])
 
 export function storeDb(storeId: string) {

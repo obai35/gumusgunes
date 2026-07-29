@@ -58,24 +58,33 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const where: any = { createdAt: { gte: start, lte: end } }
     if (branchId) where.branchId = branchId
 
-    const [expenses, totalAgg] = await Promise.all([
+    const page = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') || '1'))
+    const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') || '50')))
+
+    const [expenses, total, totalAgg] = await Promise.all([
       sdb.expense.findMany({
         where,
         include: { branch: { select: { name: true } }, supplier: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
       }),
+      sdb.expense.count({ where }),
       sdb.expense.aggregate({ where, _sum: { amount: true } }),
     ])
 
     const byMethod: Record<string, number> = {}
-    for (const e of expenses) {
+    for (const e of await sdb.expense.findMany({ where, select: { paymentMethod: true, amount: true } })) {
       byMethod[e.paymentMethod] = (byMethod[e.paymentMethod] || 0) + e.amount
     }
 
     return NextResponse.json({
       expenses,
+      total,
       totalExpenses: totalAgg._sum.amount || 0,
       count: expenses.length,
+      page,
+      totalPages: Math.ceil(total / limit),
       byMethod,
     })
   } catch (e) {

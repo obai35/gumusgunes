@@ -14,27 +14,54 @@ const AccountSchema = z.object({
 
 export const GET = withAdmin(async (req, { admin }) => {
   const sdb = storeDb(admin.storeId)
-  const accounts = await sdb.account.findMany({
-    orderBy: { code: 'asc' },
-    include: {
-      journalLines: {
-        select: { debit: true, credit: true },
-      },
-    },
-  })
+  const searchParams = new URL(req.url).searchParams
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')))
+  const typeFilter = searchParams.get('type') || undefined
+
+  const where: any = {}
+  if (typeFilter) where.type = typeFilter
+
+  const [accounts, total] = await Promise.all([
+    sdb.account.findMany({
+      where,
+      orderBy: { code: 'asc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    sdb.account.count({ where }),
+  ])
+
+  const accountIds = accounts.map(a => a.id)
+  const lineAggs = accountIds.length > 0
+    ? await sdb.journalLine.groupBy({
+        by: ['accountId'],
+        where: { accountId: { in: accountIds } },
+        _sum: { debit: true, credit: true },
+      })
+    : []
+
+  const balanceMap: Record<string, number> = {}
+  for (const agg of lineAggs) {
+    const d = agg._sum.debit || 0
+    const c = agg._sum.credit || 0
+    balanceMap[agg.accountId] = d - c
+  }
 
   const accountsWithBalance = accounts.map((acc) => {
-    const totalDebit = acc.journalLines.reduce((s, l) => s + l.debit, 0)
-    const totalCredit = acc.journalLines.reduce((s, l) => s + l.credit, 0)
-    let balance = totalDebit - totalCredit
+    let balance = balanceMap[acc.id] || 0
     if (['liability', 'equity', 'income'].includes(acc.type)) {
-      balance = totalCredit - totalDebit
+      balance = -balance
     }
-    const { journalLines, ...rest } = acc
-    return { ...rest, balance }
+    return { ...acc, balance }
   })
 
-  return NextResponse.json({ accounts: accountsWithBalance })
+  return NextResponse.json({
+    accounts: accountsWithBalance,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  })
 }, 'accounting')
 
 export const POST = withAdmin(async (req: NextRequest, { admin }) => {
