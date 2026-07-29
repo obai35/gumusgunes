@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import {
   createSaleJournalEntry,
@@ -9,8 +10,9 @@ import {
 import { logAudit } from '@/lib/audit'
 
 export const POST = withAdmin(async (req: Request, { params, admin }: { params: Promise<{ id: string }>; admin: AdminInfo }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  const order = await db.order.findUnique({ where: { id } })
+  const order = await sdb.order.findFirst({ where: { id } })
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
   try {
@@ -48,7 +50,7 @@ export const POST = withAdmin(async (req: Request, { params, admin }: { params: 
       })
     }
 
-    const updated = await db.order.update({
+    const updated = await sdb.order.update({
       where: { id },
       data: { reconciledAt: new Date() },
     })

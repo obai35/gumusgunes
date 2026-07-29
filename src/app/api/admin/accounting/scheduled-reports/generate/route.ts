@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 import { getInventoryValuation, getCOGSReport } from '@/lib/cogs'
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { type, config } = await req.json()
     if (!type) return NextResponse.json({ error: 'type required' }, { status: 400 })
@@ -25,11 +27,11 @@ export const POST = withAdmin(async (req: NextRequest) => {
 
     switch (type) {
       case 'pl': {
-        const saleEntries = await db.journalEntry.findMany({
+        const saleEntries = await sdb.journalEntry.findMany({
           where: { type: 'sale', date: { gte: start, lte: end } },
           include: { lines: { include: { account: true } } },
         })
-        const expenseEntries = await db.journalEntry.findMany({
+        const expenseEntries = await sdb.journalEntry.findMany({
           where: { type: 'expense', date: { gte: start, lte: end } },
           include: { lines: { include: { account: true } } },
         })
@@ -48,7 +50,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
         break
       }
       case 'balance_sheet': {
-        const accounts = await db.account.findMany({
+        const accounts = await sdb.account.findMany({
           include: {
             journalLines: {
               where: { entry: { date: { lte: end } } },
@@ -72,12 +74,12 @@ export const POST = withAdmin(async (req: NextRequest) => {
         break
       }
       case 'tax': {
-        const saleEntries = await db.journalEntry.findMany({
+        const saleEntries = await sdb.journalEntry.findMany({
           where: { type: 'sale', date: { gte: start, lte: end } },
           include: { lines: { include: { account: true } } },
         })
         const revenue = saleEntries.reduce((s, e) => s + e.lines.filter(l => l.account.code === '4000').reduce((s2, l) => s2 + l.credit, 0), 0)
-        const taxRate = await db.taxRate.findFirst({ where: { isActive: true } })
+        const taxRate = await sdb.taxRate.findFirst({ where: { isActive: true } })
         data = { taxableRevenue: revenue, taxRate: taxRate?.rate || 0, estimatedTax: revenue * (taxRate?.rate || 0) / 100 }
         break
       }
@@ -86,7 +88,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
         const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
         const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
 
-        const arEntries = await db.journalEntry.findMany({
+        const arEntries = await sdb.journalEntry.findMany({
           where: { type: 'sale' },
           include: { lines: { include: { account: true } } },
         })
@@ -95,7 +97,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
           .filter(e => e.lines.some(l => l.account.code === '1200'))
           .reduce((s, e) => s + e.lines.filter(l => l.account.code === '1200').reduce((s2, l) => s2 + l.debit - l.credit, 0), 0)
 
-        const orders = await db.order.findMany({
+        const orders = await sdb.order.findMany({
           where: { paymentStatus: { not: 'paid' }, status: { not: 'cancelled' } },
           select: { id: true, totalAmount: true, createdAt: true },
         })

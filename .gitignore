@@ -15,6 +15,7 @@ node_modules
 
 # next.js
 /.next/
+store-builder/.next/
 /out/
 
 # production

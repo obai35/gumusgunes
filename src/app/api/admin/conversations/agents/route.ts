@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
 const handler = withAdmin(async (req, { admin }) => {
-  const admins = await db.admin.findMany({
+  const sdb = storeDb(admin.storeId)
+  const admins = await sdb.admin.findMany({
     select: {
       id: true,
       name: true,
