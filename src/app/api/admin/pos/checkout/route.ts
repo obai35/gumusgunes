@@ -16,7 +16,7 @@ function generateReceiptNumber(): string {
 export const POST = withAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
-    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes } = await req.json()
+    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes, taxRate, taxAmount } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!paymentMethod || !VALID_PAYMENT_METHODS.includes(paymentMethod)) {
       return NextResponse.json({ error: 'Valid payment method is required' }, { status: 400 })
@@ -84,7 +84,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       const cash = cashAmount || 0
       const card = cardAmount || 0
       if (Math.abs((cash + card) - total) > 0.01) {
-        return NextResponse.json({ error: `Split amounts ($${cash.toFixed(2)} + $${card.toFixed(2)} = $${(cash + card).toFixed(2)}) must equal total $${total.toFixed(2)}` }, { status: 400 })
+        return NextResponse.json({ error: `Split amounts (${cash.toFixed(2)} E£ + ${card.toFixed(2)} E£ = ${(cash + card).toFixed(2)} E£) must equal total ${total.toFixed(2)} E£` }, { status: 400 })
       }
     }
 
@@ -142,7 +142,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
           totalAmount: total,
           subtotal,
           shipping: 0,
-          tax: 0,
+          tax: taxAmount ?? 0,
           discountAmount: (discountAmount + totalItemDiscount) || null,
           discountId: appliedDiscount?.id || null,
           status: 'confirmed',

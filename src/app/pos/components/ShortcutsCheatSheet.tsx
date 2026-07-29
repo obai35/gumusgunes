@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Keyboard } from 'lucide-react'
+import { Keyboard, X } from 'lucide-react'
 
 const shortcuts = [
   { key: 'F1', action: 'Set payment to Cash' },
@@ -12,6 +12,9 @@ const shortcuts = [
   { key: 'Enter', action: 'Quick checkout (no input focused)' },
   { key: 'Ctrl+1-9', action: 'Add product by grid position' },
   { key: 'Escape', action: 'Close modal / clear search' },
+  { key: 'F10', action: 'Set payment to Bank Transfer' },
+  { key: 'F11', action: 'Set payment to Instapay' },
+  { key: 'F12', action: 'Set payment to Wallet' },
 ]
 
 export default function ShortcutsCheatSheet() {

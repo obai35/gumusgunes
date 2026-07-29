@@ -30,6 +30,10 @@ async function main() {
         'dashboard', 'accounting', 'orders', 'products', 'customers', 'inventory', 'admins',
         'branches', 'categories', 'discounts', 'reviews', 'settings',
         'payments', 'shipping', 'reports', 'social', 'editor', 'pos', 'activity',
+        'receipts', 'stock_transfers', 'security', 'newsletter', 'customer_service',
+        'chat', 'marketing',
+        'blog', 'faq', 'banners', 'pages', 'media',
+        'system', 'pricing', 'manufacturing',
       ]),
     },
   })

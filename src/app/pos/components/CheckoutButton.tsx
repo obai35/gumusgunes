@@ -2,6 +2,8 @@
 
 import { memo } from 'react'
 import type { PaymentMethod } from '../types'
+import { formatPrice } from '@/lib/format'
+import { useTranslation } from '@/hooks/use-translation'
 
 type Props = {
   total: number
@@ -11,14 +13,20 @@ type Props = {
   onClick: () => void
 }
 
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  cash: 'Cash',
+  card: 'Card',
+  split: 'Split',
+  bank_transfer: 'Bank Transfer',
+  instapay: 'Instapay',
+  wallet: 'Wallet',
+}
+
 function CheckoutButton({ total, paymentMethod, disabled, loading, onClick }: Props) {
+  const { t } = useTranslation()
   const label = loading
-    ? 'Processing...'
-    : paymentMethod === 'cash'
-      ? `Cash $${total.toFixed(2)}`
-      : paymentMethod === 'card'
-        ? `Card $${total.toFixed(2)}`
-        : `Split $${total.toFixed(2)}`
+    ? t('admin.pos.processing')
+    : `${PAYMENT_LABELS[paymentMethod]} ${formatPrice(total)}`
 
   return (
     <button

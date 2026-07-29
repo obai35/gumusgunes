@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
 import { Sidebar } from './Sidebar'
@@ -13,11 +13,22 @@ import { Button } from '@/components/ui/button'
 import { KeyboardShortcutProvider } from './KeyboardShortcutProvider'
 import { AdminShortcuts } from './AdminShortcuts'
 import { MobileBottomNav } from './MobileBottomNav'
+import { useLocale } from '@/lib/store'
+import { LOCALES } from '@/lib/i18n/translations'
+import { useTranslation } from '@/hooks/use-translation'
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isLogin = pathname === '/admin/login'
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { locale } = useLocale()
+  const { t } = useTranslation()
+
+  useEffect(() => {
+    const dir = LOCALES.find((l) => l.code === locale)?.dir ?? 'ltr'
+    document.documentElement.dir = dir
+    document.documentElement.lang = locale
+  }, [locale])
 
   return (
     <AdminAuthGuard>
@@ -39,7 +50,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm" className="flex items-center gap-2">
                       <Menu className="h-4 w-4" />
-                      Menu
+                      {t('admin.common.menu')}
                     </Button>
                   </SheetTrigger>
                 </div>

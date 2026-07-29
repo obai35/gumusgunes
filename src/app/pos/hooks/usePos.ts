@@ -1,13 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { toast } from 'sonner'
-import type { Product, CartItem, PaymentMethod, AppliedDiscount, ReceiptData } from '../types'
-
-export type HeldOrder = {
-  id: string
-  label: string
-  items: CartItem[]
-  heldAt: string
-}
+import type { Product, CartItem, PaymentMethod, AppliedDiscount, ReceiptData, HeldOrder } from '../types'
 
 export function usePos() {
   const [search, setSearch] = useState('')
@@ -24,11 +17,14 @@ export function usePos() {
   const [customer, setCustomer] = useState<{ id: string; name: string; email: string; phone: string | null } | null>(null)
   const [customerSearch, setCustomerSearch] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
+  const [taxRate, setTaxRate] = useState(0)
 
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart])
   const itemDiscountTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.discount || 0), 0), [cart])
   const discountAmount = (appliedDiscount?.amount || 0) + itemDiscountTotal
-  const total = useMemo(() => Math.max(0, subtotal - discountAmount), [subtotal, discountAmount])
+  const taxableAmount = useMemo(() => Math.max(0, subtotal - itemDiscountTotal), [subtotal, itemDiscountTotal])
+  const taxAmount = useMemo(() => taxableAmount * (taxRate / 100), [taxableAmount, taxRate])
+  const total = useMemo(() => Math.max(0, subtotal - discountAmount + taxAmount), [subtotal, discountAmount, taxAmount])
   const parsedCash = useMemo(() => parseFloat(cashAmount) || 0, [cashAmount])
   const parsedCard = useMemo(() => parseFloat(cardAmount) || 0, [cardAmount])
   const change = useMemo(() => paymentMethod === 'cash' ? Math.max(0, parsedCash - total) : 0, [paymentMethod, parsedCash, total])
@@ -134,7 +130,7 @@ export function usePos() {
     cashAmount, cardAmount,
     handleCashChange, handleCardChange,
     receipt, setReceipt,
-    subtotal, discountAmount, total, itemDiscountTotal,
+    subtotal, discountAmount, total, itemDiscountTotal, taxAmount, taxRate, setTaxRate,
     parsedCash, parsedCard, change,
     newSale,
     setItemDiscount,

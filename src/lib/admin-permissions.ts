@@ -9,7 +9,7 @@ export const ALL_PERMISSIONS = [
   'reviews', 'newsletter', 'activity', 'chat', 'seed', 'customer_service', 'social',
   'marketing',
   'blog', 'faq', 'banners', 'pages', 'media',
-  'reports', 'system', 'pricing',
+  'reports', 'system', 'pricing', 'manufacturing',
 ] as const
 
 export type Permission = typeof ALL_PERMISSIONS[number]

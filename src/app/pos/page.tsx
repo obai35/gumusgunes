@@ -27,6 +27,7 @@ import CustomerSearch from './components/CustomerSearch'
 import OfflineBanner from './components/OfflineBanner'
 import OfflineSyncManager from './components/OfflineSyncManager'
 import ShortcutsCheatSheet from './components/ShortcutsCheatSheet'
+import { formatPrice } from '@/lib/format'
 import { registerSW } from '@/lib/offline'
 import { queueOrder, cacheProducts, storeOfflineOrder, getCachedProducts } from '@/lib/pos-db'
 import type { Shift, ShiftSummary, Category, ReceiptData } from './types'
@@ -218,6 +219,8 @@ export default function POSPage() {
         paymentMethod: pos.paymentMethod,
         shiftId: shift?.id,
         notes: pos.orderNotes || undefined,
+        taxRate: pos.taxRate,
+        taxAmount: pos.taxAmount,
       }
       if (pos.customer) {
         body.customerId = pos.customer.id
@@ -243,6 +246,8 @@ export default function POSPage() {
           paymentMethod: pos.paymentMethod,
           cashAmount: pos.parsedCash || null,
           cardAmount: pos.parsedCard || null,
+          taxRate: pos.taxRate,
+          taxAmount: pos.taxAmount,
           customerId: pos.customer?.id || null,
           customerName: pos.customer?.name || null,
           customerEmail: pos.customer?.email || null,
@@ -261,6 +266,8 @@ export default function POSPage() {
           paymentMethod: pos.paymentMethod,
           cashAmount: pos.parsedCash || null,
           cardAmount: pos.parsedCard || null,
+          taxRate: pos.taxRate,
+          taxAmount: pos.taxAmount,
         })
         toast.success(`Order saved as ${tempReceiptNumber}`)
         pos.setCheckoutLoading(false)
@@ -319,7 +326,7 @@ export default function POSPage() {
 
   function validatePayment(): string | null {
     if (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total) {
-      return `Amount tendered (E£${pos.parsedCash.toFixed(2)}) is less than total (E£${pos.total.toFixed(2)})`
+      return `Amount tendered (${formatPrice(pos.parsedCash)}) is less than total (${formatPrice(pos.total)})`
     }
     if (pos.paymentMethod === 'split') {
       if (pos.parsedCash <= 0 || pos.parsedCard <= 0) return 'Both amounts must be greater than 0 for split payment'
@@ -351,6 +358,9 @@ export default function POSPage() {
     onF3: () => pos.setPaymentMethod('split'),
     onF4: () => document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus(),
     onF6: () => document.querySelector<HTMLInputElement>('input[placeholder*="SKU"]')?.focus(),
+    onF10: () => pos.setPaymentMethod('bank_transfer'),
+    onF11: () => pos.setPaymentMethod('instapay'),
+    onF12: () => pos.setPaymentMethod('wallet'),
     onEnter: () => { if (!checkoutDisabled) handleCheckout() },
     onEscape: () => { if (pos.cart.length > 0) pos.newSale() },
     onCtrlNumber: (n) => {
@@ -547,7 +557,7 @@ export default function POSPage() {
                 change={pos.change}
               />
             }
-            totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} itemDiscountTotal={pos.itemDiscountTotal} couponDiscount={pos.appliedDiscount?.amount || 0} />}
+            totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} itemDiscountTotal={pos.itemDiscountTotal} couponDiscount={pos.appliedDiscount?.amount || 0} taxAmount={pos.taxAmount} />}
             checkoutButton={
               <CheckoutButton
                 total={pos.total}

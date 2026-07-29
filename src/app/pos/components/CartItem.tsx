@@ -3,6 +3,7 @@
 import { Minus, Plus, Trash2, Tag } from 'lucide-react'
 import { memo, useState } from 'react'
 import type { CartItem as CartItemType } from '../types'
+import { formatPrice } from '@/lib/format'
 
 type Props = {
   item: CartItemType
@@ -34,10 +35,10 @@ function CartItemInner({ item, onUpdateQuantity, onRemove, onSetDiscount }: Prop
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-medium text-silver-soft truncate">{item.name}</p>
           {(item.discount || 0) > 0 && (
-            <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">-${item.discount!.toFixed(2)}</span>
+            <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-medium whitespace-nowrap">-{formatPrice(item.discount!)}</span>
           )}
         </div>
-        <p className="text-xs text-white/40">${item.price.toFixed(2)} each</p>
+        <p className="text-xs text-white/40">{formatPrice(item.price)} each</p>
       </div>
       <div className="flex items-center gap-1">
         <button onClick={() => onUpdateQuantity(item.productId, -1)} className="h-6 w-6 rounded bg-white/10 border border-white/10 flex items-center justify-center hover:bg-white/20 text-white/60"><Minus className="h-3 w-3" /></button>
@@ -46,7 +47,7 @@ function CartItemInner({ item, onUpdateQuantity, onRemove, onSetDiscount }: Prop
       </div>
       <div className="w-16 text-right">
         <span className={`text-sm font-bold ${(item.discount || 0) > 0 ? 'text-red-400' : 'text-gold'}`}>
-          ${discountedTotal.toFixed(2)}
+          {formatPrice(discountedTotal)}
         </span>
       </div>
       <button onClick={() => setShowDiscount(!showDiscount)} className="text-white/30 hover:text-gold transition-colors"><Tag className="h-3.5 w-3.5" /></button>
@@ -57,7 +58,7 @@ function CartItemInner({ item, onUpdateQuantity, onRemove, onSetDiscount }: Prop
           <input
             value={discountInput}
             onChange={(e) => setDiscountInput(e.target.value)}
-            placeholder="Discount $"
+            placeholder="Discount"
             type="number"
             step="0.01"
             min="0"

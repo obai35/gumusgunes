@@ -17,7 +17,7 @@ export type CartItem = {
   discount?: number
 }
 
-export type PaymentMethod = 'cash' | 'card' | 'split'
+export type PaymentMethod = 'cash' | 'card' | 'split' | 'bank_transfer' | 'instapay' | 'wallet'
 
 export type AppliedDiscount = {
   code: string
@@ -45,6 +45,8 @@ export type ReceiptData = {
   paymentMethod: string
   cashAmount: number | null
   cardAmount: number | null
+  taxRate?: number
+  taxAmount?: number
 }
 
 export type Shift = {
@@ -59,6 +61,13 @@ export type Category = {
   name: string
   slug: string
   _count: { products: number }
+}
+
+export type HeldOrder = {
+  id: string
+  label: string
+  items: CartItem[]
+  heldAt: string
 }
 
 export type ShiftSummary = {

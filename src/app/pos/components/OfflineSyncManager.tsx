@@ -25,13 +25,6 @@ export default function OfflineSyncManager() {
 
   useEffect(() => { refreshPending() }, [refreshPending])
 
-  useEffect(() => {
-    const unsub = onOnlineChange((online) => {
-      if (online) { refreshPending(); syncAll() }
-    })
-    return unsub
-  }, [refreshPending])
-
   const syncAll = useCallback(async () => {
     if (syncing) return
     setSyncing(true)
@@ -107,6 +100,13 @@ export default function OfflineSyncManager() {
     }
     await refreshPending()
   }, [syncing, pending, refreshPending])
+
+  useEffect(() => {
+    const unsub = onOnlineChange((online) => {
+      if (online) { refreshPending(); syncAll() }
+    })
+    return unsub
+  }, [refreshPending, syncAll])
 
   const statusInfo = syncing
     ? { border: 'border-gold/30', bg: 'bg-gold/[0.04]', icon: RefreshCw, iconClass: 'text-gold animate-spin', text: syncProgress ? `Syncing ${syncProgress.current + 1}/${syncProgress.total}` : 'Syncing...' }

@@ -6,6 +6,9 @@ type ShortcutMap = {
   onF3?: () => void
   onF4?: () => void
   onF6?: () => void
+  onF10?: () => void
+  onF11?: () => void
+  onF12?: () => void
   onEnter?: () => void
   onEscape?: () => void
   onCtrlNumber?: (n: number) => void
@@ -26,6 +29,9 @@ export function useKeyboardShortcuts(map: ShortcutMap) {
     if (e.key === 'F3') { e.preventDefault(); m.onF3?.(); return }
     if (e.key === 'F4') { e.preventDefault(); m.onF4?.(); return }
     if (e.key === 'F6') { e.preventDefault(); m.onF6?.(); return }
+    if (e.key === 'F10') { e.preventDefault(); m.onF10?.(); return }
+    if (e.key === 'F11') { e.preventDefault(); m.onF11?.(); return }
+    if (e.key === 'F12') { e.preventDefault(); m.onF12?.(); return }
     if (e.key === 'Enter' && !isInput) { e.preventDefault(); m.onEnter?.(); return }
 
     if ((e.ctrlKey || e.metaKey) && /^[1-9]$/.test(e.key)) {
