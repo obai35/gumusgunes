@@ -12,6 +12,8 @@ import BarcodeInput from './components/BarcodeInput'
 import ProductGrid from './components/ProductGrid'
 import CartPanel from './components/CartPanel'
 import DiscountSection from './components/DiscountSection'
+import DiscountPresets from './components/DiscountPresets'
+import RecentOrders from './components/RecentOrders'
 import PaymentSection from './components/PaymentSection'
 import TotalsDisplay from './components/TotalsDisplay'
 import CheckoutButton from './components/CheckoutButton'
@@ -54,6 +56,16 @@ export default function POSPage() {
   }, [hydrated, token, router])
 
   const pos = usePos()
+  const [posHydrated, setPosHydrated] = useState(false)
+
+  useEffect(() => {
+    if (usePosStore.persist.hasHydrated()) {
+      setPosHydrated(true)
+    } else {
+      const unsub = usePosStore.persist.onFinishHydration(() => setPosHydrated(true))
+      return () => unsub()
+    }
+  }, [])
 
   const [shift, setShift] = useState<Shift | null>(null)
   const [showStartShift, setShowStartShift] = useState(false)
@@ -331,6 +343,20 @@ export default function POSPage() {
     toast.success(`Added ${name}`)
   }, [customPriceName, customPriceAmount, pos])
 
+  const handleApplyPresetDiscount = useCallback((label: string, amount: number) => {
+    const cart = usePosStore.getState().cart
+    if (cart.length === 0) return
+    const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
+    if (subtotal <= 0) return
+    usePosStore.setState((state) => ({
+      cart: state.cart.map((i) => {
+        const itemSubtotal = i.price * i.quantity
+        const itemDiscount = Math.round((itemSubtotal / subtotal) * amount * 100) / 100
+        return { ...i, discount: itemDiscount > 0 ? itemDiscount : 0 }
+      }),
+    }))
+  }, [])
+
   const handleCategoryChange = useCallback((id: string | null) => {
     setSelectedCategoryId(id)
     if (id) pos.setSearch('')
@@ -385,7 +411,7 @@ export default function POSPage() {
     },
   })
 
-  if (!hydrated || !token) return null
+  if (!hydrated || !token || !posHydrated) return null
 
   if (offlineReceipt) return (
     <div className="navy-radial min-h-screen">
@@ -518,6 +544,7 @@ export default function POSPage() {
               </div>
             </div>
             <OfflineSyncManager />
+            <RecentOrders shiftId={shift.id} />
           </div>
           <CartPanel
             cart={pos.cart}
@@ -537,14 +564,22 @@ export default function POSPage() {
               />
             }
             discountSection={
-              <DiscountSection
-                discountCode={pos.discountCode}
-                onDiscountCodeChange={pos.setDiscountCode}
-                onApplyDiscount={handleApplyDiscount}
-                appliedDiscount={pos.appliedDiscount}
-                onRemoveDiscount={() => { pos.setAppliedDiscount(null); pos.setDiscountCode('') }}
-                discountAmount={pos.discountAmount}
-              />
+              <div className="space-y-2">
+                <DiscountPresets
+                  subtotal={pos.subtotal}
+                  cartTotal={pos.total}
+                  cartLength={pos.cart.length}
+                  onApplyPreset={handleApplyPresetDiscount}
+                />
+                <DiscountSection
+                  discountCode={pos.discountCode}
+                  onDiscountCodeChange={pos.setDiscountCode}
+                  onApplyDiscount={handleApplyDiscount}
+                  appliedDiscount={pos.appliedDiscount}
+                  onRemoveDiscount={() => { pos.setAppliedDiscount(null); pos.setDiscountCode('') }}
+                  discountAmount={pos.discountAmount}
+                />
+              </div>
             }
             notesSection={
               <div>

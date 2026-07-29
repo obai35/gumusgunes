@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { toast } from 'sonner'
 import type { Product, CartItem, PaymentMethod, AppliedDiscount, ReceiptData, HeldOrder } from '../types'
 
@@ -61,7 +62,9 @@ type PosState = {
   change: () => number
 }
 
-export const usePosStore = create<PosState>((set, get) => ({
+export const usePosStore = create<PosState>()(
+  persist(
+    (set, get) => ({
   search: '',
   products: [],
   totalProducts: 0,
@@ -271,4 +274,17 @@ export const usePosStore = create<PosState>((set, get) => ({
     const state = get()
     return state.paymentMethod === 'cash' ? Math.max(0, state.parsedCash() - state.total()) : 0
   },
-}))
+}),
+    {
+      name: 'gg_pos',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        cart: state.cart,
+        heldOrders: state.heldOrders,
+        customer: state.customer,
+        taxRate: state.taxRate,
+        orderNotes: state.orderNotes,
+      }),
+    }
+  )
+)
