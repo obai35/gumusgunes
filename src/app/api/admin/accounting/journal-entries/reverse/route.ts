@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 
 export const POST = withAdmin(async (req: NextRequest, ctx: { params: unknown; admin: AdminInfo }) => {
+  const sdb = storeDb(ctx.admin.storeId)
   try {
     const { entryId, reason } = (await req.json()) as { entryId?: string; reason?: string }
     if (!entryId) {
       return NextResponse.json({ error: 'entryId required' }, { status: 400 })
     }
 
-    const entry = await db.journalEntry.findUnique({
+    const entry = await sdb.journalEntry.findFirst({
       where: { id: entryId },
       include: { lines: true },
     })
@@ -21,7 +23,7 @@ export const POST = withAdmin(async (req: NextRequest, ctx: { params: unknown; a
       return NextResponse.json({ error: 'Entry is already a reversal' }, { status: 400 })
     }
 
-    const reversal = await db.journalEntry.create({
+    const reversal = await sdb.journalEntry.create({
       data: {
         date: new Date(),
         description: `Reversal: ${entry.description}${reason ? ` (${reason})` : ''}`,

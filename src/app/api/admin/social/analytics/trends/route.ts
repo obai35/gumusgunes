@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const accountId = searchParams.get('accountId')
   const days = parseInt(searchParams.get('days') || '30')
 
-  const posts = await db.socialPost.findMany({
+  const posts = await sdb.socialPost.findMany({
     where: { ...(accountId ? { accountId } : {}), status: 'published' },
     select: { publishedAt: true, performance: true },
     orderBy: { publishedAt: 'asc' },
@@ -34,4 +37,4 @@ export async function GET(req: NextRequest) {
     .slice(-days)
 
   return NextResponse.json({ trends })
-}
+}, 'social')

@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const [pending, stats] = await Promise.all([
-    db.order.findMany({
+    sdb.order.findMany({
       where: { paymentStatus: 'awaiting_verification' },
       orderBy: { createdAt: 'desc' },
       take: 100,
@@ -14,7 +16,7 @@ export const GET = withAdmin(async () => {
         createdAt: true, notes: true,
       },
     }),
-    db.order.aggregate({
+    sdb.order.aggregate({
       where: { paymentStatus: 'awaiting_verification' },
       _count: true,
     }),

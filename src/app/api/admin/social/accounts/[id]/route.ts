@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withAdmin(async (_req: NextRequest, { admin, params }: { admin: any; params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  await db.socialAccount.delete({ where: { id } })
+  await sdb.socialAccount.delete({ where: { id } })
   return NextResponse.json({ success: true })
-}
+}, 'social')
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAdmin(async (req: NextRequest, { admin, params }: { admin: any; params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const body = await req.json()
-  const account = await db.socialAccount.update({ where: { id }, data: body })
+  const account = await sdb.socialAccount.update({ where: { id }, data: body })
   return NextResponse.json(account)
-}
+}, 'social')

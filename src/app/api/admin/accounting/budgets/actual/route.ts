@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { params, admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()))
     const month = sp.get('month') ? parseInt(sp.get('month')!) : undefined
 
-    const budgets = await db.budget.findMany({
+    const budgets = await sdb.budget.findMany({
       where: { year },
       orderBy: [{ month: 'asc' }, { accountCode: 'asc' }],
     })
 
     const accountCodes = [...new Set(budgets.map(b => b.accountCode))]
-    const accounts = await db.account.findMany({
+    const accounts = await sdb.account.findMany({
       where: { code: { in: accountCodes } },
       select: { id: true, code: true, name: true, type: true },
     })
@@ -40,7 +42,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
         const startDate = new Date(year, m - 1, 1, 0, 0, 0, 0)
         const endDate = new Date(year, m, 0, 23, 59, 59, 999)
 
-        const lines = await db.journalLine.findMany({
+        const lines = await sdb.journalLine.findMany({
           where: {
             accountId: accountInfo.id,
             entry: { date: { gte: startDate, lte: endDate } },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 
 export const POST = withAdmin(async (req: NextRequest, ctx: { params: unknown; admin: AdminInfo }) => {
@@ -17,7 +18,8 @@ export const POST = withAdmin(async (req: NextRequest, ctx: { params: unknown; a
       return NextResponse.json({ error: 'reason required for rejection' }, { status: 400 })
     }
 
-    const result = await db.journalEntry.updateMany({
+    const sdb = storeDb(ctx.admin.storeId)
+    const result = await sdb.journalEntry.updateMany({
       where: { id: { in: ids } },
       data: {
         status: reject ? 'rejected' : 'approved',
@@ -34,11 +36,12 @@ export const POST = withAdmin(async (req: NextRequest, ctx: { params: unknown; a
   }
 }, 'accounting')
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }: { admin: AdminInfo }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const url = new URL(req.url)
     const status = url.searchParams.get('status') || 'draft'
-    const entries = await db.journalEntry.findMany({
+    const entries = await sdb.journalEntry.findMany({
       where: { status },
       include: {
         lines: { include: { account: true } },

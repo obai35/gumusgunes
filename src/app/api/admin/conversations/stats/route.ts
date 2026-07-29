@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-const handler = withAdmin(async () => {
+const handler = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
 
@@ -14,11 +16,11 @@ const handler = withAdmin(async () => {
     byChannel,
     agentWorkload,
   ] = await Promise.all([
-    db.conversation.count(),
-    db.conversation.count({ where: { status: 'ACTIVE' } }),
-    db.conversation.count({ where: { status: 'WAITING' } }),
-    db.message.count({ where: { createdAt: { gte: todayStart } } }),
-    db.conversation.groupBy({
+    sdb.conversation.count(),
+    sdb.conversation.count({ where: { status: 'ACTIVE' } }),
+    sdb.conversation.count({ where: { status: 'WAITING' } }),
+    sdb.message.count({ where: { createdAt: { gte: todayStart } } }),
+    sdb.conversation.groupBy({
       by: ['source'],
       _count: true,
     }),

@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 import { withRateLimit } from '@/lib/rate-limit'
 import { logAudit } from '@/lib/audit'
 
-const handler = withAdmin(async (req, ctx) => {
+const handler = withAdmin(async (req: Request, ctx: { admin: any }) => {
+  const sdb = storeDb(ctx.admin.storeId)
   const { orderId } = await req.json()
   if (!orderId) return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
 
-  const order = await db.order.update({
+  const order = await sdb.order.update({
     where: { id: orderId },
     data: {
       paymentStatus: 'paid',

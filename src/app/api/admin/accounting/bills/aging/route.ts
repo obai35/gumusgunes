@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (req, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const now = new Date()
-  const bills = await db.bill.findMany({ where: { status: { notIn: ['paid', 'cancelled'] } }, orderBy: { dueAt: 'asc' } })
+  const bills = await sdb.bill.findMany({ where: { status: { notIn: ['paid', 'cancelled'] } }, orderBy: { dueAt: 'asc' } })
   const buckets = { current: { label: 'Current', total: 0, count: 0, bills: [] as any[] },
     overdue_30: { label: '1-30 Days', total: 0, count: 0, bills: [] as any[] },
     overdue_60: { label: '31-60 Days', total: 0, count: 0, bills: [] as any[] },

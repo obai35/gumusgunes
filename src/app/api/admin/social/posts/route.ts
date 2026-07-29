@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(req: NextRequest) {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const accountId = searchParams.get('accountId')
@@ -9,21 +12,22 @@ export async function GET(req: NextRequest) {
   if (status) where.status = status
   if (accountId) where.accountId = accountId
 
-  const posts = await db.socialPost.findMany({
+  const posts = await sdb.socialPost.findMany({
     where,
     orderBy: { createdAt: 'desc' },
     include: { account: { select: { accountName: true, platform: true } } },
   })
   return NextResponse.json(posts)
-}
+}, 'social')
 
-export async function POST(req: NextRequest) {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
   const { accountId, platform, postType, status, mediaUrls, caption, hashtags, productIds, discountId, scheduledAt } = body
   if (!platform || !postType || !mediaUrls) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
-  const post = await db.socialPost.create({
+  const post = await sdb.socialPost.create({
     data: {
       accountId: accountId || null,
       platform,
@@ -38,4 +42,4 @@ export async function POST(req: NextRequest) {
     },
   })
   return NextResponse.json(post)
-}
+}, 'social')

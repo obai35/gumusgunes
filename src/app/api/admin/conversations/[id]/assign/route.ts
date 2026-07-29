@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
 const handler = withAdmin(async (req, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
   const { adminId } = body
   if (!adminId) {
@@ -14,7 +16,7 @@ const handler = withAdmin(async (req, { params, admin }) => {
     return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
   }
 
-  const result = await db.conversation.updateMany({
+  const result = await sdb.conversation.updateMany({
     where: { id: params.id },
     data: { assignedTo: adminId, status: 'ACTIVE' },
   })

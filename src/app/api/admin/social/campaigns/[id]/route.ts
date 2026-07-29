@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAdmin(async (_req: NextRequest, { admin, params }: { admin: any; params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  const campaign = await db.socialCampaign.findUnique({
+  const campaign = await sdb.socialCampaign.findFirst({
     where: { id },
     include: {
       posts: {
@@ -14,17 +17,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   })
   if (!campaign) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(campaign)
-}
+}, 'social')
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAdmin(async (req: NextRequest, { admin, params }: { admin: any; params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const body = await req.json()
-  const campaign = await db.socialCampaign.update({ where: { id }, data: body })
+  const campaign = await sdb.socialCampaign.update({ where: { id }, data: body })
   return NextResponse.json(campaign)
-}
+}, 'social')
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withAdmin(async (_req: NextRequest, { admin, params }: { admin: any; params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  await db.socialCampaign.delete({ where: { id } })
+  await sdb.socialCampaign.delete({ where: { id } })
   return NextResponse.json({ success: true })
-}
+}, 'social')

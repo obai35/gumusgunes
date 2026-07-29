@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const POST = withAdmin(async (req: NextRequest, { params }) => {
+export const POST = withAdmin(async (req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
   const { transactions } = body
   const created = []
   for (const tx of transactions) {
-    const createdTx = await db.bankTransaction.create({
+    const createdTx = await sdb.bankTransaction.create({
       data: {
         bankAccountId: params.id,
         transactionDate: new Date(tx.date),

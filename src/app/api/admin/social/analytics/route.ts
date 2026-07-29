@@ -1,16 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
+import { withAdmin } from '@/lib/admin-permissions'
 
-export async function GET() {
+export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const [totalPosts, publishedPosts, scheduledPosts, failedPosts, totalAccounts] = await Promise.all([
-    db.socialPost.count(),
-    db.socialPost.count({ where: { status: 'published' } }),
-    db.socialPost.count({ where: { status: 'scheduled' } }),
-    db.socialPost.count({ where: { status: 'failed' } }),
-    db.socialAccount.count({ where: { isActive: true } }),
+    sdb.socialPost.count(),
+    sdb.socialPost.count({ where: { status: 'published' } }),
+    sdb.socialPost.count({ where: { status: 'scheduled' } }),
+    sdb.socialPost.count({ where: { status: 'failed' } }),
+    sdb.socialAccount.count({ where: { isActive: true } }),
   ])
 
-  const posts = await db.socialPost.findMany({
+  const posts = await sdb.socialPost.findMany({
     where: { status: 'published', performance: { not: null } },
     select: { performance: true },
   })
@@ -38,4 +41,4 @@ export async function GET() {
     totalReach,
     engagementRate: totalReach > 0 ? ((totalLikes + totalComments + totalShares) / totalReach * 100).toFixed(2) : '0',
   })
-}
+}, 'social')

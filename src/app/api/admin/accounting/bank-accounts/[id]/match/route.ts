@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const POST = withAdmin(async (req: NextRequest, { params }) => {
-  const unmatched = await db.bankTransaction.findMany({
+export const POST = withAdmin(async (req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const unmatched = await sdb.bankTransaction.findMany({
     where: { bankAccountId: params.id, matchedEntryId: null },
     orderBy: { transactionDate: 'desc' },
   })
-  const entries = await db.journalEntry.findMany({
+  const entries = await sdb.journalEntry.findMany({
     include: { lines: { include: { account: true } } },
     orderBy: { date: 'desc' },
     take: 200,

@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 import { MetaClient } from '@/lib/social/meta'
 
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
   try {
-    const accounts = await db.socialAccount.findMany({
+    const sdb = storeDb(admin.storeId)
+    const accounts = await sdb.socialAccount.findMany({
       where: { isActive: true },
       select: { id: true, platform: true, accountName: true, accountId: true },
     })
@@ -16,15 +18,16 @@ export const GET = withAdmin(async () => {
   }
 }, 'social')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { postId, pageId, budget, days, targeting } = await req.json()
 
     if (!postId || !pageId || !budget || !days) {
       return NextResponse.json({ ok: false, error: 'postId, pageId, budget, and days are required' }, { status: 400 })
     }
 
-    const account = await db.socialAccount.findFirst({
+    const account = await sdb.socialAccount.findFirst({
       where: { isActive: true, platform: 'facebook' },
     })
 

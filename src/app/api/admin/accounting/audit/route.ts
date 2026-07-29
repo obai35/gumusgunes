@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { params, admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const action = sp.get('action')
     const resource = sp.get('resource')
@@ -24,13 +26,13 @@ export const GET = withAdmin(async (req: NextRequest) => {
     }
 
     const [logs, total] = await Promise.all([
-      db.activityLog.findMany({
+      sdb.activityLog.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      db.activityLog.count({ where }),
+      sdb.activityLog.count({ where }),
     ])
 
     const logsWithParsed = logs.map(log => ({
@@ -38,13 +40,13 @@ export const GET = withAdmin(async (req: NextRequest) => {
       details: log.details ? JSON.parse(log.details) : null,
     }))
 
-    const distinctActions = await db.activityLog.findMany({
+    const distinctActions = await sdb.activityLog.findMany({
       select: { action: true },
       distinct: ['action'],
       orderBy: { action: 'asc' },
     })
 
-    const distinctResources = await db.activityLog.findMany({
+    const distinctResources = await sdb.activityLog.findMany({
       select: { resource: true },
       distinct: ['resource'],
       orderBy: { resource: 'asc' },
