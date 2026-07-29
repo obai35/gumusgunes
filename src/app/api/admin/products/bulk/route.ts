@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req) => {
+export const POST = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { action, productIds, value } = await req.json()
   if (!productIds?.length) return NextResponse.json({ error: 'No products selected' }, { status: 400 })
 
@@ -11,7 +13,7 @@ export const POST = withAdmin(async (req) => {
   switch (action) {
     case 'toggleActive': {
       const isActive = value !== false
-      result = await db.product.updateMany({
+      result = await sdb.product.updateMany({
         where: { id: { in: productIds } },
         data: { isActive },
       })
@@ -19,7 +21,7 @@ export const POST = withAdmin(async (req) => {
     }
     case 'setCategory': {
       if (!value) return NextResponse.json({ error: 'Category ID required' }, { status: 400 })
-      result = await db.product.updateMany({
+      result = await sdb.product.updateMany({
         where: { id: { in: productIds } },
         data: { categoryId: value },
       })
@@ -27,7 +29,7 @@ export const POST = withAdmin(async (req) => {
     }
     case 'adjustPrice': {
       if (!value?.type || !value?.amount) return NextResponse.json({ error: 'Price adjustment params required' }, { status: 400 })
-      const products = await db.product.findMany({ where: { id: { in: productIds } }, select: { id: true, price: true } })
+      const products = await sdb.product.findMany({ where: { id: { in: productIds } }, select: { id: true, price: true } })
       for (const p of products) {
         let newPrice = p.price
         if (value.type === 'percentage') {
@@ -37,27 +39,27 @@ export const POST = withAdmin(async (req) => {
           newPrice = value.direction === 'increase' ? p.price + value.amount : p.price - value.amount
         }
         newPrice = Math.max(0, Math.round(newPrice * 100) / 100)
-        await db.product.update({ where: { id: p.id }, data: { price: newPrice } })
+        await sdb.product.update({ where: { id: p.id }, data: { price: newPrice } })
       }
       result = { count: products.length }
       break
     }
     case 'adjustStock': {
       if (!value?.type || value.amount === undefined) return NextResponse.json({ error: 'Stock adjustment params required' }, { status: 400 })
-      const products = await db.product.findMany({ where: { id: { in: productIds } }, select: { id: true, stock: true } })
+      const products = await sdb.product.findMany({ where: { id: { in: productIds } }, select: { id: true, stock: true } })
       for (const p of products) {
         let newStock = p.stock
         if (value.type === 'set') newStock = value.amount
         else if (value.type === 'add') newStock = p.stock + value.amount
         else if (value.type === 'subtract') newStock = p.stock - value.amount
         newStock = Math.max(0, newStock)
-        await db.product.update({ where: { id: p.id }, data: { stock: newStock } })
+        await sdb.product.update({ where: { id: p.id }, data: { stock: newStock } })
       }
       result = { count: products.length }
       break
     }
     case 'setFeatured': {
-      result = await db.product.updateMany({
+      result = await sdb.product.updateMany({
         where: { id: { in: productIds } },
         data: { isFeatured: value === true },
       })

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async () => {
-  const reports = await db.scheduledReport.findMany({ orderBy: { createdAt: 'desc' } })
+export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const reports = await sdb.scheduledReport.findMany({ orderBy: { createdAt: 'desc' } })
   return NextResponse.json({
     reports: reports.map(r => ({
       ...r,
@@ -13,8 +15,9 @@ export const GET = withAdmin(async () => {
   })
 }, 'accounting')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { name, type, config, schedule, cronExpression, recipients, format } = await req.json()
     if (!name || !type || !schedule) {
       return NextResponse.json({ error: 'name, type, and schedule required' }, { status: 400 })
@@ -37,7 +40,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
         break
     }
 
-    const report = await db.scheduledReport.create({
+    const report = await sdb.scheduledReport.create({
       data: {
         name,
         type,
@@ -60,8 +63,9 @@ export const POST = withAdmin(async (req: NextRequest) => {
   }
 }, 'accounting')
 
-export const PUT = withAdmin(async (req: NextRequest) => {
+export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { id, ...data } = await req.json()
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
@@ -75,7 +79,7 @@ export const PUT = withAdmin(async (req: NextRequest) => {
     if (data.format) updateData.format = data.format
     if (data.isActive !== undefined) updateData.isActive = data.isActive
 
-    const report = await db.scheduledReport.update({
+    const report = await sdb.scheduledReport.update({
       where: { id },
       data: updateData,
     })
@@ -90,12 +94,13 @@ export const PUT = withAdmin(async (req: NextRequest) => {
   }
 }, 'accounting')
 
-export const DELETE = withAdmin(async (req: NextRequest) => {
+export const DELETE = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const url = new URL(req.url)
     const id = url.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-    await db.scheduledReport.delete({ where: { id } })
+    await sdb.scheduledReport.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('Scheduled report delete error:', e)

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { sanitize } from '@/lib/sanitize'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req) => {
+export const POST = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const data = await req.json()
-  const product = await db.product.update({
+  const product = await sdb.product.update({
     where: { id: data.id },
     data: {
       name: data.name ? sanitize(data.name) : data.name,

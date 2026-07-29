@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const search = req.nextUrl.searchParams.get('search') || ''
   const status = req.nextUrl.searchParams.get('status') || ''
   const page = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') || '1'))
@@ -14,7 +16,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
   if (search) where.poNumber = { contains: search, mode: 'insensitive' }
 
   const [purchaseOrders, total] = await Promise.all([
-    db.purchaseOrder.findMany({
+    sdb.purchaseOrder.findMany({
       where,
       include: {
         supplier: { select: { id: true, name: true } },
@@ -24,7 +26,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       skip,
       take: limit,
     }),
-    db.purchaseOrder.count({ where }),
+    sdb.purchaseOrder.count({ where }),
   ])
 
   return NextResponse.json({
@@ -38,16 +40,17 @@ export const GET = withAdmin(async (req: NextRequest) => {
   })
 }, 'inventory')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { supplierId, notes, items } = await req.json()
 
   if (!supplierId) return NextResponse.json({ error: 'Supplier required' }, { status: 400 })
   if (!items?.length) return NextResponse.json({ error: 'At least one item required' }, { status: 400 })
 
-  const count = await db.purchaseOrder.count()
+  const count = await sdb.purchaseOrder.count()
   const poNumber = `PO-${String(count + 1).padStart(5, '0')}`
 
-  const purchaseOrder = await db.purchaseOrder.create({
+  const purchaseOrder = await sdb.purchaseOrder.create({
     data: {
       poNumber,
       supplierId,

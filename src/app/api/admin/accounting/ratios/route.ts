@@ -1,33 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const now = new Date()
     const yearStart = new Date(now.getFullYear(), 0, 1)
 
-    const revenue = await db.journalLine.aggregate({
+    const revenue = await sdb.journalLine.aggregate({
       where: { account: { code: '4000' }, entry: { date: { gte: yearStart } } },
       _sum: { credit: true },
     })
-    const cogs = await db.journalLine.aggregate({
+    const cogs = await sdb.journalLine.aggregate({
       where: { account: { code: '5000' }, entry: { date: { gte: yearStart } } },
       _sum: { debit: true },
     })
-    const expenses = await db.journalLine.aggregate({
+    const expenses = await sdb.journalLine.aggregate({
       where: { account: { code: { startsWith: '5' } }, entry: { date: { gte: yearStart } } },
       _sum: { debit: true },
     })
-    const totalAssetsAgg = await db.journalLine.aggregate({
+    const totalAssetsAgg = await sdb.journalLine.aggregate({
       where: { account: { code: { startsWith: '1' } } },
       _sum: { debit: true, credit: true },
     })
-    const totalLiabilitiesAgg = await db.journalLine.aggregate({
+    const totalLiabilitiesAgg = await sdb.journalLine.aggregate({
       where: { account: { code: { startsWith: '2' } } },
       _sum: { debit: true, credit: true },
     })
-    const totalInventoryAgg = await db.journalLine.aggregate({
+    const totalInventoryAgg = await sdb.journalLine.aggregate({
       where: { account: { code: { startsWith: '3' } } },
       _sum: { debit: true, credit: true },
     })

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
 const CreateCategorySchema = z.object({
   name: z.string().min(1).max(100),
@@ -13,7 +14,8 @@ const CreateCategorySchema = z.object({
   isVisible: z.boolean().optional(),
 }).strict()
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const search = searchParams.get('search') || ''
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -25,7 +27,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
   if (search) where.name = { contains: search, mode: 'insensitive' }
 
   const [categories, total] = await Promise.all([
-    db.category.findMany({
+    sdb.category.findMany({
       where,
       orderBy: { name: 'asc' },
       take,
@@ -36,13 +38,14 @@ export const GET = withAdmin(async (req: NextRequest) => {
         children: { select: { id: true, name: true, slug: true, icon: true, imageUrl: true } },
       },
     }),
-    db.category.count({ where }),
+    sdb.category.count({ where }),
   ])
 
   return NextResponse.json({ ok: true, categories, total, page, totalPages: Math.ceil(total / take) })
 }, 'categories')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const parsed = CreateCategorySchema.safeParse(body)
@@ -55,10 +58,10 @@ export const POST = withAdmin(async (req: NextRequest) => {
     const { name, slug, description, icon, parentId, image, isVisible } = parsed.data
     const imageUrl = image
 
-    const existing = await db.category.findUnique({ where: { slug } })
+    const existing = await sdb.category.findUnique({ where: { slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
-    const category = await db.category.create({
+    const category = await sdb.category.create({
       data: { name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible },
     })
 

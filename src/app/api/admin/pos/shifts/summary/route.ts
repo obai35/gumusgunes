@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: Request) => {
+export const GET = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const shiftId = searchParams.get('shiftId')
     if (!shiftId) return NextResponse.json({ error: 'shiftId is required' }, { status: 400 })
 
-    const shift = await db.shift.findUnique({ where: { id: shiftId } })
+    const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
 
     const [orders, returns] = await Promise.all([
-      db.order.findMany({
+      sdb.order.findMany({
         where: { shiftId, status: { not: 'cancelled' } },
         include: {
           items: {
@@ -20,7 +22,7 @@ export const GET = withAdmin(async (req: Request) => {
           },
         },
       }),
-      db.return.findMany({
+      sdb.return.findMany({
         where: { shiftId },
         include: {
           items: { include: { product: { select: { id: true, name: true } } } },

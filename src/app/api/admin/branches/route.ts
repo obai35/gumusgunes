@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/pos-auth'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
-    const branches = await db.branch.findMany({ orderBy: { createdAt: 'desc' } })
+    const branches = await sdb.branch.findMany({ orderBy: { createdAt: 'desc' } })
     return NextResponse.json({ ok: true, branches })
   } catch (err) {
     console.error('GET /api/admin/branches error:', err)
@@ -13,13 +15,14 @@ export const GET = withAdmin(async () => {
   }
 }, 'branches')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { name, email, password, phone, address } = await req.json()
     if (!name || !email || !password) return NextResponse.json({ error: 'Name, email, and password required' }, { status: 400 })
-    const existing = await db.branch.findUnique({ where: { email } })
+    const existing = await sdb.branch.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
-    const branch = await db.branch.create({
+    const branch = await sdb.branch.create({
       data: { name, email, password: await hashPassword(password), phone, address },
     })
     return NextResponse.json({ ok: true, branch })
@@ -29,7 +32,8 @@ export const POST = withAdmin(async (req: NextRequest) => {
   }
 }, 'branches')
 
-export const PUT = withAdmin(async (req: NextRequest) => {
+export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { id, name, email, password, phone, address, isActive } = await req.json()
     const data: any = {}
@@ -39,7 +43,7 @@ export const PUT = withAdmin(async (req: NextRequest) => {
     if (phone !== undefined) data.phone = phone
     if (address !== undefined) data.address = address
     if (isActive !== undefined) data.isActive = isActive
-    const branch = await db.branch.update({ where: { id }, data })
+    const branch = await sdb.branch.update({ where: { id }, data })
     return NextResponse.json({ ok: true, branch })
   } catch (err) {
     console.error('PUT /api/admin/branches error:', err)

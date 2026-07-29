@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const slowDays = parseInt(sp.get('slowDays') || '90')
 
-    const products = await db.product.findMany({
+    const products = await sdb.product.findMany({
       where: { isActive: true },
       include: {
         orderItems: {
@@ -21,7 +23,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     })
 
     const slowThreshold = new Date(Date.now() - slowDays * 24 * 60 * 60 * 1000)
-    const categories = await db.category.findMany({ select: { id: true, name: true } })
+    const categories = await sdb.category.findMany({ select: { id: true, name: true } })
     const catMap = new Map(categories.map(c => [c.id, c.name]))
 
     const items = products.map(p => {

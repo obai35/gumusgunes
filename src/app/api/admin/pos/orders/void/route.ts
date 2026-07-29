@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { orderId, reason } = await req.json()
     if (!orderId) return NextResponse.json({ error: 'Order ID is required' }, { status: 400 })
 
-    const order = await db.order.findUnique({
+    const order = await sdb.order.findFirst({
       where: { id: orderId },
       include: { items: { include: { product: { select: { id: true } } } } },
     })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.status === 'cancelled') return NextResponse.json({ error: 'Order is already voided' }, { status: 400 })
 
-    await db.$transaction(async (tx) => {
+    await sdb.$transaction(async (tx) => {
       const shift = order.shiftId ? await tx.shift.findUnique({ where: { id: order.shiftId } }) : null
       const branchId = shift?.branchId
 

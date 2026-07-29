@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
 function getDateRange(period: string, date?: string, customStart?: string, customEnd?: string): { start: Date; end: Date } {
   if (customStart && customEnd) {
@@ -55,22 +56,22 @@ function getPreviousDateRange(range: { start: Date; end: Date }): { start: Date;
   return { start: prevStart, end: prevEnd }
 }
 
-async function fetchPeriodMetrics(from: Date, to: Date) {
+async function fetchPeriodMetrics(from: Date, to: Date, sdb: ReturnType<typeof storeDb>) {
   const [orders, revenueAgg, returns, expensesSum] = await Promise.all([
-    db.order.findMany({
+    sdb.order.findMany({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
       select: { id: true, totalAmount: true, createdAt: true, paymentMethod: true, cashAmount: true, cardAmount: true, status: true, shiftId: true },
       take: 1000,
     }),
-    db.order.aggregate({
+    sdb.order.aggregate({
       where: { createdAt: { gte: from, lte: to }, status: { not: 'cancelled' } },
       _sum: { totalAmount: true },
     }),
-    db.return.findMany({
+    sdb.return.findMany({
       where: { createdAt: { gte: from, lte: to }, refundMethod: { not: 'no_refund' } },
       select: { refundAmount: true },
     }),
-    db.expense.aggregate({
+    sdb.expense.aggregate({
       where: { createdAt: { gte: from, lte: to } },
       _sum: { amount: true },
     }),
@@ -78,7 +79,7 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
 
   const orderShiftIds = [...new Set(orders.map(o => o.shiftId).filter(Boolean))] as string[]
   const shifts = orderShiftIds.length > 0
-    ? await db.shift.findMany({
+    ? await sdb.shift.findMany({
         where: { id: { in: orderShiftIds } },
         select: { id: true, branch: { select: { name: true } } },
       })
@@ -95,8 +96,9 @@ async function fetchPeriodMetrics(from: Date, to: Date) {
   }
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const period = req.nextUrl.searchParams.get('period') || 'day'
     const date = req.nextUrl.searchParams.get('date') || undefined
     const customStart = req.nextUrl.searchParams.get('customStart') || undefined
@@ -111,10 +113,10 @@ export const GET = withAdmin(async (req: NextRequest) => {
       unreconciledOrders,
       openShifts,
     ] = await Promise.all([
-      fetchPeriodMetrics(start, end),
-      db.order.count({ where: { status: { notIn: ['delivered', 'cancelled'] } } }),
-      db.order.count({ where: { reconciledAt: null, paymentStatus: 'paid' } }),
-      db.shift.count({ where: { isOpen: true } }),
+      fetchPeriodMetrics(start, end, sdb),
+      sdb.order.count({ where: { status: { notIn: ['delivered', 'cancelled'] } } }),
+      sdb.order.count({ where: { reconciledAt: null, paymentStatus: 'paid' } }),
+      sdb.shift.count({ where: { isOpen: true } }),
     ])
 
     const { orders, branchByShiftId, totalRevenue, totalReturns, totalExpenses, netRevenue } = metrics
@@ -165,7 +167,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       branchRevenue[name] = (branchRevenue[name] || 0) + o.totalAmount
     }
 
-    const openShiftsList = await db.shift.findMany({
+    const openShiftsList = await sdb.shift.findMany({
       where: { isOpen: true },
       include: { branch: { select: { name: true } } },
     })
@@ -198,19 +200,19 @@ export const GET = withAdmin(async (req: NextRequest) => {
     // Budget vs Actual
     const budgetYear = start.getFullYear()
     const budgetMonth = start.getMonth() + 1
-    const budgets = await db.budget.findMany({ where: { year: budgetYear, month: budgetMonth } })
+    const budgets = await sdb.budget.findMany({ where: { year: budgetYear, month: budgetMonth } })
     let totalBudgeted = 0
     let totalActual = 0
     if (budgets.length > 0) {
       const accountCodes = budgets.map(b => b.accountCode)
-      const budgetAccounts = await db.account.findMany({ where: { code: { in: accountCodes } }, select: { id: true, code: true, type: true } })
+      const budgetAccounts = await sdb.account.findMany({ where: { code: { in: accountCodes } }, select: { id: true, code: true, type: true } })
       const accountByCode = new Map(budgetAccounts.map(a => [a.code, a]))
       totalBudgeted = budgets.reduce((s, b) => s + b.amount, 0)
 
       for (const b of budgets) {
         const acc = accountByCode.get(b.accountCode)
         if (!acc) continue
-        const lines = await db.journalLine.findMany({
+        const lines = await sdb.journalLine.findMany({
           where: {
             accountId: acc.id,
             entry: { date: { gte: start, lte: end } },
@@ -233,7 +235,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
     if (comparePeriod === 'previous') {
       const prevRange = getPreviousDateRange({ start, end })
-      const prevMetrics = await fetchPeriodMetrics(prevRange.start, prevRange.end)
+      const prevMetrics = await fetchPeriodMetrics(prevRange.start, prevRange.end, sdb)
 
       result.compare = {
         compareRevenue: prevMetrics.totalRevenue,

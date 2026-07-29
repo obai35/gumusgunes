@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { code, subtotal, items } = await req.json()
-    const discount = await db.discount.findUnique({ where: { code } })
+    const discount = await sdb.discount.findFirst({ where: { code } })
     if (!discount || !discount.isActive) return NextResponse.json({ error: 'Invalid discount code' }, { status: 400 })
     if (discount.expiresAt && new Date(discount.expiresAt) < new Date()) return NextResponse.json({ error: 'Discount code expired' }, { status: 400 })
     if (discount.maxUses && discount.usedCount >= discount.maxUses) return NextResponse.json({ error: 'Usage limit reached' }, { status: 400 })
@@ -20,7 +22,7 @@ export const POST = withAdmin(async (req: Request) => {
       const target = discount.targetValue.toLowerCase()
 
       const productIds = items.map((i: any) => i.productId)
-      const products = await db.product.findMany({
+      const products = await sdb.product.findMany({
         where: { id: { in: productIds } },
         include: { category: { select: { name: true, parent: { select: { name: true } } } } },
       })

@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async () => {
-  const rules = await db.shippingRule.findMany({
+export const GET = withAdmin(async (_req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const rules = await sdb.shippingRule.findMany({
     include: { method: { select: { name: true } }, governorate: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json({ rules })
 }, 'shipping')
 
-export const POST = withAdmin(async (req) => {
+export const POST = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
-  const rule = await db.shippingRule.create({
+  const rule = await sdb.shippingRule.create({
     data: {
       name: body.name,
       methodId: body.methodId || null,

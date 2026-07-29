@@ -1,0 +1,32 @@
+{
+  "pages": {
+    "/_app": [
+      "static/chunks/node_modules_next_0erq-mb._.js",
+      "static/chunks/1k36_next_dist_compiled_1los81n._.js",
+      "static/chunks/[next]_entry_page-loader_ts_0z3haqk._.js",
+      "static/chunks/1k36_react-dom_1zhsxs9._.js",
+      "static/chunks/_0rd792c._.js",
+      "static/chunks/[root-of-the-server]__1j7fgcc._.js",
+      "static/chunks/store-builder_pages__app_0du2_q-._.js",
+      "static/chunks/turbopack-store-builder_pages__app_1jmwhq_._.js"
+    ],
+    "/_error": [
+      "static/chunks/node_modules_next_dist_0ur1kpp._.js",
+      "static/chunks/1k36_next_dist_0gqky7w._.js",
+      "static/chunks/[next]_entry_page-loader_ts_1q9hv9x._.js",
+      "static/chunks/1k36_react-dom_1zhsxs9._.js",
+      "static/chunks/_0rd792c._.js",
+      "static/chunks/[root-of-the-server]__1ysia5t._.js",
+      "static/chunks/store-builder_pages__error_0du2_q-._.js",
+      "static/chunks/turbopack-store-builder_pages__error_1s19jw1._.js"
+    ]
+  },
+  "devFiles": [],
+  "polyfillFiles": [],
+  "lowPriorityFiles": [
+    "static/development/_buildManifest.js",
+    "static/development/_ssgManifest.js",
+    "static/development/_clientMiddlewareManifest.js"
+  ],
+  "rootMainFiles": []
+}

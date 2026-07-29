@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const shiftId = req.nextUrl.searchParams.get('shiftId')
     if (!shiftId) return NextResponse.json({ error: 'shiftId required' }, { status: 400 })
 
-    const shift = await db.shift.findUnique({ where: { id: shiftId } })
+    const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
 
-    const orders = await db.order.findMany({ where: { shiftId } })
-    const expenses = await db.expense.findMany({ where: { shiftId } })
-    const returns = await db.return.findMany({ where: { shiftId } })
+    const orders = await sdb.order.findMany({ where: { shiftId } })
+    const expenses = await sdb.expense.findMany({ where: { shiftId } })
+    const returns = await sdb.return.findMany({ where: { shiftId } })
 
     const incomeByMethod: Record<string, number> = {
       cash: 0,

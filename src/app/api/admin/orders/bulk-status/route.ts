@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { orderIds, status } = await req.json()
     if (!Array.isArray(orderIds) || orderIds.length === 0) {
@@ -12,7 +14,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
       return NextResponse.json({ error: 'status is required' }, { status: 400 })
     }
 
-    const result = await db.order.updateMany({
+    const result = await sdb.order.updateMany({
       where: { id: { in: orderIds } },
       data: { status },
     })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
 const EVENTS = [
   'order.created',
@@ -15,15 +16,17 @@ const EVENTS = [
   'admin.audit',
 ] as const
 
-export const GET = withAdmin(async (_req: NextRequest) => {
-  const webhooks = await db.webhook.findMany({
+export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const webhooks = await sdb.webhook.findMany({
     orderBy: { createdAt: 'desc' },
     include: { _count: { select: { deliveries: true } } },
   })
   return NextResponse.json({ webhooks, events: EVENTS })
 }, 'system')
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { name, url, events, isActive, secret } = await req.json()
     if (!name || !url || !events || !Array.isArray(events) || events.length === 0) {
@@ -36,7 +39,7 @@ export const POST = withAdmin(async (req: Request) => {
     if (invalid.length > 0) {
       return NextResponse.json({ error: `Invalid events: ${invalid.join(', ')}` }, { status: 400 })
     }
-    const webhook = await db.webhook.create({
+    const webhook = await sdb.webhook.create({
       data: { name, url, events: JSON.stringify(events), isActive: isActive ?? true, secret: secret || null },
     })
     return NextResponse.json({ webhook })

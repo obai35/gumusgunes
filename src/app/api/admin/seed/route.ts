@@ -3,10 +3,12 @@ import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth-utils'
 import { PrismaClient } from '@prisma/client'
+import { storeDb } from '@/lib/store-scoped'
 
 const prisma = new PrismaClient()
 
 export const POST = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   if (!process.env.SEED_API_KEY) {
     return NextResponse.json(
       { error: 'Seed API is not configured' },

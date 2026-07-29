@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 import { getInventoryValuation, getCOGSReport } from '@/lib/cogs'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const url = new URL(req.url)
     const period = url.searchParams.get('period') || 'month'
 
@@ -50,23 +52,23 @@ export const GET = withAdmin(async (req: NextRequest) => {
       topProducts,
       recentTransactions,
     ] = await Promise.all([
-      db.expense.aggregate({
+      sdb.expense.aggregate({
         where: { createdAt: { gte: start, lte: end } },
         _sum: { amount: true },
       }),
-      db.order.count({ where: { createdAt: { gte: start, lte: end } } }),
-      db.order.count({ where: { status: 'delivered', createdAt: { gte: start, lte: end } } }),
-      db.order.count({ where: { status: 'cancelled', createdAt: { gte: start, lte: end } } }),
+      sdb.order.count({ where: { createdAt: { gte: start, lte: end } } }),
+      sdb.order.count({ where: { status: 'delivered', createdAt: { gte: start, lte: end } } }),
+      sdb.order.count({ where: { status: 'cancelled', createdAt: { gte: start, lte: end } } }),
       getInventoryValuation(),
       getCOGSReport(start, end),
-      db.orderItem.groupBy({
+      sdb.orderItem.groupBy({
         by: ['productId'],
         where: { order: { createdAt: { gte: start, lte: end }, paymentStatus: 'paid' } },
         _sum: { price: true, quantity: true },
         orderBy: { _sum: { price: 'desc' } },
         take: 10,
       }),
-      db.journalEntry.findMany({
+      sdb.journalEntry.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: { lines: { include: { account: true } } },
@@ -74,7 +76,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     ])
 
     // Compute revenue from sale journal entries (Prisma nested aggregate workaround)
-    const saleEntries = await db.journalEntry.findMany({
+    const saleEntries = await sdb.journalEntry.findMany({
       where: { type: 'sale', date: { gte: start, lte: end } },
       include: { lines: { include: { account: true } } },
     })
@@ -86,7 +88,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     let topProductDetails: any[] = []
     if (topProducts && topProducts.length > 0) {
       const productIds = topProducts.map(p => p.productId)
-      const products = await db.product.findMany({
+      const products = await sdb.product.findMany({
         where: { id: { in: productIds } },
         select: { id: true, name: true, sku: true },
       })

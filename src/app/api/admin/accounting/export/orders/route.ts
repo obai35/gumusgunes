@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import ExcelJS from 'exceljs'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const search = sp.get('search') || ''
     const status = sp.get('status') || ''
@@ -31,7 +33,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       if (to) where.createdAt.lte = new Date(to + 'T23:59:59.999Z')
     }
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where,
       include: {
         shift: { include: { branch: { select: { name: true } } } },

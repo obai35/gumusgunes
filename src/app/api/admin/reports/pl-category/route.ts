@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const period = sp.get('period') || 'month'
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()))
@@ -23,7 +25,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       end = new Date(year, 11, 31, 23, 59, 59, 999)
     }
 
-    const categories = await db.category.findMany({
+    const categories = await sdb.category.findMany({
       include: {
         products: {
           include: {

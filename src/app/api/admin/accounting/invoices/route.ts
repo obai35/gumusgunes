@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const status = req.nextUrl.searchParams.get('status') || ''
   const search = req.nextUrl.searchParams.get('search') || ''
   const page = parseInt(req.nextUrl.searchParams.get('page') || '1')
@@ -18,21 +20,22 @@ export const GET = withAdmin(async (req: NextRequest) => {
   ]
 
   const [invoices, total] = await Promise.all([
-    db.invoice.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit, include: { items: true } }),
-    db.invoice.count({ where }),
+    sdb.invoice.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit, include: { items: true } }),
+    sdb.invoice.count({ where }),
   ])
   return NextResponse.json({ invoices, total, page, totalPages: Math.ceil(total / limit) })
 }, 'accounting')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
-  const count = await db.invoice.count()
+  const count = await sdb.invoice.count()
   const invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`
 
   if (body.orderId) {
-    const order = await db.order.findUnique({ where: { id: body.orderId }, include: { items: { include: { product: true } } } })
+    const order = await sdb.order.findFirst({ where: { id: body.orderId }, include: { items: { include: { product: true } } } })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
-    const invoice = await db.invoice.create({
+    const invoice = await sdb.invoice.create({
       data: {
         invoiceNumber,
         orderId: order.id,
@@ -52,7 +55,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
     return NextResponse.json({ invoice })
   }
 
-  const invoice = await db.invoice.create({
+  const invoice = await sdb.invoice.create({
     data: {
       invoiceNumber,
       customerName: body.customerName,

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const adminId = req.nextUrl.searchParams.get('adminId')
     const resource = req.nextUrl.searchParams.get('resource')
@@ -16,13 +18,13 @@ export const GET = withAdmin(async (req: NextRequest) => {
     if (action) where.action = action
 
     const [logs, total] = await Promise.all([
-      db.activityLog.findMany({
+      sdb.activityLog.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take: Math.min(limit, 200),
         skip: offset,
       }),
-      db.activityLog.count({ where }),
+      sdb.activityLog.count({ where }),
     ])
 
     return NextResponse.json({ logs, total })

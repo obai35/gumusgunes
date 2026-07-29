@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 const CreatePageSchema = z.object({
@@ -10,12 +11,14 @@ const CreatePageSchema = z.object({
   status: z.enum(['draft', 'published']).default('published'),
 }).strict()
 
-export const GET = withAdmin(async () => {
-  const pages = await db.staticPage.findMany({ orderBy: { createdAt: 'desc' } })
+export const GET = withAdmin(async (_req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const pages = await sdb.staticPage.findMany({ orderBy: { createdAt: 'desc' } })
   return NextResponse.json(pages)
 }, 'pages')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const parsed = CreatePageSchema.safeParse(body)
@@ -25,10 +28,10 @@ export const POST = withAdmin(async (req: NextRequest) => {
         { status: 400 }
       )
     }
-    const existing = await db.staticPage.findUnique({ where: { slug: parsed.data.slug } })
+    const existing = await sdb.staticPage.findFirst({ where: { slug: parsed.data.slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
-    const page = await db.staticPage.create({ data: parsed.data })
+    const page = await sdb.staticPage.create({ data: parsed.data })
     return NextResponse.json(page)
   } catch (err) {
     console.error('Create static page error:', err)

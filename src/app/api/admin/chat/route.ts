@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { withRateLimit } from '@/lib/rate-limit'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { getOrCreateSession } from '@/lib/admin-chat-session'
 import { executeTool, isToolSafe } from '@/lib/admin-chat-tools'
 
@@ -62,7 +63,8 @@ const TOOL_DEFINITIONS = [
   { type: 'function', function: { name: 'restartServer', description: 'Restart the dev server (requires admin approval)', parameters: { type: 'object', properties: {} } } },
 ]
 
-const chatHandler = async (req: NextRequest, ctx: { params: any }) => {
+const chatHandler = async (req: NextRequest, ctx: { params: any; admin: AdminInfo }) => {
+  const sdb = storeDb(ctx.admin.storeId)
   try {
     const { message, history = [], sessionId: clientSessionId } = await req.json()
     if (!message || typeof message !== 'string') {
@@ -77,8 +79,8 @@ const chatHandler = async (req: NextRequest, ctx: { params: any }) => {
     const session = getOrCreateSession(clientSessionId)
     session.history = [...session.history.slice(-20), ...history, { role: 'user', content: message }]
 
-    const orderCount = await db.order.count().catch(() => 0)
-    const productCount = await db.product.count({ where: { isActive: true } }).catch(() => 0)
+    const orderCount = await sdb.order.count().catch(() => 0)
+    const productCount = await sdb.product.count({ where: { isActive: true } }).catch(() => 0)
     const systemContent = `${ADMIN_PROMPT}\n\nCurrent stats: ${orderCount} orders, ${productCount} active products.`
 
     const maxLoop = 5

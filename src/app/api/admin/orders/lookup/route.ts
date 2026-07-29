@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req) => {
+export const GET = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const q = req.nextUrl.searchParams.get('q') || ''
     if (!q.trim()) return NextResponse.json({ orders: [] })
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where: {
         OR: [
           { receiptNumber: { contains: q } },

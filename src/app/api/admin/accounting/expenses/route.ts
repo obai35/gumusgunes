@@ -3,9 +3,11 @@ import { db } from '@/lib/db'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { autoAccountExpense } from '@/lib/auto-accounting'
 import { logAudit } from '@/lib/audit'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const period = req.nextUrl.searchParams.get('period') || 'month'
     const branchId = req.nextUrl.searchParams.get('branchId') || undefined
     const customStart = req.nextUrl.searchParams.get('customStart') || undefined
@@ -57,12 +59,12 @@ export const GET = withAdmin(async (req: NextRequest) => {
     if (branchId) where.branchId = branchId
 
     const [expenses, totalAgg] = await Promise.all([
-      db.expense.findMany({
+      sdb.expense.findMany({
         where,
         include: { branch: { select: { name: true } }, supplier: { select: { name: true } } },
         orderBy: { createdAt: 'desc' },
       }),
-      db.expense.aggregate({ where, _sum: { amount: true } }),
+      sdb.expense.aggregate({ where, _sum: { amount: true } }),
     ])
 
     const byMethod: Record<string, number> = {}
@@ -82,13 +84,14 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 }, 'accounting')
 
-export const POST = withAdmin(async (req: Request, ctx: { params: any; admin: AdminInfo }) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { amount, description, paymentMethod, branchId, supplierId, invoiceNumber, notes } = await req.json()
     if (!amount || !description || !paymentMethod) {
       return NextResponse.json({ error: 'Amount, description, and payment method required' }, { status: 400 })
     }
-    const expense = await db.expense.create({
+    const expense = await sdb.expense.create({
       data: {
         amount: parseFloat(amount),
         description,
@@ -105,7 +108,7 @@ export const POST = withAdmin(async (req: Request, ctx: { params: any; admin: Ad
       console.error('Failed to create journal entry for expense:', journalErr)
     }
     try {
-      await logAudit({ adminId: ctx.admin.id, action: 'create', resource: 'expense', resourceId: expense.id, details: { amount: expense.amount, description: expense.description } })
+      await logAudit({ adminId: admin.id, action: 'create', resource: 'expense', resourceId: expense.id, details: { amount: expense.amount, description: expense.description } })
     } catch {}
     return NextResponse.json({ ok: true, expense })
   } catch (e) {
@@ -114,15 +117,16 @@ export const POST = withAdmin(async (req: Request, ctx: { params: any; admin: Ad
   }
 }, 'accounting')
 
-export const DELETE = withAdmin(async (req: NextRequest, ctx: { params: any; admin: AdminInfo }) => {
+export const DELETE = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const id = req.nextUrl.searchParams.get('id')
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
     try {
-      const exp = await db.expense.findUnique({ where: { id }, select: { amount: true, description: true } })
-      if (exp) await logAudit({ adminId: ctx.admin.id, action: 'delete', resource: 'expense', resourceId: id, details: { amount: exp.amount, description: exp.description } })
+      const exp = await sdb.expense.findUnique({ where: { id }, select: { amount: true, description: true } })
+      if (exp) await logAudit({ adminId: admin.id, action: 'delete', resource: 'expense', resourceId: id, details: { amount: exp.amount, description: exp.description } })
     } catch {}
-    await db.expense.delete({ where: { id } })
+    await sdb.expense.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('Expenses DELETE error:', e)

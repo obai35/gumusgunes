@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = withAdmin(async (req: NextRequest, { params, admin }: { params: Promise<{ id: string }>; admin: any }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const { items } = await req.json()
 
-  const po = await db.purchaseOrder.findUnique({ where: { id }, include: { items: true } })
+  const po = await sdb.purchaseOrder.findUnique({ where: { id }, include: { items: true } })
   if (!po) return NextResponse.json({ error: 'Purchase order not found' }, { status: 404 })
   if (po.status === 'cancelled') return NextResponse.json({ error: 'PO is cancelled' }, { status: 400 })
   if (po.status === 'received') return NextResponse.json({ error: 'PO already fully received' }, { status: 400 })
 
-  const result = await db.$transaction(async tx => {
+  const result = await sdb.$transaction(async tx => {
     for (const item of items) {
       const poi = po.items.find(i => i.id === item.id)
       if (!poi) continue

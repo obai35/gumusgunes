@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (_req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const GET = withAdmin(async (_req: NextRequest, { params, admin }: { params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  const shipment = await db.shipment.findUnique({
+  const shipment = await sdb.shipment.findFirst({
     where: { id },
     include: {
       method: true,

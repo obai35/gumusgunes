@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 function getDateRange(period: string, dateFrom?: string | null, dateTo?: string | null) {
@@ -39,7 +40,8 @@ function getDateRange(period: string, dateFrom?: string | null, dateTo?: string 
   return { start, end }
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = req.nextUrl
     const period = searchParams.get('period') || 'daily'
@@ -58,7 +60,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     }
 
     const [orders, returnsAgg, shifts] = await Promise.all([
-      db.order.findMany({
+      sdb.order.findMany({
         where: orderWhere,
         include: {
           items: {
@@ -70,14 +72,14 @@ export const GET = withAdmin(async (req: NextRequest) => {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      db.return.aggregate({
+      sdb.return.aggregate({
         where: {
           createdAt: { gte: start, lte: end },
           refundMethod: { not: 'no_refund' },
         },
         _sum: { refundAmount: true },
       }),
-      db.shift.findMany({
+      sdb.shift.findMany({
         where: {
           ...(branchId ? { branchId } : {}),
           closedAt: { gte: start, lte: end },

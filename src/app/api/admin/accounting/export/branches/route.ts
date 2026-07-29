@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import ExcelJS from 'exceljs'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const period = sp.get('period') || 'day'
     const now = new Date()
@@ -19,7 +21,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       from.setHours(0, 0, 0, 0)
     }
 
-    const branches = await db.branch.findMany({
+    const branches = await sdb.branch.findMany({
       include: {
         shifts: {
           where: { startedAt: { gte: from } },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 import { handleApiError } from '@/lib/api-error'
 
 const CreateBrandSchema = z.object({
@@ -12,7 +13,8 @@ const CreateBrandSchema = z.object({
   isVisible: z.boolean().optional(),
 }).strict()
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const search = searchParams.get('search') || ''
@@ -30,7 +32,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     }
 
     const [brands, total] = await Promise.all([
-      db.brand.findMany({
+      sdb.brand.findMany({
         where,
         orderBy: { name: 'asc' },
         take,
@@ -39,7 +41,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
           _count: { select: { products: true } },
         },
       }),
-      db.brand.count({ where }),
+      sdb.brand.count({ where }),
     ])
 
     return NextResponse.json({ ok: true, brands, total, page, totalPages: Math.ceil(total / take) })
@@ -48,7 +50,8 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 }, 'brands')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const parsed = CreateBrandSchema.safeParse(body)
@@ -60,10 +63,10 @@ export const POST = withAdmin(async (req: NextRequest) => {
     }
     const { name, nameAr, slug, logo, isVisible } = parsed.data
 
-    const existing = await db.brand.findUnique({ where: { slug } })
+    const existing = await sdb.brand.findUnique({ where: { slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
-    const brand = await db.brand.create({
+    const brand = await sdb.brand.create({
       data: { name, nameAr, slug, logo, isVisible },
     })
 

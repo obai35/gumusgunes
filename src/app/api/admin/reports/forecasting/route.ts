@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 function linearRegression(data: { x: number; y: number }[]): { slope: number; intercept: number; r2: number } {
@@ -24,8 +25,9 @@ function linearRegression(data: { x: number; y: number }[]): { slope: number; in
   return { slope, intercept, r2: Math.round(r2 * 1000) / 1000 }
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const forecastMonths = parseInt(sp.get('forecastMonths') || '6')
     const historyMonths = parseInt(sp.get('historyMonths') || '24')
@@ -34,7 +36,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     const start = new Date(now.getFullYear(), now.getMonth() - historyMonths, 1)
     start.setHours(0, 0, 0, 0)
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where: { createdAt: { gte: start }, status: { not: 'cancelled' } },
       select: { totalAmount: true, createdAt: true },
       orderBy: { createdAt: 'asc' },

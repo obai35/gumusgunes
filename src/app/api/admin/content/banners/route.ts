@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 const CreateBannerSchema = z.object({
@@ -14,12 +15,14 @@ const CreateBannerSchema = z.object({
   endDate: z.string().optional(),
 }).strict()
 
-export const GET = withAdmin(async () => {
-  const banners = await db.banner.findMany({ orderBy: { sortOrder: 'asc' } })
+export const GET = withAdmin(async (_req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const banners = await sdb.banner.findMany({ orderBy: { sortOrder: 'asc' } })
   return NextResponse.json(banners)
 }, 'banners')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const parsed = CreateBannerSchema.safeParse(body)
@@ -30,7 +33,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
       )
     }
     const { startDate, endDate, ...rest } = parsed.data
-    const banner = await db.banner.create({
+    const banner = await sdb.banner.create({
       data: {
         ...rest,
         startDate: startDate ? new Date(startDate) : null,

@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAdmin(async (_req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  const draft = await db.socialDraft.findUnique({ where: { id } })
+  const draft = await sdb.socialDraft.findUnique({ where: { id } })
   if (!draft) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json(draft)
-}
+}, 'social')
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAdmin(async (req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const body = await req.json()
   const data: any = { ...body }
@@ -16,12 +20,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (data.hashtags) data.hashtags = JSON.stringify(data.hashtags)
   if (data.productIds) data.productIds = JSON.stringify(data.productIds)
   if (data.platforms) data.platforms = JSON.stringify(data.platforms)
-  const draft = await db.socialDraft.update({ where: { id }, data })
+  const draft = await sdb.socialDraft.update({ where: { id }, data })
   return NextResponse.json(draft)
-}
+}, 'social')
 
-export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = withAdmin(async (_req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  await db.socialDraft.delete({ where: { id } })
+  await sdb.socialDraft.delete({ where: { id } })
   return NextResponse.json({ success: true })
-}
+}, 'social')

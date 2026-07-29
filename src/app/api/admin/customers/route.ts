@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const search = req.nextUrl.searchParams.get('search') || ''
     const page = parseInt(req.nextUrl.searchParams.get('page') || '1')
     const limit = 20
@@ -18,7 +20,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     } : {}
 
     const [customers, total] = await Promise.all([
-      db.user.findMany({
+      sdb.user.findMany({
         where,
         select: {
           id: true, name: true, email: true, phone: true, createdAt: true,
@@ -35,7 +37,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      db.user.count({ where }),
+      sdb.user.count({ where }),
     ])
 
     const enriched = customers.map(c => ({
@@ -52,7 +54,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     }))
 
     const userIds = customers.map(c => c.id)
-    const orderAggs = await db.order.groupBy({
+    const orderAggs = await sdb.order.groupBy({
       by: ['userId'],
       where: { userId: { in: userIds }, status: { not: 'cancelled' } },
       _sum: { totalAmount: true },
@@ -65,11 +67,11 @@ export const GET = withAdmin(async (req: NextRequest) => {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
     const [activeCustomerCount, revenueResult, orderCountResult] = await Promise.all([
-      db.user.count({
+      sdb.user.count({
         where: { orders: { some: { createdAt: { gte: thirtyDaysAgo } } } },
       }),
-      db.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: 'cancelled' } } }),
-      db.order.count({ where: { status: { not: 'cancelled' } } }),
+      sdb.order.aggregate({ _sum: { totalAmount: true }, where: { status: { not: 'cancelled' } } }),
+      sdb.order.count({ where: { status: { not: 'cancelled' } } }),
     ])
 
     const totalRevenue = revenueResult._sum.totalAmount || 0

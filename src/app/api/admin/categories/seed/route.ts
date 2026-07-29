@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
 const HIERARCHY = [
   {
@@ -56,18 +57,19 @@ const HIERARCHY = [
   },
 ]
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
-    const existing = await db.category.findFirst()
+    const existing = await sdb.category.findFirst()
     if (existing) {
-      await db.category.deleteMany()
+      await sdb.category.deleteMany()
     }
 
     for (const parent of HIERARCHY) {
       const { children, ...parentData } = parent
-      const created = await db.category.create({ data: parentData })
+      const created = await sdb.category.create({ data: parentData })
       for (const child of children) {
-        await db.category.create({
+        await sdb.category.create({
           data: { ...child, parentId: created.id },
         })
       }

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { autoAccountReturn } from '@/lib/auto-accounting'
 
-export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = withAdmin(async (req, { params, admin: adminCtx }: { params: Promise<{ id: string }>, admin: any }) => {
+  const sdb = storeDb(adminCtx.storeId)
   try {
     const { id } = await params
     const body = await req.json()
@@ -14,10 +16,10 @@ export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: st
     if (!refundMethod) return NextResponse.json({ error: 'Refund method is required' }, { status: 400 })
     if (!processedById) return NextResponse.json({ error: 'Processed by is required' }, { status: 400 })
 
-    const admin = await db.admin.findUnique({ where: { id: processedById } })
-    if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
+    const adminUser = await sdb.admin.findFirst({ where: { id: processedById } })
+    if (!adminUser) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
 
-    const order = await db.order.findUnique({ where: { id }, include: { items: true } })
+    const order = await sdb.order.findFirst({ where: { id }, include: { items: true } })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
     for (const ri of items) {
@@ -28,7 +30,7 @@ export const POST = withAdmin(async (req, { params }: { params: Promise<{ id: st
 
     const refundAmount = items.reduce((sum: number, ri: any) => sum + (ri.refundAmount || 0), 0)
 
-    const result = await db.$transaction(async (tx) => {
+    const result = await sdb.$transaction(async (tx) => {
       const returnCount = await tx.return.count()
       const returnNumber = `RMA-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(returnCount + 1).padStart(6, '0')}`
 

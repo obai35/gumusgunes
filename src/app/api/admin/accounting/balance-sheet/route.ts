@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const dateParam = sp.get('date') || new Date().toISOString().slice(0, 10)
     const asOfDate = new Date(dateParam)
     asOfDate.setHours(23, 59, 59, 999)
 
-    const accounts = await db.account.findMany({
+    const accounts = await sdb.account.findMany({
       orderBy: { code: 'asc' },
       include: {
         journalLines: {

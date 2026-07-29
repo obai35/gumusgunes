@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const fromParam = sp.get('from') || ''
     const toParam = sp.get('to') || ''
@@ -14,7 +16,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       : new Date(end.getTime() - 90 * 24 * 60 * 60 * 1000)
     start.setHours(0, 0, 0, 0)
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where: {
         createdAt: { gte: start, lte: end },
         status: { not: 'cancelled' },

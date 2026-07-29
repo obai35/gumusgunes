@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const search = req.nextUrl.searchParams.get('search') || ''
     const branchId = req.nextUrl.searchParams.get('branchId')
     const categoryId = req.nextUrl.searchParams.get('categoryId')
@@ -19,7 +21,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
     let branchStockMap: Map<string, number> | null = null
     if (branchId) {
-      const branchStockProducts = await db.branchStock.findMany({
+      const branchStockProducts = await sdb.branchStock.findMany({
         where: { branchId, quantity: { gt: 0 } },
         select: { productId: true, quantity: true },
       })
@@ -27,7 +29,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       where.id = { in: [...branchStockMap.keys()] }
     }
 
-    const products = await db.product.findMany({
+    const products = await sdb.product.findMany({
       where,
       select: { id: true, name: true, price: true, stock: true, imageUrl: true, sku: true },
       take: 20,

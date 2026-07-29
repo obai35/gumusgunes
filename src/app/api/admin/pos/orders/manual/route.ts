@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import crypto from 'crypto'
 import { withAdmin } from '@/lib/admin-permissions'
 
@@ -12,7 +13,8 @@ function generateReceiptNumber(): string {
 
 const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { items, paymentMethod, notes, shiftId, cashAmount, cardAmount, fullName } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'At least one item is required' }, { status: 400 })
@@ -21,15 +23,15 @@ export const POST = withAdmin(async (req: Request) => {
     }
     if (!shiftId) return NextResponse.json({ error: 'Shift ID is required' }, { status: 400 })
 
-    const shift = await db.shift.findUnique({ where: { id: shiftId } })
+    const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
     const branchId = shift.branchId
 
-    const products = await db.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
+    const products = await sdb.product.findMany({ where: { id: { in: items.map((i: any) => i.productId) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
-    const branchStocks = await db.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStocks = await sdb.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
     const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let totalAmount = 0
@@ -54,7 +56,7 @@ export const POST = withAdmin(async (req: Request) => {
     const orderNumber = `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
     const receiptNumber = generateReceiptNumber()
 
-    const order = await db.$transaction(async (tx) => {
+    const order = await sdb.$transaction(async (tx) => {
       for (const item of items) {
         const qty = item.quantity || 1
         await tx.branchStock.upsert({
@@ -100,7 +102,7 @@ export const POST = withAdmin(async (req: Request) => {
       })
     })
 
-    const fullOrder = await db.order.findUnique({
+    const fullOrder = await sdb.order.findFirst({
       where: { id: order.id },
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })

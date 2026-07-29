@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
+export const PUT = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const body = await req.json()
-  const rule = await db.shippingRule.update({
+  const rule = await sdb.shippingRule.update({
     where: { id },
     data: {
       name: body.name,
@@ -22,8 +24,9 @@ export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: str
   return NextResponse.json({ rule })
 }, 'shipping')
 
-export const DELETE = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
+export const DELETE = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }> }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
-  await db.shippingRule.delete({ where: { id } })
+  await sdb.shippingRule.delete({ where: { id } })
   return NextResponse.json({ ok: true })
 }, 'shipping')

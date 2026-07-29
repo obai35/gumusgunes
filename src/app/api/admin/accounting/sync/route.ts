@@ -4,16 +4,18 @@ import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { createSaleJournalEntry, createExpenseJournalEntry } from '@/lib/accounting'
 import { recordCOGS } from '@/lib/cogs'
 import { logAudit } from '@/lib/audit'
+import { storeDb } from '@/lib/store-scoped'
 
 export const POST = withAdmin(async (req: Request, { admin }: { params: any; admin: AdminInfo }) => {
+  const sdb = storeDb(admin.storeId)
   const results = { orders: 0, expenses: 0, errors: 0 }
 
-  const orders = await db.order.findMany({
+  const orders = await sdb.order.findMany({
     where: { paymentStatus: 'paid' },
     select: { id: true, totalAmount: true, cashAmount: true, cardAmount: true, paymentMethod: true, createdAt: true },
   })
   for (const order of orders) {
-    const existing = await db.journalEntry.findFirst({ where: { orderId: order.id, type: 'sale' } })
+    const existing = await sdb.journalEntry.findFirst({ where: { orderId: order.id, type: 'sale' } })
     if (existing) continue
     try {
       await createSaleJournalEntry(order)
@@ -24,11 +26,11 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
     }
   }
 
-  const expenses = await db.expense.findMany({
+  const expenses = await sdb.expense.findMany({
     select: { id: true, amount: true, paymentMethod: true, description: true, createdAt: true },
   })
   for (const expense of expenses) {
-    const existing = await db.journalEntry.findFirst({ where: { expenseId: expense.id, type: 'expense' } })
+    const existing = await sdb.journalEntry.findFirst({ where: { expenseId: expense.id, type: 'expense' } })
     if (existing) continue
     try {
       await createExpenseJournalEntry(expense)
@@ -40,7 +42,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
   }
 
   let cogsCount = 0
-  const deliveredOrders = await db.order.findMany({
+  const deliveredOrders = await sdb.order.findMany({
     where: {
       status: 'delivered',
       paymentStatus: 'paid',
@@ -50,7 +52,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
   })
   for (const order of deliveredOrders) {
     try {
-      const existing = await db.journalEntry.findFirst({ where: { orderId: order.id, type: 'cogs' } })
+      const existing = await sdb.journalEntry.findFirst({ where: { orderId: order.id, type: 'cogs' } })
       if (!existing) {
         await recordCOGS(order.id)
         cogsCount++

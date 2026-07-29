@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  status         String   @default("draft") // draft, demo, active, suspended
+  clientName     String?
+  clientEmail    String?
+  clientPhone    String?
+  notes          String?
+
+  // Theme
+  themePreset    String   @default("gold")
+  primaryColor   String   @default("#C8A97E")
+  secondaryColor String   @default("#1a1a2e")
+  accentColor    String   @default("#e2b14a")
+  borderRadius   String   @default("0.5rem")
+  fontFamily     String   @default("Inter")
+  logoUrl        String?
+  faviconUrl     String?
+  layoutType     String   @default("multi-page")
+
+  // Features (JSON array)
+  features       String   @default("[]")
+
+  // Plan
+  plan           String   @default("starter")
+  demoExpiresAt  DateTime?
+  isDemo         Boolean  @default(false)
+
+  // Generated
+  lastGeneratedAt DateTime?
+  generatedPath  String?
+  gitRepo        String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  deployments    Deployment[]
+
+  @@map("sb_store")
+}
+
+model Deployment {
+  id          String   @id @default(cuid())
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  version     String   @default("1.0.0")
+  mode        String   @default("demo")
+  status      String   @default("pending")
+  outputPath  String?
+  archivePath String?
+  fileSize    Int?
+  errorLog    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("sb_deployment")
+}

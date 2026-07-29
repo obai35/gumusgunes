@@ -1,16 +1,18 @@
 import { NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { redis } from '@/lib/redis'
 import { version } from '@/../package.json'
 
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (_req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const start = Date.now()
   const checks: Record<string, any> = {}
 
   try {
     const dbStart = Date.now()
-    await db.$queryRaw`SELECT 1`
+    await sdb.$queryRaw`SELECT 1`
     checks.database = { status: 'healthy', latency: Date.now() - dbStart }
   } catch (err: any) {
     checks.database = { status: 'unhealthy', error: err.message }
@@ -31,8 +33,8 @@ export const GET = withAdmin(async () => {
   try {
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
     const [totalLogs, errorLogs] = await Promise.all([
-      db.activityLog.count({ where: { createdAt: { gte: last24h } } }),
-      db.activityLog.count({
+      sdb.activityLog.count({ where: { createdAt: { gte: last24h } } }),
+      sdb.activityLog.count({
         where: { createdAt: { gte: last24h }, action: { in: ['error', 'delete'] } },
       }),
     ])
@@ -46,14 +48,14 @@ export const GET = withAdmin(async () => {
   }
 
   try {
-    const pendingOrders = await db.order.count({ where: { status: 'pending' } })
+    const pendingOrders = await sdb.order.count({ where: { status: 'pending' } })
     checks.queueDepth = { pendingOrders }
   } catch {
     checks.queueDepth = { status: 'unavailable' }
   }
 
   try {
-    const result: any = await db.$queryRaw`SELECT count(*)::int as count FROM pg_stat_activity WHERE state = 'active'`
+    const result: any = await sdb.$queryRaw`SELECT count(*)::int as count FROM pg_stat_activity WHERE state = 'active'`
     checks.dbConnections = { active: result[0]?.count || 0 }
   } catch {
     checks.dbConnections = { status: 'unavailable' }

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const status = req.nextUrl.searchParams.get('status') || ''
   const search = req.nextUrl.searchParams.get('search') || ''
   const page = parseInt(req.nextUrl.searchParams.get('page') || '1')
@@ -17,18 +19,19 @@ export const GET = withAdmin(async (req: NextRequest) => {
   ]
 
   const [bills, total] = await Promise.all([
-    db.bill.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit, include: { items: true } }),
-    db.bill.count({ where }),
+    sdb.bill.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: limit, include: { items: true } }),
+    sdb.bill.count({ where }),
   ])
   return NextResponse.json({ bills, total, page, totalPages: Math.ceil(total / limit) })
 }, 'accounting')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
-  const count = await db.bill.count()
+  const count = await sdb.bill.count()
   const billNumber = `BILL-${String(count + 1).padStart(5, '0')}`
 
-  const bill = await db.bill.create({
+  const bill = await sdb.bill.create({
     data: {
       billNumber,
       supplierId: body.supplierId,

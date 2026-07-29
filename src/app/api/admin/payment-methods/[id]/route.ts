@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { encrypt } from '@/lib/encryption'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: string }> }) => {
+export const PUT = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }>, admin: any }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const body = await req.json()
   const data: any = {}
@@ -15,6 +17,6 @@ export const PUT = withAdmin(async (req, { params }: { params: Promise<{ id: str
   if (body.sortOrder !== undefined) data.sortOrder = body.sortOrder
   if (body.config !== undefined) data.config = encrypt(JSON.stringify(body.config))
 
-  const method = await db.paymentMethod.update({ where: { id }, data })
+  const method = await sdb.paymentMethod.update({ where: { id }, data })
   return NextResponse.json({ method: { ...method, config: body.config || {} } })
 }, 'payments')

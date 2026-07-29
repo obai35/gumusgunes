@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const months = parseInt(sp.get('months') || '12')
     const categoryId = sp.get('categoryId') || ''
@@ -12,7 +14,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     const start = new Date(now.getFullYear(), now.getMonth() - months + 1, 1)
     start.setHours(0, 0, 0, 0)
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where: {
         createdAt: { gte: start },
         status: { not: 'cancelled' },
@@ -25,7 +27,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       orderBy: { createdAt: 'asc' },
     })
 
-    const categories = await db.category.findMany({ select: { id: true, name: true } })
+    const categories = await sdb.category.findMany({ select: { id: true, name: true } })
     const catMap = new Map(categories.map(c => [c.id, c.name]))
 
     const monthlyData: Record<string, { revenue: number; cost: number; orders: number }> = {}

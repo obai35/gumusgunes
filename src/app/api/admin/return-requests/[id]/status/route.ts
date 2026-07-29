@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const POST = withAdmin(async (req: NextRequest, { params, admin }: { params: Promise<{ id: string }>, admin: any }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
   const { status, notes } = await req.json()
 
@@ -10,10 +12,10 @@ export const POST = withAdmin(async (req: NextRequest, { params }: { params: Pro
     return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
   }
 
-  const returnRequest = await db.returnRequest.findUnique({ where: { id }, include: { product: true } })
+  const returnRequest = await sdb.returnRequest.findFirst({ where: { id }, include: { product: true } })
   if (!returnRequest) return NextResponse.json({ error: 'Return request not found' }, { status: 404 })
 
-  await db.$transaction(async tx => {
+  await sdb.$transaction(async tx => {
     await tx.returnRequest.update({ where: { id }, data: { status, notes: notes || undefined } })
 
     if (status === 'approved') {

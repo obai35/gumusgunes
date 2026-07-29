@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 function getDateRange(period: string, customStart?: string, customEnd?: string) {
@@ -19,19 +20,20 @@ function getDateRange(period: string, customStart?: string, customEnd?: string) 
   return { start, end }
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const period = req.nextUrl.searchParams.get('period') || 'month'
     const customStart = req.nextUrl.searchParams.get('customStart') || undefined
     const customEnd = req.nextUrl.searchParams.get('customEnd') || undefined
     const { start, end } = getDateRange(period, customStart, customEnd)
 
-    const cashAccount = await db.account.findUnique({ where: { code: '1000' } })
-    const bankAccount = await db.account.findUnique({ where: { code: '1100' } })
+    const cashAccount = await sdb.account.findFirst({ where: { code: '1000' } })
+    const bankAccount = await sdb.account.findFirst({ where: { code: '1100' } })
     const cashId = cashAccount?.id
     const bankId = bankAccount?.id
 
-    const lines = await db.journalLine.findMany({
+    const lines = await sdb.journalLine.findMany({
       where: {
         accountId: { in: [cashId, bankId].filter(Boolean) as string[] },
         entry: { date: { gte: start, lte: end } },
@@ -43,12 +45,12 @@ export const GET = withAdmin(async (req: NextRequest) => {
     const cashInflow = lines.filter(l => l.credit > 0).reduce((s, l) => s + l.credit, 0)
     const cashOutflow = lines.filter(l => l.debit > 0).reduce((s, l) => s + l.debit, 0)
 
-    const totalDebit = await db.journalLine.aggregate({
+    const totalDebit = await sdb.journalLine.aggregate({
       where: { accountId: { in: [cashId, bankId].filter(Boolean) as string[] } },
       _sum: { debit: true, credit: true },
     })
 
-    const allEntries = await db.journalEntry.findMany({
+    const allEntries = await sdb.journalEntry.findMany({
       where: { date: { gte: start, lte: end } },
       include: {
         lines: {

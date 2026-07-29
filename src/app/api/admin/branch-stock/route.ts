@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const branchId = req.nextUrl.searchParams.get('branchId')
     const all = req.nextUrl.searchParams.get('all')
 
     if (all === 'true') {
-      const stocks = await db.branchStock.findMany({
+      const stocks = await sdb.branchStock.findMany({
         include: { branch: { select: { name: true } }, product: { select: { name: true, sku: true, stock: true } } },
         orderBy: { branchId: 'asc' },
         take: 200,
@@ -23,7 +25,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
     if (!branchId) return NextResponse.json({ error: 'branchId required' }, { status: 400 })
 
-    const stocks = await db.branchStock.findMany({
+    const stocks = await sdb.branchStock.findMany({
       where: { branchId },
       include: { product: { select: { name: true, sku: true, price: true, stock: true } } },
       orderBy: { product: { name: 'asc' } },

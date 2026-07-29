@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req) => {
+export const GET = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -11,12 +13,12 @@ export const GET = withAdmin(async (req) => {
     const skip = (page - 1) * take
 
     const [orders, total] = await Promise.all([
-      db.order.findMany({
+      sdb.order.findMany({
         orderBy: { createdAt: 'desc' },
         include: { items: { include: { product: { select: { name: true } } } }, discount: true },
         take, skip,
       }),
-      db.order.count(),
+      sdb.order.count(),
     ])
     return NextResponse.json({ ok: true, orders, total, page, totalPages: Math.ceil(total / take) })
   } catch (err) {

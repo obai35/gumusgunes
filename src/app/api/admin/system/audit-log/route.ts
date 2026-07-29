@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const page = parseInt(searchParams.get('page') || '1')
   const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 100)
@@ -23,23 +25,23 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 
   const [logs, total] = await Promise.all([
-    db.activityLog.findMany({
+    sdb.activityLog.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
     }),
-    db.activityLog.count({ where }),
+    sdb.activityLog.count({ where }),
   ])
 
-  const distinctActions = await db.activityLog.groupBy({
+  const distinctActions = await sdb.activityLog.groupBy({
     by: ['action'],
     _count: { action: true },
     orderBy: { _count: { action: 'desc' } },
     take: 50,
   })
 
-  const distinctResources = await db.activityLog.groupBy({
+  const distinctResources = await sdb.activityLog.groupBy({
     by: ['resource'],
     _count: { resource: true },
     orderBy: { _count: { resource: 'desc' } },

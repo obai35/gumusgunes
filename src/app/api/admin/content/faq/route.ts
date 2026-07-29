@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 const CreateFaqSchema = z.object({
@@ -11,14 +12,16 @@ const CreateFaqSchema = z.object({
   isActive: z.boolean().default(true),
 }).strict()
 
-export const GET = withAdmin(async () => {
-  const entries = await db.faqEntry.findMany({
+export const GET = withAdmin(async (_req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const entries = await sdb.faqEntry.findMany({
     orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
   })
   return NextResponse.json(entries)
 }, 'faq')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const parsed = CreateFaqSchema.safeParse(body)
@@ -28,8 +31,8 @@ export const POST = withAdmin(async (req: NextRequest) => {
         { status: 400 }
       )
     }
-    const maxSort = await db.faqEntry.aggregate({ _max: { sortOrder: true } })
-    const entry = await db.faqEntry.create({
+    const maxSort = await sdb.faqEntry.aggregate({ _max: { sortOrder: true } })
+    const entry = await sdb.faqEntry.create({
       data: { ...parsed.data, sortOrder: parsed.data.sortOrder ?? (maxSort._max.sortOrder ?? 0) + 1 },
     })
     return NextResponse.json(entry)

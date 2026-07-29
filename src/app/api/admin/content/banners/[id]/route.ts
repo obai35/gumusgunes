@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const PUT = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const PUT = withAdmin(async (req: NextRequest, { params, admin }: { params: Promise<{ id: string }>; admin: AdminInfo }) => {
   const { id } = await params
+  const sdb = storeDb(admin.storeId)
   try {
-    const existing = await db.banner.findUnique({ where: { id } })
+    const existing = await sdb.banner.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Banner not found' }, { status: 404 })
     const body = await req.json()
     const { startDate, endDate, ...rest } = body
-    const banner = await db.banner.update({
+    const banner = await sdb.banner.update({
       where: { id },
       data: {
         ...rest,
@@ -24,12 +26,13 @@ export const PUT = withAdmin(async (req: NextRequest, { params }: { params: Prom
   }
 }, 'banners')
 
-export const DELETE = withAdmin(async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
+export const DELETE = withAdmin(async (req: NextRequest, { params, admin }: { params: Promise<{ id: string }>; admin: AdminInfo }) => {
   const { id } = await params
+  const sdb = storeDb(admin.storeId)
   try {
-    const existing = await db.banner.findUnique({ where: { id } })
+    const existing = await sdb.banner.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ error: 'Banner not found' }, { status: 404 })
-    await db.banner.delete({ where: { id } })
+    await sdb.banner.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('Delete banner error:', err)

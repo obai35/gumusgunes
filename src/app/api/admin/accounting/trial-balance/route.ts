@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const from = searchParams.get('from')
   const to = searchParams.get('to')
@@ -14,7 +16,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     if (to) dateFilter.date.lte = new Date(to)
   }
 
-  const accounts = await db.account.findMany({
+  const accounts = await sdb.account.findMany({
     orderBy: { code: 'asc' },
     include: {
       journalLines: {

@@ -2,15 +2,17 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 import { createJournalEntry } from '@/lib/accounting'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { shiftId } = await req.json()
     if (!shiftId) {
       return NextResponse.json({ error: 'shiftId required' }, { status: 400 })
     }
 
-    const shift = await db.shift.findUnique({ where: { id: shiftId } })
+    const shift = await sdb.shift.findUnique({ where: { id: shiftId } })
     if (!shift) {
       return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
     }
@@ -19,7 +21,7 @@ export const POST = withAdmin(async (req: Request) => {
       return NextResponse.json({ error: 'Shift is still open' }, { status: 400 })
     }
 
-    const existing = await db.journalEntry.findFirst({
+    const existing = await sdb.journalEntry.findFirst({
       where: { description: { startsWith: `Shift close #${shiftId.slice(0, 8)}` } },
     })
     if (existing) {

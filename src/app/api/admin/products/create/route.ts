@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { withAdmin } from '@/lib/admin-permissions'
 import { sanitize } from '@/lib/sanitize'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
 const CreateProductSchema = z.object({
   name: z.string().min(1).max(200).transform(sanitize),
@@ -17,7 +18,8 @@ const CreateProductSchema = z.object({
   weight: z.number().positive().optional(),
 }).strict()
 
-export const POST = withAdmin(async (req) => {
+export const POST = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const data = await req.json()
   const parsed = CreateProductSchema.safeParse(data)
   if (!parsed.success) {
@@ -27,7 +29,7 @@ export const POST = withAdmin(async (req) => {
     )
   }
   const { name, description, price, stock, categoryId, images, tags, featured, requiresShipping, weight } = parsed.data
-  const product = await db.product.create({
+  const product = await sdb.product.create({
     data: {
       name, description,
       price, stock, categoryId,

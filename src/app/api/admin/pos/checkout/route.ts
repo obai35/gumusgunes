@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 const VALID_PAYMENT_METHODS = ['cash', 'card', 'split', 'bank_transfer', 'instapay', 'wallet']
@@ -12,7 +13,8 @@ function generateReceiptNumber(): string {
   return `R-${datePart}-${seq}`
 }
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
@@ -21,15 +23,15 @@ export const POST = withAdmin(async (req: Request) => {
     }
 
     if (!shiftId) return NextResponse.json({ error: 'An open shift is required to process sales' }, { status: 400 })
-    const shift = await db.shift.findUnique({ where: { id: shiftId } })
+    const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
     const branchId = shift.branchId
 
-    const products = await db.product.findMany({ where: { id: { in: items.map((i: any) => i.productId ) } } })
+    const products = await sdb.product.findMany({ where: { id: { in: items.map((i: any) => i.productId ) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
-    const branchStocks = await db.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStocks = await sdb.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
     const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let subtotal = 0
@@ -46,7 +48,7 @@ export const POST = withAdmin(async (req: Request) => {
     let discountAmount = 0
     let appliedDiscount: any = null
     if (discountCode) {
-      appliedDiscount = await db.discount.findUnique({ where: { code: discountCode } })
+      appliedDiscount = await sdb.discount.findFirst({ where: { code: discountCode } })
       if (!appliedDiscount || !appliedDiscount.isActive) return NextResponse.json({ error: 'Invalid discount code' }, { status: 400 })
       if (appliedDiscount.expiresAt && new Date(appliedDiscount.expiresAt) < new Date()) return NextResponse.json({ error: 'Discount code expired' }, { status: 400 })
       if (appliedDiscount.maxUses && appliedDiscount.usedCount >= appliedDiscount.maxUses) return NextResponse.json({ error: 'Discount code usage limit reached' }, { status: 400 })
@@ -54,7 +56,7 @@ export const POST = withAdmin(async (req: Request) => {
       let eligibleSubtotal = subtotal
       if (appliedDiscount.appliesTo !== 'all' && appliedDiscount.targetValue && items?.length) {
         const target = appliedDiscount.targetValue.toLowerCase()
-        const productsWithCat = await db.product.findMany({
+        const productsWithCat = await sdb.product.findMany({
           where: { id: { in: items.map((i: any) => i.productId) } },
           include: { category: { select: { name: true, parent: { select: { name: true } } } } },
         })
@@ -92,7 +94,7 @@ export const POST = withAdmin(async (req: Request) => {
     let resolvedUserId: string | null = null
 
     if (customerId) {
-      const user = await db.user.findUnique({ where: { id: customerId } })
+      const user = await sdb.user.findFirst({ where: { id: customerId } })
       if (user) {
         resolvedName = user.name
         resolvedEmail = user.email
@@ -108,7 +110,7 @@ export const POST = withAdmin(async (req: Request) => {
     const orderNumber = `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
     const receiptNumber = generateReceiptNumber()
 
-    const order = await db.$transaction(async (tx) => {
+    const order = await sdb.$transaction(async (tx) => {
       for (const item of items) {
         await tx.branchStock.upsert({
           where: { branchId_productId: { branchId, productId: item.productId } },
@@ -164,7 +166,7 @@ export const POST = withAdmin(async (req: Request) => {
       })
     })
 
-    const fullOrder = await db.order.findUnique({
+    const fullOrder = await sdb.order.findFirst({
       where: { id: order.id },
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })
@@ -174,12 +176,13 @@ export const POST = withAdmin(async (req: Request) => {
   }
 }, 'pos')
 
-export const PUT = withAdmin(async (req: Request) => {
+export const PUT = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { orderId, action, items: returnItems, fullReturn, reason, refundMethod, cashRefundAmount, cardRefundAmount } = await req.json()
     if (!orderId || action !== 'return') return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
 
-    const order = await db.order.findUnique({
+    const order = await sdb.order.findFirst({
       where: { id: orderId },
       include: { items: { include: { product: { select: { id: true, name: true, sku: true } } } }, shift: { select: { branchId: true } } },
     })
@@ -190,9 +193,9 @@ export const PUT = withAdmin(async (req: Request) => {
     let totalRefund = 0
     const returnedItems: Array<{ productId: string; productName: string; quantity: number; refundAmount: number }> = []
 
-    const branch = branchId ? await db.branch.findUnique({ where: { id: branchId }, select: { name: true } }) : null
+    const branch = branchId ? await sdb.branch.findFirst({ where: { id: branchId }, select: { name: true } }) : null
 
-    const returnRecord = await db.$transaction(async (tx) => {
+    const returnRecord = await sdb.$transaction(async (tx) => {
       for (const ri of returnItems || []) {
         const orderItem = order.items.find(i => i.id === ri.itemId)
         if (!orderItem) continue

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
 const handler = withAdmin(async (req, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') || undefined
   const source = searchParams.get('source') || undefined
@@ -11,7 +13,7 @@ const handler = withAdmin(async (req, { admin }) => {
   if (status) where.status = status
   if (source && source !== 'all') where.source = source
 
-  const conversations = await db.conversation.findMany({
+  const conversations = await sdb.conversation.findMany({
     where,
     include: {
       messages: { orderBy: { createdAt: 'desc' }, take: 1 },

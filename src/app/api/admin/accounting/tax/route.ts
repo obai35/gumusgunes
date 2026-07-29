@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const year = parseInt(sp.get('year') || String(new Date().getFullYear()))
     const fromParam = sp.get('from')
     const toParam = sp.get('to')
 
-    const siteSetting = await db.siteSetting.findUnique({ where: { key: 'tax_rate' } })
+    const siteSetting = await sdb.siteSetting.findFirst({ where: { key: 'tax_rate' } })
     const taxRate = siteSetting ? parseFloat(siteSetting.value) / 100 : 0.14
 
     let from: Date, to: Date
@@ -26,7 +28,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       to = new Date(year, 11, 31, 23, 59, 59, 999)
     }
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where: {
         createdAt: { gte: from, lte: to },
         status: { not: 'cancelled' },
@@ -67,12 +69,12 @@ export const GET = withAdmin(async (req: NextRequest) => {
       .map(([month, data]) => ({ month, ...data }))
       .sort((a, b) => a.month.localeCompare(b.month))
 
-    const taxPayableAccount = await db.account.findUnique({ where: { code: '2100' } })
+    const taxPayableAccount = await sdb.account.findFirst({ where: { code: '2100' } })
 
     let actual: { total: number; monthly: { month: string; amount: number }[] } | null = null
 
     if (taxPayableAccount) {
-      const lines = await db.journalLine.findMany({
+      const lines = await sdb.journalLine.findMany({
         where: {
           accountId: taxPayableAccount.id,
           entry: {

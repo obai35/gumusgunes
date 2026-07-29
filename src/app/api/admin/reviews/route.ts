@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
@@ -29,14 +31,14 @@ export const GET = withAdmin(async (req: NextRequest) => {
     else if (verified === 'unverified') where.isVerified = false
 
     const [reviews, total] = await Promise.all([
-      db.review.findMany({
+      sdb.review.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         include: { product: { select: { name: true, slug: true } } },
         take,
         skip,
       }),
-      db.review.count({ where }),
+      sdb.review.count({ where }),
     ])
 
     return NextResponse.json({ ok: true, reviews, total, page, totalPages: Math.ceil(total / take) })
@@ -46,16 +48,17 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 }, 'reviews')
 
-export const PUT = withAdmin(async (req: NextRequest) => {
+export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ ok: false, error: 'Missing review id' }, { status: 400 })
 
-    const review = await db.review.findUnique({ where: { id } })
+    const review = await sdb.review.findFirst({ where: { id } })
     if (!review) return NextResponse.json({ ok: false, error: 'Review not found' }, { status: 404 })
 
-    const updated = await db.review.update({
+    const updated = await sdb.review.update({
       where: { id },
       data: { isVerified: !review.isVerified },
       include: { product: { select: { name: true, slug: true } } },
@@ -68,16 +71,17 @@ export const PUT = withAdmin(async (req: NextRequest) => {
   }
 }, 'reviews')
 
-export const DELETE = withAdmin(async (req: NextRequest) => {
+export const DELETE = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ ok: false, error: 'Missing review id' }, { status: 400 })
 
-    const review = await db.review.findUnique({ where: { id } })
+    const review = await sdb.review.findFirst({ where: { id } })
     if (!review) return NextResponse.json({ ok: false, error: 'Review not found' }, { status: 404 })
 
-    await db.review.delete({ where: { id } })
+    await sdb.review.delete({ where: { id } })
 
     return NextResponse.json({ ok: true })
   } catch (err) {

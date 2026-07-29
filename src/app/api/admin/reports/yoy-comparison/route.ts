@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const years = parseInt(sp.get('years') || '3')
     const metric = sp.get('metric') || 'revenue'
@@ -16,13 +18,13 @@ export const GET = withAdmin(async (req: NextRequest) => {
       const end = new Date(y, 11, 31, 23, 59, 59, 999)
 
       if (metric === 'revenue' || metric === 'all') {
-        const revenueAgg = await db.order.aggregate({
+        const revenueAgg = await sdb.order.aggregate({
           where: { createdAt: { gte: start, lte: end }, status: { not: 'cancelled' } },
           _sum: { totalAmount: true },
         })
 
         const ordersByMonth: Record<string, number> = {}
-        const monthlyOrders = await db.order.findMany({
+        const monthlyOrders = await sdb.order.findMany({
           where: { createdAt: { gte: start, lte: end }, status: { not: 'cancelled' } },
           select: { totalAmount: true, createdAt: true },
           orderBy: { createdAt: 'asc' },
@@ -44,7 +46,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       }
 
       if (metric === 'customers' || metric === 'all') {
-        const customerCount = await db.user.count({
+        const customerCount = await sdb.user.count({
           where: { createdAt: { gte: start, lte: end } },
         })
         if (!result.find(r => r.year === y)) {

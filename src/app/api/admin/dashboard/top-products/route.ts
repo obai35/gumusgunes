@@ -1,8 +1,10 @@
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 import { NextRequest, NextResponse } from 'next/server'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
     const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 50)
@@ -11,7 +13,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
     const dateFrom = new Date()
     dateFrom.setDate(dateFrom.getDate() - days)
 
-    const topItems = await db.orderItem.groupBy({
+    const topItems = await sdb.orderItem.groupBy({
       by: ['productId'],
       _sum: { price: true, quantity: true },
       where: { order: { createdAt: { gte: dateFrom } } },
@@ -23,7 +25,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       return NextResponse.json({ products: [], totalRevenue: 0 })
     }
 
-    const products = await db.product.findMany({
+    const products = await sdb.product.findMany({
       where: { id: { in: topItems.map(p => p.productId) } },
       select: { id: true, name: true, imageUrl: true },
     })

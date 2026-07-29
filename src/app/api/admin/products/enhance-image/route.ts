@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { enhanceImage } from '@/lib/enhance-image'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const formData = await req.formData()
 
   const imageFile = formData.get('image') as File | null

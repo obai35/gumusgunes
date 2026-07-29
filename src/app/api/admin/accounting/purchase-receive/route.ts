@@ -3,15 +3,17 @@ import { db } from '@/lib/db'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { recordPurchaseCOGS } from '@/lib/cogs'
 import { logAudit } from '@/lib/audit'
+import { storeDb } from '@/lib/store-scoped'
 
 export const POST = withAdmin(async (req: Request, { admin }: { params: any; admin: AdminInfo }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { purchaseOrderId } = await req.json()
     if (!purchaseOrderId) {
       return NextResponse.json({ error: 'purchaseOrderId required' }, { status: 400 })
     }
 
-    const po = await db.purchaseOrder.findUnique({
+    const po = await sdb.purchaseOrder.findUnique({
       where: { id: purchaseOrderId },
       include: { items: true },
     })
@@ -26,7 +28,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
 
     await recordPurchaseCOGS(purchaseOrderId)
 
-    await db.purchaseOrder.update({
+    await sdb.purchaseOrder.update({
       where: { id: purchaseOrderId },
       data: { status: 'received' },
     })

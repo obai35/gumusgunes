@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const cohortMonths = parseInt(req.nextUrl.searchParams.get('months') || '12')
 
-    const users = await db.user.findMany({
+    const users = await sdb.user.findMany({
       select: { id: true, createdAt: true },
       orderBy: { createdAt: 'asc' },
     })
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where: { userId: { not: null }, status: { not: 'cancelled' } },
       select: { userId: true, totalAmount: true, createdAt: true },
       orderBy: { createdAt: 'asc' },

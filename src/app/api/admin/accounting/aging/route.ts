@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 function getAgeBucket(days: number): string {
@@ -9,15 +10,16 @@ function getAgeBucket(days: number): string {
   return '90+'
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const now = new Date()
     const sp = req.nextUrl.searchParams
     const asOfParam = sp.get('asOf') || now.toISOString().slice(0, 10)
     const asOf = new Date(asOfParam)
     asOf.setHours(23, 59, 59, 999)
 
-    const arOrders = await db.order.findMany({
+    const arOrders = await sdb.order.findMany({
       where: {
         paymentStatus: 'paid',
         reconciledAt: null,
@@ -66,13 +68,13 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
     const totalAR = arOrders.reduce((s, o) => s + o.totalAmount, 0)
 
-    const apAccount = await db.account.findUnique({ where: { code: '2000' } })
+    const apAccount = await sdb.account.findFirst({ where: { code: '2000' } })
 
     let apBuckets: Record<string, { count: number; total: number; items: any[] }> | null = null
     let totalAP = 0
 
     if (apAccount) {
-      const apLines = await db.journalLine.findMany({
+      const apLines = await sdb.journalLine.findMany({
         where: {
           accountId: apAccount.id,
           credit: { gt: 0 },
@@ -86,7 +88,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
       const apEntries: any[] = []
       for (const line of apLines) {
-        const offsetDebit = await db.journalLine.findFirst({
+        const offsetDebit = await sdb.journalLine.findFirst({
           where: {
             accountId: apAccount.id,
             debit: { gt: 0 },

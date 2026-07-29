@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 const CreatePostSchema = z.object({
@@ -13,7 +14,8 @@ const CreatePostSchema = z.object({
   status: z.enum(['draft', 'published']).default('draft'),
 }).strict()
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
   const take = 20
@@ -33,19 +35,20 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 
   const [posts, total] = await Promise.all([
-    db.blogPost.findMany({
+    sdb.blogPost.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take,
       skip,
     }),
-    db.blogPost.count({ where }),
+    sdb.blogPost.count({ where }),
   ])
 
   return NextResponse.json({ posts, total, page, totalPages: Math.ceil(total / take) })
 }, 'blog')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const parsed = CreatePostSchema.safeParse(body)
@@ -57,10 +60,10 @@ export const POST = withAdmin(async (req: NextRequest) => {
     }
     const { title, slug, content, excerpt, featuredImage, category, status } = parsed.data
 
-    const existing = await db.blogPost.findUnique({ where: { slug } })
+    const existing = await sdb.blogPost.findFirst({ where: { slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
-    const post = await db.blogPost.create({
+    const post = await sdb.blogPost.create({
       data: {
         title, slug, content, excerpt, featuredImage, category, status,
         publishedAt: status === 'published' ? new Date() : null,

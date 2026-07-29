@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const POST = withAdmin(async (req: Request) => {
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const { shiftId, endingCash, notes } = await req.json()
     if (!shiftId || endingCash === undefined) {
       return NextResponse.json({ error: 'shiftId and endingCash are required' }, { status: 400 })
     }
 
-    const shift = await db.shift.findUnique({ where: { id: shiftId } })
+    const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is already closed' }, { status: 400 })
 
-    const orders = await db.order.findMany({ where: { shiftId } })
+    const orders = await sdb.order.findMany({ where: { shiftId } })
 
     const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0)
     const totalCash = orders.reduce((sum, o) => sum + (o.cashAmount || (o.paymentMethod === 'cash' ? o.totalAmount : 0)), 0)
@@ -21,10 +23,10 @@ export const POST = withAdmin(async (req: Request) => {
     const totalBankTransfer = orders.filter((o) => o.paymentMethod === 'bank_transfer').reduce((sum, o) => sum + o.totalAmount, 0)
     const totalInstapay = orders.filter((o) => o.paymentMethod === 'instapay').reduce((sum, o) => sum + o.totalAmount, 0)
     const totalWallet = orders.filter((o) => o.paymentMethod === 'wallet').reduce((sum, o) => sum + o.totalAmount, 0)
-    const totalExpenses = await db.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
+    const totalExpenses = await sdb.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
     const orderCount = orders.length
 
-    const updated = await db.shift.update({
+    const updated = await sdb.shift.update({
       where: { id: shiftId },
       data: {
         isOpen: false,

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const body = await req.json()
     const { fromType, fromId, toType, toId, items, note, createdById } = body
@@ -13,20 +15,20 @@ export const POST = withAdmin(async (req: NextRequest) => {
     if (fromType === 'branch' && !fromId) return NextResponse.json({ error: 'fromId required when fromType=branch' }, { status: 400 })
     if (toType === 'branch' && !toId) return NextResponse.json({ error: 'toId required when toType=branch' }, { status: 400 })
 
-    const admin = await db.admin.findUnique({ where: { id: createdById } })
-    if (!admin) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
+    const found = await sdb.admin.findUnique({ where: { id: createdById } })
+    if (!found) return NextResponse.json({ error: 'Admin not found' }, { status: 400 })
 
     for (const item of items) {
       if (fromType === 'branch') {
-        const bs = await db.branchStock.findUnique({ where: { branchId_productId: { branchId: fromId!, productId: item.productId } } })
+        const bs = await sdb.branchStock.findUnique({ where: { branchId_productId: { branchId: fromId!, productId: item.productId } } })
         if (!bs || bs.quantity < item.quantity) return NextResponse.json({ error: `Insufficient stock for product ${item.productId} at source branch` }, { status: 400 })
       } else {
-        const product = await db.product.findUnique({ where: { id: item.productId } })
+        const product = await sdb.product.findUnique({ where: { id: item.productId } })
         if (!product || product.stock < item.quantity) return NextResponse.json({ error: `Insufficient warehouse stock for product ${item.productId}` }, { status: 400 })
       }
     }
 
-    const result = await db.$transaction(async (tx) => {
+    const result = await sdb.$transaction(async (tx) => {
       const transfers = []
 
       for (const item of items) {
@@ -74,7 +76,8 @@ export const POST = withAdmin(async (req: NextRequest) => {
   }
 }, 'stock_transfers')
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   try {
     const branchId = req.nextUrl.searchParams.get('branchId')
     const where: any = {}
@@ -82,7 +85,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
       where.OR = [{ fromId: branchId, fromType: 'branch' }, { toId: branchId, toType: 'branch' }]
     }
 
-    const transfers = await db.stockTransfer.findMany({
+    const transfers = await sdb.stockTransfer.findMany({
       where,
       include: {
         product: { select: { name: true, sku: true } },

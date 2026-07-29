@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
 function getDateRange(period: string, year?: string, month?: string): { start: Date; end: Date } {
@@ -33,8 +34,9 @@ function getDateRange(period: string, year?: string, month?: string): { start: D
   return { start, end }
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const sp = req.nextUrl.searchParams
     const period = sp.get('period') || 'year'
     const year = sp.get('year') || String(new Date().getFullYear())
@@ -43,7 +45,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
 
     const { start, end } = getDateRange(period, year, month)
 
-    const accounts = await db.account.findMany({
+    const accounts = await sdb.account.findMany({
       where: { type: { in: ['income', 'expense'] } },
       orderBy: { code: 'asc' },
       include: {
@@ -88,11 +90,11 @@ export const GET = withAdmin(async (req: NextRequest) => {
         months.push({ month: `${y}-${String(m).padStart(2, '0')}`, start: ms, end: me })
       }
 
-      const allIncome = await db.account.findMany({
+      const allIncome = await sdb.account.findMany({
         where: { type: 'income' },
         select: { id: true, code: true, name: true },
       })
-      const allExpense = await db.account.findMany({
+      const allExpense = await sdb.account.findMany({
         where: { type: 'expense' },
         select: { id: true, code: true, name: true },
       })
@@ -100,14 +102,14 @@ export const GET = withAdmin(async (req: NextRequest) => {
       monthlyComparison = []
       for (const m of months) {
         const [incomeLines, expenseLines] = await Promise.all([
-          db.journalLine.findMany({
+          sdb.journalLine.findMany({
             where: {
               accountId: { in: allIncome.map(a => a.id) },
               entry: { date: { gte: m.start, lte: m.end } },
             },
             select: { debit: true, credit: true },
           }),
-          db.journalLine.findMany({
+          sdb.journalLine.findMany({
             where: {
               accountId: { in: allExpense.map(a => a.id) },
               entry: { date: { gte: m.start, lte: m.end } },

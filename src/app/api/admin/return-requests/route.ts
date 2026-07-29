@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const status = req.nextUrl.searchParams.get('status') || ''
   const search = req.nextUrl.searchParams.get('search') || ''
   const page = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') || '1'))
@@ -14,7 +16,7 @@ export const GET = withAdmin(async (req: NextRequest) => {
   if (search) where.OR = [{ rmaNumber: { contains: search, mode: 'insensitive' } }, { order: { orderNumber: { contains: search, mode: 'insensitive' } } }]
 
   const [returnRequests, total] = await Promise.all([
-    db.returnRequest.findMany({
+    sdb.returnRequest.findMany({
       where,
       include: {
         order: { select: { id: true, orderNumber: true, fullName: true } },
@@ -24,20 +26,21 @@ export const GET = withAdmin(async (req: NextRequest) => {
       skip,
       take: limit,
     }),
-    db.returnRequest.count({ where }),
+    sdb.returnRequest.count({ where }),
   ])
 
   return NextResponse.json({ ok: true, returnRequests, total, totalPages: Math.ceil(total / limit) })
 }, 'orders')
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { orderId, productId, quantity, reason, notes } = await req.json()
   if (!orderId || !productId || !quantity || !reason) return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
 
-  const count = await db.returnRequest.count()
+  const count = await sdb.returnRequest.count()
   const rmaNumber = `RMA-${String(count + 1).padStart(5, '0')}`
 
-  const returnRequest = await db.returnRequest.create({
+  const returnRequest = await sdb.returnRequest.create({
     data: { orderId, productId, quantity, reason, notes, rmaNumber },
     include: {
       order: { select: { orderNumber: true, fullName: true } },

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const POST = withAdmin(async (req: NextRequest) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { metrics, dimension, filters, from, to } = await req.json()
     if (!Array.isArray(metrics) || metrics.length === 0) {
       return NextResponse.json({ error: 'At least one metric required' }, { status: 400 })
@@ -23,7 +25,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
     if (filters?.status) where.status = filters.status
     if (filters?.paymentMethod) where.paymentMethod = filters.paymentMethod
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where,
       include: {
         items: { include: { product: { select: { name: true, categoryId: true, price: true } } } },
@@ -32,7 +34,7 @@ export const POST = withAdmin(async (req: NextRequest) => {
     })
 
     const customers = metrics.includes('customers')
-      ? await db.user.findMany({
+      ? await sdb.user.findMany({
           where: { createdAt: { gte: start, lte: end } },
           select: { id: true, createdAt: true },
         })

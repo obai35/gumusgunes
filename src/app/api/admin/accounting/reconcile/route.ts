@@ -2,15 +2,17 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { createReconciliationJournalEntry } from '@/lib/accounting'
+import { storeDb } from '@/lib/store-scoped'
 
 export const POST = withAdmin(async (req: Request, { admin }: { params: any; admin: AdminInfo }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { orderId } = await req.json()
     if (!orderId) {
       return NextResponse.json({ error: 'orderId required' }, { status: 400 })
     }
 
-    const order = await db.order.findUnique({ where: { id: orderId } })
+    const order = await sdb.order.findUnique({ where: { id: orderId } })
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
@@ -20,7 +22,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
       return NextResponse.json({ error: 'Order is not paid' }, { status: 400 })
     }
 
-    const existingEntry = await db.journalEntry.findFirst({
+    const existingEntry = await sdb.journalEntry.findFirst({
       where: { orderId, type: 'reconciliation' },
     })
     if (existingEntry) {
@@ -33,7 +35,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
       createdAt: order.createdAt,
     })
 
-    await db.order.update({
+    await sdb.order.update({
       where: { id: orderId },
       data: { reconciledAt: new Date() },
     })
@@ -45,8 +47,9 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
   }
 }, 'accounting')
 
-export const GET = withAdmin(async (req: Request) => {
+export const GET = withAdmin(async (req: Request, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const url = new URL(req.url)
     const status = url.searchParams.get('status')
 
@@ -57,7 +60,7 @@ export const GET = withAdmin(async (req: Request) => {
       where.reconciledAt = null
     }
 
-    const orders = await db.order.findMany({
+    const orders = await sdb.order.findMany({
       where,
       select: {
         id: true,

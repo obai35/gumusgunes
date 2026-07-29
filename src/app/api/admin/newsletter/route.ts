@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { searchParams } = new URL(req.url)
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
     const take = 50
@@ -20,14 +22,14 @@ export const GET = withAdmin(async (req: NextRequest) => {
     }
 
     const [subscribers, total, totalThisMonth] = await Promise.all([
-      db.newsletter.findMany({
+      sdb.newsletter.findMany({
         where,
         orderBy: { createdAt: 'desc' },
         take,
         skip,
       }),
-      db.newsletter.count(),
-      db.newsletter.count({
+      sdb.newsletter.count(),
+      sdb.newsletter.count({
         where: {
           createdAt: {
             gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -43,16 +45,17 @@ export const GET = withAdmin(async (req: NextRequest) => {
   }
 }, 'newsletter')
 
-export const DELETE = withAdmin(async (req: NextRequest) => {
+export const DELETE = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const { searchParams } = new URL(req.url)
     const id = searchParams.get('id')
     if (!id) return NextResponse.json({ ok: false, error: 'Missing subscriber id' }, { status: 400 })
 
-    const sub = await db.newsletter.findUnique({ where: { id } })
+    const sub = await sdb.newsletter.findUnique({ where: { id } })
     if (!sub) return NextResponse.json({ ok: false, error: 'Subscriber not found' }, { status: 404 })
 
-    await db.newsletter.delete({ where: { id } })
+    await sdb.newsletter.delete({ where: { id } })
 
     return NextResponse.json({ ok: true })
   } catch (err) {

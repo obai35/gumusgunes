@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/admin-auth'
 import { withAdmin } from '@/lib/admin-permissions'
 import { logAudit } from '@/lib/audit'
+import { storeDb } from '@/lib/store-scoped'
 
 const CreateAdminSchema = z.object({
   name: z.string().min(1).max(100),
@@ -17,15 +18,17 @@ const CreateAdminSchema = z.object({
   phone: z.string().optional(),
 }).strict()
 
-export const GET = withAdmin(async (req: NextRequest) => {
-  const admins = await db.admin.findMany({
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const admins = await sdb.admin.findMany({
     include: { roleRel: { select: { name: true } } },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(admins.map((a) => ({ id: a.id, email: a.email, name: a.name, phone: a.phone, role: a.roleRel?.name || a.role, roleId: a.roleId, totpEnabled: a.totpEnabled, lastLoginAt: a.lastLoginAt, createdAt: a.createdAt })))
 }, 'admins')
 
-export const POST = withAdmin(async (req: NextRequest, ctx) => {
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
   const parsed = CreateAdminSchema.safeParse(body)
   if (!parsed.success) {
@@ -36,16 +39,16 @@ export const POST = withAdmin(async (req: NextRequest, ctx) => {
   }
   const { name, email, password, roleId, phone } = parsed.data
 
-  const existing = await db.admin.findUnique({ where: { email } })
+  const existing = await sdb.admin.findUnique({ where: { email } })
   if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
 
-  const created = await db.admin.create({
+  const created = await sdb.admin.create({
     data: { name, email, password: await hashPassword(password), roleId, phone },
     include: { roleRel: { select: { name: true } } },
   })
 
   await logAudit({
-    adminId: ctx.admin.id,
+    adminId: admin.id,
     action: 'admin_created',
     resource: 'admin',
     resourceId: created.id,

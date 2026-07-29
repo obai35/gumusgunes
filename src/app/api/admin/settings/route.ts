@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { sanitize } from '@/lib/sanitize'
 import { withAdmin } from '@/lib/admin-permissions'
+import { storeDb } from '@/lib/store-scoped'
 
 const MAX_VALUE_LENGTH = 50000
 
@@ -57,9 +58,10 @@ const DEFAULTS: Record<string, string> = {
   aboutStats: '[]',
 }
 
-export const GET = withAdmin(async () => {
+export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
   try {
-    const settings = await db.siteSetting.findMany()
+    const sdb = storeDb(admin.storeId)
+    const settings = await sdb.siteSetting.findMany()
     const map: Record<string, string> = { ...DEFAULTS }
     for (const s of settings) map[s.key] = s.value
     return NextResponse.json({ ok: true, settings: map })
@@ -69,8 +71,9 @@ export const GET = withAdmin(async () => {
   }
 }, 'settings')
 
-export const PUT = withAdmin(async (req: NextRequest) => {
+export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
   try {
+    const sdb = storeDb(admin.storeId)
     const body = await req.json()
     const entries = Object.entries(body) as [string, string][]
     for (const [key, value] of entries) {
@@ -83,7 +86,7 @@ export const PUT = withAdmin(async (req: NextRequest) => {
           { status: 400 }
         )
       }
-      await db.siteSetting.upsert({
+      await sdb.siteSetting.upsert({
         where: { key },
         update: { value: sanitize(value) },
         create: { key, value: sanitize(value) },
