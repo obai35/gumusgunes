@@ -3,18 +3,24 @@ import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
 import { logAudit } from '@/lib/audit'
+import { recordActualCost, recordCOGS } from '@/lib/cogs'
 
 export const POST = withAdmin(async (req: Request, { params, admin }: { params: Promise<{ id: string }>; admin: AdminInfo }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { id } = await params
-    const order = await sdb.order.findFirst({ where: { id } })
+    const order = await sdb.order.findFirst({ where: { id }, include: { items: true } })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
     const updated = await sdb.order.update({
       where: { id },
       data: { status: 'delivered', fulfilledAt: new Date() },
     })
+
+    for (const item of order.items) {
+      await recordActualCost(item.id, item.productId, item.quantity)
+    }
+    await recordCOGS(id)
 
     try {
       await logAudit({ adminId: admin.id, action: 'fulfill', resource: 'order', resourceId: id, details: { orderNumber: updated.orderNumber, totalAmount: updated.totalAmount } })

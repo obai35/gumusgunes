@@ -34,6 +34,7 @@ export async function autoAccountOrderPayment(orderId: string): Promise<void> {
         cardAmount: true,
         paymentMethod: true,
         createdAt: true,
+        tax: true,
       },
     })
     if (!order) {
@@ -111,7 +112,7 @@ export async function autoAccountAllOrders(): Promise<{ orders: number; expenses
 
   const orders = await db.order.findMany({
     where: { paymentStatus: 'paid' },
-    select: { id: true, totalAmount: true, cashAmount: true, cardAmount: true, paymentMethod: true, createdAt: true },
+    select: { id: true, totalAmount: true, cashAmount: true, cardAmount: true, paymentMethod: true, createdAt: true, tax: true },
   })
   for (const order of orders) {
     const existing = await db.journalEntry.findFirst({ where: { orderId: order.id, type: 'sale' } })

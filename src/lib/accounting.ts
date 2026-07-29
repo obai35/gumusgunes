@@ -151,7 +151,14 @@ export async function createSaleJournalEntry(order: {
   cardAmount?: number | null
   paymentMethod: string
   createdAt: Date
+  tax?: number
 }) {
+  const creditLines: { accountCode: string; credit: number }[] = []
+  const taxAmount = order.tax ?? 0
+  const revenueAmount = order.totalAmount - taxAmount
+  if (revenueAmount > 0) creditLines.push({ accountCode: ACCOUNTS.salesRevenue, credit: revenueAmount })
+  if (taxAmount > 0) creditLines.push({ accountCode: ACCOUNTS.taxPayable, credit: taxAmount })
+
   if (order.paymentMethod === 'split') {
     const hasCash = order.cashAmount != null && order.cashAmount > 0
     const hasCard = order.cardAmount != null && order.cardAmount > 0
@@ -167,8 +174,8 @@ export async function createSaleJournalEntry(order: {
     }
     const lines: { accountCode: string; debit?: number; credit?: number }[] = []
     if (hasCash) lines.push({ accountCode: ACCOUNTS.cash, debit: order.cashAmount! })
-    if (hasCard) lines.push({ accountCode: ACCOUNTS.cash, debit: order.cardAmount! })
-    lines.push({ accountCode: ACCOUNTS.salesRevenue, credit: order.totalAmount })
+    if (hasCard) lines.push({ accountCode: ACCOUNTS.bank, debit: order.cardAmount! })
+    lines.push(...creditLines)
     return createJournalEntry({
       date: order.createdAt,
       description: `Sale #${order.id.slice(0, 8)}`,
@@ -179,16 +186,17 @@ export async function createSaleJournalEntry(order: {
     })
   }
   const debitAccount = getDebitAccount(order.paymentMethod)
+  const lines: { accountCode: string; debit?: number; credit?: number }[] = [
+    { accountCode: debitAccount, debit: order.totalAmount },
+    ...creditLines,
+  ]
   return createJournalEntry({
     date: order.createdAt,
     description: `Sale #${order.id.slice(0, 8)}`,
     reference: order.id,
     type: 'sale',
     orderId: order.id,
-    lines: [
-      { accountCode: debitAccount, debit: order.totalAmount },
-      { accountCode: ACCOUNTS.salesRevenue, credit: order.totalAmount },
-    ],
+    lines,
   })
 }
 

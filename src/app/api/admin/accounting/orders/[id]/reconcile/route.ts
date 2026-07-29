@@ -16,38 +16,26 @@ export const POST = withAdmin(async (req: Request, { params, admin }: { params: 
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
   try {
+    const saleEntryArgs = {
+      id: order.id,
+      totalAmount: order.totalAmount,
+      paymentMethod: order.paymentMethod,
+      cashAmount: order.cashAmount,
+      cardAmount: order.cardAmount,
+      createdAt: order.createdAt,
+      tax: order.tax,
+    }
     if (order.paymentMethod === 'bank_transfer') {
-      await createSaleJournalEntry({
-        id: order.id,
-        totalAmount: order.totalAmount,
-        paymentMethod: order.paymentMethod,
-        cashAmount: null,
-        cardAmount: null,
-        createdAt: order.createdAt,
-      })
+      await createSaleJournalEntry(saleEntryArgs)
     } else if (order.paymentMethod === 'cod') {
-      await createSaleJournalEntry({
-        id: order.id,
-        totalAmount: order.totalAmount,
-        paymentMethod: order.paymentMethod,
-        cashAmount: null,
-        cardAmount: null,
-        createdAt: order.createdAt,
-      })
+      await createSaleJournalEntry(saleEntryArgs)
       await createReconciliationJournalEntry({
         id: order.id,
         totalAmount: order.totalAmount,
         createdAt: order.createdAt,
       })
     } else {
-      await createSaleJournalEntry({
-        id: order.id,
-        totalAmount: order.totalAmount,
-        paymentMethod: order.paymentMethod,
-        cashAmount: null,
-        cardAmount: null,
-        createdAt: order.createdAt,
-      })
+      await createSaleJournalEntry(saleEntryArgs)
     }
 
     const updated = await sdb.order.update({

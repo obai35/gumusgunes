@@ -12,7 +12,7 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
 
   const orders = await sdb.order.findMany({
     where: { paymentStatus: 'paid' },
-    select: { id: true, totalAmount: true, cashAmount: true, cardAmount: true, paymentMethod: true, createdAt: true },
+    select: { id: true, totalAmount: true, cashAmount: true, cardAmount: true, paymentMethod: true, createdAt: true, tax: true },
   })
   for (const order of orders) {
     const existing = await sdb.journalEntry.findFirst({ where: { orderId: order.id, type: 'sale' } })
