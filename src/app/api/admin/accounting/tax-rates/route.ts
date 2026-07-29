@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
-export const GET = withAdmin(async ({ admin }) => {
+export const GET = withAdmin(async (req, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const rates = await sdb.taxRate.findMany({ orderBy: { name: 'asc' } })
   return NextResponse.json({ rates })
