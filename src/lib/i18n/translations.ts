@@ -5,7 +5,7 @@ export const LOCALES: { code: Locale; label: string; dir: 'ltr' | 'rtl' }[] = [
   { code: 'ar', label: 'العربية', dir: 'rtl' },
 ]
 
-type TranslationValue = string | { [key: string]: TranslationValue }
+type TranslationValue = string | string[] | { [key: string]: TranslationValue }
 
 type Translations = {
   [key in Locale]: { [key: string]: TranslationValue }

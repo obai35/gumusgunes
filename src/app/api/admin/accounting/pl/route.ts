@@ -46,7 +46,7 @@ async function fetchPL(sdb: ReturnType<typeof storeDb>, start: Date, end: Date, 
     orderBy: { code: 'asc' },
     include: {
       journalLines: {
-        where: { entry },
+        where: { entry: entryWhere },
         select: { debit: true, credit: true },
       },
     },

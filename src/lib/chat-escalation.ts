@@ -5,6 +5,7 @@ type IncomingMessage = {
   from: string
   text: string
   name: string
+  storeId: string
 }
 
 function getFallbackResponse(message: string): string | null {
@@ -53,7 +54,7 @@ async function queryAiChatbot(message: string): Promise<string | null> {
   }
 }
 
-export async function handleIncomingMessage({ from, text, name }: IncomingMessage) {
+export async function handleIncomingMessage({ from, text, name, storeId }: IncomingMessage) {
   // Find or create conversation
   let conversation = await db.conversation.findFirst({
     where: { customerPhone: from, status: { not: 'CLOSED' } },
@@ -62,13 +63,13 @@ export async function handleIncomingMessage({ from, text, name }: IncomingMessag
 
   if (!conversation) {
     conversation = await db.conversation.create({
-      data: { customerName: name, customerPhone: from, status: 'ACTIVE' },
+      data: { customerName: name, customerPhone: from, status: 'ACTIVE', storeId },
     })
   }
 
   // Save customer message
   await db.message.create({
-    data: { conversationId: conversation.id, content: text, role: 'CUSTOMER' },
+    data: { conversationId: conversation.id, content: text, role: 'CUSTOMER', storeId },
   })
 
   // Try AI chatbot first
@@ -79,7 +80,7 @@ export async function handleIncomingMessage({ from, text, name }: IncomingMessag
     // Chatbot can answer
     await sendWhatsAppMessage(from, aiReply)
     await db.message.create({
-      data: { conversationId: conversation.id, content: aiReply, role: 'BOT' },
+      data: { conversationId: conversation.id, content: aiReply, role: 'BOT', storeId },
     })
     return
   }
@@ -94,7 +95,7 @@ export async function handleIncomingMessage({ from, text, name }: IncomingMessag
   const waitingMsg = 'Thank you for your message. A member of our team will be with you shortly. We appreciate your patience.'
   await sendWhatsAppMessage(from, waitingMsg)
   await db.message.create({
-    data: { conversationId: conversation.id, content: waitingMsg, role: 'BOT' },
+    data: { conversationId: conversation.id, content: waitingMsg, role: 'BOT', storeId },
   })
 
   // Notify admins via Socket.IO

@@ -34,16 +34,17 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
   if (!data) {
     return <div className="flex items-center justify-center flex-1 text-sm text-white/50">No data available</div>
   }
+  const d = data
 
-  const incomeMethods = Object.entries(data.incomeByMethod).filter(([, v]) => v > 0)
-  const refundMethods = Object.entries(data.refundsByMethod || {}).filter(([, v]) => v > 0)
-  const expenseMethods = Object.entries(data.expensesByMethod).filter(([, v]) => v > 0)
+  const incomeMethods = Object.entries(d.incomeByMethod).filter(([, v]) => v > 0)
+  const refundMethods = Object.entries(d.refundsByMethod || {}).filter(([, v]) => v > 0)
+  const expenseMethods = Object.entries(d.expensesByMethod).filter(([, v]) => v > 0)
 
   function handlePrint() {
     const w = window.open('', '_blank')
     if (!w) return
     w.document.write(`
-      <html><head><title>Hall Sale - ${new Date(data.shift.startedAt).toLocaleDateString()}</title>
+      <html><head><title>Hall Sale - ${new Date(d.shift.startedAt).toLocaleDateString()}</title>
       <style>
         body { font-family: monospace; font-size: 12px; padding: 20px; }
         h1 { font-size: 16px; margin-bottom: 5px; }
@@ -53,30 +54,30 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
         th { border-bottom: 1px solid #ccc; }
         .right { text-align: right; }
         .total { font-weight: bold; border-top: 1px solid #999; }
-        .diff { color: ${data.difference >= 0 ? 'green' : 'red'}; }
+        .diff { color: ${d.difference >= 0 ? 'green' : 'red'}; }
       </style></head><body>
       <h1>Hall Sale Report</h1>
-      <p>Date: ${new Date(data.shift.startedAt).toLocaleString()}</p>
-      <p>Status: ${data.shift.isOpen ? 'Open' : 'Closed'} | Orders: ${data.shift.orderCount}</p>
+      <p>Date: ${new Date(d.shift.startedAt).toLocaleString()}</p>
+      <p>Status: ${d.shift.isOpen ? 'Open' : 'Closed'} | Orders: ${d.shift.orderCount}</p>
       <h2>Income</h2>
       <table>${incomeMethods.map(([m, v]) => `<tr><td>${PAYMENT_LABELS[m] || m}</td><td class="right">E£${v.toFixed(2)}</td></tr>`).join('')}
-      <tr class="total"><td>Total Income</td><td class="right">E£${data.totalIncome.toFixed(2)}</td></tr></table>
+      <tr class="total"><td>Total Income</td><td class="right">E£${d.totalIncome.toFixed(2)}</td></tr></table>
       ${refundMethods.length > 0 ? `
       <h2>Refunds</h2>
       <table>${refundMethods.map(([m, v]) => `<tr><td>${PAYMENT_LABELS[m] || m}</td><td class="right">-E£${v.toFixed(2)}</td></tr>`).join('')}
-      <tr class="total"><td>Total Refunds</td><td class="right">-E£${data.totalRefunds.toFixed(2)}</td></tr></table>` : ''}
+      <tr class="total"><td>Total Refunds</td><td class="right">-E£${d.totalRefunds.toFixed(2)}</td></tr></table>` : ''}
       <h2>Expenses</h2>
       <table>${expenseMethods.length > 0 ? expenseMethods.map(([m, v]) => `<tr><td>${PAYMENT_LABELS[m] || m}</td><td class="right">-E£${v.toFixed(2)}</td></tr>`).join('') : '<tr><td>No expenses</td><td class="right">E£0.00</td></tr>'}
-      <tr class="total"><td>Total Expenses</td><td class="right">-E£${data.totalExpenses.toFixed(2)}</td></tr></table>
+      <tr class="total"><td>Total Expenses</td><td class="right">-E£${d.totalExpenses.toFixed(2)}</td></tr></table>
       <h2>Cash Position</h2>
       <table>
-       <tr><td>Starting Cash</td><td class="right">E£${data.shift.startingCash.toFixed(2)}</td></tr>
-       <tr><td>Cash Income</td><td class="right">E£${(data.incomeByMethod.cash || 0).toFixed(2)}</td></tr>
-       ${(data.refundsByMethod?.cash || 0) > 0 ? `<tr><td>Cash Refunds</td><td class="right">-E£${(data.refundsByMethod.cash || 0).toFixed(2)}</td></tr>` : ''}
-       <tr><td>Cash Expenses</td><td class="right">-E£${(data.expensesByMethod.cash || 0).toFixed(2)}</td></tr>
-       <tr class="total"><td>Expected Cash</td><td class="right">E£${data.expectedCash.toFixed(2)}</td></tr>
-      <tr><td>Actual Ending Cash</td><td class="right">E£${data.actualEndingCash.toFixed(2)}</td></tr>
-      <tr class="total"><td>Difference</td><td class="right ${data.difference >= 0 ? '' : ''}">E£${data.difference.toFixed(2)}</td></tr>
+       <tr><td>Starting Cash</td><td class="right">E£${d.shift.startingCash.toFixed(2)}</td></tr>
+       <tr><td>Cash Income</td><td class="right">E£${(d.incomeByMethod.cash || 0).toFixed(2)}</td></tr>
+       ${(d.refundsByMethod?.cash || 0) > 0 ? `<tr><td>Cash Refunds</td><td class="right">-E£${(d.refundsByMethod.cash || 0).toFixed(2)}</td></tr>` : ''}
+       <tr><td>Cash Expenses</td><td class="right">-E£${(d.expensesByMethod.cash || 0).toFixed(2)}</td></tr>
+       <tr class="total"><td>Expected Cash</td><td class="right">E£${d.expectedCash.toFixed(2)}</td></tr>
+      <tr><td>Actual Ending Cash</td><td class="right">E£${d.actualEndingCash.toFixed(2)}</td></tr>
+      <tr class="total"><td>Difference</td><td class="right ${d.difference >= 0 ? '' : ''}">E£${d.difference.toFixed(2)}</td></tr>
       </table>
       <p style="margin-top: 20px; font-size: 10px; color: #999;">Generated by Gümüş Güneş POS</p>
       </body></html>
@@ -91,10 +92,10 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
         <div>
           <h2 className="font-display text-lg font-semibold text-silver-soft">Hall Sale</h2>
           <p className="text-xs text-white/40">
-            {new Date(data.shift.startedAt).toLocaleString()}
-            {data.shift.closedAt && ` — ${new Date(data.shift.closedAt).toLocaleString()}`}
-            <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${data.shift.isOpen ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/40'}`}>
-              {data.shift.isOpen ? 'Open' : 'Closed'}
+            {new Date(d.shift.startedAt).toLocaleString()}
+            {d.shift.closedAt && ` — ${new Date(d.shift.closedAt).toLocaleString()}`}
+            <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${d.shift.isOpen ? 'bg-emerald-500/10 text-emerald-400' : 'bg-white/5 text-white/40'}`}>
+              {d.shift.isOpen ? 'Open' : 'Closed'}
             </span>
           </p>
         </div>
@@ -107,16 +108,16 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
         <div className="grid grid-cols-3 gap-3">
           <div className="pos-glass rounded-xl p-4 text-center">
             <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Total Income</p>
-            <p className="text-2xl font-bold text-emerald-400">E£{data.totalIncome.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-emerald-400">E£{d.totalIncome.toFixed(2)}</p>
           </div>
           <div className="pos-glass rounded-xl p-4 text-center">
             <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Total Expenses</p>
-            <p className="text-2xl font-bold text-red-400">-E£{data.totalExpenses.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-red-400">-E£{d.totalExpenses.toFixed(2)}</p>
           </div>
           <div className="pos-glass rounded-xl p-4 text-center">
             <p className="text-xs text-white/40 uppercase tracking-wide mb-1">Net</p>
-            <p className={`text-2xl font-bold ${data.netTotal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              E£{data.netTotal.toFixed(2)}
+            <p className={`text-2xl font-bold ${d.netTotal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              E£{d.netTotal.toFixed(2)}
             </p>
           </div>
         </div>
@@ -140,7 +141,7 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
                 ))}
                 <tr className="font-bold">
                   <td className="py-2 text-silver-soft">Total</td>
-                  <td className="py-2 text-right text-emerald-400">E£{data.totalIncome.toFixed(2)}</td>
+                  <td className="py-2 text-right text-emerald-400">E£{d.totalIncome.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -168,7 +169,7 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
                 ))}
                 <tr className="font-bold">
                   <td className="py-2 text-silver-soft">Total Refunds</td>
-                  <td className="py-2 text-right text-red-400">-E£{data.totalRefunds.toFixed(2)}</td>
+                  <td className="py-2 text-right text-red-400">-E£{d.totalRefunds.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -194,7 +195,7 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
                 ))}
                 <tr className="font-bold">
                   <td className="py-2 text-silver-soft">Total</td>
-                  <td className="py-2 text-right text-red-400">-E£{data.totalExpenses.toFixed(2)}</td>
+                  <td className="py-2 text-right text-red-400">-E£{d.totalExpenses.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
@@ -209,34 +210,34 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
             <tbody>
               <tr className="border-b border-white/10">
                 <td className="py-2 text-white/50">Starting Cash</td>
-                <td className="py-2 text-right font-medium text-silver-soft">E£{data.shift.startingCash.toFixed(2)}</td>
+                <td className="py-2 text-right font-medium text-silver-soft">E£{d.shift.startingCash.toFixed(2)}</td>
               </tr>
               <tr className="border-b border-white/10">
                 <td className="py-2 text-white/50">+ Cash Income</td>
-                <td className="py-2 text-right font-medium text-emerald-400">+E£{(data.incomeByMethod.cash || 0).toFixed(2)}</td>
+                <td className="py-2 text-right font-medium text-emerald-400">+E£{(d.incomeByMethod.cash || 0).toFixed(2)}</td>
               </tr>
-              {(data.refundsByMethod?.cash || 0) > 0 && (
+              {(d.refundsByMethod?.cash || 0) > 0 && (
                 <tr className="border-b border-white/10">
                   <td className="py-2 text-white/50">- Cash Refunds</td>
-                  <td className="py-2 text-right font-medium text-red-400">-E£{(data.refundsByMethod.cash || 0).toFixed(2)}</td>
+                  <td className="py-2 text-right font-medium text-red-400">-E£{(d.refundsByMethod.cash || 0).toFixed(2)}</td>
                 </tr>
               )}
               <tr className="border-b border-white/10">
                 <td className="py-2 text-white/50">- Cash Expenses</td>
-                <td className="py-2 text-right font-medium text-red-400">-E£{(data.expensesByMethod.cash || 0).toFixed(2)}</td>
+                <td className="py-2 text-right font-medium text-red-400">-E£{(d.expensesByMethod.cash || 0).toFixed(2)}</td>
               </tr>
               <tr className="border-b border-white/10 font-bold">
                 <td className="py-2 text-silver-soft">Expected Cash</td>
-                <td className="py-2 text-right text-gold">E£{data.expectedCash.toFixed(2)}</td>
+                <td className="py-2 text-right text-gold">E£{d.expectedCash.toFixed(2)}</td>
               </tr>
               <tr className="border-b border-white/10">
                 <td className="py-2 text-white/50">Actual Ending Cash</td>
-                <td className="py-2 text-right font-medium text-silver-soft">E£{data.actualEndingCash.toFixed(2)}</td>
+                <td className="py-2 text-right font-medium text-silver-soft">E£{d.actualEndingCash.toFixed(2)}</td>
               </tr>
               <tr className="font-bold">
                 <td className="py-2 text-silver-soft">Difference</td>
-                <td className={`py-2 text-right ${data.difference >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  E£{data.difference >= 0 ? '+' : ''}{data.difference.toFixed(2)}
+                <td className={`py-2 text-right ${d.difference >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  E£{d.difference >= 0 ? '+' : ''}{d.difference.toFixed(2)}
                 </td>
               </tr>
             </tbody>

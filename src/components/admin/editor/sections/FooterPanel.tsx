@@ -10,10 +10,10 @@ let linkId = 0
 
 export function FooterPanel() {
   const { settings, updateSetting } = useEditor()
-  type Col = FooterColumn & { _id: number }
   type Link = { label: string; href: string; _id: number }
+  type Col = { title: string; links: Link[]; _id: number }
   const [cols, setCols] = useState<Col[]>(() => {
-    try { return (JSON.parse(settings.footer || '[{"title":"Shop","links":[]},{"title":"About","links":[]},{"title":"Care","links":[]}]') as FooterColumn[]).map(c => ({ ...c, _id: ++colId, links: c.links.map(l => ({ ...l, _id: ++linkId })) })) } catch { return [] }
+    try { return (JSON.parse(settings['footer'] || '[{"title":"Shop","links":[]},{"title":"About","links":[]},{"title":"Care","links":[]}]') as FooterColumn[]).map(c => ({ ...c, _id: ++colId, links: c.links.map(l => ({ ...l, _id: ++linkId })) })) } catch { return [] }
   })
 
   const save = (next: Col[]) => { setCols(next); updateSetting('footer', JSON.stringify(next.map(({ _id, ...rest }) => ({ ...rest }))) as any) }
@@ -31,19 +31,19 @@ export function FooterPanel() {
     <div className="space-y-4">
       <div>
         <label className="text-xs font-medium text-muted-foreground">Copyright Text</label>
-        <input value={settings.footerCopyright || ''} onChange={e => updateSetting('footerCopyright', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" placeholder="© Gümüş Güneş. All rights reserved." />
+        <input value={settings['footerCopyright'] || ''} onChange={e => updateSetting('footerCopyright', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" placeholder="© Gümüş Güneş. All rights reserved." />
       </div>
       <div>
         <label className="text-xs font-medium text-muted-foreground">Email</label>
-        <input value={settings.footerEmail || ''} onChange={e => updateSetting('footerEmail', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
+        <input value={settings['footerEmail'] || ''} onChange={e => updateSetting('footerEmail', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
       </div>
       <div>
         <label className="text-xs font-medium text-muted-foreground">Phone</label>
-        <input value={settings.footerPhone || ''} onChange={e => updateSetting('footerPhone', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
+        <input value={settings['footerPhone'] || ''} onChange={e => updateSetting('footerPhone', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
       </div>
       <div>
         <label className="text-xs font-medium text-muted-foreground">Address</label>
-        <input value={settings.footerAddress || ''} onChange={e => updateSetting('footerAddress', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
+        <input value={settings['footerAddress'] || ''} onChange={e => updateSetting('footerAddress', e.target.value)} className="w-full px-2 py-1.5 text-sm border border-border rounded mt-1" />
       </div>
       <div className="border-t border-border pt-3">
         <span className="text-xs font-medium text-muted-foreground block mb-2">Social Links</span>

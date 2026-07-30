@@ -40,10 +40,12 @@ export async function POST(req: NextRequest) {
       const parsed = parseWebhookBody(body)
       if (!parsed) return NextResponse.json({ ok: true })
 
+      const storeId = req.nextUrl.searchParams.get('storeId') || process.env.STORE_ID || ''
       await handleIncomingMessage({
         from: parsed.from,
         text: parsed.text,
         name: parsed.name,
+        storeId,
       })
     } else {
       const body = await req.json()
@@ -51,10 +53,12 @@ export async function POST(req: NextRequest) {
       const parsed = parseWebhookBody(body)
       if (!parsed) return NextResponse.json({ ok: true })
 
+      const storeId = req.nextUrl.searchParams.get('storeId') || process.env.STORE_ID || ''
       await handleIncomingMessage({
         from: parsed.from,
         text: parsed.text,
         name: parsed.name,
+        storeId,
       })
     }
 
