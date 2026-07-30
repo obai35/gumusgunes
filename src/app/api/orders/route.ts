@@ -4,6 +4,7 @@ import { db } from '@/lib/db'
 import { verifyToken } from '@/lib/customer-auth'
 import { getStripe } from '@/lib/stripe'
 import { encrypt } from '@/lib/encryption'
+import { encryptFields } from '@/lib/field-encryption'
 import { addAlsoBought } from '@/lib/product-graph'
 import { sanitize } from '@/lib/sanitize'
 import { autoAccountOrderPayment } from '@/lib/auto-accounting'
@@ -186,32 +187,35 @@ const orderHandler = async (req: NextRequest) => {
     }
 
     const order = await db.order.create({
-      data: {
-        orderNumber,
-        userId: authedUser?.userId || null,
-        email: rest.email.toLowerCase(),
-        fullName: rest.fullName,
-        phone: rest.phone || null,
-        address: rest.address,
-        city: rest.city,
-        postalCode: rest.postalCode,
-        country: rest.country,
-        notes: rest.notes || null,
-        paymentMethod: rest.paymentMethod,
-        idempotencyKey: idempotencyKey || null,
-        stripePaymentIntentId: stripePaymentIntentId || null,
-        paypalOrderId: paypalOrderId || null,
-        walletProvider: walletProvider || null,
-        paymentReference: paymentReference ? encrypt(paymentReference) : null,
-        subtotal,
-        shipping,
-        shippingMethodId,
-        tax,
-        totalAmount,
-        status: rest.paymentMethod === 'cod' ? 'confirmed' : 'pending',
-        paymentStatus,
-        items: { create: orderItemsData },
-      },
+      data: encryptFields(
+        {
+          orderNumber,
+          userId: authedUser?.userId || null,
+          email: rest.email.toLowerCase(),
+          fullName: rest.fullName,
+          phone: rest.phone || null,
+          address: rest.address,
+          city: rest.city,
+          postalCode: rest.postalCode,
+          country: rest.country,
+          notes: rest.notes || null,
+          paymentMethod: rest.paymentMethod,
+          idempotencyKey: idempotencyKey || null,
+          stripePaymentIntentId: stripePaymentIntentId || null,
+          paypalOrderId: paypalOrderId || null,
+          walletProvider: walletProvider || null,
+          paymentReference: paymentReference ? encrypt(paymentReference) : null,
+          subtotal,
+          shipping,
+          shippingMethodId,
+          tax,
+          totalAmount,
+          status: rest.paymentMethod === 'cod' ? 'confirmed' : 'pending',
+          paymentStatus,
+          items: { create: orderItemsData },
+        },
+        ['fullName', 'phone', 'address', 'notes'] as (keyof any)[]
+      ),
       select: {
         id: true, orderNumber: true, userId: true, email: true, fullName: true, phone: true,
         address: true, city: true, postalCode: true, country: true, totalAmount: true,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { verifyWebhook, parseWebhookBody } from '@/lib/whatsapp'
 import { handleIncomingMessage } from '@/lib/chat-escalation'
 
@@ -14,16 +15,48 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    console.log('WhatsApp webhook received:', JSON.stringify(body).slice(0, 500))
-    const parsed = parseWebhookBody(body)
-    if (!parsed) return NextResponse.json({ ok: true })
+    const appSecret = process.env.WHATSAPP_APP_SECRET
+    if (appSecret) {
+      const signature = req.headers.get('x-hub-signature-256')
+      if (!signature) {
+        console.warn('[WhatsApp] Missing signature header')
+        return NextResponse.json({ ok: true })
+      }
+      const rawBody = await req.text()
+      const expected = 'sha256=' + createHmac('sha256', appSecret).update(rawBody).digest('hex')
+      const actual = signature
+      try {
+        const expectedBuf = Buffer.from(expected)
+        const actualBuf = Buffer.from(actual)
+        if (!timingSafeEqual(expectedBuf, actualBuf)) {
+          console.warn('[WhatsApp] Invalid webhook signature')
+          return NextResponse.json({ ok: true })
+        }
+      } catch {
+        console.warn('[WhatsApp] Signature comparison failed')
+        return NextResponse.json({ ok: true })
+      }
+      const body = JSON.parse(rawBody)
+      const parsed = parseWebhookBody(body)
+      if (!parsed) return NextResponse.json({ ok: true })
 
-    await handleIncomingMessage({
-      from: parsed.from,
-      text: parsed.text,
-      name: parsed.name,
-    })
+      await handleIncomingMessage({
+        from: parsed.from,
+        text: parsed.text,
+        name: parsed.name,
+      })
+    } else {
+      const body = await req.json()
+      console.log('WhatsApp webhook received:', JSON.stringify(body).slice(0, 500))
+      const parsed = parseWebhookBody(body)
+      if (!parsed) return NextResponse.json({ ok: true })
+
+      await handleIncomingMessage({
+        from: parsed.from,
+        text: parsed.text,
+        name: parsed.name,
+      })
+    }
 
     return NextResponse.json({ ok: true })
   } catch (err) {

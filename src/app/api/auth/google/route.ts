@@ -1,20 +1,30 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import crypto from 'crypto'
 import { hashPassword, signToken } from '@/lib/customer-auth'
+import { encryptFields } from '@/lib/field-encryption'
 import { db } from '@/lib/db'
+import { z } from 'zod'
 
 export async function GET() {
   const clientId = process.env.GOOGLE_CLIENT_ID
   return NextResponse.json({ enabled: !!clientId, clientId: clientId || null })
 }
 
-export async function POST(req: Request) {
+const GoogleAuthSchema = z.object({
+  credential: z.string().min(1, 'Missing credential'),
+}).strict()
+
+const handler = async (req: NextRequest) => {
   try {
     const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
     if (!GOOGLE_CLIENT_ID) return NextResponse.json({ error: 'Google login not configured' }, { status: 501 })
 
-    const { credential } = await req.json()
-    if (!credential) return NextResponse.json({ error: 'Missing credential' }, { status: 400 })
+    const parsed = GoogleAuthSchema.safeParse(await req.json())
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Missing credential' }, { status: 400 })
+    }
+    const { credential } = parsed.data
 
     const ticketRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`)
     if (!ticketRes.ok) return NextResponse.json({ error: 'Invalid Google token' }, { status: 401 })
@@ -31,7 +41,10 @@ export async function POST(req: Request) {
       if (!user.googleId) await db.user.update({ where: { id: user.id }, data: { googleId } })
     } else {
       user = await db.user.create({
-        data: { email, name, googleId, password: await hashPassword(crypto.randomUUID()) },
+        data: encryptFields(
+          { email, name, googleId, password: await hashPassword(crypto.randomUUID()) },
+          ['name'] as (keyof any)[]
+        ),
       })
     }
 
@@ -39,7 +52,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ totpRequired: true, userId: user.id, email: user.email })
     }
 
-    const token = signToken({ userId: user.id, email: user.email })
+    const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } })
     response.cookies.set('__session', token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
@@ -50,3 +63,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Google login failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 5, window: '60s' })

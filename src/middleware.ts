@@ -8,6 +8,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
 const CSRF_EXEMPT = [
   '/api/csp-report',
   '/api/payments/stripe/webhook',
+  '/api/payments/paypal/webhook',
   '/api/whatsapp/webhook',
   '/api/integrations/meta/webhook',
 ]

@@ -547,29 +547,32 @@ enum Gender {
 }
 
 model User {
-  id            String                @id @default(cuid())
-  storeId       String
-  store         Store                 @relation(fields: [storeId], references: [id])
-  email         String                @unique
-  password      String
-  name          String
-  phone         String?
-  avatar        String?
-  dateOfBirth   DateTime?
-  googleId      String?               @unique
-  gender        Gender?
-  totpSecret    String?
-  totpEnabled   Boolean               @default(false)
-  loyaltyPoints Int                   @default(0)
-  loyaltyTierId String?
-  loyaltyTier   LoyaltyTier?          @relation(fields: [loyaltyTierId], references: [id])
-  createdAt     DateTime              @default(now())
-  addresses     Address[]
-  savedCards    SavedCard[]
-  orders        Order[]
-  notes         CustomerNote[]
-  activityLogs  CustomerActivityLog[]
-  emailLogs     EmailLog[]
+  id                  String                @id @default(cuid())
+  storeId             String
+  store               Store                 @relation(fields: [storeId], references: [id])
+  email               String                @unique
+  password            String
+  name                String
+  phone               String?
+  avatar              String?
+  dateOfBirth         DateTime?
+  googleId            String?               @unique
+  gender              Gender?
+  totpSecret          String?
+  totpEnabled         Boolean               @default(false)
+  loyaltyPoints       Int                   @default(0)
+  loyaltyTierId       String?
+  loyaltyTier         LoyaltyTier?          @relation(fields: [loyaltyTierId], references: [id])
+  failedLoginAttempts Int                   @default(0)
+  lockedUntil         DateTime?
+  tokenVersion        Int                   @default(0)
+  createdAt           DateTime              @default(now())
+  addresses           Address[]
+  savedCards          SavedCard[]
+  orders              Order[]
+  notes               CustomerNote[]
+  activityLogs        CustomerActivityLog[]
+  emailLogs           EmailLog[]
 
   @@index([storeId])
 }

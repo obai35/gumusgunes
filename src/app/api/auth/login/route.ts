@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server'
-import { verifyPassword, signToken } from '@/lib/customer-auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
+import { verifyPassword, signToken, hashPassword } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
+import { logAudit } from '@/lib/audit'
 import { z } from 'zod'
 
 const LoginSchema = z.object({
@@ -8,7 +10,7 @@ const LoginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 }).strict()
 
-export async function POST(req: Request) {
+const handler = async (req: NextRequest) => {
   try {
     const parsed = LoginSchema.safeParse(await req.json())
     if (!parsed.success) {
@@ -20,15 +22,35 @@ export async function POST(req: Request) {
     const { email, password } = parsed.data
 
     const user = await db.user.findUnique({ where: { email } })
-    if (!user) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    }
     if (!user.password) {
       return NextResponse.json({ error: 'This account uses Google sign-in. Please sign in with Google.', code: 'google_only_account' }, { status: 401 })
     }
 
-    const valid = await verifyPassword(password, user.password)
-    if (!valid) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const retryAfter = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000)
+      return NextResponse.json(
+        { error: 'Account temporarily locked. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      )
+    }
 
-    const token = signToken({ userId: user.id, email: user.email })
+    const valid = await verifyPassword(password, user.password)
+    if (!valid) {
+      const attempts = user.failedLoginAttempts + 1
+      const lockData: Record<string, unknown> = { failedLoginAttempts: attempts }
+      if (attempts >= 10) {
+        lockData.lockedUntil = new Date(Date.now() + 15 * 60 * 1000)
+      }
+      await db.user.update({ where: { id: user.id }, data: lockData }).catch(() => {})
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+    }
+
+    await db.user.update({ where: { id: user.id }, data: { failedLoginAttempts: 0, lockedUntil: null } }).catch(() => {})
+
+    const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name, gender: user.gender } })
     response.cookies.set('__session', token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
@@ -39,3 +61,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Login failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 10, window: '60s' })

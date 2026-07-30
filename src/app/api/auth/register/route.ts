@@ -1,5 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { hashPassword, signToken } from '@/lib/customer-auth'
+import { encryptFields } from '@/lib/field-encryption'
 import { db } from '@/lib/db'
 import { z } from 'zod'
 
@@ -15,7 +17,7 @@ const RegisterSchema = z.object({
   gender: z.enum(['MALE', 'FEMALE']).optional(),
 }).strict()
 
-export async function POST(req: Request) {
+const handler = async (req: NextRequest) => {
   try {
     const parsed = RegisterSchema.safeParse(await req.json())
     if (!parsed.success) {
@@ -24,16 +26,19 @@ export async function POST(req: Request) {
         { status: 400 }
       )
     }
-    const { email, password, name, gender } = parsed.data
+    const { email, password, name, gender, phone } = parsed.data
 
     const existing = await db.user.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
 
     const user = await db.user.create({
-      data: { email, password: await hashPassword(password), name, gender },
+      data: encryptFields(
+        { email, password: await hashPassword(password), name, gender, phone },
+        ['name', 'phone'] as (keyof any)[]
+      ),
     })
 
-    const token = signToken({ userId: user.id, email: user.email })
+    const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name, gender: user.gender } })
     response.cookies.set('__session', token, {
       httpOnly: true, secure: process.env.NODE_ENV === 'production',
@@ -44,3 +49,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 5, window: '60s' })

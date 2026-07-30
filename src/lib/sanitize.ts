@@ -1,8 +1,9 @@
+import sanitizeHtml from 'sanitize-html'
+
 export function sanitize(input: string): string {
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
+  return sanitizeHtml(input, {
+    allowedTags: [],
+    allowedAttributes: {},
+    disallowedTagsMode: 'discard',
+  })
 }

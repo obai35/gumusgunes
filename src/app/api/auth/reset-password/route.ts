@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { withRateLimit } from '@/lib/rate-limit'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
@@ -13,7 +14,7 @@ const ResetSchema = z.object({
     .regex(/[0-9]/, 'Must include a digit'),
 }).strict()
 
-export async function POST(req: Request) {
+const handler = async (req: NextRequest) => {
   try {
     const parsed = ResetSchema.safeParse(await req.json())
     if (!parsed.success) {
@@ -56,3 +57,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 5, window: '120s' })
