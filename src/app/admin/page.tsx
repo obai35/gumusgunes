@@ -8,6 +8,7 @@ import Link from 'next/link'
 import {
   ShoppingBag, DollarSign, Package, AlertTriangle, Plus, Eye, Wallet, FileText, ChevronRight, TrendingUp, TrendingDown,
 } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { StatsCard } from '@/components/admin/StatsCard'
 import { RevenueChart } from '@/components/admin/RevenueChart'
@@ -16,14 +17,15 @@ import { TopProducts } from '@/components/admin/TopProducts'
 import { ActivityFeed } from '@/components/admin/ActivityFeed'
 import { PeriodSelector } from '@/components/admin/PeriodSelector'
 
-const quickActions = [
-  { href: '/admin/products/new', label: 'New Product', icon: Plus, desc: 'Add a product', color: 'gold' as const },
-  { href: '/admin/orders', label: 'View Orders', icon: Eye, desc: 'Manage orders', color: 'blue' as const },
-  { href: '/admin/pos', label: 'Open POS', icon: Wallet, desc: 'Take payment', color: 'green' as const },
-  { href: '/admin/accounting', label: 'Accounting', icon: FileText, desc: 'Financial overview', color: 'purple' as const },
+const quickActionKeys = [
+  { href: '/admin/products/new', labelKey: 'newProduct', descKey: 'newProductDesc', icon: Plus, color: 'gold' as const },
+  { href: '/admin/orders', labelKey: 'viewOrders', descKey: 'viewOrdersDesc', icon: Eye, color: 'blue' as const },
+  { href: '/admin/pos', labelKey: 'openPOS', descKey: 'openPOSDesc', icon: Wallet, color: 'green' as const },
+  { href: '/admin/accounting', labelKey: 'accounting', descKey: 'accountingDesc', icon: FileText, color: 'purple' as const },
 ]
 
 export default function AdminDashboard() {
+  const { t } = useTranslation()
   const [overviewDay, setOverviewDay] = useState<any>(null)
   const [overviewWeek, setOverviewWeek] = useState<any>(null)
   const [overviewMonth, setOverviewMonth] = useState<any>(null)
@@ -67,8 +69,8 @@ export default function AdminDashboard() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Your store at a glance</p>
+          <h1 className="text-2xl font-display font-semibold text-foreground">{t('admin.dashboard.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">{t('admin.dashboard.subtitle')}</p>
         </div>
         <PeriodSelector value={dashboardPeriod} onChange={setDashboardPeriod} />
       </div>
@@ -81,16 +83,16 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatsCard icon={ShoppingBag} label="Orders Today" value={String(overviewDay?.totalOrders || 0)} accentColor="gold" />
+          <StatsCard icon={ShoppingBag} label={t('admin.dashboard.ordersToday')} value={String(overviewDay?.totalOrders || 0)} accentColor="gold" />
           <StatsCard
             icon={DollarSign}
-            label="Revenue"
+            label={t('admin.dashboard.revenue')}
             value={`$${(overviewWeek?.totalRevenue || 0).toFixed(2)}`}
-            sub="This week"
+            sub={t('admin.dashboard.thisWeek')}
             accentColor="blue"
           />
-          <StatsCard icon={Package} label="Total Orders" value={String(overviewMonth?.totalOrders || 0)} accentColor="green" />
-          <StatsCard icon={AlertTriangle} label="Low Stock Items" value={String(lowStockCount)} accentColor="orange" />
+          <StatsCard icon={Package} label={t('admin.dashboard.totalOrders')} value={String(overviewMonth?.totalOrders || 0)} accentColor="green" />
+          <StatsCard icon={AlertTriangle} label={t('admin.dashboard.lowStockItems')} value={String(lowStockCount)} accentColor="orange" />
         </div>
       )}
 
@@ -105,7 +107,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        {quickActions.map(action => {
+        {quickActionKeys.map(action => {
           const colorClasses: Record<string, string> = {
             gold: 'bg-gold/10 text-gold group-hover:bg-gold/20',
             blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100',
@@ -121,8 +123,8 @@ export default function AdminDashboard() {
               <div className={`h-10 w-10 rounded-lg flex items-center justify-center transition-colors ${colorClasses[action.color] || colorClasses.gold}`}>
                 <action.icon className="h-5 w-5" />
               </div>
-              <span className="text-xs font-medium">{action.label}</span>
-              <span className="text-[10px] text-muted-foreground">{action.desc}</span>
+              <span className="text-xs font-medium">{t('admin.dashboard.' + action.labelKey)}</span>
+              <span className="text-[10px] text-muted-foreground">{t('admin.dashboard.' + action.descKey)}</span>
             </Link>
           )
         })}
@@ -136,18 +138,28 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <SectionCard title="Recent Orders" icon={ShoppingBag} href="/admin/orders">
-          <OrdersList />
+        <SectionCard title={t('admin.dashboard.recentOrders')} icon={ShoppingBag} href="/admin/orders" viewAllLabel={t('admin.dashboard.viewAll')}>
+          <OrdersList t={t} />
         </SectionCard>
-        <SectionCard title="Low Stock Alerts" icon={AlertTriangle} href="/admin/inventory">
-          <LowStockList onTotal={setLowStockCount} />
+        <SectionCard title={t('admin.dashboard.lowStockAlerts')} icon={AlertTriangle} href="/admin/inventory" viewAllLabel={t('admin.dashboard.viewAll')}>
+          <LowStockList onTotal={setLowStockCount} t={t} />
         </SectionCard>
       </div>
     </div>
   )
 }
 
-function SectionCard({ title, icon: Icon, href, children }: { title: string; icon: any; href: string; children: React.ReactNode }) {
+function statusLabel(t: (key: string) => string, status: string): string {
+  const map: Record<string, string> = {
+    delivered: 'admin.dashboard.statusDelivered',
+    shipped: 'admin.dashboard.statusShipped',
+    processing: 'admin.dashboard.statusProcessing',
+    pending: 'admin.dashboard.statusPending',
+  }
+  return t(map[status] || status)
+}
+
+function SectionCard({ title, icon: Icon, href, viewAllLabel, children }: { title: string; icon: any; href: string; viewAllLabel: string; children: React.ReactNode }) {
   return (
     <div className="bg-card rounded-xl border-border p-5">
       <div className="flex items-center justify-between mb-4">
@@ -156,7 +168,7 @@ function SectionCard({ title, icon: Icon, href, children }: { title: string; ico
           {title}
         </h2>
         <Link href={href} className="text-xs text-gold hover:text-gold/80 font-medium flex items-center gap-1 transition-colors">
-          View All <ChevronRight className="h-3 w-3" />
+          {viewAllLabel} <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
       {children}
@@ -164,7 +176,7 @@ function SectionCard({ title, icon: Icon, href, children }: { title: string; ico
   )
 }
 
-function OrdersList() {
+function OrdersList({ t }: { t: (key: string) => string }) {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -192,20 +204,20 @@ function OrdersList() {
             <p className="text-sm font-medium text-foreground">{order.orderNumber || order.receiptNumber || `#${order.id.slice(0, 8)}`}</p>
             <p className="text-xs text-muted-foreground">{order.fullName} · ${(order.totalAmount || 0).toFixed(2)}</p>
           </div>
-          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+          <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
             order.status === 'delivered' ? 'bg-green-50 text-green-700' :
             order.status === 'shipped' ? 'bg-blue-50 text-blue-700' :
             order.status === 'processing' ? 'bg-yellow-50 text-yellow-700' :
             'bg-gray-50 text-gray-700'
-          }`}>{order.status}</span>
+          }`}>{statusLabel(t, order.status)}</span>
         </div>
       ))}
-      {orders.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">No orders yet.</p>}
+      {orders.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">{t('admin.dashboard.noOrders')}</p>}
     </div>
   )
 }
 
-function LowStockList({ onTotal }: { onTotal?: (n: number) => void }) {
+function LowStockList({ onTotal, t }: { onTotal?: (n: number) => void; t: (key: string) => string }) {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -239,10 +251,10 @@ function LowStockList({ onTotal }: { onTotal?: (n: number) => void }) {
           </div>
           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
             p.stock === 0 ? 'bg-red-50 text-red-700' : 'bg-orange-50 text-orange-700'
-          }`}>{p.stock} left</span>
+          }`}>{t('admin.dashboard.itemsLeft', p.stock)}</span>
         </div>
       ))}
-      {products.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">All products are well-stocked.</p>}
+      {products.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">{t('admin.dashboard.wellStocked')}</p>}
     </div>
   )
 }

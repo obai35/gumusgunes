@@ -20,63 +20,85 @@ import {
 import { SheetTrigger } from '@/components/ui/sheet'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 
-const segmentLabels: Record<string, string> = {
-  'admin': 'Admin',
-  'orders': 'Orders',
-  'returns': 'Returns',
-  'receipts': 'Receipts',
-  'pos': 'POS',
-  'shipping': 'Shipping',
-  'customer-service': 'Customer Service',
-  'branches': 'Branches',
-  'products': 'Products',
-  'categories': 'Categories',
-  'brands': 'Brands',
-  'reviews': 'Reviews',
-  'quality-control': 'Quality Control',
-  'inventory': 'Inventory',
-  'stock-transfers': 'Stock Transfers',
-  'purchase-orders': 'Purchase Orders',
-  'warehouses': 'Warehouses',
-  'discounts': 'Discounts',
-  'customers': 'Customers',
-  'accounting': 'Accounting',
-  'reports': 'Reports',
-  'tax-rates': 'Tax Rates',
-  'payments': 'Payments',
-  'currencies': 'Currencies',
-  'pricing': 'Pricing',
-  'content': 'Content',
-  'blog': 'Blog',
-  'faq': 'FAQ',
-  'banners': 'Banners',
-  'pages': 'Pages',
-  'media': 'Media',
-  'system': 'System',
-  'audit-log': 'Audit Log',
-  'webhooks': 'Webhooks',
-  'api-keys': 'API Keys',
-  'cache': 'Cache',
-  'feature-flags': 'Feature Flags',
-  'health': 'System Health',
-  'admins': 'Admins',
-  'security': 'Security',
-  'settings': 'Settings',
-  'translations': 'Translations',
-  'editor': 'Site Editor',
-  'social': 'Social',
-  'newsletter': 'Newsletter',
-  'manufacturing': 'Manufacturing',
-  'cost-pools': 'Cost Pools',
-  'formulas': 'Formulas',
-  'cost-cards': 'Cost Cards',
-  'lists': 'Price Lists',
+const segmentTransKey: Record<string, string> = {
+  'admin': 'dashboard',
+  'orders': 'orders',
+  'returns': 'returns',
+  'receipts': 'receipts',
+  'pos': 'pos',
+  'shipping': 'shipping',
+  'customer-service': 'customerService',
+  'branches': 'branches',
+  'products': 'products',
+  'categories': 'categories',
+  'brands': 'brands',
+  'reviews': 'reviews',
+  'quality-control': 'qualityControl',
+  'inventory': 'inventory',
+  'stock-transfers': 'stockTransfers',
+  'purchase-orders': 'purchaseOrders',
+  'warehouses': 'warehouses',
+  'discounts': 'discounts',
+  'customers': 'customers',
+  'accounting': 'accounting',
+  'reports': 'reports',
+  'tax-rates': 'taxRates',
+  'payments': 'payments',
+  'currencies': 'currencies',
+  'pricing': 'pricing',
+  'content': 'content',
+  'blog': 'blog',
+  'faq': 'faq',
+  'banners': 'banners',
+  'pages': 'pages',
+  'media': 'media',
+  'system': 'system',
+  'audit-log': 'auditLog',
+  'webhooks': 'webhooks',
+  'api-keys': 'apiKeys',
+  'cache': 'cache',
+  'feature-flags': 'featureFlags',
+  'health': 'systemHealth',
+  'admins': 'admins',
+  'security': 'security',
+  'settings': 'settings',
+  'translations': 'translations',
+  'editor': 'siteEditor',
+  'social': 'social',
+  'newsletter': 'newsletter',
+  'manufacturing': 'manufacturing',
+  'cost-pools': 'costPools',
+  'formulas': 'formulas',
+  'cost-cards': 'costCards',
+  'lists': 'priceLists',
+  'marketing': 'marketing',
+  'abandoned-carts': 'abandonedCarts',
+  'coupons': 'coupons',
+  'email-campaigns': 'emailCampaigns',
+  'gift-cards': 'giftCards',
+  'push-campaigns': 'pushCampaigns',
+  'referrals': 'referrals',
+  'sales': 'sales',
+  'seo': 'seo',
+  'segments': 'segments',
+  'tiers': 'tiers',
+  'analytics': 'analytics',
+  'campaigns': 'campaigns',
+  'comments': 'comments',
+  'posts': 'posts',
+  'new': 'new',
+  'customer-service': 'customerService',
+  'adjust': 'adjust',
+  'agent': 'agent',
+  'settings': 'settings',
+  'login': 'login',
+  'advertising': 'advertising',
 }
 
-function formatSegment(seg: string): string {
-  return segmentLabels[seg] || seg
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase())
+function formatSegment(t: (key: string) => string, seg: string): string {
+  const key = segmentTransKey[seg]
+  if (key) return t('admin.sidebar.' + key)
+  return seg.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export function TopBar() {
@@ -106,11 +128,11 @@ export function TopBar() {
                 return (
                   <BreadcrumbItem key={href}>
                     {isLast ? (
-                      <BreadcrumbPage className="text-sm font-medium">{formatSegment(seg)}</BreadcrumbPage>
+                      <BreadcrumbPage className="text-sm font-medium">{formatSegment(t, seg)}</BreadcrumbPage>
                     ) : (
                       <>
                         <BreadcrumbLink asChild>
-                          <Link href={href} className="text-sm text-muted-foreground hover:text-foreground">{formatSegment(seg)}</Link>
+                          <Link href={href} className="text-sm text-muted-foreground hover:text-foreground">{formatSegment(t, seg)}</Link>
                         </BreadcrumbLink>
                         <BreadcrumbSeparator>
                           <ChevronRight className="h-3.5 w-3.5" />
@@ -150,7 +172,7 @@ export function TopBar() {
                 {user?.email}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>{t('admin.dashboard.profile')}</DropdownMenuItem>
               <DropdownMenuItem>{t('admin.common.settings')}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
