@@ -90,6 +90,9 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
               <div class="flex justify-between text-sm"><span>Card</span><span class="font-bold">E£${(receipt.cardAmount || 0).toFixed(2)}</span></div>
             ` : ''}
           </div>
+          <div class="text-center" style="margin-top:12px">
+            <img src="/api/barcode?text=${receipt.receiptNumber}" alt="" style="display:inline-block;max-width:220px" />
+          </div>
           ${showReturnPolicy ? `<p class="text-center text-xs" style="margin-top:16px">Returns accepted within ${returnDays} days</p>` : ''}
           <p class="text-center text-xs" style="margin-top:4px">${footer}</p>
         </body>
@@ -131,6 +134,9 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
             ${receipt.items.map((item) => `
               <div class="text-sm font-bold">${item.product.name}</div>
             `).join('')}
+          </div>
+          <div class="text-center" style="margin-top:12px">
+            <img src="/api/barcode?text=${receipt.receiptNumber}" alt="" style="display:inline-block;max-width:220px" />
           </div>
           <p class="text-center text-xs" style="margin-top:16px">Thank you! No refund without original receipt.</p>
         </body>
@@ -218,6 +224,9 @@ export default function ReceiptView({ receipt, onNewSale, isOffline }: Props) {
           )}
         </div>
         <div className="p-4 space-y-2">
+          <div className="flex justify-center">
+            <img src={`/api/barcode?text=${receipt.receiptNumber}`} alt="" className="h-14" />
+          </div>
           {showReturnPolicy && (
             <p className="text-center text-xs text-white/40">Returns accepted within {returnDays} days</p>
           )}

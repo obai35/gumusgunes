@@ -135,6 +135,9 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
               </div>
             `).join('')}
           </div>
+          <div class="text-center" style="margin-top:12px">
+            <img src="/api/barcode?text=${order.receiptNumber || order.orderNumber}" alt="" style="display:inline-block;max-width:220px" />
+          </div>
           <p class="text-center text-xs" style="margin-top:16px">Thank you! No refund without original receipt.</p>
         </body>
       </html>
@@ -190,6 +193,9 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
           </div>
           <div class="p-4">
             <div class="flex justify-between text-sm"><span>Total</span><span class="font-bold">E£${order.totalAmount.toFixed(2)}</span></div>
+          </div>
+          <div class="text-center" style="margin-top:12px">
+            <img src="/api/barcode?text=${order.receiptNumber || order.orderNumber}" alt="" style="display:inline-block;max-width:220px" />
           </div>
           <p class="text-center text-xs" style="margin-top:16px">Thank you for your purchase!</p>
         </body>

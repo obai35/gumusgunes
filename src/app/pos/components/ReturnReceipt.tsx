@@ -90,6 +90,10 @@ export default function ReturnReceipt({ returnData, branchName, onClose }: Retur
           </div>
         </div>
 
+        <div className="flex justify-center mt-4">
+          <img src={`/api/barcode?text=${returnData.order.receiptNumber}`} alt="" className="h-14" />
+        </div>
+
         <div className="text-center text-xs text-gray-500 mt-6">
           <p>Processed by: {returnData.processedBy.name}</p>
         </div>
