@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-store'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/use-translation'
 import { toast } from 'sonner'
 import { Shield, Smartphone, Copy, Check } from 'lucide-react'
 
 export default function SecurityPage() {
+  const { t } = useTranslation()
   const { user, logout } = useAuth()
   const router = useRouter()
   const [step, setStep] = useState<'idle' | 'showSecret' | 'verify'>('idle')
@@ -33,7 +35,7 @@ export default function SecurityPage() {
     } else {
       const err = await res.json()
       if (err.error === '2FA already enabled') { setTotpEnabled(true); setStep('idle') }
-      else toast.error(err.error || 'Failed to set up 2FA')
+      else toast.error(err.error || t('accountSecurity.failedSetup'))
     }
     setLoading(false)
   }
@@ -45,8 +47,8 @@ export default function SecurityPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: verifyCode }),
     })
-    if (res.ok) { toast.success('2FA enabled!'); setTotpEnabled(true); setStep('idle'); setVerifyCode('') }
-    else { const err = await res.json(); toast.error(err.error || 'Invalid code') }
+    if (res.ok) { toast.success(t('accountSecurity.enabledToast')); setTotpEnabled(true); setStep('idle'); setVerifyCode('') }
+    else { const err = await res.json(); toast.error(err.error || t('accountSecurity.invalidCode')) }
     setLoading(false)
   }
 
@@ -57,8 +59,8 @@ export default function SecurityPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token: disableCode }),
     })
-    if (res.ok) { toast.success('2FA disabled'); setTotpEnabled(false); setStep('idle'); setDisableCode('') }
-    else { const err = await res.json(); toast.error(err.error || 'Invalid code') }
+    if (res.ok) { toast.success(t('accountSecurity.disabledToast')); setTotpEnabled(false); setStep('idle'); setDisableCode('') }
+    else { const err = await res.json(); toast.error(err.error || t('accountSecurity.invalidCode')) }
     setLoading(false)
   }
 
@@ -76,8 +78,8 @@ export default function SecurityPage() {
         <div className="flex items-center gap-3 mb-8">
           <Shield className="h-8 w-8 text-gold" />
           <div>
-            <h1 className="text-2xl font-display font-semibold text-navy">Security Settings</h1>
-            <p className="text-sm text-muted-foreground">Manage your account security</p>
+            <h1 className="text-2xl font-display font-semibold text-navy">{t('accountSecurity.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('accountSecurity.subtitle')}</p>
           </div>
         </div>
 
@@ -86,26 +88,26 @@ export default function SecurityPage() {
             <div className="flex items-center gap-3">
               <Smartphone className="h-5 w-5 text-navy" />
               <div>
-                <p className="font-medium text-navy">Two-Factor Authentication</p>
-                <p className="text-xs text-muted-foreground">{totpEnabled ? 'Enabled' : 'Not set up'}</p>
+                <p className="font-medium text-navy">{t('accountSecurity.twoFactorAuth')}</p>
+                <p className="text-xs text-muted-foreground">{totpEnabled ? t('accountSecurity.enabled') : t('accountSecurity.notSetUp')}</p>
               </div>
             </div>
             {!totpEnabled && step === 'idle' && (
               <button onClick={setup2fa} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">
-                {loading ? 'Loading...' : 'Set Up'}
+                {loading ? t('accountSecurity.loading') : t('accountSecurity.setUp')}
               </button>
             )}
             {totpEnabled && (
-              <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">Active</span>
+              <span className="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-medium">{t('accountSecurity.active')}</span>
             )}
           </div>
 
           {step === 'showSecret' && (
             <div className="space-y-4 p-4 bg-secondary/30 rounded-lg">
-              <p className="text-sm font-medium text-navy">Scan this QR code with your authenticator app:</p>
-              {qrCode && <img src={qrCode} alt="2FA QR Code" className="mx-auto w-48 h-48" />}
+              <p className="text-sm font-medium text-navy">{t('accountSecurity.scanQr')}</p>
+              {qrCode && <img src={qrCode} alt={t('accountSecurity.twoFactorAuth')} className="mx-auto w-48 h-48" />}
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Or enter this key manually:</p>
+                <p className="text-xs text-muted-foreground mb-1">{t('accountSecurity.enterKey')}</p>
                 <div className="flex items-center gap-2">
                   <code className="flex-1 px-3 py-2 bg-white border border-border rounded text-xs font-mono break-all">{secret}</code>
                   <button onClick={copySecret} className="p-2 hover:bg-gray-100 rounded transition-colors">
@@ -114,10 +116,10 @@ export default function SecurityPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-navy">Verify with code from app</label>
+                <label className="text-sm font-medium text-navy">{t('accountSecurity.verifyWithApp')}</label>
                 <div className="flex gap-2 mt-1">
-                  <input type="text" inputMode="numeric" value={verifyCode} onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-border text-sm text-center tracking-[0.3em] font-mono" placeholder="000000" maxLength={6} />
-                  <button onClick={verify2fa} disabled={verifyCode.length !== 6 || loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">Verify</button>
+                  <input type="text" inputMode="numeric" value={verifyCode} onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-border text-sm text-center tracking-[0.3em] font-mono" placeholder={t('accountSecurity.placeholderCode')} maxLength={6} />
+                  <button onClick={verify2fa} disabled={verifyCode.length !== 6 || loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">{t('accountSecurity.verify')}</button>
                 </div>
               </div>
             </div>
@@ -125,10 +127,10 @@ export default function SecurityPage() {
 
           {totpEnabled && (
             <div className="p-4 bg-red-50 rounded-lg space-y-3">
-              <p className="text-sm font-medium text-red-700">To disable 2FA, enter a code from your authenticator app:</p>
+              <p className="text-sm font-medium text-red-700">{t('accountSecurity.disableInstructions')}</p>
               <div className="flex gap-2">
-                <input type="text" inputMode="numeric" value={disableCode} onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-red-200 text-sm text-center tracking-[0.3em] font-mono" placeholder="000000" maxLength={6} />
-                <button onClick={disable2fa} disabled={disableCode.length !== 6 || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">Disable</button>
+                <input type="text" inputMode="numeric" value={disableCode} onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-red-200 text-sm text-center tracking-[0.3em] font-mono" placeholder={t('accountSecurity.placeholderCode')} maxLength={6} />
+                <button onClick={disable2fa} disabled={disableCode.length !== 6 || loading} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors">{t('accountSecurity.disable')}</button>
               </div>
             </div>
           )}

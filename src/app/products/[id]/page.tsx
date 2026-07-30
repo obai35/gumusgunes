@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
+import { T } from '@/components/store/Translated'
 import ProductDetailClient from './ProductDetailClient'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
@@ -64,9 +65,9 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2">
-              <li><a href="/" className="hover:text-gold transition-colors">Home</a></li>
+              <li><a href="/" className="hover:text-gold transition-colors"><T path="nav.home" /></a></li>
               <li><span className="mx-2">/</span></li>
-              <li><a href="/products" className="hover:text-gold transition-colors">Products</a></li>
+              <li><a href="/products" className="hover:text-gold transition-colors"><T path="productsPage.products" /></a></li>
               <li><span className="mx-2">/</span></li>
               <li className="text-navy font-medium truncate max-w-[200px]">{serialized.product.name}</li>
             </ol>

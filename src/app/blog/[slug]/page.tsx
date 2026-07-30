@@ -7,6 +7,7 @@ import { Footer } from '@/components/store/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { SafeHtml } from '@/components/ui/SafeHtml'
+import { T } from '@/components/store/Translated'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
@@ -29,16 +30,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <article className="max-w-3xl mx-auto px-4 py-12">
           <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2">
-              <li><a href="/" className="hover:text-gold transition-colors">Home</a></li>
+              <li><a href="/" className="hover:text-gold transition-colors"><T path="nav.home" /></a></li>
               <li><span className="mx-2">/</span></li>
-              <li><Link href="/blog" className="hover:text-gold transition-colors">Blog</Link></li>
+              <li><Link href="/blog" className="hover:text-gold transition-colors"><T path="blogPage.blog" /></Link></li>
               <li><span className="mx-2">/</span></li>
               <li className="text-navy font-medium truncate max-w-[200px]">{post.title}</li>
             </ol>
           </nav>
 
           <Link href="/blog" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-gold mb-6 transition-colors">
-            <ArrowLeft className="h-4 w-4" /> Back to Blog
+            <ArrowLeft className="h-4 w-4" /> <T path="blogPost.backToBlog" />
           </Link>
 
           {post.featuredImage && (

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
@@ -6,6 +6,7 @@ import { Suspense, useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { ChevronDown, Search } from 'lucide-react'
+import { useTranslation } from '@/hooks/use-translation'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
@@ -48,18 +49,18 @@ export default function FaqPage() {
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
               <ol className="flex items-center gap-2">
-                <li><a href="/" className="hover:text-gold transition-colors">Home</a></li>
+                <li><a href="/" className="hover:text-gold transition-colors">{t('nav.home')}</a></li>
                 <li><span className="mx-2">/</span></li>
-                <li className="text-navy font-medium">FAQ</li>
+                <li className="text-navy font-medium">{t('faqPage.faq')}</li>
               </ol>
             </nav>
-            <h1 className="text-4xl font-display font-semibold text-navy mb-2">Frequently Asked Questions</h1>
-            <p className="text-muted-foreground mb-8 max-w-xl">Find answers to common questions about ordering, shipping, returns, and more.</p>
+            <h1 className="text-4xl font-display font-semibold text-navy mb-2">{t('faqPage.title')}</h1>
+            <p className="text-muted-foreground mb-8 max-w-xl">{t('faqPage.description')}</p>
           </motion.div>
 
           <div className="relative mb-10">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search questions or keywords…" className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-navy text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors" />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder={t('faqPage.searchPlaceholder')} className="w-full h-12 pl-11 pr-4 rounded-xl border border-border bg-background text-navy text-sm focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold transition-colors" />
           </div>
 
           {categories.map(cat => {
@@ -90,7 +91,7 @@ export default function FaqPage() {
           })}
 
           {filtered.length === 0 && (
-            <p className="text-center text-muted-foreground py-12">No results found for "{search}".</p>
+            <p className="text-center text-muted-foreground py-12">{t('faqPage.noResults', { search })}</p>
           )}
         </div>
       </main>
@@ -99,3 +100,11 @@ export default function FaqPage() {
     </>
   )
 }
+
+
+
+
+
+
+
+

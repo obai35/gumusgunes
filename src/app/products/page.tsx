@@ -3,6 +3,7 @@ import { Footer } from '@/components/store/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import ProductsPageClient from './ProductsPageClient'
+import { T } from '@/components/store/Translated'
 import type { Metadata } from 'next'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
@@ -39,12 +40,12 @@ export default async function ProductsPage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2">
-              <li><a href="/" className="hover:text-gold transition-colors">Home</a></li>
+              <li><a href="/" className="hover:text-gold transition-colors"><T path="nav.home" /></a></li>
               <li><span className="mx-2">/</span></li>
-              <li className="text-navy font-medium">Products</li>
+              <li className="text-navy font-medium"><T path="productsPage.products" /></li>
             </ol>
           </nav>
-          <h1 className="text-4xl font-display font-semibold text-navy mb-8">Our Collection</h1>
+          <h1 className="text-4xl font-display font-semibold text-navy mb-8"><T path="productsPage.ourCollection" /></h1>
           <ProductsPageClient categories={categories} initialProducts={initialProducts} />
         </div>
       </main>

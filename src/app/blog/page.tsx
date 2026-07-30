@@ -5,6 +5,7 @@ import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
+import { T } from '@/components/store/Translated'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
@@ -53,17 +54,17 @@ export default async function BlogPage({
         <div className="max-w-6xl mx-auto px-4 py-12">
           <nav className="text-sm text-muted-foreground mb-6" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2">
-              <li><a href="/" className="hover:text-gold transition-colors">Home</a></li>
+              <li><a href="/" className="hover:text-gold transition-colors"><T path="nav.home" /></a></li>
               <li><span className="mx-2">/</span></li>
-              <li className="text-navy font-medium">Blog</li>
+              <li className="text-navy font-medium"><T path="blogPage.blog" /></li>
             </ol>
           </nav>
-          <h1 className="text-4xl font-display font-semibold text-navy mb-2">Our Journal</h1>
-          <p className="text-muted-foreground mb-8 max-w-xl">Stories, guides, and insights from the world of Gümüş Güneş.</p>
+          <h1 className="text-4xl font-display font-semibold text-navy mb-2"><T path="blogPage.title" /></h1>
+          <p className="text-muted-foreground mb-8 max-w-xl"><T path="blogPage.description" /></p>
 
           {catList.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-10">
-              <Link href="/blog" className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${!categoryFilter ? 'bg-navy text-silver' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'}`}>All</Link>
+              <Link href="/blog" className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${!categoryFilter ? 'bg-navy text-silver' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'}`}><T path="blogPage.all" /></Link>
               {catList.map(cat => (
                 <Link key={cat} href={`/blog?category=${encodeURIComponent(cat)}`} className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${categoryFilter === cat ? 'bg-navy text-silver' : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'}`}>{cat}</Link>
               ))}
@@ -72,7 +73,7 @@ export default async function BlogPage({
 
           {posts.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground">No posts yet. Check back soon!</p>
+              <p className="text-muted-foreground"><T path="blogPage.noPosts" /></p>
             </div>
           ) : (
             <>
@@ -98,7 +99,7 @@ export default async function BlogPage({
                         {post.publishedAt && (
                           <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{new Date(post.publishedAt).toLocaleDateString()}</span>
                         )}
-                        <span className="flex items-center gap-1 text-gold group-hover:gap-2 transition-all">Read <ArrowRight className="h-3 w-3" /></span>
+                        <span className="flex items-center gap-1 text-gold group-hover:gap-2 transition-all"><T path="blogPage.read" /> <ArrowRight className="h-3 w-3" /></span>
                       </div>
                     </div>
                   </Link>

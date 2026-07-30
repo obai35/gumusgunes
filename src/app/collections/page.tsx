@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
@@ -8,6 +8,7 @@ import { motion, type Variants } from 'framer-motion'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import type { Category } from '@/lib/types'
+import { useTranslation } from '@/hooks/use-translation'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
@@ -53,7 +54,7 @@ function CategoryCard({ category, index }: { category: Category; index: number }
               </h3>
               {category._count && (
                 <p className="text-xs text-silver/60 tracking-wide">
-                  {category._count.products} {category._count.products === 1 ? 'piece' : 'pieces'}
+                  {category._count.products} {category._count.products === 1 ? t('collections.piece') : t('collections.pieces')}
                 </p>
               )}
             </div>
@@ -70,6 +71,7 @@ function CategoryCard({ category, index }: { category: Category; index: number }
 }
 
 function CollectionsContent() {
+  const { t } = useTranslation()
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -108,13 +110,13 @@ function CollectionsContent() {
             >
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gold/10 border border-gold/20 text-gold text-xs tracking-widest uppercase mb-6">
                 <Sparkles className="h-3.5 w-3.5" />
-                Handcrafted with purpose
+                {t('collections.handcraftedWithPurpose')}
               </div>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold text-silver mb-4">
-                Our Collections
+                {t('collections.ourCollections')}
               </h1>
               <p className="text-silver/60 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-                Each piece tells a story. Explore our curated collections of stainless steel accessories, made to last a lifetime.
+                {t('collections.description')}
               </p>
             </motion.div>
           </div>
@@ -124,9 +126,9 @@ function CollectionsContent() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <nav className="text-sm text-muted-foreground" aria-label="Breadcrumb">
             <ol className="flex items-center gap-2">
-              <li><a href="/" className="hover:text-gold transition-colors">Home</a></li>
+              <li><a href="/" className="hover:text-gold transition-colors">{t('nav.home')}</a></li>
               <li><span className="mx-2">/</span></li>
-              <li className="text-navy font-medium">Collections</li>
+              <li className="text-navy font-medium">{t('collections.collections')}</li>
             </ol>
           </nav>
         </div>
@@ -141,8 +143,8 @@ function CollectionsContent() {
             </div>
           ) : categories.length === 0 ? (
             <div className="text-center py-20">
-              <p className="font-display text-2xl text-navy mb-2">No collections yet</p>
-              <p className="text-muted-foreground text-sm">Check back soon for new arrivals.</p>
+              <p className="font-display text-2xl text-navy mb-2">{t('collections.noCollections')}</p>
+              <p className="text-muted-foreground text-sm">{t('collections.checkBackSoon')}</p>
             </div>
           ) : (
             <motion.div
@@ -171,3 +173,4 @@ export default function CollectionsPage() {
     </Suspense>
   )
 }
+

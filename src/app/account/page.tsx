@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-store'
 import { useHydrated } from '@/hooks/use-hydrated'
+import { useTranslation } from '@/hooks/use-translation'
 import { useRouter } from 'next/navigation'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
@@ -17,13 +18,6 @@ import { OrderTrackModal } from './OrderTrackModal'
 import type { Order } from './OrdersSection'
 
 type Tab = 'profile' | 'addresses' | 'cards' | 'orders'
-
-const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
-  { key: 'profile', label: 'Profile', icon: User },
-  { key: 'addresses', label: 'Addresses', icon: MapPin },
-  { key: 'cards', label: 'Payment Methods', icon: CreditCard },
-  { key: 'orders', label: 'Orders', icon: Package },
-]
 
 const TAB_VALID: Record<string, Tab> = { profile: 'profile', addresses: 'addresses', cards: 'cards', orders: 'orders' }
 
@@ -44,8 +38,16 @@ function TabButton({ active, label, icon: Icon, onClick }: { active: boolean; la
 
 export default function AccountPage() {
   const hydrated = useHydrated()
+  const { t } = useTranslation()
   const { user, logout, isAuthenticated, loading } = useAuth()
   const router = useRouter()
+
+  const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
+    { key: 'profile', label: t('account.profile'), icon: User },
+    { key: 'addresses', label: t('account.addresses'), icon: MapPin },
+    { key: 'cards', label: t('account.paymentMethods'), icon: CreditCard },
+    { key: 'orders', label: t('account.orders'), icon: Package },
+  ]
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [trackModal, setTrackModal] = useState<Order | null>(null)
 
@@ -65,15 +67,15 @@ export default function AccountPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="font-display text-3xl font-semibold text-navy">My Account</h1>
-              <p className="text-sm text-muted-foreground mt-1">Welcome back, {user?.name || 'there'}</p>
+              <h1 className="font-display text-3xl font-semibold text-navy">{t('account.myAccount')}</h1>
+              <p className="text-sm text-muted-foreground mt-1">{t('account.welcomeBack')} {user?.name || 'there'}</p>
             </div>
             <Button
               onClick={() => { logout(); router.push('/') }}
               variant="outline"
               className="rounded-full text-sm press"
             >
-              Sign Out
+              {t('account.signOut')}
             </Button>
           </div>
 

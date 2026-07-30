@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useTranslation } from '@/hooks/use-translation'
 import { toast } from 'sonner'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [token] = useState(() => {
     if (typeof window !== 'undefined') return new URLSearchParams(window.location.search).get('token') || ''
     return ''
@@ -23,7 +25,7 @@ export default function ResetPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!token) { toast.error('Invalid reset link'); return }
+    if (!token) { toast.error(t('auth.resetPassword.invalidResetLinkToast')); return }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/reset-password', {
@@ -33,13 +35,13 @@ export default function ResetPasswordPage() {
       })
       if (res.ok) {
         setDone(true)
-        toast.success('Password reset successfully')
+        toast.success(t('auth.resetPassword.passwordResetSuccess'))
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Failed to reset password')
+        toast.error(data.error || t('auth.resetPassword.failedToReset'))
       }
     } catch {
-      toast.error('Something went wrong')
+      toast.error(t('auth.resetPassword.somethingWentWrong'))
     } finally {
       setLoading(false)
     }
@@ -49,9 +51,9 @@ export default function ResetPasswordPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-secondary/30 px-4">
         <div className="w-full max-w-sm text-center">
-          <h1 className="text-2xl font-display font-semibold text-navy mb-4">Invalid Link</h1>
-          <p className="text-sm text-muted-foreground mb-6">This password reset link is invalid or has expired.</p>
-          <Link href="/forgot-password" className="text-gold hover:underline font-medium">Request a new reset link</Link>
+          <h1 className="text-2xl font-display font-semibold text-navy mb-4">{t('auth.resetPassword.invalidLink')}</h1>
+          <p className="text-sm text-muted-foreground mb-6">{t('auth.resetPassword.invalidLinkDesc')}</p>
+          <Link href="/forgot-password" className="text-gold hover:underline font-medium">{t('auth.resetPassword.requestNewLink')}</Link>
         </div>
       </div>
     )
@@ -67,7 +69,7 @@ export default function ResetPasswordPage() {
             </div>
             <span className="font-display text-2xl font-semibold text-navy">Gümüş <span className="gold-text">Güneş</span></span>
           </Link>
-          <h1 className="text-2xl font-display font-semibold text-navy">Set New Password</h1>
+          <h1 className="text-2xl font-display font-semibold text-navy">{t('auth.resetPassword.setNewPassword')}</h1>
         </div>
 
         {done ? (
@@ -75,9 +77,9 @@ export default function ResetPasswordPage() {
             <div className="h-12 w-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             </div>
-            <p className="text-sm text-navy font-medium mb-2">Password Updated</p>
-            <p className="text-xs text-muted-foreground mb-4">Your password has been reset successfully.</p>
-            <Link href="/login" className="text-sm text-gold hover:underline font-medium">Sign in with your new password</Link>
+            <p className="text-sm text-navy font-medium mb-2">{t('auth.resetPassword.passwordUpdated')}</p>
+            <p className="text-xs text-muted-foreground mb-4">{t('auth.resetPassword.passwordUpdatedDesc')}</p>
+            <Link href="/login" className="text-sm text-gold hover:underline font-medium">{t('auth.resetPassword.signInWithNewPassword')}</Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4 shadow-sm">
@@ -99,7 +101,7 @@ export default function ResetPasswordPage() {
                 "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
                 "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
               )}>
-                Email
+                {t('auth.login.email')}
               </span>
               {errors.email && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.email}</p>}
             </label>
@@ -113,10 +115,10 @@ export default function ResetPasswordPage() {
                   const val = e.target.value
                   setPassword(val)
                   let err = ''
-                  if (val.length > 0 && val.length < 8) err = 'At least 8 characters'
-                  else if (val.length > 0 && !/[a-z]/.test(val)) err = 'Must include a lowercase letter'
-                  else if (val.length > 0 && !/[A-Z]/.test(val)) err = 'Must include an uppercase letter'
-                  else if (val.length > 0 && !/[0-9]/.test(val)) err = 'Must include a digit'
+                  if (val.length > 0 && val.length < 8) err = t('auth.resetPassword.atLeast8Chars')
+                  else if (val.length > 0 && !/[a-z]/.test(val)) err = t('auth.resetPassword.mustIncludeLowercase')
+                  else if (val.length > 0 && !/[A-Z]/.test(val)) err = t('auth.resetPassword.mustIncludeUppercase')
+                  else if (val.length > 0 && !/[0-9]/.test(val)) err = t('auth.resetPassword.mustIncludeDigit')
                   setErrors(prev => ({ ...prev, password: err }))
                 }}
                 className={cn(
@@ -135,7 +137,7 @@ export default function ResetPasswordPage() {
                 "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
                 "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
               )}>
-                New Password
+                {t('auth.resetPassword.newPassword')}
               </label>
               {errors.password && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.password}</p>}
             </div>
@@ -145,7 +147,7 @@ export default function ResetPasswordPage() {
               className="w-full py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Reset Password
+              {t('auth.resetPassword.resetPassword')}
             </button>
           </form>
         )}

@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslation } from '@/hooks/use-translation'
 import { toast } from 'sonner'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function ForgotPasswordPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [sent, setSent] = useState(false)
@@ -15,7 +17,7 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     const newErrors: Record<string, string> = {}
-    if (!email) newErrors.email = 'Email is required'
+    if (!email) newErrors.email = t('auth.forgotPassword.emailRequired')
     if (Object.keys(newErrors).length) { setErrors(newErrors); return }
     setLoading(true)
     try {
@@ -26,13 +28,13 @@ export default function ForgotPasswordPage() {
       })
       if (res.ok) {
         setSent(true)
-        toast.success('Check your email for a reset link')
+        toast.success(t('auth.forgotPassword.checkEmail'))
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Something went wrong')
+        toast.error(data.error || t('auth.forgotPassword.somethingWentWrong'))
       }
     } catch {
-      toast.error('Something went wrong')
+      toast.error(t('auth.forgotPassword.somethingWentWrong'))
     } finally {
       setLoading(false)
     }
@@ -48,8 +50,8 @@ export default function ForgotPasswordPage() {
             </div>
             <span className="font-display text-2xl font-semibold text-navy">Gümüş <span className="gold-text">Güneş</span></span>
           </Link>
-          <h1 className="text-2xl font-display font-semibold text-navy">Reset Password</h1>
-          <p className="text-sm text-muted-foreground mt-1">Enter your email to receive a reset link</p>
+          <h1 className="text-2xl font-display font-semibold text-navy">{t('auth.forgotPassword.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('auth.forgotPassword.description')}</p>
         </div>
 
         {sent ? (
@@ -57,9 +59,9 @@ export default function ForgotPasswordPage() {
             <div className="h-12 w-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center mx-auto mb-4">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
             </div>
-            <p className="text-sm text-navy font-medium mb-2">Email Sent</p>
-            <p className="text-xs text-muted-foreground mb-4">If an account exists for <strong>{email}</strong>, you&apos;ll receive a password reset link shortly.</p>
-            <Link href="/login" className="text-sm text-gold hover:underline font-medium">Back to sign in</Link>
+            <p className="text-sm text-navy font-medium mb-2">{t('auth.forgotPassword.emailSent')}</p>
+            <p className="text-xs text-muted-foreground mb-4">{t('auth.forgotPassword.emailSentDesc', email)}</p>
+            <Link href="/login" className="text-sm text-gold hover:underline font-medium">{t('auth.forgotPassword.backToSignIn')}</Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-border p-6 space-y-4 shadow-sm">
@@ -81,7 +83,7 @@ export default function ForgotPasswordPage() {
                 "peer-focus:top-0.5 peer-focus:text-[11px] peer-focus:text-gold",
                 "peer-[:not(:placeholder-shown)]:top-0.5 peer-[:not(:placeholder-shown)]:text-[11px] peer-[:not(:placeholder-shown)]:text-gold"
               )}>
-                Email
+                {t('auth.forgotPassword.email')}
               </span>
               {errors.email && <p className="text-xs text-red-500 mt-1 transition-opacity duration-200">{errors.email}</p>}
             </label>
@@ -91,11 +93,11 @@ export default function ForgotPasswordPage() {
               className="w-full py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              Send Reset Link
+              {t('auth.forgotPassword.sendReset')}
             </button>
             <p className="text-center text-xs text-muted-foreground">
               <Link href="/login" className="inline-flex items-center gap-1 text-gold hover:text-gold/80 font-medium">
-                <ArrowLeft className="h-3 w-3" /> Back to sign in
+                <ArrowLeft className="h-3 w-3" /> {t('auth.forgotPassword.backToSignIn')}
               </Link>
             </p>
           </form>
