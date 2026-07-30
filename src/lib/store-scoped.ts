@@ -24,6 +24,7 @@ const MODELS_WITH_STORE_ID = new Set([
   'ProductionOrderLabor', 'ProductionOrderOutput', 'WorkCenter',
   'Group', 'GroupEntity', 'InterCompanyTransaction', 'ConsolidationRun',
   'FixedAsset', 'DepreciationEntry',
+  'Country',
   'PriceList', 'PriceListItem', 'CostHistory',
   'CostPool', 'PricingFormula', 'ProductCostBreakdown',
   'Routing', 'RoutingStep', 'ProductionOperation', 'ProdOpLabor',

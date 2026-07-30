@@ -21,6 +21,7 @@ const contactInfo = [
 ]
 
 export default function ContactPage() {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')

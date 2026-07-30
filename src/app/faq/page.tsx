@@ -20,6 +20,7 @@ const fallbackFaqs = [
 ]
 
 export default function FaqPage() {
+  const { t } = useTranslation()
   const [faqs, setFaqs] = useState(fallbackFaqs)
   const [search, setSearch] = useState('')
   const [openIndex, setOpenIndex] = useState<number | null>(null)

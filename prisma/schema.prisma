@@ -47,6 +47,7 @@ model Store {
   branches             Branch[]
   paymentMethods       PaymentMethod[]
   shippingMethods      ShippingMethod[]
+  countries            Country[]
   governorates         Governorate[]
   suppliers            Supplier[]
   expenses             Expense[]
@@ -419,16 +420,34 @@ model ReturnItem {
   @@index([storeId])
 }
 
+model Country {
+  id           String        @id @default(cuid())
+  storeId      String
+  store        Store         @relation(fields: [storeId], references: [id])
+  name         String
+  nameAr       String
+  isoCode      String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  governorates Governorate[]
+
+  @@unique([storeId, name])
+  @@index([storeId])
+}
+
 model Governorate {
   id            String         @id @default(cuid())
   storeId       String
   store         Store          @relation(fields: [storeId], references: [id])
-  name          String         @unique
+  countryId     String
+  country       Country        @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  name          String
   nameAr        String
   shippingRates ShippingRate[]
   shippingRules ShippingRule[]
   discounts     Discount[]
 
+  @@unique([storeId, name])
   @@index([storeId])
 }
 

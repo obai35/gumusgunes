@@ -5,8 +5,10 @@ import MethodsTab from '@/components/admin/shipping/MethodsTab'
 import RatesTab from '@/components/admin/shipping/RatesTab'
 import RulesTab from '@/components/admin/shipping/RulesTab'
 import ShipmentsTab from '@/components/admin/shipping/ShipmentsTab'
+import CountriesTab from '@/components/admin/shipping/CountriesTab'
 
 const TABS = [
+  { id: 'countries', label: 'Countries' },
   { id: 'methods', label: 'Shipping Methods' },
   { id: 'rates', label: 'Shipping Rates' },
   { id: 'rules', label: 'Free Shipping Rules' },
@@ -34,6 +36,7 @@ export default function AdminShippingPage() {
           </button>
         ))}
       </div>
+      {activeTab === 'countries' && <CountriesTab />}
       {activeTab === 'methods' && <MethodsTab />}
       {activeTab === 'rates' && <RatesTab />}
       {activeTab === 'rules' && <RulesTab />}
