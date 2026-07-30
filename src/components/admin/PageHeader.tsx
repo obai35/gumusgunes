@@ -14,13 +14,13 @@ export function PageHeader({ title, subtitle, backHref, actions }: PageHeaderPro
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         {backHref && (
-          <Link href={backHref} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <ArrowLeft className="h-5 w-5 text-gray-400" />
+          <Link href={backHref} className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <ArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Link>
         )}
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+          <h1 className="text-xl font-display font-semibold text-foreground">{title}</h1>
+          {subtitle && <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
       </div>
       {actions && <div className="flex items-center gap-3">{actions}</div>}

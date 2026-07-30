@@ -15,14 +15,13 @@ import {
   Store, Users, Shield, Calculator, ArrowLeftRight, FolderTree, UserCircle, MessageSquareText, Mail,
   Truck, Share2, Headset, FileText, Image, HelpCircle, RefreshCw, ClipboardCheck, BarChart3,
   Activity, Webhook, Key, Database, Flag, HeartPulse, Factory, CircleDollarSign, GanttChartSquare,
-  ChevronDown,
-  Languages,
+  ChevronDown, Languages, type LucideIcon,
 } from 'lucide-react'
 
 type NavItem = { href: string; label: string; permission?: string }
 type NavGroup = {
   label: string
-  icon: any
+  icon: LucideIcon
   permission: string
   children: NavItem[]
 }
@@ -212,6 +211,57 @@ const sidebarItemKey: Record<string, string> = {
   'Site Editor': 'siteEditor',
 }
 
+const childIcons: Record<string, LucideIcon> = {
+  'Dashboard': LayoutDashboard,
+  'Orders': ShoppingBag,
+  'Returns': RefreshCw,
+  'Receipts': Receipt,
+  'POS': ShoppingCart,
+  'Shipping': Truck,
+  'Customer Service': Headset,
+  'Branches': Store,
+  'Products': Package,
+  'Categories': FolderTree,
+  'Brands': Tag,
+  'Reviews': MessageSquareText,
+  'Quality Control': ClipboardCheck,
+  'Inventory': Warehouse,
+  'Stock Transfers': ArrowLeftRight,
+  'Purchase Orders': FileText,
+  'Warehouses': Warehouse,
+  'Discounts': Tag,
+  'Customers': Users,
+  'Accounting': Calculator,
+  'Reports': BarChart3,
+  'Tax Rates': CreditCard,
+  'Payments': CreditCard,
+  'Currencies': CircleDollarSign,
+  'Pricing': CircleDollarSign,
+  'Cost Pools': Database,
+  'Formulas': GanttChartSquare,
+  'Cost Cards': CreditCard,
+  'Price Lists': FileText,
+  'Manufacturing': Factory,
+  'Social': Share2,
+  'Newsletter': Mail,
+  'Blog': FileText,
+  'FAQ': HelpCircle,
+  'Banners': Image,
+  'Pages': FileText,
+  'Media': Image,
+  'Audit Log': ClipboardCheck,
+  'Webhooks': Webhook,
+  'API Keys': Key,
+  'Cache': RefreshCw,
+  'Feature Flags': Flag,
+  'System Health': HeartPulse,
+  'Admins': Shield,
+  'Security': Shield,
+  'Settings': Settings,
+  'Translations': Languages,
+  'Site Editor': FileText,
+}
+
 function loadCollapsed(): Set<string> {
   if (typeof window === 'undefined') return new Set()
   try {
@@ -264,90 +314,99 @@ export const Sidebar = memo(function Sidebar({ open, onClose }: SidebarProps) {
   const visibleGroups = groups.filter((g) => isFullAccess || user?.permissions?.includes(g.permission))
 
   return (
-    <>
-      <aside className={`w-64 min-h-screen bg-navy-deep text-silver flex flex-col shrink-0 max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-30 max-lg:transition-transform max-lg:duration-200 ${open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full'}`}>
-          <div className="px-6 py-6 border-b border-silver/10">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Sun className="h-6 w-6 text-gold" />
-              <span className="font-display text-lg font-semibold">Admin</span>
+    <aside className={`w-64 min-h-screen bg-navy-deep text-silver flex flex-col shrink-0 max-lg:fixed max-lg:inset-y-0 max-lg:left-0 max-lg:z-30 max-lg:transition-transform max-lg:duration-200 ${open ? 'max-lg:translate-x-0' : 'max-lg:-translate-x-full'}`}>
+      <div className="px-6 py-6 border-b border-silver/10">
+        <div className="flex items-center justify-between gap-2">
+          <Link href="/admin" className="flex items-center gap-2.5 group">
+            <div className="h-8 w-8 rounded-lg bg-gold/15 flex items-center justify-center group-hover:bg-gold/25 transition-colors">
+              <Sun className="h-4.5 w-4.5 text-gold" />
             </div>
-            {onClose && (
-              <button onClick={onClose} className="lg:hidden text-silver/60 hover:text-silver">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            )}
-          </div>
-          {user?.storeName && (
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-silver/50">
-              <Store className="h-3 w-3" />
-              <span className="truncate">{user.storeName}</span>
+            <div>
+              <span className="font-display text-lg font-semibold text-silver block leading-tight">Gümüş Güneş</span>
+              <span className="text-[10px] text-gold/70 font-medium tracking-wider uppercase">Admin Panel</span>
             </div>
+          </Link>
+          {onClose && (
+            <button onClick={onClose} className="lg:hidden text-silver/60 hover:text-silver">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
           )}
-          </div>
-          <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          {visibleGroups.map((group) => {
-            const isCollapsed = collapsed.has(group.label)
-
-            const visibleChildren = group.children.filter(
-              (c) => !c.permission || isFullAccess || user?.permissions?.includes(c.permission)
-            )
-            if (visibleChildren.length === 0) return null
-
-            return (
-              <div key={group.label} className="mb-1">
-                <button
-                  onClick={() => toggleGroup(group.label)}
-                  className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider text-silver/40 hover:text-silver/70 hover:bg-silver/5 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <group.icon className="h-3.5 w-3.5" />
-                    {t('admin.sidebar.' + (sidebarLabelKey[group.label] || 'dashboard'))}
-                  </div>
-                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-                </button>
-                {!isCollapsed && (
-                  <div className="ml-2 space-y-0.5 mt-0.5">
-                    {visibleChildren.map((child) => {
-                      const isActive = pathname === child.href || (child.href !== '/admin' && pathname.startsWith(child.href))
-                      return (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={onClose}
-                          className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                            isActive
-                              ? 'bg-gold/10 text-gold font-medium'
-                              : 'text-silver/60 hover:text-silver hover:bg-silver/5'
-                          }`}
-                        >
-                          <span className="h-4 w-4 shrink-0" />
-                          {t('admin.sidebar.' + (sidebarItemKey[child.label] || child.label.toLowerCase().replace(/[\s&]+/g, '')))}
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </nav>
-        <AdminChat />
-        <div className="px-3 py-4 border-t border-silver/10 space-y-1">
-          <div className="flex items-center gap-1">
-            <DarkModeToggle />
-            <LanguageToggle />
-            <ShortcutCheatSheet />
-          </div>
-          <button
-            onClick={() => { logout(); router.push('/admin/login') }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-silver/60 hover:text-silver hover:bg-silver/5 w-full transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            {t('admin.common.signOut')}
-          </button>
         </div>
-      </aside>
-    </>
+        {user?.storeName && (
+          <div className="mt-3 flex items-center gap-1.5 text-xs text-silver/50">
+            <Store className="h-3 w-3" />
+            <span className="truncate">{user.storeName}</span>
+          </div>
+        )}
+      </div>
+
+      <nav className="flex-1 px-3 py-4 overflow-y-auto scrollbar-thin">
+        {visibleGroups.map((group) => {
+          const isCollapsed = collapsed.has(group.label)
+
+          const visibleChildren = group.children.filter(
+            (c) => !c.permission || isFullAccess || user?.permissions?.includes(c.permission)
+          )
+          if (visibleChildren.length === 0) return null
+
+          return (
+            <div key={group.label} className="mb-1">
+              <button
+                onClick={() => toggleGroup(group.label)}
+                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider text-silver/40 hover:text-silver/70 hover:bg-silver/5 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <group.icon className="h-3.5 w-3.5" />
+                  {t('admin.sidebar.' + (sidebarLabelKey[group.label] || 'dashboard'))}
+                </div>
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
+              </button>
+              {!isCollapsed && (
+                <div className="ml-2 space-y-0.5 mt-0.5">
+                  {visibleChildren.map((child) => {
+                    const isActive = pathname === child.href || (child.href !== '/admin' && pathname.startsWith(child.href))
+                    const Icon = childIcons[child.label]
+                    return (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={onClose}
+                        className={`relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
+                          isActive
+                            ? 'bg-gold/10 text-gold font-medium'
+                            : 'text-silver/60 hover:text-silver hover:bg-silver/5'
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 rounded-full bg-gold" />
+                        )}
+                        {Icon ? <Icon className={`h-4 w-4 shrink-0 ${isActive ? 'text-gold' : ''}`} /> : <span className="h-4 w-4 shrink-0" />}
+                        {t('admin.sidebar.' + (sidebarItemKey[child.label] || child.label.toLowerCase().replace(/[\s&]+/g, '')))}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </nav>
+
+      <AdminChat />
+      <div className="px-3 py-4 border-t border-silver/10 space-y-1">
+        <div className="flex items-center gap-1">
+          <DarkModeToggle />
+          <LanguageToggle />
+          <ShortcutCheatSheet />
+        </div>
+        <button
+          onClick={() => { logout(); router.push('/admin/login') }}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-silver/60 hover:text-silver hover:bg-silver/5 w-full transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          {t('admin.common.signOut')}
+        </button>
+      </div>
+    </aside>
   )
 })

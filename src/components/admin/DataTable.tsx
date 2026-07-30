@@ -98,7 +98,7 @@ export function DataTable<T extends Record<string, any>>({
           <div
             key={keyExtractor(item)}
             onClick={() => onRowClick?.(item)}
-            className={`bg-card rounded-xl border-border p-4 space-y-2 ${onRowClick ? 'cursor-pointer hover:border-gold/30 transition-colors' : ''}`}
+            className={`bg-card rounded-xl border-border p-4 space-y-2 transition-all hover:border-gold/30 hover:shadow-sm ${onRowClick ? 'cursor-pointer' : ''}`}
           >
             {columns.map((col) => {
               const cellValue = 'accessorKey' in col
@@ -139,12 +139,12 @@ export function DataTable<T extends Record<string, any>>({
         <table className="w-full">
           <thead>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="border-b border-border bg-muted/50">
+              <tr key={headerGroup.id} className="border-b border-border">
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
                     onClick={header.column.getToggleSortingHandler()}
-                    className={`text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3 select-none ${
+                    className={`text-left text-xs font-medium text-muted-foreground uppercase tracking-wider px-4 py-3.5 select-none bg-muted/30 ${
                       header.column.getCanSort() ? 'cursor-pointer hover:text-foreground' : ''
                     }`}
                     style={{ width: header.getSize() !== 150 ? header.getSize() : undefined }}
@@ -158,7 +158,7 @@ export function DataTable<T extends Record<string, any>>({
                           ) : header.column.getIsSorted() === 'desc' ? (
                             <ChevronDown className="h-3 w-3" />
                           ) : (
-                            <ChevronsUpDown className="h-3 w-3 text-muted" />
+                            <ChevronsUpDown className="h-3 w-3 text-muted-foreground/50" />
                           )}
                         </span>
                       )}
@@ -169,11 +169,13 @@ export function DataTable<T extends Record<string, any>>({
             ))}
           </thead>
           <tbody className="divide-y divide-border/50">
-            {table.getRowModel().rows.map(row => (
+            {table.getRowModel().rows.map((row, i) => (
               <tr
                 key={keyExtractor(row.original)}
                 onClick={() => onRowClick?.(row.original)}
-                className={`${onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''} transition-colors`}
+                className={`${i % 2 === 0 ? 'bg-card' : 'bg-muted/20'} ${
+                  onRowClick ? 'cursor-pointer' : ''
+                } transition-colors hover:bg-muted/40`}
               >
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="px-4 py-3 text-sm text-foreground">

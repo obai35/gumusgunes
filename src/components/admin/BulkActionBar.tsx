@@ -27,7 +27,7 @@ export function BulkActionBar({ selectedCount, actions, onClear }: BulkActionBar
         exit={{ y: 20, opacity: 0 }}
         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
       >
-        <div className="flex items-center gap-3 bg-navy text-white px-5 py-3 rounded-full shadow-lg">
+        <div className="flex items-center gap-3 bg-navy text-white px-5 py-3 rounded-full shadow-lg shadow-navy/20">
           <span className="text-sm font-medium whitespace-nowrap">{selectedCount} selected</span>
           <div className="h-4 w-px bg-white/20" />
           <div className="flex items-center gap-2">

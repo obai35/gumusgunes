@@ -29,12 +29,12 @@ export function FilterBar({
   onClearAll, hasActiveFilters = false,
 }: FilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-white rounded-xl border border-gray-100">
+    <div className="flex flex-wrap items-center gap-3 p-4 bg-card rounded-xl border-border">
       {statusOptions.length > 0 && onStatusChange && (
         <select
           value={status || ''}
           onChange={e => onStatusChange(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">All Statuses</option>
           {statusOptions.map(o => (
@@ -48,7 +48,7 @@ export function FilterBar({
           type="date"
           value={dateFrom || ''}
           onChange={e => onDateFromChange(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="From"
         />
       )}
@@ -58,7 +58,7 @@ export function FilterBar({
           type="date"
           value={dateTo || ''}
           onChange={e => onDateToChange(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           placeholder="To"
         />
       )}
@@ -67,7 +67,7 @@ export function FilterBar({
         <select
           value={source || ''}
           onChange={e => onSourceChange(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
           <option value="">All Sources</option>
           {sourceOptions.map(o => (
@@ -79,7 +79,7 @@ export function FilterBar({
       {children}
 
       {hasActiveFilters && onClearAll && (
-        <Button variant="ghost" size="sm" onClick={onClearAll} className="text-red-500 hover:text-red-700">
+        <Button variant="ghost" size="sm" onClick={onClearAll} className="text-destructive hover:text-destructive/80">
           <X className="h-3 w-3 mr-1" />
           Clear all
         </Button>
