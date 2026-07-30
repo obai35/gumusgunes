@@ -12,17 +12,11 @@ export const PUT = withAdmin(async (req: NextRequest, { admin, params }) => {
       workCenterId: body.workCenterId,
       name: body.name,
       description: body.description,
-      standardTime: Number(body.standardTime),
-      setupTime: Number(body.setupTime),
-      laborCost: Number(body.laborCost),
-      machineCost: Number(body.machineCost),
-      notes: body.notes,
+      standardHours: Number(body.standardTime),
+      setupHours: Number(body.setupTime),
       sortOrder: body.sortOrder,
     },
   })
-
-  const totalTime = await sdb.routingStep.aggregate({ where: { routingId: id }, _sum: { standardTime: true } })
-  await sdb.routing.update({ where: { id }, data: { totalStandardTime: totalTime._sum.standardTime ?? 0 } })
 
   return NextResponse.json({ success: true })
 }, 'manufacturing')
@@ -34,11 +28,8 @@ export const DELETE = withAdmin(async (req: NextRequest, { admin, params }) => {
 
   const remaining = await sdb.routingStep.findMany({ where: { routingId: id }, orderBy: { sortOrder: 'asc' } })
   for (let i = 0; i < remaining.length; i++) {
-    await sdb.routingStep.update({ where: { id: remaining[i].id }, data: { stepNumber: i + 1, sortOrder: i } })
+    await sdb.routingStep.update({ where: { id: remaining[i].id }, data: { sortOrder: i } })
   }
-
-  const totalTime = await sdb.routingStep.aggregate({ where: { routingId: id }, _sum: { standardTime: true } })
-  await sdb.routing.update({ where: { id }, data: { totalStandardTime: totalTime._sum.standardTime ?? 0 } })
 
   return NextResponse.json({ success: true })
 }, 'manufacturing')

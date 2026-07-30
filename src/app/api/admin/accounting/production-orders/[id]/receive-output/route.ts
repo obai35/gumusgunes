@@ -21,7 +21,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }: any) =
       unitCost: body.unitCost,
       totalCost,
       isScrap: body.isScrap || false,
-    },
+    } as any,
   })
 
   if (!body.isScrap) {

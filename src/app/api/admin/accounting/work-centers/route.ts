@@ -12,7 +12,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const body = await req.json()
   const item = await sdb.workCenter.create({
-    data: { name: body.name, code: body.code, description: body.description, hourlyRate: body.hourlyRate || 0 },
+    data: { name: body.name, description: body.description, hourlyRate: body.hourlyRate || 0 } as any,
   })
   return NextResponse.json(item, { status: 201 })
 })

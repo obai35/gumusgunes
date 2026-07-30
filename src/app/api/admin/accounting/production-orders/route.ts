@@ -60,7 +60,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       notes: body.notes,
       createdById: admin.id,
       standardCost,
-    },
+    } as any,
     include: { product: true, workCenter: true },
   })
   return NextResponse.json(item, { status: 201 })

@@ -43,7 +43,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     const budget = await sdb.budget.upsert({
       where: { accountCode_month_year: { accountCode, month, year } },
       update: { amount },
-      create: { accountCode, month, year, amount },
+      create: { accountCode, month, year, amount } as any,
     })
 
     return NextResponse.json({ budget })

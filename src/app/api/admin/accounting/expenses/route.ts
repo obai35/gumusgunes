@@ -109,7 +109,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         supplierId: supplierId || null,
         invoiceNumber: invoiceNumber || null,
         notes: notes || null,
-      },
+      } as any,
     })
     try {
       await autoAccountExpense(expense.id)

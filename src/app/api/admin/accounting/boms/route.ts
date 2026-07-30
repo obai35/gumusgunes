@@ -28,9 +28,9 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
           quantity: i.quantity || 1,
           unitCost: i.unitCost,
           scrapPct: i.scrapPct || 0,
-        })),
+        } as any)),
       },
-    },
+    } as any,
     include: { product: true, items: { include: { product: true } } },
   })
 

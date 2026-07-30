@@ -36,9 +36,9 @@ export const POST = withAdmin(async (req: NextRequest, ctx: { params: unknown; a
             accountId: l.accountId,
             debit: l.credit,
             credit: l.debit,
-          })),
+          } as any)),
         },
-      },
+      } as any,
       include: { lines: { include: { account: true } } },
     })
 

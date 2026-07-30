@@ -19,7 +19,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       country: country || 'EG',
       region: region || null,
       isActive: isActive !== undefined ? isActive : true,
-    },
+    } as any,
   })
   return NextResponse.json({ ok: true, taxRate })
 }, 'accounting')

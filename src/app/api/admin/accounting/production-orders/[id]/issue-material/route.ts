@@ -19,7 +19,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }: any) =
       quantity: body.quantity,
       unitCost,
       totalCost,
-    },
+    } as any,
     include: { product: true },
   })
 

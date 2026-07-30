@@ -48,8 +48,8 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
         shipping: order.shipping,
         total: order.totalAmount,
         status: 'draft',
-        items: { create: order.items.map(i => ({ productId: i.productId, name: i.product?.name || `Product ${i.productId.slice(0, 8)}`, quantity: i.quantity, unitPrice: i.price, total: i.price * i.quantity })) },
-      },
+        items: { create: order.items.map(i => ({ productId: i.productId, name: i.product?.name || `Product ${i.productId.slice(0, 8)}`, quantity: i.quantity, unitPrice: i.price, total: i.price * i.quantity } as any)) },
+      } as any,
       include: { items: true },
     })
     return NextResponse.json({ invoice })
@@ -70,8 +70,8 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       issuedAt: new Date(),
       dueAt: body.dueAt ? new Date(body.dueAt) : null,
       notes: body.notes,
-      items: { create: (body.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity, unitPrice: i.unitPrice, total: i.quantity * i.unitPrice })) },
-    },
+      items: { create: (body.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity, unitPrice: i.unitPrice, total: i.quantity * i.unitPrice } as any)) },
+    } as any,
     include: { items: true },
   })
   return NextResponse.json({ invoice })

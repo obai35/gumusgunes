@@ -43,8 +43,8 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       issuedAt: new Date(),
       dueAt: body.dueAt ? new Date(body.dueAt) : null,
       notes: body.notes,
-      items: { create: (body.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity, unitPrice: i.unitPrice, total: i.quantity * i.unitPrice })) },
-    },
+      items: { create: (body.items || []).map((i: any) => ({ name: i.name, quantity: i.quantity, unitPrice: i.unitPrice, total: i.quantity * i.unitPrice } as any)) },
+    } as any,
     include: { items: true },
   })
   return NextResponse.json({ bill })

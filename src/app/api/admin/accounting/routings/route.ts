@@ -19,18 +19,13 @@ export const POST = withAdmin(async (req, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const body = await req.json()
 
-  const count = await sdb.routing.count()
-  const routingId = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + (count + 1)
-
   const item = await sdb.routing.create({
     data: {
       productId: body.productId,
       name: body.name,
-      routingId,
       description: body.description,
-      totalStandardTime: 0,
       isActive: body.isActive ?? true,
-    },
+    } as any,
     include: {
       product: { select: { id: true, name: true, sku: true } },
       steps: { orderBy: { sortOrder: 'asc' } },

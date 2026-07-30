@@ -15,7 +15,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }: any) =
       rate: body.rate,
       totalCost,
       description: body.description,
-    },
+    } as any,
   })
 
   return NextResponse.json(item, { status: 201 })

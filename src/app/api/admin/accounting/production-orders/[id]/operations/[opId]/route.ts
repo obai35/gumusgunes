@@ -10,10 +10,10 @@ export const PATCH = withAdmin(async (req: NextRequest, { admin, params }) => {
   const data: any = {}
   if (body.status) data.status = body.status
   if (body.isCompleted !== undefined) {
-    data.isCompleted = body.isCompleted
+    data.status = body.isCompleted ? 'completed' : 'pending'
     data.completedAt = body.isCompleted ? new Date() : null
   }
-  if (body.operatorNotes !== undefined) data.operatorNotes = body.operatorNotes
+  if (body.operatorNotes !== undefined) data.notes = body.operatorNotes
   if (body.startedAt !== undefined) data.startedAt = body.startedAt ? new Date(body.startedAt) : null
   if (body.startedAt === null) data.startedAt = null
 
@@ -40,21 +40,18 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }) => {
         operationId: opId,
         employeeId: body.employeeId,
         hours: Number(body.hours),
-        cost: Number(body.cost),
-        notes: body.notes || '',
-      },
+        rate: Number(body.cost),
+        description: body.notes || '',
+      } as any,
       include: { employee: { select: { id: true, name: true } } },
     })
 
-    const aggregate = await sdb.prodOpLabor.aggregate({ where: { operationId: opId }, _sum: { cost: true, hours: true } })
-    const totalOpLaborCost = aggregate._sum.cost ?? 0
+    const aggregate = await sdb.prodOpLabor.aggregate({ where: { operationId: opId }, _sum: { totalCost: true, hours: true } })
     const totalOpHours = aggregate._sum.hours ?? 0
 
-    await sdb.productionOperation.update({ where: { id: opId }, data: { actualLaborCost: totalOpLaborCost } })
-
-    const allOps = await sdb.productionOperation.findMany({ where: { productionOrderId: orderId }, select: { id: true, actualLaborCost: true } })
-    const totalLaborCost = allOps.reduce((s, o) => s + (o.actualLaborCost ?? 0), 0)
-    await sdb.productionOrder.update({ where: { id: orderId }, data: { actualLaborCost: totalLaborCost } })
+    // Aggregate all labor for this order and update the order total
+    const orderAgg = await sdb.prodOpLabor.aggregate({ where: { operation: { orderId } }, _sum: { totalCost: true } })
+    await sdb.productionOrder.update({ where: { id: orderId }, data: { actualLaborCost: orderAgg._sum.totalCost ?? 0 } })
 
     return NextResponse.json(entry, { status: 201 })
   }
@@ -62,13 +59,11 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }) => {
   if (body._action === 'delete-labor') {
     await sdb.prodOpLabor.delete({ where: { id: body.laborId } })
 
-    const aggregate = await sdb.prodOpLabor.aggregate({ where: { operationId: opId }, _sum: { cost: true, hours: true } })
-    const totalOpLaborCost = aggregate._sum.cost ?? 0
-    await sdb.productionOperation.update({ where: { id: opId }, data: { actualLaborCost: totalOpLaborCost } })
+    const aggregate = await sdb.prodOpLabor.aggregate({ where: { operationId: opId }, _sum: { totalCost: true, hours: true } })
 
-    const allOps = await sdb.productionOperation.findMany({ where: { productionOrderId: orderId }, select: { id: true, actualLaborCost: true } })
-    const totalLaborCost = allOps.reduce((s, o) => s + (o.actualLaborCost ?? 0), 0)
-    await sdb.productionOrder.update({ where: { id: orderId }, data: { actualLaborCost: totalLaborCost } })
+    // Aggregate all labor for this order and update the order total
+    const orderAgg = await sdb.prodOpLabor.aggregate({ where: { operation: { orderId } }, _sum: { totalCost: true } })
+    await sdb.productionOrder.update({ where: { id: orderId }, data: { actualLaborCost: orderAgg._sum.totalCost ?? 0 } })
 
     return NextResponse.json({ success: true })
   }

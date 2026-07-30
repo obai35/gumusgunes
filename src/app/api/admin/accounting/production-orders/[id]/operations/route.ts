@@ -6,7 +6,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin, params }) => {
   const { id: orderId } = params
   const sdb = storeDb(admin.storeId)
   const items = await sdb.productionOperation.findMany({
-    where: { productionOrderId: orderId },
+    where: { orderId },
     orderBy: { sortOrder: 'asc' },
     include: {
       step: { include: { workCenter: true } },
@@ -24,19 +24,20 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }) => {
   const order = await sdb.productionOrder.findFirst({ where: { id: orderId } })
   if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
 
-  const count = await sdb.productionOperation.count({ where: { productionOrderId: orderId } })
+  const step = body.routingStepId ? await sdb.routingStep.findFirst({ where: { id: body.routingStepId } }) : null
+  const count = await sdb.productionOperation.count({ where: { orderId } })
 
   const item = await sdb.productionOperation.create({
     data: {
-      productionOrderId: orderId,
-      routingStepId: body.routingStepId,
+      orderId,
+      name: step?.name ?? `Operation ${count + 1}`,
+      stepId: body.routingStepId,
       status: 'pending',
       sortOrder: count,
-      operatorNotes: body.operatorNotes || '',
+      notes: body.operatorNotes || '',
       startedAt: body.startedAt ? new Date(body.startedAt) : null,
       completedAt: null,
-      isCompleted: false,
-    },
+    } as any,
     include: {
       step: { include: { workCenter: true } },
       laborEntries: { include: { employee: { select: { id: true, name: true } } } },

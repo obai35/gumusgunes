@@ -7,7 +7,7 @@ export const POST = withAdmin(async (req: NextRequest, { params, admin }) => {
   const sdb = storeDb(admin.storeId)
   const body = await req.json()
   const { transactions } = body
-  const created = []
+  const created: any[] = []
   for (const tx of transactions) {
     const createdTx = await sdb.bankTransaction.create({
       data: {
@@ -18,7 +18,7 @@ export const POST = withAdmin(async (req: NextRequest, { params, admin }) => {
         debit: tx.debit || 0,
         credit: tx.credit || 0,
         balance: tx.balance || 0,
-      },
+      } as any,
     })
     created.push(createdTx)
   }

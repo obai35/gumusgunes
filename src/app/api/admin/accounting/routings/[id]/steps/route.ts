@@ -8,7 +8,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin, params }) => {
   const items = await sdb.routingStep.findMany({
     where: { routingId: id },
     orderBy: { sortOrder: 'asc' },
-    include: { workCenter: { select: { id: true, name: true, code: true } } },
+    include: { workCenter: { select: { id: true, name: true } } },
   })
   return NextResponse.json(items)
 }, 'manufacturing')
@@ -28,20 +28,13 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }) => {
       routingId: id,
       workCenterId: body.workCenterId,
       name: body.name,
-      stepNumber: count + 1,
       sortOrder: body.sortOrder ?? count,
       description: body.description,
-      standardTime: Number(body.standardTime) || 0,
-      setupTime: Number(body.setupTime) || 0,
-      laborCost: Number(body.laborCost) || 0,
-      machineCost: Number(body.machineCost) || 0,
-      notes: body.notes,
-    },
-    include: { workCenter: { select: { id: true, name: true, code: true } } },
+      standardHours: Number(body.standardTime) || 0,
+      setupHours: Number(body.setupTime) || 0,
+    } as any,
+    include: { workCenter: { select: { id: true, name: true } } },
   })
-
-  const totalTime = await sdb.routingStep.aggregate({ where: { routingId: id }, _sum: { standardTime: true } })
-  await sdb.routing.update({ where: { id }, data: { totalStandardTime: totalTime._sum.standardTime ?? 0 } })
 
   return NextResponse.json(item, { status: 201 })
 }, 'manufacturing')

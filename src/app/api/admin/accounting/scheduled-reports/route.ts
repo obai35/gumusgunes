@@ -50,7 +50,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
         recipients: JSON.stringify(recipients || []),
         format: format || 'pdf',
         nextRunAt,
-      },
+      } as any,
     })
 
     return NextResponse.json({

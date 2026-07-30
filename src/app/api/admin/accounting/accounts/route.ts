@@ -73,6 +73,6 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   }
   const existing = await sdb.account.findFirst({ where: { code: parsed.data.code } })
   if (existing) return NextResponse.json({ error: 'Account code already exists' }, { status: 400 })
-  const account = await sdb.account.create({ data: parsed.data })
+  const account = await sdb.account.create({ data: parsed.data as any })
   return NextResponse.json({ account })
 }, 'accounting')
