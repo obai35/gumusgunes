@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { ProductForm } from '../ProductForm'
+import { useTranslation } from '@/hooks/use-translation'
 
 export default function NewProduct() {
+  const { t } = useTranslation()
   const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -18,15 +20,15 @@ export default function NewProduct() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-2xl font-display font-semibold text-navy mb-6">Add Product</h1>
-        <div className="text-sm text-muted-foreground">Loading...</div>
+        <h1 className="text-2xl font-display font-semibold text-navy mb-6">{t('admin.productForm.title')}</h1>
+        <div className="text-sm text-muted-foreground">{t('admin.productForm.loading')}</div>
       </div>
     )
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Add Product</h1>
+      <h1 className="text-2xl font-display font-semibold text-navy mb-6">{t('admin.productForm.title')}</h1>
       <ProductForm categories={categories} />
     </div>
   )

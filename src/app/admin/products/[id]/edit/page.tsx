@@ -15,10 +15,10 @@ export default async function EditProduct({ params }: { params: Promise<{ id: st
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Edit {product.name}</h1>
       <ProductForm
         categories={categories}
         productId={product.id}
+        productName={product.name}
         initialData={{
           name: product.name, slug: product.slug, description: product.description,
           price: product.price, compareAtPrice: product.compareAtPrice || undefined,

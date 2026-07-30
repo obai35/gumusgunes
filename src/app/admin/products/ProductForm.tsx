@@ -2,38 +2,55 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
 import { toast } from 'sonner'
+import { Plus, Trash2, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
+import { Label } from '@/components/ui/label'
+import {
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+} from '@/components/ui/form'
+import { useTranslation } from '@/hooks/use-translation'
 
-type ProductData = {
-  name: string; slug: string; description: string; price: number; compareAtPrice?: number
-  sku: string; categoryId: string; material: string; weight?: string; stock: number
-  imageUrl: string; images: string; tags: string; isActive: boolean; isFeatured: boolean
-  isNew: boolean; isBestseller: boolean
-}
+type Category = { id: string; name: string; parentId: string | null; parent?: { id: string; name: string } | null }
 
-const PRODUCT_TYPES = [
-  { value: 'ring', label: 'Ring' },
-  { value: 'necklace', label: 'Necklace' },
-  { value: 'bracelet', label: 'Bracelet' },
-  { value: 'earrings', label: 'Earrings' },
-  { value: 'other', label: 'Other' },
-]
+type Variant = { size: string; color: string; price: number; stock: number; sku: string; imageUrl: string }
 
-export function ProductForm({ categories, initialData, productId }: {
-  categories: { id: string; name: string; parentId: string | null; parent?: { id: string; name: string } | null }[]
-  initialData?: ProductData
+const productSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  slug: z.string().min(1, 'Slug is required'),
+  description: z.string().min(1, 'Description is required'),
+  price: z.coerce.number().positive('Price must be > 0'),
+  compareAtPrice: z.coerce.number().optional().or(z.literal('')),
+  stock: z.coerce.number().int().nonnegative('Stock cannot be negative'),
+  sku: z.string().min(1, 'SKU is required'),
+  categoryId: z.string().min(1, 'Category is required'),
+  material: z.string().optional(),
+  weight: z.string().optional(),
+  imageUrl: z.string().optional(),
+  tags: z.string().optional(),
+  isActive: z.boolean(),
+  isFeatured: z.boolean(),
+  isNew: z.boolean(),
+  isBestseller: z.boolean(),
+})
+
+type ProductFormValues = z.infer<typeof productSchema>
+
+const PRODUCT_TYPES = ['ring', 'necklace', 'bracelet', 'earrings', 'other'] as const
+
+export function ProductForm({ categories, initialData, productId, productName }: {
+  categories: Category[]
+  initialData?: ProductFormValues & { images?: string }
   productId?: string
+  productName?: string
 }) {
-  const parentCats = categories.filter(c => !c.parentId)
-  const subCats = categories.filter(c => c.parentId)
+  const { t } = useTranslation()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const [form, setForm] = useState<ProductData>(initialData || {
-    name: '', slug: '', description: '', price: 0, sku: '', categoryId: '',
-    material: '', stock: 0, imageUrl: '', images: '[]', tags: '[]',
-    isActive: true, isFeatured: false, isNew: false, isBestseller: false,
-  })
   const [productType, setProductType] = useState('ring')
   const [customPrompt, setCustomPrompt] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -42,12 +59,48 @@ export function ProductForm({ categories, initialData, productId }: {
   const [originalPreview, setOriginalPreview] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const originalPreviewRef = useRef<string | null>(null)
+  const [variants, setVariants] = useState<Variant[]>(() => {
+    try {
+      const parsed = initialData?.images ? JSON.parse(initialData.images) : []
+      return Array.isArray(parsed) ? parsed.filter((v: any) => typeof v === 'object' && !Array.isArray(v) && v.size) : []
+    } catch { return [] }
+  })
+
+  const parentCats = categories.filter(c => !c.parentId)
+  const subCats = categories.filter(c => c.parentId)
+
+  const form = useForm<ProductFormValues>({
+    resolver: async (data) => {
+      const r = productSchema.safeParse(data)
+      return r.success ? { values: r.data, errors: {} } : { values: {} as any, errors: r.error.flatten().fieldErrors as any }
+    },
+    defaultValues: initialData ? {
+      name: initialData.name,
+      slug: initialData.slug,
+      description: initialData.description,
+      price: initialData.price,
+      compareAtPrice: initialData.compareAtPrice || '',
+      stock: initialData.stock,
+      sku: initialData.sku,
+      categoryId: initialData.categoryId,
+      material: initialData.material || '',
+      weight: initialData.weight || '',
+      imageUrl: initialData.imageUrl || '',
+      tags: initialData.tags || '',
+      isActive: initialData.isActive ?? true,
+      isFeatured: initialData.isFeatured ?? false,
+      isNew: initialData.isNew ?? false,
+      isBestseller: initialData.isBestseller ?? false,
+    } : {
+      name: '', slug: '', description: '', price: 0, compareAtPrice: '', stock: 0,
+      sku: '', categoryId: '', material: '', weight: '', imageUrl: '', tags: '',
+      isActive: true, isFeatured: false, isNew: false, isBestseller: false,
+    },
+  })
 
   useEffect(() => {
     return () => {
-      if (originalPreviewRef.current) {
-        URL.revokeObjectURL(originalPreviewRef.current)
-      }
+      if (originalPreviewRef.current) URL.revokeObjectURL(originalPreviewRef.current)
     }
   }, [])
 
@@ -67,10 +120,7 @@ export function ProductForm({ categories, initialData, productId }: {
     setIsDragging(false)
     const file = e.dataTransfer.files?.[0]
     if (!file) return
-    if (!file.type.startsWith('image/')) {
-      toast.error('Only image files are allowed')
-      return
-    }
+    if (!file.type.startsWith('image/')) { toast.error(t('admin.productForm.onlyImages')); return }
     if (originalPreviewRef.current) URL.revokeObjectURL(originalPreviewRef.current)
     const url = URL.createObjectURL(file)
     setSelectedFile(file)
@@ -79,187 +129,294 @@ export function ProductForm({ categories, initialData, productId }: {
     originalPreviewRef.current = url
   }
 
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault()
-  }
-
-  function handleDragEnter(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(true)
-  }
-
-  function handleDragLeave(e: React.DragEvent) {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
   async function handleEnhance() {
-    if (!selectedFile) {
-      toast.error('Select an image first')
-      return
-    }
+    if (!selectedFile) { toast.error(t('admin.productForm.selectImageFirst')); return }
     setEnhancing(true)
     try {
       const fd = new FormData()
       fd.append('image', selectedFile)
-      fd.append('productName', form.name || 'product')
+      fd.append('productName', form.getValues('name') || 'product')
       fd.append('productType', productType)
       if (customPrompt.trim()) fd.append('customPrompt', customPrompt.trim())
-
-      const res = await fetch('/api/admin/products/enhance-image', {
-        method: 'POST',
-        body: fd,
-      })
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.details || err.error || 'Enhancement failed')
-      }
+      const res = await fetch('/api/admin/products/enhance-image', { method: 'POST', body: fd })
+      if (!res.ok) { const err = await res.json(); throw new Error(err.details || err.error || t('admin.productForm.enhancementFailed')) }
       const data = await res.json()
       setEnhanceResult(data)
-      toast.success('Image enhanced successfully')
+      toast.success(t('admin.productForm.imageEnhanced'))
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'An error occurred')
-    } finally {
-      setEnhancing(false)
-    }
+      toast.error(e instanceof Error ? e.message : t('admin.productForm.errorOccurred'))
+    } finally { setEnhancing(false) }
   }
 
   function handleAccept() {
     if (enhanceResult) {
-      setForm(f => ({ ...f, imageUrl: enhanceResult.enhancedUrl }))
-      setEnhanceResult(null)
-      setSelectedFile(null)
-      setOriginalPreview(null)
-      setCustomPrompt('')
-      toast.success('Image set')
+      form.setValue('imageUrl', enhanceResult.enhancedUrl)
+      setEnhanceResult(null); setSelectedFile(null); setOriginalPreview(null); setCustomPrompt('')
+      toast.success(t('admin.productForm.imageSet'))
     }
   }
 
-  function handleRetry() {
-    setEnhanceResult(null)
+  function handleRetry() { setEnhanceResult(null) }
+
+  function addVariant() {
+    setVariants(v => [...v, { size: '', color: '', price: 0, stock: 0, sku: '', imageUrl: '' }])
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  function updateVariant(i: number, field: keyof Variant, value: string | number) {
+    setVariants(v => v.map((item, idx) => idx === i ? { ...item, [field]: value } : item))
+  }
+
+  function removeVariant(i: number) {
+    setVariants(v => v.filter((_, idx) => idx !== i))
+  }
+
+  async function onSubmit(data: ProductFormValues) {
     const url = productId ? '/api/admin/products/update' : '/api/admin/products/create'
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, id: productId }),
-    })
-    if (res.ok) { toast.success(productId ? 'Product updated' : 'Product created'); router.push('/admin/products'); router.refresh() }
-    else { toast.error('Failed to save product') }
+    const payload = productId
+      ? { ...data, id: productId, images: JSON.stringify(variants.length > 0 ? variants : []), compareAtPrice: data.compareAtPrice || undefined, material: data.material || undefined, weight: data.weight || undefined }
+      : { name: data.name, description: data.description, price: data.price, stock: data.stock, categoryId: data.categoryId, images: [], tags: [], featured: data.isFeatured, weight: data.weight ? parseFloat(data.weight) : undefined }
+    const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    if (res.ok) {
+      toast.success(productId ? t('admin.productForm.productUpdated') : t('admin.productForm.productCreated'))
+      router.push('/admin/products')
+    } else {
+      toast.error(t('admin.productForm.saveFailed'))
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="text-sm font-medium text-navy">Name</label><input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-        <div><label className="text-sm font-medium text-navy">Slug</label><input required value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-      </div>
-      <div><label className="text-sm font-medium text-navy">Description</label><textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1 min-h-[80px]" /></div>
-      <div className="grid grid-cols-3 gap-4">
-        <div><label className="text-sm font-medium text-navy">Price ($)</label><input type="number" step="0.01" required value={form.price} onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) || 0 })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-        <div><label className="text-sm font-medium text-navy">Compare At</label><input type="number" step="0.01" value={form.compareAtPrice || ''} onChange={(e) => setForm({ ...form, compareAtPrice: parseFloat(e.target.value) || undefined })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-        <div><label className="text-sm font-medium text-navy">Stock</label><input type="number" required value={form.stock} onChange={(e) => setForm({ ...form, stock: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="text-sm font-medium text-navy">SKU</label><input required value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-        <div><label className="text-sm font-medium text-navy">Category</label><select required value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1">{parentCats.map((p) => (<optgroup key={p.id} label={p.name}>{subCats.filter(c => c.parentId === p.id).map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}</optgroup>))}</select></div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div><label className="text-sm font-medium text-navy">Material</label><input value={form.material} onChange={(e) => setForm({ ...form, material: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-        <div><label className="text-sm font-medium text-navy">Weight</label><input value={form.weight || ''} onChange={(e) => setForm({ ...form, weight: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-      </div>
+    <Form {...form}>
+      {productName && <h1 className="text-2xl font-display font-semibold text-navy mb-6">{t('admin.productForm.editTitle')} {productName}</h1>}
+      <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl space-y-6">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="name" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.name')}</FormLabel>
+              <FormControl><Input {...field} onChange={e => { field.onChange(e); form.setValue('slug', e.target.value.toLowerCase().replace(/\s+/g, '-')) }} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="slug" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.slug')}</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
 
-      <div className="p-4 rounded-xl border border-border/60 bg-secondary/20 space-y-3">
-        <label className="text-sm font-medium text-navy">Product Type</label>
-        <select
-          value={productType}
-          onChange={e => setProductType(e.target.value)}
-          className="w-full p-2 rounded-lg border border-border text-sm"
-        >
-          {PRODUCT_TYPES.map(t => (
-            <option key={t.value} value={t.value}>{t.label}</option>
-          ))}
-        </select>
+        <FormField control={form.control} name="description" render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t('admin.productForm.description')}</FormLabel>
+            <FormControl><Textarea {...field} className="min-h-[80px]" /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
 
-        <label className="text-sm font-medium text-navy">Photo</label>
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-gold/50 transition-colors ${isDragging ? 'border-gold' : 'border-border'}`}
-        >
-          {originalPreview ? (
-            <img src={originalPreview} alt="Preview" className="max-h-40 mx-auto rounded-lg" />
+        <div className="grid grid-cols-3 gap-4">
+          <FormField control={form.control} name="price" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.price')}</FormLabel>
+              <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="compareAtPrice" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.compareAt')}</FormLabel>
+              <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="stock" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.stock')}</FormLabel>
+              <FormControl><Input type="number" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="sku" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.sku')}</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="categoryId" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.category')}</FormLabel>
+              <FormControl>
+                <select {...field} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value="">—</option>
+                  {parentCats.map(p => (
+                    <optgroup key={p.id} label={p.name}>
+                      {subCats.filter(c => c.parentId === p.id).map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="material" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.material')}</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="weight" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.weight')}</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+
+        <div className="p-4 rounded-xl border border-border/60 bg-secondary/20 space-y-3">
+          <Label className="text-sm font-medium">{t('admin.productForm.productType')}</Label>
+          <select
+            value={productType}
+            onChange={e => setProductType(e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {PRODUCT_TYPES.map(tp => (
+              <option key={tp} value={tp}>{t(`admin.productForm.productTypes.${tp}`)}</option>
+            ))}
+          </select>
+
+          <Label className="text-sm font-medium">{t('admin.productForm.photo')}</Label>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            onDrop={handleDrop}
+            onDragOver={e => e.preventDefault()}
+            onDragEnter={() => setIsDragging(true)}
+            onDragLeave={() => setIsDragging(false)}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer hover:border-gold/50 transition-colors ${isDragging ? 'border-gold' : 'border-border'}`}
+          >
+            {originalPreview ? (
+              <img src={originalPreview} alt="Preview" className="max-h-40 mx-auto rounded-lg" />
+            ) : (
+              <p className="text-sm text-muted-foreground">{t('admin.productForm.dropImage')}</p>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">{t('admin.productForm.customPrompt')}</Label>
+            <Input
+              value={customPrompt}
+              onChange={e => setCustomPrompt(e.target.value)}
+              placeholder="e.g. &quot;on a white marble surface with rose gold lighting&quot;"
+              className="mt-1"
+            />
+          </div>
+
+          <Button type="button" onClick={handleEnhance} disabled={!selectedFile || enhancing} variant="outline">
+            {enhancing ? t('admin.productForm.enhancing') : t('admin.productForm.enhance')}
+          </Button>
+        </div>
+
+        {enhanceResult && (
+          <div className="p-4 rounded-xl border border-border/60 space-y-3">
+            <p className="text-sm font-medium">{t('admin.productForm.result')}</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">{t('admin.productForm.original')}</p>
+                <img src={enhanceResult.originalUrl} alt="Original" className="w-full rounded-lg border border-border" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">{t('admin.productForm.enhanced')}</p>
+                <img src={enhanceResult.enhancedUrl} alt="Enhanced" className="w-full rounded-lg border border-gold/30" />
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button type="button" onClick={handleAccept} variant="default" className="bg-green-600 hover:bg-green-700">{t('admin.productForm.accept')}</Button>
+              <Button type="button" onClick={handleRetry} variant="outline">{t('admin.productForm.retry')}</Button>
+            </div>
+          </div>
+        )}
+
+        {!enhanceResult && (
+          <FormField control={form.control} name="imageUrl" render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('admin.productForm.imageUrl')}</FormLabel>
+              <FormControl><Input {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        )}
+
+        {/* Variants */}
+        <div className="rounded-xl border border-border/60 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">{t('admin.variants.title')}</Label>
+            <Button type="button" variant="outline" size="sm" onClick={addVariant}>
+              <Plus className="h-3 w-3" /> {t('admin.variants.add')}
+            </Button>
+          </div>
+          {variants.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('admin.variants.noVariants')}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">Drop image here or click to upload</p>
+            <div className="space-y-2">
+              {variants.map((v, i) => (
+                <div key={i} className="flex flex-wrap items-end gap-2 p-3 rounded-lg border border-border/50 bg-background">
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs text-muted-foreground">{t('admin.variants.size')}</Label>
+                    <Input value={v.size} onChange={e => updateVariant(i, 'size', e.target.value)} className="h-8 w-20 text-xs" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs text-muted-foreground">{t('admin.variants.color')}</Label>
+                    <Input value={v.color} onChange={e => updateVariant(i, 'color', e.target.value)} className="h-8 w-24 text-xs" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs text-muted-foreground">{t('admin.variants.price')}</Label>
+                    <Input type="number" step="0.01" value={v.price || ''} onChange={e => updateVariant(i, 'price', parseFloat(e.target.value) || 0)} className="h-8 w-24 text-xs" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs text-muted-foreground">{t('admin.variants.stock')}</Label>
+                    <Input type="number" value={v.stock || ''} onChange={e => updateVariant(i, 'stock', parseInt(e.target.value) || 0)} className="h-8 w-20 text-xs" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-xs text-muted-foreground">{t('admin.variants.sku')}</Label>
+                    <Input value={v.sku} onChange={e => updateVariant(i, 'sku', e.target.value)} className="h-8 w-24 text-xs" />
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => removeVariant(i)} className="h-8 w-8 text-destructive">
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleFileSelect}
-            className="hidden"
-          />
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-navy">Custom Prompt (optional)</label>
-          <input
-            value={customPrompt}
-            onChange={e => setCustomPrompt(e.target.value)}
-            placeholder='e.g. "on a white marble surface with rose gold lighting"'
-            className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1"
-          />
+        <div className="flex flex-wrap gap-4">
+          {(['isFeatured', 'isNew', 'isBestseller', 'isActive'] as const).map(f => (
+            <FormField key={f} control={form.control} name={f} render={({ field }) => (
+              <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                <FormControl>
+                  <input type="checkbox" checked={field.value} onChange={field.onChange} className="rounded border-gray-300" />
+                </FormControl>
+                <FormLabel className="text-sm font-normal">{t(`admin.productForm.flags.${f.replace('is', '').toLowerCase()}`)}</FormLabel>
+              </FormItem>
+            )} />
+          ))}
         </div>
 
-        <button
-          type="button"
-          onClick={handleEnhance}
-          disabled={!selectedFile || enhancing}
-          className="px-6 py-2.5 bg-gold/10 text-gold border border-gold/30 rounded-lg text-sm font-medium hover:bg-gold/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {enhancing ? 'Enhancing...' : 'Enhance with AI'}
-        </button>
-      </div>
-
-      {enhanceResult && (
-        <div className="p-4 rounded-xl border border-border/60 space-y-3">
-          <p className="text-sm font-medium text-navy">Result</p>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Original</p>
-              <img src={enhanceResult.originalUrl} alt="Original" className="w-full rounded-lg border border-border" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Enhanced</p>
-              <img src={enhanceResult.enhancedUrl} alt="Enhanced" className="w-full rounded-lg border border-gold/30" />
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={handleAccept} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">Accept</button>
-            <button type="button" onClick={handleRetry} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:bg-gray-50 transition-colors">Retry</button>
-          </div>
+        <div className="flex gap-3 pt-2">
+          <Button type="submit" variant="default">{productId ? t('admin.productForm.submitUpdate') : t('admin.productForm.submitCreate')}</Button>
+          <Button type="button" variant="outline" onClick={() => router.back()}>{t('admin.productForm.cancel')}</Button>
         </div>
-      )}
-
-      {!enhanceResult && (
-        <div><label className="text-sm font-medium text-navy">Image URL</label><input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" /></div>
-      )}
-
-      <div className="flex gap-4">
-        {(['isFeatured', 'isNew', 'isBestseller', 'isActive'] as const).map((f) => (
-          <label key={f} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form[f]} onChange={(e) => setForm({ ...form, [f]: e.target.checked })} className="rounded" />{f.replace('is', '')}</label>
-        ))}
-      </div>
-      <div className="flex gap-3 pt-2">
-        <button type="submit" className="px-6 py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">{productId ? 'Update' : 'Create'} Product</button>
-        <button type="button" onClick={() => router.back()} className="px-6 py-2.5 border border-border rounded-lg text-sm text-muted-foreground hover:bg-gray-50 transition-colors">Cancel</button>
-      </div>
-    </form>
+      </form>
+    </Form>
   )
 }
