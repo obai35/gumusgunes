@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { useTranslation } from '@/hooks/use-translation'
+import { useState, useEffect } from 'react'
 import {
-  Menu, Search, Bell, ChevronRight,
+  Menu, Search, Bell, ChevronRight, Package, ShoppingCart, Users, Settings,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { SheetTrigger } from '@/components/ui/sheet'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 
@@ -103,10 +112,30 @@ function formatSegment(t: (key: string) => string, seg: string): string {
 
 export function TopBar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { user } = useAdminAuth()
   const { t } = useTranslation()
+  const [searchOpen, setSearchOpen] = useState(false)
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setSearchOpen((o) => !o)
+      }
+    }
+    document.addEventListener('keydown', down)
+    return () => document.removeEventListener('keydown', down)
+  }, [])
 
   const segments = pathname.split('/').filter(Boolean)
+
+  const searchItems = [
+    { label: 'Products', icon: Package, href: '/admin/products' },
+    { label: 'Orders', icon: ShoppingCart, href: '/admin/orders' },
+    { label: 'Customers', icon: Users, href: '/admin/customers' },
+    { label: 'Settings', icon: Settings, href: '/admin/settings' },
+  ]
 
   return (
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border">
@@ -147,14 +176,28 @@ export function TopBar() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
+
+          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground" onClick={() => setSearchOpen(true)}>
             <Search className="h-4 w-4" />
           </Button>
 
-          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground relative">
+                <Bell className="h-4 w-4" />
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72">
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal px-3 py-2">
+                {t('admin.common.notifications')}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                {t('admin.common.noNotifications')}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -172,12 +215,37 @@ export function TopBar() {
                 {user?.email}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>{t('admin.dashboard.profile')}</DropdownMenuItem>
-              <DropdownMenuItem>{t('admin.common.settings')}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/admin/settings')}>
+                {t('admin.common.profile')}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push('/admin/settings')}>
+                {t('admin.common.settings')}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+
+      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <CommandInput placeholder={t('admin.common.searchDot')} />
+        <CommandList>
+          <CommandEmpty>{t('admin.common.noResults')}</CommandEmpty>
+          <CommandGroup heading={t('admin.common.quickNavigate')}>
+            {searchItems.map((item) => (
+              <CommandItem
+                key={item.href}
+                onSelect={() => {
+                  setSearchOpen(false)
+                  router.push(item.href)
+                }}
+              >
+                <item.icon className="mr-2 h-4 w-4" />
+                <span>{item.label}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
     </header>
   )
 }
