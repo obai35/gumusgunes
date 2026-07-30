@@ -37,7 +37,7 @@ const handler = async (req: NextRequest) => {
       data: { email, name, password: await hashPassword(password), gender: parsed.data.gender },
     })
 
-    const token = signToken({ userId: user.id, email: user.email })
+    const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.json({
       user: { id: user.id, email: user.email, name: user.name, gender: user.gender }
     })

@@ -104,7 +104,7 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    const jwtToken = signToken({ userId: user.id, email: user.email })
+    const jwtToken = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.redirect(new URL('/?google_login=success', origin))
 
     response.cookies.set('__session', jwtToken, {
