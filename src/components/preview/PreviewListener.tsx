@@ -14,7 +14,7 @@ const CSS_VAR_MAP: Record<string, string> = {
 const SECTION_MAP: Record<string, string> = {
   announcement: 'announcement',
   hero: 'hero',
-  'trust-badges': 'layout',
+  'trust-badges': 'trustBadges',
   'flash-sale': 'promo',
   footer: 'footer',
   'category-grid': 'categories',
@@ -22,7 +22,7 @@ const SECTION_MAP: Record<string, string> = {
   'promo-banner': 'promo',
   'new-arrivals': 'layout',
   bestsellers: 'layout',
-  'about-section': 'layout',
+  'about-section': 'aboutSection',
   'product-grid': 'layout',
 }
 
