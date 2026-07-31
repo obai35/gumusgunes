@@ -16,6 +16,7 @@ import PaymentSection from '../components/PaymentSection'
 import TotalsDisplay from '../components/TotalsDisplay'
 import CheckoutButton from '../components/CheckoutButton'
 import ReceiptView from '../components/ReceiptView'
+import ShortcutsCheatSheet from '../components/ShortcutsCheatSheet'
 import { formatPrice } from '@/lib/format'
 import { queueOrder, storeOfflineOrder } from '@/lib/pos-db'
 import type { Shift } from '../types'
@@ -384,6 +385,8 @@ export default function POSPaymentPage() {
           </div>
         </div>
       </div>
+
+      <ShortcutsCheatSheet page="payment" />
     </div>
   )
 }

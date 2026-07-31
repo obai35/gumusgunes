@@ -1,42 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Keyboard, X } from 'lucide-react'
 
-const shortcuts = [
-  { key: 'F1', action: 'Set payment to Cash' },
-  { key: 'F2', action: 'Set payment to Card' },
-  { key: 'F3', action: 'Set payment to Split' },
-  { key: 'F4', action: 'Focus search input' },
-  { key: 'F6', action: 'Focus SKU / barcode input' },
-  { key: 'Enter', action: 'Quick checkout (no input focused)' },
-  { key: 'Ctrl+1-9', action: 'Add product by grid position' },
-  { key: 'Escape', action: 'Close modal / clear search' },
-  { key: 'F10', action: 'Set payment to Bank Transfer' },
-  { key: 'F11', action: 'Set payment to Instapay' },
-  { key: 'F12', action: 'Set payment to Wallet' },
-]
+const shortcutsByPage: Record<'pos' | 'payment', { key: string; action: string }[]> = {
+  pos: [
+    { key: 'F4', action: 'Focus search input' },
+    { key: 'F6', action: 'Focus SKU / barcode input' },
+    { key: 'Ctrl+1-9', action: 'Add product by grid position' },
+    { key: 'Escape', action: 'Clear cart' },
+  ],
+  payment: [
+    { key: 'F1', action: 'Set payment to Cash' },
+    { key: 'F2', action: 'Set payment to Card' },
+    { key: 'F3', action: 'Set payment to Split' },
+    { key: 'F10', action: 'Set payment to Bank Transfer' },
+    { key: 'F11', action: 'Set payment to Instapay' },
+    { key: 'F12', action: 'Set payment to Wallet' },
+    { key: 'Enter', action: 'Quick checkout (no input focused)' },
+    { key: 'Escape', action: 'Back to cart' },
+  ],
+}
 
-export default function ShortcutsCheatSheet() {
+export default function ShortcutsCheatSheet({ page = 'pos' }: { page?: 'pos' | 'payment' }) {
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'F1') {
-        e.preventDefault()
-        setOpen(p => !p)
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
 
   return (
     <>
       <button
         onClick={() => setOpen(p => !p)}
         className="fixed bottom-4 right-4 z-40 flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/10 text-white/50 text-xs hover:bg-white/20 hover:text-white/70 transition-all"
-        title="Keyboard Shortcuts (F1)"
+        title="Keyboard Shortcuts"
       >
         <Keyboard className="h-3.5 w-3.5" />
         Shortcuts
@@ -52,7 +46,7 @@ export default function ShortcutsCheatSheet() {
               </button>
             </div>
             <div className="space-y-2">
-              {shortcuts.map(s => (
+              {shortcutsByPage[page].map(s => (
                 <div key={s.key} className="flex items-center justify-between">
                   <span className="text-xs text-white/50">{s.action}</span>
                   <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/60 text-xs font-mono">{s.key}</kbd>

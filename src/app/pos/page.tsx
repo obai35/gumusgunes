@@ -457,7 +457,7 @@ export default function POSPage() {
         <CustomerDisplay itemCount={pos.cart.length} total={pos.total} />
       )}
 
-      {view === 'pos' && <ShortcutsCheatSheet />}
+      {view === 'pos' && <ShortcutsCheatSheet page="pos" />}
     </PosLayout>
   )
 }
