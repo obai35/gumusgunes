@@ -20,6 +20,7 @@ const MODELS_WITH_STORE_ID = new Set([
   'SavedCard', 'CustomerPushToken', 'PushToken', 'PushPreference',
   'ResetToken', 'OtpVerification', 'EmailLog', 'CustomerActivityLog',
   'ProductRelation', 'ProductEmbedding',
+  'SiteSetting',
   'BillOfMaterial', 'BomItem', 'ProductionOrder', 'ProductionOrderMaterial',
   'ProductionOrderLabor', 'ProductionOrderOutput', 'WorkCenter',
   'Group', 'GroupEntity', 'InterCompanyTransaction', 'ConsolidationRun',
