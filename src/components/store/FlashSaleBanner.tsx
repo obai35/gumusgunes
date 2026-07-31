@@ -62,7 +62,7 @@ export function FlashSaleBanner() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/shop" className="text-xs font-medium underline underline-offset-2 hover:no-underline">Shop Now</Link>
+            <Link href="/products" className="text-xs font-medium underline underline-offset-2 hover:no-underline">Shop Now</Link>
             <button onClick={() => setDismissed(true)} className="text-white/80 hover:text-white">
               <X className="h-4 w-4" />
             </button>

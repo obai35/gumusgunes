@@ -177,9 +177,9 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-silver/40">
         <p data-setting="footerCopyright">© {new Date().getFullYear()} {s('footerCopyright', 'Gümüş Güneş Jewellery Ltd. All rights reserved.')}</p>
         <div className="flex items-center gap-4">
-          <a href="#" className="hover:text-silver transition-colors">{t('footer.privacy')}</a>
-          <a href="#" className="hover:text-silver transition-colors">{t('footer.terms')}</a>
-          <a href="#" className="hover:text-silver transition-colors">{t('footer.cookies')}</a>
+          <a href="/privacy" className="hover:text-silver transition-colors">{t('footer.privacy')}</a>
+          <a href="/terms" className="hover:text-silver transition-colors">{t('footer.terms')}</a>
+          <a href="/cookies" className="hover:text-silver transition-colors">{t('footer.cookies')}</a>
         </div>
       </div>
     </footer>

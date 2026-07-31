@@ -3,6 +3,8 @@ import dynamic from 'next/dynamic'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
 import { AboutSection } from '@/components/store/AboutSection'
+import { CraftsmanshipTimeline } from '@/components/store/CraftsmanshipTimeline'
+import { Testimonials } from '@/components/store/Testimonials'
 import type { Metadata } from 'next'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
@@ -18,6 +20,8 @@ export default function AboutPage() {
       <Header />
       <main>
         <AboutSection />
+        <Suspense fallback={null}><CraftsmanshipTimeline /></Suspense>
+        <Suspense fallback={null}><Testimonials /></Suspense>
       </main>
       <Footer />
       <Suspense>

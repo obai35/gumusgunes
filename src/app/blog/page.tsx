@@ -42,7 +42,7 @@ export default async function BlogPage({
       select: { category: true },
       distinct: ['category'],
     }),
-  ])
+  ]).catch(() => [{}, 0, {}] as any)
 
   const totalPages = Math.ceil(total / take)
   const catList = [...new Set(categories.map(c => c.category).filter(Boolean))] as string[]

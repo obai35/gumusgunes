@@ -357,7 +357,7 @@ export function GiftFinder() {
                   {t('giftFinder.startOver')}
                 </button>
                 <a
-                  href="#collections"
+                  href="/collections"
                   className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-full bg-navy text-silver hover:bg-gold hover:text-navy-deep transition-colors text-sm font-semibold"
                 >
                   {t('giftFinder.browseAll')}

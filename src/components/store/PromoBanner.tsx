@@ -76,7 +76,7 @@ export function PromoBanner() {
 
             <div className="flex flex-wrap items-center gap-4">
               <a
-                href="#collections"
+                href="/collections"
                 className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow group"
               >
                 {t('general.shopNow')}

@@ -46,11 +46,11 @@ export function Header() {
   }, [])
 
   const navLinks = [
-    { label: settings.navCollections || t('nav.collections'), href: '/#collections' },
-    { label: settings.navNewArrivals || t('nav.newArrivals'), href: '/#new' },
-    { label: settings.navBestsellers || t('nav.bestsellers'), href: '/#bestsellers' },
-    { label: settings.navGiftFinder || t('nav.giftFinder'), href: '/#gift-finder' },
-    { label: settings.navOurStory || t('nav.ourStory'), href: '/#about' },
+    { label: settings.navCollections || t('nav.collections'), href: '/collections' },
+    { label: settings.navNewArrivals || t('nav.newArrivals'), href: '/new-arrivals' },
+    { label: settings.navBestsellers || t('nav.bestsellers'), href: '/bestsellers' },
+    { label: settings.navGiftFinder || t('nav.giftFinder'), href: '/gift-finder' },
+    { label: settings.navOurStory || t('nav.ourStory'), href: '/about' },
   ]
 
   function selectCategory(slug: string) {

@@ -90,7 +90,7 @@ export function Hero() {
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
               <a
-                href="#collections"
+                href="/collections"
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gold text-navy-deep font-semibold text-sm tracking-wide hover:bg-gold-soft transition-all gold-shadow hover-glow"
               >
                 {t('hero.cta')}

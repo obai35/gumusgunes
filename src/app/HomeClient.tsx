@@ -7,26 +7,16 @@ import { Header } from '@/components/store/Header'
 import { Hero } from '@/components/store/Hero'
 import { TrustBadges } from '@/components/store/TrustBadges'
 import { BannerSlider } from '@/components/store/BannerSlider'
-import { CategoryGrid } from '@/components/store/CategoryGrid'
 import { FeaturedProducts } from '@/components/store/FeaturedProducts'
-import { ProductGrid } from '@/components/store/ProductGrid'
 import { PromoBanner } from '@/components/store/PromoBanner'
-import { AboutSection } from '@/components/store/AboutSection'
 import { Footer } from '@/components/store/Footer'
-import { DiamondLoading } from '@/components/store/DiamondLoading'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { VisibilityGate } from '@/components/store/VisibilityGate'
 import { useCart, useWishlist, useUI } from '@/lib/store'
 import { useTranslation } from '@/hooks/use-translation'
-import type { Product, Category } from '@/lib/types'
+import type { Product } from '@/lib/types'
 
-const CraftsmanshipTimeline = lazy(() => import('@/components/store/CraftsmanshipTimeline').then(m => ({ default: m.CraftsmanshipTimeline })))
-const Testimonials = lazy(() => import('@/components/store/Testimonials').then(m => ({ default: m.Testimonials })))
 const Newsletter = lazy(() => import('@/components/store/Newsletter').then(m => ({ default: m.Newsletter })))
-const RecentlyViewed = lazy(() => import('@/components/store/RecentlyViewed').then(m => ({ default: m.RecentlyViewed })))
-const RewardsSection = lazy(() => import('@/components/store/RewardsSection').then(m => ({ default: m.RewardsSection })))
-const GiftFinder = lazy(() => import('@/components/store/GiftFinder').then(m => ({ default: m.GiftFinder })))
-const BundleConfigurator = lazy(() => import('@/components/store/BundleConfigurator').then(m => ({ default: m.BundleConfigurator })))
 const FlashSaleBanner = lazy(() => import('@/components/store/FlashSaleBanner').then(m => ({ default: m.FlashSaleBanner })))
 const SearchDialog = lazy(() => import('@/components/store/SearchDialog').then(m => ({ default: m.SearchDialog })))
 const WishlistDrawer = lazy(() => import('@/components/store/WishlistDrawer').then(m => ({ default: m.WishlistDrawer })))
@@ -39,10 +29,8 @@ function SectionFallback() {
 }
 
 export default function HomeClient({
-  categories,
   products,
 }: {
-  categories: Category[]
   products: Product[]
 }) {
   const { t } = useTranslation()
@@ -83,8 +71,6 @@ export default function HomeClient({
   }, [])
 
   const featured = products.filter((p) => p.isFeatured).slice(0, 4)
-  const newArrivals = products.filter((p) => p.isNew).slice(0, 4)
-  const bestsellers = products.filter((p) => p.isBestseller).slice(0, 4)
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -95,7 +81,6 @@ export default function HomeClient({
         <VisibilityGate setting="section_hero"><ErrorBoundary><Hero /></ErrorBoundary></VisibilityGate>
         <VisibilityGate setting="section_flashSale"><Suspense fallback={<SectionFallback />}><FlashSaleBanner /></Suspense></VisibilityGate>
         <VisibilityGate setting="section_trustBadges"><ErrorBoundary><TrustBadges /></ErrorBoundary></VisibilityGate>
-        <VisibilityGate setting="section_categoryGrid"><ErrorBoundary><CategoryGrid categories={categories} /></ErrorBoundary></VisibilityGate>
 
         <VisibilityGate setting="section_featuredProducts">
           {featured.length > 0 && (
@@ -106,7 +91,7 @@ export default function HomeClient({
                 title={t('page.featured.title')}
                 products={featured}
                 ctaLabel={t('page.featured.cta')}
-                ctaHref="#collections"
+                ctaHref="/collections"
               />
             </ErrorBoundary>
           )}
@@ -114,54 +99,6 @@ export default function HomeClient({
 
         <VisibilityGate setting="section_promoBanner"><ErrorBoundary><PromoBanner /></ErrorBoundary></VisibilityGate>
 
-        <VisibilityGate setting="section_bundleConfigurator"><Suspense fallback={<SectionFallback />}><BundleConfigurator /></Suspense></VisibilityGate>
-
-        <VisibilityGate setting="section_newArrivals">
-          {newArrivals.length > 0 && (
-            <ErrorBoundary>
-              <FeaturedProducts
-                id="new"
-                eyebrow={t('page.newArrivals.eyebrow')}
-                title={t('page.newArrivals.title')}
-                products={newArrivals}
-                ctaLabel={t('page.newArrivals.cta')}
-                ctaHref="#collections"
-              />
-            </ErrorBoundary>
-          )}
-        </VisibilityGate>
-
-        <VisibilityGate setting="section_productGrid">
-          <ErrorBoundary>
-            <ProductGrid
-              categories={categories}
-              initialProducts={products}
-            />
-          </ErrorBoundary>
-        </VisibilityGate>
-
-        <VisibilityGate setting="section_bestsellers">
-          {bestsellers.length > 0 && (
-            <ErrorBoundary>
-              <FeaturedProducts
-                id="bestsellers"
-                eyebrow={t('page.bestsellers.eyebrow')}
-                title={t('page.bestsellers.title')}
-                products={bestsellers}
-                ctaLabel={t('page.bestsellers.cta')}
-                ctaHref="#collections"
-              />
-            </ErrorBoundary>
-          )}
-        </VisibilityGate>
-
-        <VisibilityGate setting="section_recentlyViewed"><Suspense fallback={<SectionFallback />}><RecentlyViewed allProducts={products} /></Suspense></VisibilityGate>
-        <VisibilityGate setting="section_giftFinder"><Suspense fallback={<SectionFallback />}><GiftFinder /></Suspense></VisibilityGate>
-
-        <VisibilityGate setting="section_aboutSection"><ErrorBoundary><AboutSection /></ErrorBoundary></VisibilityGate>
-        <VisibilityGate setting="section_craftsmanshipTimeline"><Suspense fallback={<SectionFallback />}><CraftsmanshipTimeline /></Suspense></VisibilityGate>
-        <VisibilityGate setting="section_testimonials"><Suspense fallback={<SectionFallback />}><Testimonials /></Suspense></VisibilityGate>
-        <VisibilityGate setting="section_rewardsSection"><Suspense fallback={<SectionFallback />}><RewardsSection /></Suspense></VisibilityGate>
         <VisibilityGate setting="section_newsletter"><Suspense fallback={<SectionFallback />}><Newsletter /></Suspense></VisibilityGate>
       </main>
 

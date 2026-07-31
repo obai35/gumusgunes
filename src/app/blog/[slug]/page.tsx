@@ -11,16 +11,27 @@ import { T } from '@/components/store/Translated'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
+async function fetchPost(slug: string) {
+  return db.blogPost.findUnique({ where: { slug } })
+}
+
 export const revalidate = 60
 
 export async function generateStaticParams() {
-  const posts = await db.blogPost.findMany({ where: { status: 'published' }, select: { slug: true } })
-  return posts.map(p => ({ slug: p.slug }))
+  try {
+    const posts = await db.blogPost.findMany({ where: { status: 'published' }, select: { slug: true } })
+    return posts.map(p => ({ slug: p.slug }))
+  } catch {
+    return []
+  }
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = await db.blogPost.findUnique({ where: { slug } })
+  let post: Awaited<ReturnType<typeof fetchPost>> | null = null
+  try {
+    post = await fetchPost(slug)
+  } catch {}
   if (!post || post.status !== 'published') notFound()
 
   return (
