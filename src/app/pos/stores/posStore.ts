@@ -25,6 +25,8 @@ type PosState = {
   customerSearch: string
   orderNotes: string
   taxRate: number
+  offlineMode: boolean
+  offlineReceipt: ReceiptData | null
 
   setSearch: (search: string) => void
   setProductPage: (products: Product[], total: number, page: number, totalPages: number, append?: boolean) => void
@@ -50,6 +52,8 @@ type PosState = {
   setCustomerSearch: (search: string) => void
   setOrderNotes: (notes: string) => void
   setTaxRate: (rate: number) => void
+  setOfflineMode: (on: boolean) => void
+  setOfflineReceipt: (receipt: ReceiptData | null) => void
 
   subtotal: () => number
   itemDiscountTotal: () => number
@@ -84,6 +88,8 @@ export const usePosStore = create<PosState>()(
   customerSearch: '',
   orderNotes: '',
   taxRate: 0,
+  offlineMode: false,
+  offlineReceipt: null,
 
   setSearch: (search) => set({ search }),
   setProductPage: (products, total, page, totalPages, append) => {
@@ -249,6 +255,8 @@ export const usePosStore = create<PosState>()(
   setCustomerSearch: (search) => set({ customerSearch: search }),
   setOrderNotes: (notes) => set({ orderNotes: notes }),
   setTaxRate: (rate) => set({ taxRate: rate }),
+  setOfflineMode: (on) => set({ offlineMode: on }),
+  setOfflineReceipt: (receipt) => set({ offlineReceipt: receipt }),
 
   subtotal: () => get().cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
   itemDiscountTotal: () => get().cart.reduce((sum, item) => sum + (item.discount || 0), 0),
@@ -284,6 +292,7 @@ export const usePosStore = create<PosState>()(
         customer: state.customer,
         taxRate: state.taxRate,
         orderNotes: state.orderNotes,
+        offlineMode: state.offlineMode,
       }),
     }
   )

@@ -1,9 +1,10 @@
 'use client'
 
 import { posFetch } from '@/lib/pos-client-fetch'
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { ShoppingCart } from 'lucide-react'
 import { usePosAuth } from '@/lib/pos-auth-store'
 import { usePos } from './hooks/usePos'
 import { usePosStore } from './stores/posStore'
@@ -12,13 +13,7 @@ import PosLayout from './components/PosLayout'
 import BarcodeInput from './components/BarcodeInput'
 import ProductGrid from './components/ProductGrid'
 import CartPanel from './components/CartPanel'
-import DiscountSection from './components/DiscountSection'
-import DiscountPresets from './components/DiscountPresets'
 import RecentOrders from './components/RecentOrders'
-import PaymentSection from './components/PaymentSection'
-import TotalsDisplay from './components/TotalsDisplay'
-import CheckoutButton from './components/CheckoutButton'
-import ReceiptView from './components/ReceiptView'
 import ShiftStartModal from './components/ShiftStartModal'
 import ShiftCloseModal from './components/ShiftCloseModal'
 import AssessmentView from './components/AssessmentView'
@@ -27,14 +22,13 @@ import RecordsTab from './components/RecordsTab'
 import HallSaleTab from './components/HallSaleTab'
 import ReturnsTab from './components/ReturnsTab'
 import CustomerDisplay from './components/CustomerDisplay'
-import CustomerSearch from './components/CustomerSearch'
 import OfflineBanner from './components/OfflineBanner'
 import OfflineSyncManager from './components/OfflineSyncManager'
 import ShortcutsCheatSheet from './components/ShortcutsCheatSheet'
 import { formatPrice } from '@/lib/format'
 import { registerSW } from '@/lib/offline'
-import { queueOrder, cacheProducts, storeOfflineOrder, getCachedProducts } from '@/lib/pos-db'
-import type { Shift, ShiftSummary, Category, ReceiptData } from './types'
+import { cacheProducts, getCachedProducts } from '@/lib/pos-db'
+import type { Shift, ShiftSummary, Category } from './types'
 
 type View = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale' | 'assessment'
 
@@ -85,9 +79,8 @@ export default function POSPage() {
   const [customPriceAmount, setCustomPriceAmount] = useState('')
   const customPriceRef = useRef<HTMLDivElement>(null)
   const [returnOrderId, setReturnOrderId] = useState<string | null>(null)
-  const [showNotes, setShowNotes] = useState(false)
-  const [offlineMode, setOfflineMode] = useState(false)
-  const [offlineReceipt, setOfflineReceipt] = useState<ReceiptData | null>(null)
+  const offlineMode = usePosStore((s) => s.offlineMode)
+  const setOfflineMode = usePosStore((s) => s.setOfflineMode)
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
@@ -209,130 +202,6 @@ export default function POSPage() {
     } catch { toast.error('Failed to close shift') }
   }, [shift?.id, endingCash, shiftNotes])
 
-  const handleApplyDiscount = useCallback(async () => {
-    if (!pos.discountCode.trim()) return
-    try {
-      const res = await posFetch('/api/admin/pos/validate-discount', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: pos.discountCode,
-          subtotal: pos.subtotal,
-          items: pos.cart.map(i => ({ productId: i.productId, price: i.price, quantity: i.quantity })),
-        }),
-      })
-      if (res.ok) {
-        const data = await res.json()
-        pos.setAppliedDiscount({ code: pos.discountCode, ...data })
-        toast.success('Discount applied')
-      } else {
-        const err = await res.json()
-        toast.error(err.error || 'Invalid discount')
-        pos.setAppliedDiscount(null)
-      }
-    } catch { toast.error('Failed to apply discount') }
-  }, [pos.discountCode, pos.subtotal, pos.cart])
-
-  const handleCheckout = useCallback(async () => {
-    if (pos.cart.length === 0) return
-    const validationError = validatePayment()
-    if (validationError) { toast.error(validationError); return }
-    pos.setCheckoutLoading(true)
-    try {
-      const items = pos.cart.map((i) => ({ productId: i.productId, quantity: i.quantity, discount: i.discount }))
-      const body: any = {
-        items,
-        discountCode: pos.appliedDiscount?.code,
-        paymentMethod: pos.paymentMethod,
-        shiftId: shift?.id,
-        notes: pos.orderNotes || undefined,
-        taxRate: pos.taxRate,
-        taxAmount: pos.taxAmount,
-      }
-      if (pos.customer) {
-        body.customerId = pos.customer.id
-        body.customerName = pos.customer.name
-        body.customerEmail = pos.customer.email
-        body.customerPhone = pos.customer.phone
-      }
-      if (pos.paymentMethod === 'cash' || pos.paymentMethod === 'split') body.cashAmount = pos.parsedCash
-      if (pos.paymentMethod === 'split') body.cardAmount = pos.parsedCard
-
-      if (offlineMode) {
-        const itemsForReceipt = pos.cart.map((i) => ({
-          id: i.productId,
-          quantity: i.quantity,
-          price: i.price,
-          product: { name: i.name, sku: i.productId },
-        }))
-        const { tempReceiptNumber } = await storeOfflineOrder({
-          items,
-          subtotal: pos.subtotal,
-          discountAmount: pos.discountAmount,
-          total: pos.total,
-          paymentMethod: pos.paymentMethod,
-          cashAmount: pos.parsedCash || null,
-          cardAmount: pos.parsedCard || null,
-          taxRate: pos.taxRate,
-          taxAmount: pos.taxAmount,
-          customerId: pos.customer?.id || null,
-          customerName: pos.customer?.name || null,
-          customerEmail: pos.customer?.email || null,
-          customerPhone: pos.customer?.phone || null,
-          discountCode: pos.appliedDiscount?.code || null,
-          shiftId: shift?.id || null,
-          notes: pos.orderNotes || null,
-        })
-        setOfflineReceipt({
-          orderId: tempReceiptNumber,
-          receiptNumber: tempReceiptNumber,
-          total: pos.total,
-          items: itemsForReceipt,
-          subtotal: pos.subtotal,
-          discount: pos.discountAmount,
-          paymentMethod: pos.paymentMethod,
-          cashAmount: pos.parsedCash || null,
-          cardAmount: pos.parsedCard || null,
-          taxRate: pos.taxRate,
-          taxAmount: pos.taxAmount,
-        })
-        toast.success(`Order saved as ${tempReceiptNumber}`)
-        pos.setCheckoutLoading(false)
-        return
-      }
-
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        await queueOrder(body)
-        toast.success('Order queued for sync when back online')
-        pos.setCheckoutLoading(false)
-        return
-      }
-
-      const res = await posFetch('/api/admin/pos/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      if (res.ok) {
-        const data = await res.json()
-        pos.setReceipt({
-          orderId: data.orderId,
-          receiptNumber: data.order?.receiptNumber || '',
-          total: data.total,
-          items: data.order?.items || [],
-          subtotal: data.order?.subtotal || pos.subtotal,
-          discount: data.order?.discountAmount || pos.discountAmount,
-          paymentMethod: data.order?.paymentMethod || pos.paymentMethod,
-          cashAmount: data.order?.cashAmount || null,
-          cardAmount: data.order?.cardAmount || null,
-          taxRate: pos.taxRate,
-          taxAmount: data.order?.tax ?? pos.taxAmount,
-        })
-        toast.success('Order completed!')
-      } else {
-        const err = await res.json()
-        toast.error(err.error || 'Checkout failed')
-      }
-    } catch { toast.error('Checkout failed') }
-    pos.setCheckoutLoading(false)
-  }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.customer, pos.orderNotes, shift?.id])
-
   const handleAddCustomPrice = useCallback(() => {
     const name = customPriceName.trim() || 'Custom Item'
     const price = parseFloat(customPriceAmount)
@@ -344,20 +213,6 @@ export default function POSPage() {
     toast.success(`Added ${name}`)
   }, [customPriceName, customPriceAmount, pos])
 
-  const handleApplyPresetDiscount = useCallback((label: string, amount: number) => {
-    const cart = usePosStore.getState().cart
-    if (cart.length === 0) return
-    const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
-    if (subtotal <= 0) return
-    usePosStore.setState((state) => ({
-      cart: state.cart.map((i) => {
-        const itemSubtotal = i.price * i.quantity
-        const itemDiscount = Math.round((itemSubtotal / subtotal) * amount * 100) / 100
-        return { ...i, discount: itemDiscount > 0 ? itemDiscount : 0 }
-      }),
-    }))
-  }, [])
-
   const handleCategoryChange = useCallback((id: string | null) => {
     setSelectedCategoryId(id)
     if (id) pos.setSearch('')
@@ -366,17 +221,6 @@ export default function POSPage() {
   useEffect(() => {
     if (showCustomPrice) customPriceRef.current?.querySelector('input')?.focus()
   }, [showCustomPrice])
-
-  function validatePayment(): string | null {
-    if (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total) {
-      return `Amount tendered (${formatPrice(pos.parsedCash)}) is less than total (${formatPrice(pos.total)})`
-    }
-    if (pos.paymentMethod === 'split') {
-      if (pos.parsedCash <= 0 || pos.parsedCard <= 0) return 'Both amounts must be greater than 0 for split payment'
-      if (Math.abs(pos.parsedCash + pos.parsedCard - pos.total) > 0.01) return 'Split amounts must equal total'
-    }
-    return null
-  }
 
   const handleLogout = useCallback(() => { logout(); router.replace('/pos/login') }, [logout, router])
 
@@ -388,23 +232,9 @@ export default function POSPage() {
     setView(tab)
   }, [shift])
 
-  const checkoutDisabled = useMemo(() =>
-    pos.cart.length === 0 ||
-    pos.checkoutLoading ||
-    (pos.paymentMethod === 'cash' && pos.parsedCash < pos.total && pos.parsedCash > 0) ||
-    (pos.paymentMethod === 'split' && (pos.parsedCash <= 0 || pos.parsedCard <= 0 || Math.abs(pos.parsedCash + pos.parsedCard - pos.total) > 0.01))
-  , [pos.cart.length, pos.checkoutLoading, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.total])
-
   useKeyboardShortcuts({
-    onF1: () => pos.setPaymentMethod('cash'),
-    onF2: () => pos.setPaymentMethod('card'),
-    onF3: () => pos.setPaymentMethod('split'),
     onF4: () => document.querySelector<HTMLInputElement>('input[placeholder*="Search"]')?.focus(),
     onF6: () => document.querySelector<HTMLInputElement>('input[placeholder*="SKU"]')?.focus(),
-    onF10: () => pos.setPaymentMethod('bank_transfer'),
-    onF11: () => pos.setPaymentMethod('instapay'),
-    onF12: () => pos.setPaymentMethod('wallet'),
-    onEnter: () => { if (!checkoutDisabled) handleCheckout() },
     onEscape: () => { if (pos.cart.length > 0) pos.newSale() },
     onCtrlNumber: (n) => {
       const p = pos.products[n - 1]
@@ -413,18 +243,6 @@ export default function POSPage() {
   })
 
   if (!hydrated || !token || !posHydrated) return null
-
-  if (offlineReceipt) return (
-    <div className="navy-radial min-h-screen">
-      <ReceiptView receipt={offlineReceipt} onNewSale={() => setOfflineReceipt(null)} isOffline />
-    </div>
-  )
-
-  if (pos.receipt) return (
-    <div className="navy-radial min-h-screen">
-      <ReceiptView receipt={pos.receipt} onNewSale={pos.newSale} />
-    </div>
-  )
 
   if (shiftSummary) {
     return (
@@ -556,71 +374,15 @@ export default function POSPage() {
             onHoldOrder={pos.holdOrder}
             onRecallOrder={pos.recallOrder}
             onRemoveHeldOrder={pos.removeHeldOrder}
-            customerSection={
-              <CustomerSearch
-                customer={pos.customer}
-                setCustomer={pos.setCustomer}
-                customerSearch={pos.customerSearch}
-                setCustomerSearch={pos.setCustomerSearch}
-              />
-            }
-            discountSection={
-              <div className="space-y-2">
-                <DiscountPresets
-                  subtotal={pos.subtotal}
-                  cartTotal={pos.total}
-                  cartLength={pos.cart.length}
-                  onApplyPreset={handleApplyPresetDiscount}
-                />
-                <DiscountSection
-                  discountCode={pos.discountCode}
-                  onDiscountCodeChange={pos.setDiscountCode}
-                  onApplyDiscount={handleApplyDiscount}
-                  appliedDiscount={pos.appliedDiscount}
-                  onRemoveDiscount={() => { pos.setAppliedDiscount(null); pos.setDiscountCode('') }}
-                  discountAmount={pos.discountAmount}
-                />
-              </div>
-            }
-            notesSection={
-              <div>
-                <p className="text-xs font-semibold text-white/40 uppercase tracking-wide mb-2">Notes</p>
-                {(showNotes || pos.orderNotes) ? (
-                  <textarea
-                    value={pos.orderNotes}
-                    onChange={(e) => pos.setOrderNotes(e.target.value)}
-                    placeholder="Order notes..."
-                    rows={2}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-xs text-silver-soft placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-gold/30 resize-none"
-                  />
-                ) : (
-                  <button onClick={() => setShowNotes(true)} className="w-full py-2 px-3 rounded-lg border border-dashed border-white/10 text-xs text-white/40 hover:text-white/60 hover:border-white/20 transition-all text-left">
-                    + Add Note
-                  </button>
-                )}
-              </div>
-            }
-            paymentSection={
-              <PaymentSection
-                paymentMethod={pos.paymentMethod}
-                onPaymentMethodChange={pos.setPaymentMethod}
-                cashAmount={pos.cashAmount}
-                onCashChange={pos.handleCashChange}
-                cardAmount={pos.cardAmount}
-                onCardChange={pos.handleCardChange}
-                total={pos.total}
-                change={pos.change}
-              />
-            }
-            totalsDisplay={<TotalsDisplay subtotal={pos.subtotal} discountAmount={pos.discountAmount} total={pos.total} itemDiscountTotal={pos.itemDiscountTotal} couponDiscount={pos.appliedDiscount?.amount || 0} taxAmount={pos.taxAmount} />}
-            checkoutButton={
-              <CheckoutButton
-                total={pos.total}
-                paymentMethod={pos.paymentMethod}
-                disabled={checkoutDisabled}
-                loading={pos.checkoutLoading}
-                onClick={handleCheckout}
-              />
+            paymentButton={
+              <button
+                onClick={() => router.push('/pos/payment')}
+                disabled={pos.cart.length === 0}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-gradient-to-r from-gold to-amber-400 text-navy-deep text-sm font-bold uppercase tracking-wider hover:from-gold/90 hover:to-amber-400/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_20px_-6px_rgba(212,175,55,0.5)] transition-all"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                Proceed to Payment · {formatPrice(pos.total)}
+              </button>
             }
           />
         </div>
