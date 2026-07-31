@@ -17,6 +17,7 @@ import TotalsDisplay from '../components/TotalsDisplay'
 import CheckoutButton from '../components/CheckoutButton'
 import ReceiptView from '../components/ReceiptView'
 import ShortcutsCheatSheet from '../components/ShortcutsCheatSheet'
+import CartItemComponent from '../components/CartItem'
 import { formatPrice } from '@/lib/format'
 import { queueOrder, storeOfflineOrder } from '@/lib/pos-db'
 import type { Shift } from '../types'
@@ -305,23 +306,25 @@ export default function POSPaymentPage() {
 
         <div className="flex gap-4 flex-1 min-h-0 items-start">
           <div className="w-[380px] min-w-[380px] flex flex-col bg-[rgba(10,22,40,0.95)] rounded-xl border border-gold/30 p-4 shadow-[0_0_20px_-8px_rgba(212,175,55,0.3)] max-h-[calc(100dvh-10rem)]">
-            <h2 className="font-semibold text-silver-soft flex items-center gap-2 mb-3 flex-shrink-0">
-              <ShoppingCart className="h-4 w-4 text-gold" /> Order ({pos.cart.length})
-            </h2>
+            <div className="flex items-center justify-between mb-3 flex-shrink-0">
+              <h2 className="font-semibold text-silver-soft flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-gold" /> Order ({pos.cart.length})
+              </h2>
+              {pos.cart.length > 0 && (
+                <button onClick={() => pos.cart.forEach(i => pos.removeFromCart(i.productId))} className="text-xs text-white/40 hover:text-red-400 transition-colors">
+                  Clear all
+                </button>
+              )}
+            </div>
             <div className="flex-1 overflow-y-auto space-y-2 min-h-0 scroll-luxury">
               {pos.cart.map((item) => (
-                <div key={item.productId} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2 border border-white/5">
-                  <div className="flex-1 min-w-0 mr-2">
-                    <p className="text-sm font-medium text-silver-soft truncate">{item.name}</p>
-                    <p className="text-xs text-white/40">
-                      {item.quantity} × {formatPrice(item.price)}
-                      {item.discount ? ` · -${formatPrice(item.discount)}` : ''}
-                    </p>
-                  </div>
-                  <span className="text-sm font-semibold text-silver-soft whitespace-nowrap">
-                    {formatPrice(item.price * item.quantity - (item.discount || 0))}
-                  </span>
-                </div>
+                <CartItemComponent
+                  key={item.productId}
+                  item={item}
+                  onUpdateQuantity={pos.updateQuantity}
+                  onRemove={pos.removeFromCart}
+                  onSetDiscount={pos.setItemDiscount}
+                />
               ))}
             </div>
             <div className="flex-shrink-0 mt-3 pt-3 border-t border-white/10 space-y-1.5 text-sm">
