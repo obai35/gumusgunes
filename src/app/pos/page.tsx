@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ShoppingCart } from 'lucide-react'
 import { usePosAuth } from '@/lib/pos-auth-store'
 import { usePos } from './hooks/usePos'
+import { usePosSettings } from './hooks/usePosSettings'
 import { usePosStore } from './stores/posStore'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import PosLayout from './components/PosLayout'
@@ -52,6 +53,8 @@ export default function POSPage() {
 
   const pos = usePos()
   const [posHydrated, setPosHydrated] = useState(false)
+
+  usePosSettings(true)
 
   useEffect(() => {
     if (usePosStore.persist.hasHydrated()) {

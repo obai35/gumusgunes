@@ -4,14 +4,28 @@ export function getCurrencyMeta(code: string) {
   return null
 }
 
-export function formatPrice(value: number, currencyCode: string = 'EGP', symbol: string = 'E£', locale: string = 'ar-EG'): string {
-  const converted = value * 1
+let runtimeCurrencySymbol: string | null = null
+let runtimeCurrencyCode: string | null = null
+
+export function setRuntimeCurrency(symbol: string, code: string) {
+  runtimeCurrencySymbol = symbol
+  runtimeCurrencyCode = code
+}
+
+export function formatPrice(value: number, currencyCode: string = runtimeCurrencyCode ?? 'EGP', symbol: string = runtimeCurrencySymbol ?? 'E£', locale: string = 'ar-EG'): string {
+  const digits = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value * 1)
+  if ((arguments.length > 2 && symbol) || runtimeCurrencySymbol !== null) {
+    return `${symbol} ${digits}`
+  }
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(converted)
+  }).format(value * 1)
 }
 
 export function parseTags(tags: string | null | undefined): string[] {

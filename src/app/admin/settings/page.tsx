@@ -40,6 +40,9 @@ const FIELDS: { key: string; label: string; type?: string; group: string }[] = [
   { key: 'receiptAddress', label: 'Receipt Address', group: 'Receipt' },
   { key: 'receiptShowReturnPolicy', label: 'Show Return Policy', type: 'select', group: 'Receipt' },
   { key: 'receiptReturnPolicyDays', label: 'Return Policy Days', type: 'number', group: 'Receipt' },
+  { key: 'posDefaultTaxRate', label: 'POS Default Tax Rate (%) — 0 to keep current behavior', type: 'number', group: 'POS' },
+  { key: 'posCurrencySymbol', label: 'POS Currency Symbol', group: 'POS' },
+  { key: 'posCurrencyCode', label: 'POS Currency Code (ISO)', group: 'POS' },
 ]
 
 export default function AdminSettings() {

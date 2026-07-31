@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { ArrowLeft, History, Receipt, ShoppingCart } from 'lucide-react'
 import { usePosAuth } from '@/lib/pos-auth-store'
 import { usePos } from '../hooks/usePos'
+import { usePosSettings } from '../hooks/usePosSettings'
 import { usePosStore } from '../stores/posStore'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import CustomerSearch from '../components/CustomerSearch'
@@ -65,6 +66,8 @@ export default function POSPaymentPage() {
   const offlineReceipt = usePosStore((s) => s.offlineReceipt)
   const setOfflineReceipt = usePosStore((s) => s.setOfflineReceipt)
   const saleIdRef = useRef<string | null>(null)
+
+  usePosSettings(true)
   const [showRecent, setShowRecent] = useState(false)
   const [recentOrders, setRecentOrders] = useState<any[]>([])
   const [recentLoading, setRecentLoading] = useState(false)
