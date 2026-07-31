@@ -2,6 +2,7 @@
 import { storeDb } from '@/lib/store-scoped'
 import { withPosOrAdmin } from '@/lib/pos-or-admin'
 import { createJournalEntry, ACCOUNTS } from '@/lib/accounting'
+import { computeShiftTotals } from '@/lib/shiftTotals'
 
 function getAssetAccount(method: string): string {
   const map: Record<string, string> = {
@@ -33,13 +34,8 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   }
 
   const orders = await sdb.order.findMany({ where: { shiftId, status: { not: 'cancelled' } } })
+  const totals = computeShiftTotals(orders)
 
-  const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0)
-  const totalCash = orders.reduce((sum, o) => sum + (o.cashAmount || (o.paymentMethod === 'cash' ? o.totalAmount : 0)), 0)
-  const totalCard = orders.reduce((sum, o) => sum + (o.cardAmount || (o.paymentMethod === 'card' ? o.totalAmount : 0)), 0)
-  const totalBankTransfer = orders.filter((o) => o.paymentMethod === 'bank_transfer').reduce((sum, o) => sum + o.totalAmount, 0)
-  const totalInstapay = orders.filter((o) => o.paymentMethod === 'instapay').reduce((sum, o) => sum + o.totalAmount, 0)
-  const totalWallet = orders.filter((o) => o.paymentMethod === 'wallet').reduce((sum, o) => sum + o.totalAmount, 0)
   const totalExpenses = await sdb.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
   const orderCount = orders.length
 
@@ -49,12 +45,12 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
       isOpen: false,
       closedAt: new Date(),
       endingCash: validatedEndingCash,
-      totalSales,
-      totalCash,
-      totalCard,
-      totalBankTransfer,
-      totalInstapay,
-      totalWallet,
+      totalSales: totals.totalSales,
+      totalCash: totals.totalCash,
+      totalCard: totals.totalCard,
+      totalBankTransfer: totals.totalBankTransfer,
+      totalInstapay: totals.totalInstapay,
+      totalWallet: totals.totalWallet,
       totalExpenses,
       orderCount,
       notes: notes || null,
@@ -67,16 +63,16 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
 
   // Auto-accounting: create summary journal entries for this shift
   try {
-    const salesLines: { accountCode: string; debit?: number; credit?: number }[] = []
-    let totalDebit = 0
-    for (const [method, total] of Object.entries({ cash: totalCash, card: totalCard, bank_transfer: totalBankTransfer, instapay: totalInstapay, wallet: totalWallet }) as [string, number][]) {
-      if (total > 0) {
-        salesLines.push({ accountCode: getAssetAccount(method), debit: total })
-        totalDebit += total
-      }
-    }
-    if (totalSales > 0) {
-      salesLines.push({ accountCode: ACCOUNTS.salesRevenue, credit: totalSales })
+        const salesLines: { accountCode: string; debit?: number; credit?: number }[] = []
+        let totalDebit = 0
+        for (const [method, total] of Object.entries({ cash: totals.totalCash, card: totals.totalCard, bank_transfer: totals.totalBankTransfer, instapay: totals.totalInstapay, wallet: totals.totalWallet }) as [string, number][]) {
+          if (total > 0) {
+            salesLines.push({ accountCode: getAssetAccount(method), debit: total })
+            totalDebit += total
+          }
+        }
+        if (totals.totalSales > 0) {
+          salesLines.push({ accountCode: ACCOUNTS.salesRevenue, credit: totals.totalSales })
       await createJournalEntry({
         date: new Date(),
         description: `Shift close #${shiftId.slice(0, 8)} — Sales`,
