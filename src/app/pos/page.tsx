@@ -376,7 +376,11 @@ export default function POSPage() {
             onRemoveHeldOrder={pos.removeHeldOrder}
             paymentButton={
               <button
-                onClick={() => router.push('/pos/payment')}
+                onClick={() => {
+                  pos.setReceipt(null)
+                  setOfflineReceipt(null)
+                  router.push('/pos/payment')
+                }}
                 disabled={pos.cart.length === 0}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-lg bg-gradient-to-r from-gold to-amber-400 text-navy-deep text-sm font-bold uppercase tracking-wider hover:from-gold/90 hover:to-amber-400/90 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_4px_20px_-6px_rgba(212,175,55,0.5)] transition-all"
               >

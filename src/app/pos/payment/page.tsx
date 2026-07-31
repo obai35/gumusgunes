@@ -240,7 +240,14 @@ export default function POSPaymentPage() {
     onF11: () => pos.setPaymentMethod('instapay'),
     onF12: () => pos.setPaymentMethod('wallet'),
     onEnter: () => { if (!checkoutDisabled) handleCheckout() },
-    onEscape: () => router.push('/pos'),
+    onEscape: () => {
+      if (pos.receipt || offlineReceipt) {
+        setOfflineReceipt(null)
+        pos.newSale()
+      } else {
+        router.push('/pos')
+      }
+    },
   })
 
   if (!hydrated || !token || !posHydrated) return null
