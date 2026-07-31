@@ -1,32 +1,25 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
+export const GET = withAdmin(async (req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
 
-  const asset = await storeDb(storeId).fixedAsset.findFirst({
+  const asset = await sdb.fixedAsset.findFirst({
     where: { id },
     include: { depreciationEntries: { orderBy: { periodDate: 'desc' } } },
   })
   if (!asset) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json({ asset })
-}
+}, 'accounting')
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
+export const PUT = withAdmin(async (req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
 
   const body = await req.json()
-  const asset = await storeDb(storeId).fixedAsset.update({
+  const asset = await sdb.fixedAsset.update({
     where: { id },
     data: {
       name: body.name,
@@ -39,15 +32,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     },
   })
   return NextResponse.json({ asset })
-}
+}, 'accounting')
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
+export const DELETE = withAdmin(async (req: NextRequest, { params, admin }) => {
+  const sdb = storeDb(admin.storeId)
   const { id } = await params
 
-  await storeDb(storeId).fixedAsset.delete({ where: { id } })
+  await sdb.fixedAsset.delete({ where: { id } })
   return NextResponse.json({ success: true })
-}
+}, 'accounting')

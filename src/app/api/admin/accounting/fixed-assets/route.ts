@@ -1,47 +1,37 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
-
-  const { searchParams } = new URL(req.url)
-  const status = searchParams.get('status')
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50')))
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const sdb = storeDb(admin.storeId)
+  const status = req.nextUrl.searchParams.get('status')
+  const page = Math.max(1, parseInt(req.nextUrl.searchParams.get('page') || '1'))
+  const limit = Math.min(100, Math.max(1, parseInt(req.nextUrl.searchParams.get('limit') || '50')))
 
   const where: any = {}
   if (status) where.status = status
 
   const [assets, total] = await Promise.all([
-    storeDb(storeId).fixedAsset.findMany({
+    sdb.fixedAsset.findMany({
       where,
       include: { depreciationEntries: { orderBy: { periodDate: 'desc' }, take: 5 } },
       orderBy: { purchaseDate: 'desc' },
       skip: (page - 1) * limit,
       take: limit,
     }),
-    storeDb(storeId).fixedAsset.count({ where }),
+    sdb.fixedAsset.count({ where }),
   ])
   return NextResponse.json({ assets, total, page, totalPages: Math.ceil(total / limit) })
-}
+}, 'accounting')
 
-export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
-
+export const POST = withAdmin(async (req: Request, { admin }) => {
+  const sdb = storeDb(admin.storeId)
   const body = await req.json()
   if (!body.name || !body.assetNumber || !body.purchaseCost || !body.usefulLifeYears) {
     return NextResponse.json({ error: 'name, assetNumber, purchaseCost, usefulLifeYears required' }, { status: 400 })
   }
 
-  const asset = await (storeDb(storeId).fixedAsset as any).create({
+  const asset = await (sdb.fixedAsset as any).create({
     data: {
       name: body.name,
       nameAr: body.nameAr || null,
@@ -57,4 +47,4 @@ export async function POST(req: Request) {
     },
   })
   return NextResponse.json({ asset })
-}
+}, 'accounting')

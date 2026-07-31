@@ -60,14 +60,14 @@ export default async function PreviewPage() {
     }),
     db.product.findMany({
       where: { isActive: true },
-      include: { category: { select: { id: true, name: true, slug: true } } },
+      include: { category: true },
       orderBy: { createdAt: 'desc' },
       take: 100,
     }),
   ])
 
   const categories = rawCategories as Category[]
-  const products = rawProducts as Product[]
+  const products = rawProducts as unknown as Product[]
 
   const map: Record<string, string> = { ...DEFAULTS }
   for (const s of settings) map[s.key] = s.value

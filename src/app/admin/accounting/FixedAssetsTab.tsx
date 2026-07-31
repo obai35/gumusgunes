@@ -57,8 +57,13 @@ function AssetRegisterView() {
     params.set('page', String(page))
     fetch(`/api/admin/accounting/fixed-assets?${params}`)
       .then(r => r.json())
-      .then(d => { setAssets(d.assets); setTotal(d.total); setTotalPages(d.totalPages) })
-      .catch(() => toast.error('Failed to load assets'))
+      .then(d => {
+        if (d.error) throw new Error(d.error)
+        setAssets(d.assets || [])
+        setTotal(d.total || 0)
+        setTotalPages(d.totalPages || 1)
+      })
+      .catch((e: Error) => toast.error(e.message || 'Failed to load assets'))
       .finally(() => setLoading(false))
   }
 
@@ -197,7 +202,7 @@ function DepreciationRunView() {
   useEffect(() => {
     fetch('/api/admin/accounting/fixed-assets?status=active')
       .then(r => r.json())
-      .then(d => setAssets(d.assets))
+      .then(d => setAssets(d.assets || []))
       .catch(() => toast.error('Failed to load assets'))
       .finally(() => setLoading(false))
   }, [])
@@ -269,7 +274,7 @@ function DepreciationScheduleView() {
   useEffect(() => {
     fetch('/api/admin/accounting/fixed-assets')
       .then(r => r.json())
-      .then(d => setAssets(d.assets))
+      .then(d => setAssets(d.assets || []))
       .catch(() => toast.error('Failed'))
       .finally(() => setLoading(false))
   }, [])
@@ -280,7 +285,7 @@ function DepreciationScheduleView() {
     try {
       const r = await fetch(`/api/admin/accounting/fixed-assets/${selectedAsset}/schedule`)
       const d = await r.json()
-      setSchedule(d.schedule)
+      setSchedule(d.schedule || [])
     } catch { toast.error('Failed to load schedule') }
     finally { setScheduleLoading(false) }
   }

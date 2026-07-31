@@ -27,8 +27,8 @@ export const POST = withAdmin(async (req, { admin }) => {
   }
   const existing = await prisma.admin.findUnique({ where: { email } })
   if (existing) return NextResponse.json({ message: 'Admin already exists' })
-  const newAdmin = await prisma.admin.create({
-    data: { email, name: 'Admin', password: await hashPassword(password), role: 'superadmin' },
+  const newAdmin = await sdb.admin.create({
+    data: { email, name: 'Admin', password: await hashPassword(password), role: 'superadmin' } as any,
   })
   return NextResponse.json({ message: 'Admin created', id: newAdmin.id })
 }, 'seed')

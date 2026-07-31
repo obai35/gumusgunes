@@ -23,7 +23,7 @@ export const POST = withAdmin(async (req, { admin }) => {
       isDefault: body.isDefault || false,
       isActive: body.isActive ?? true,
       sortOrder: body.sortOrder ?? count,
-    },
+    } as any,
   })
   return NextResponse.json(item, { status: 201 })
 }, 'pricing')

@@ -28,7 +28,7 @@ export const POST = withAdmin(async (req, { admin }) => {
       { status: 400 }
     )
   }
-  const { name, description, price, stock, categoryId, images, tags, featured, requiresShipping, weight } = parsed.data
+  const { name, description, price, stock, categoryId, images, tags, featured, weight } = parsed.data
   const product = await sdb.product.create({
     data: {
       name, description,
@@ -37,8 +37,7 @@ export const POST = withAdmin(async (req, { admin }) => {
       tags: tags ? JSON.stringify(tags) : '[]',
       weight: weight !== undefined ? String(weight) : null,
       isFeatured: featured ?? false,
-      requiresShipping: requiresShipping ?? true,
-    },
+    } as any,
   })
   return NextResponse.json(product)
 }, 'products')

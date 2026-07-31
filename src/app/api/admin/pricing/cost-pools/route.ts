@@ -28,7 +28,7 @@ export const POST = withAdmin(async (req, { admin }) => {
       basis: body.basis || 'total_pct',
       rate: Number(body.rate) || 0,
       isActive: body.isActive ?? true,
-    },
+    } as any,
   })
   return NextResponse.json(item, { status: 201 })
 }, 'pricing')
