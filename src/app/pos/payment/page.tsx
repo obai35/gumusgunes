@@ -4,7 +4,7 @@ import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ArrowLeft, Receipt, ShoppingCart } from 'lucide-react'
+import { ArrowLeft, History, Receipt, ShoppingCart } from 'lucide-react'
 import { usePosAuth } from '@/lib/pos-auth-store'
 import { usePos } from '../hooks/usePos'
 import { usePosStore } from '../stores/posStore'
@@ -65,6 +65,40 @@ export default function POSPaymentPage() {
   const offlineReceipt = usePosStore((s) => s.offlineReceipt)
   const setOfflineReceipt = usePosStore((s) => s.setOfflineReceipt)
   const saleIdRef = useRef<string | null>(null)
+  const [showRecent, setShowRecent] = useState(false)
+  const [recentOrders, setRecentOrders] = useState<any[]>([])
+  const [recentLoading, setRecentLoading] = useState(false)
+
+  const loadRecentOrders = useCallback(async () => {
+    if (!shift?.id) return
+    setRecentLoading(true)
+    try {
+      const res = await posFetch(`/api/admin/pos/orders/recent?shiftId=${shift.id}&limit=5&full=1`)
+      const data = await res.json()
+      if (data.ok) setRecentOrders((data.orders || []).filter((o: any) => o.status !== 'cancelled'))
+    } catch {}
+    setRecentLoading(false)
+  }, [shift?.id])
+
+  useEffect(() => {
+    if (showRecent) loadRecentOrders()
+  }, [showRecent, loadRecentOrders])
+
+  const handleRepeatOrder = useCallback((order: any) => {
+    const items: any[] = order?.items || []
+    if (items.length === 0) return
+    for (const item of pos.cart) pos.removeFromCart(item.productId)
+    pos.setDiscountCode('')
+    pos.setAppliedDiscount(null)
+    usePosStore.getState().setCashAmount('')
+    usePosStore.getState().setCardAmount('')
+    for (const it of items) {
+      pos.addToCart({ id: it.product.id, name: it.product.name, price: it.price, stock: 9999, imageUrl: '', sku: it.product.sku || '' })
+      if ((it.discount || 0) > 0) pos.setItemDiscount(it.product.id, it.discount)
+    }
+    setShowRecent(false)
+    toast.success('Order repeated — review before checkout')
+  }, [pos])
 
   useEffect(() => {
     if (hydrated && token && posHydrated && pos.cart.length === 0 && !pos.receipt && !offlineReceipt) {
@@ -225,13 +259,14 @@ export default function POSPaymentPage() {
         })
         saleIdRef.current = null
         toast.success('Order completed!')
+        loadRecentOrders()
       } else {
         const err = await res.json()
         toast.error(err.error || 'Checkout failed')
       }
     } catch { toast.error('Checkout failed') }
     pos.setCheckoutLoading(false)
-  }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.customer, pos.orderNotes, pos.taxRate, pos.taxAmount, pos.subtotal, pos.discountAmount, pos.total, shift?.id, offlineMode])
+  }, [pos.cart, pos.appliedDiscount?.code, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.customer, pos.orderNotes, pos.taxRate, pos.taxAmount, pos.subtotal, pos.discountAmount, pos.total, shift?.id, offlineMode, loadRecentOrders])
 
   const handleNewSale = useCallback(() => {
     setOfflineReceipt(null)
@@ -299,6 +334,46 @@ export default function POSPaymentPage() {
             <Receipt className="h-5 w-5 text-gold" /> Payment
           </h1>
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowRecent(v => !v)}
+                className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 hover:bg-white/10 text-silver-soft text-xs font-medium rounded-lg border border-white/10 transition-all"
+              >
+                <History className="h-4 w-4 text-gold" /> Recent
+              </button>
+              {showRecent && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowRecent(false)} />
+                  <div className="absolute right-0 top-full mt-2 z-50 w-80 bg-[rgba(10,22,40,0.98)] border border-gold/25 rounded-xl shadow-2xl p-3 space-y-2 max-h-[60dvh] overflow-y-auto scroll-luxury">
+                    <p className="text-xs font-semibold text-white/40 uppercase tracking-wide">Recent orders</p>
+                    {recentLoading ? (
+                      <p className="text-xs text-white/40 py-4 text-center">Loading…</p>
+                    ) : recentOrders.length === 0 ? (
+                      <p className="text-xs text-white/40 py-4 text-center">No recent orders</p>
+                    ) : (
+                      recentOrders.map((o) => (
+                        <div key={o.id} className="flex items-center gap-2 bg-white/5 rounded-lg p-2 border border-white/5">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-silver-soft truncate">
+                              {o.items.map((i: any) => `${i.quantity}× ${i.product.name}`).join(', ')}
+                            </p>
+                            <p className="text-[11px] text-white/40">
+                              {new Date(o.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {formatPrice(o.totalAmount)} · {o.paymentMethod}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleRepeatOrder(o)}
+                            className="flex-shrink-0 px-2.5 py-1 bg-gold text-navy-deep rounded-md text-xs font-semibold hover:bg-gold/90 transition-all"
+                          >
+                            Repeat
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
             {offlineMode && (
               <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/15 text-amber-400 text-xs font-semibold rounded-full border border-amber-500/30">
                 Offline Mode

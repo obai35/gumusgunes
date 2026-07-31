@@ -7,6 +7,7 @@ export const GET = withPosOrAdmin(async (req: Request, { admin }) => {
   const { searchParams } = new URL(req.url)
   const shiftId = searchParams.get('shiftId')
   const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') || '10') || 10))
+  const fullItems = searchParams.get('full') === '1'
 
   const orders = await sdb.order.findMany({
     where: shiftId
@@ -25,10 +26,12 @@ export const GET = withPosOrAdmin(async (req: Request, { admin }) => {
       paymentStatus: true,
       status: true,
       createdAt: true,
-      items: {
-        take: 3,
-        select: { id: true, quantity: true, price: true, product: { select: { name: true } } },
-      },
+      items: fullItems
+        ? { select: { id: true, quantity: true, price: true, discount: true, product: { select: { id: true, name: true, sku: true } } } }
+        : {
+            take: 3,
+            select: { id: true, quantity: true, price: true, product: { select: { name: true } } },
+          },
     },
   })
 
