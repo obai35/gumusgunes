@@ -16,6 +16,6 @@ export const POST = withAdmin(async (req, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const { name, nameAr, isoCode } = await req.json()
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-  const country = await sdb.country.create({ data: { name, nameAr: nameAr || name, isoCode: isoCode || '' } })
+  const country = await sdb.country.create({ data: { name, nameAr: nameAr || name, isoCode: isoCode || '' } as any })
   return NextResponse.json({ country })
 }, 'shipping')

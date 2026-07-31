@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import HomeClient from './HomeClient'
+import type { Category, Product } from '@/lib/types'
 
 export const revalidate = 60
 
@@ -26,5 +27,5 @@ export default async function Home() {
     }),
   ])
 
-  return <HomeClient categories={categories} products={products} />
+  return <HomeClient categories={categories as Category[]} products={products as Product[]} />
 }

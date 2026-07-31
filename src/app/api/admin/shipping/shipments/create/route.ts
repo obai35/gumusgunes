@@ -30,7 +30,7 @@ export const POST = withAdmin(async (req, { admin }) => {
         estimatedDeliveryAt: estimatedDeliveryAt ? new Date(estimatedDeliveryAt) : null,
         addressSnapshot: JSON.stringify(order),
         notes: notes || null,
-      },
+      } as any,
     })
     await tx.order.update({ where: { id: orderId }, data: { status: 'shipped' } })
     return s

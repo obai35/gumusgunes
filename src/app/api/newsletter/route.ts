@@ -11,7 +11,7 @@ const Schema = z.object({
 
 async function handlePost(req: NextRequest) {
   try {
-    const { db: sdb } = await storefrontDb(req)
+    const { db: sdb, storeId } = await storefrontDb(req)
     const body = await req.json()
     const parsed = Schema.safeParse(body)
     if (!parsed.success) {
@@ -32,6 +32,7 @@ async function handlePost(req: NextRequest) {
       data: {
         email: parsed.data.email.toLowerCase(),
         name: parsed.data.name || null,
+        storeId,
       },
     })
 

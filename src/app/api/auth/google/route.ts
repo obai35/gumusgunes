@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { hashPassword, signToken } from '@/lib/customer-auth'
 import { encryptFields } from '@/lib/field-encryption'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { z } from 'zod'
 
 export async function GET() {
@@ -40,10 +41,11 @@ const handler = async (req: NextRequest) => {
     if (user) {
       if (!user.googleId) await db.user.update({ where: { id: user.id }, data: { googleId } })
     } else {
+      const { storeId } = await storefrontDb(req)
       user = await db.user.create({
         data: encryptFields(
-          { email, name, googleId, password: await hashPassword(crypto.randomUUID()) },
-          ['name'] as (keyof any)[]
+          { email, name, googleId, password: await hashPassword(crypto.randomUUID()), storeId },
+          ['name']
         ),
       })
     }

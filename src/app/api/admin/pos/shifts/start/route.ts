@@ -17,7 +17,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
     }
 
     const shift = await sdb.shift.create({
-      data: { branchId, startingCash, isOpen: true },
+      data: { branchId, startingCash, isOpen: true } as any,
     })
 
     return NextResponse.json({ ok: true, shift })

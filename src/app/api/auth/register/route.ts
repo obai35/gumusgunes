@@ -3,6 +3,7 @@ import { withRateLimit } from '@/lib/rate-limit'
 import { hashPassword, signToken } from '@/lib/customer-auth'
 import { encryptFields } from '@/lib/field-encryption'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { z } from 'zod'
 
 const RegisterSchema = z.object({
@@ -31,10 +32,11 @@ const handler = async (req: NextRequest) => {
     const existing = await db.user.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already registered' }, { status: 409 })
 
+    const { storeId } = await storefrontDb(req)
     const user = await db.user.create({
       data: encryptFields(
-        { email, password: await hashPassword(password), name, gender, phone },
-        ['name', 'phone'] as (keyof any)[]
+        { email, password: await hashPassword(password), name, gender, phone, storeId },
+        ['name', 'phone']
       ),
     })
 

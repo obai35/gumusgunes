@@ -31,6 +31,7 @@ async function handler(req: Request) {
     await db.resetToken.create({
       data: {
         email,
+        storeId: user.storeId,
         token: hashedToken,
         expiresAt: new Date(Date.now() + 3600000), // 1 hour
       },

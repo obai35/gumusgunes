@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { signToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 
 export async function GET(req: NextRequest) {
   const origin = new URL(req.url).origin
@@ -88,6 +89,7 @@ export async function GET(req: NextRequest) {
       } catch { return email }
     })()
 
+    const { storeId } = await storefrontDb(req)
     const user = await db.user.upsert({
       where: { email },
       update: {
@@ -101,6 +103,7 @@ export async function GET(req: NextRequest) {
         password: '',
         googleId: googleSub,
         avatar,
+        storeId,
       },
     })
 

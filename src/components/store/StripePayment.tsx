@@ -81,7 +81,7 @@ export default function StripePayment({ amount, currency, onSuccess, publishable
   if (loading) return <div className="animate-pulse h-32 bg-gray-100 rounded-lg" />
 
   return (
-    <Elements stripe={getStripe(publishableKey)} clientSecret={clientSecret} options={{ locale: 'en' }}>
+    <Elements stripe={getStripe(publishableKey)} options={{ clientSecret, locale: 'en' }}>
       <StripeForm amount={amount} currency={currency} onSuccess={onSuccess} />
     </Elements>
   )

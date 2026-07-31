@@ -13,7 +13,7 @@ const handler = withAdmin(async (req, { admin }) => {
   await sdb.pushToken.upsert({
     where: { adminId_token: { adminId: admin.id, token } },
     update: { platform: platform || 'android' },
-    create: { token, platform: platform || 'android', adminId: admin.id },
+    create: { token, platform: platform || 'android', adminId: admin.id } as any,
   })
 
   return NextResponse.json({ ok: true })

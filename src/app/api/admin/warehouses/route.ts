@@ -18,7 +18,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   if (!name || !code) return NextResponse.json({ error: 'Name and code required' }, { status: 400 })
   const existing = await sdb.warehouse.findUnique({ where: { code } })
   if (existing) return NextResponse.json({ error: 'Warehouse code already exists' }, { status: 409 })
-  const warehouse = await sdb.warehouse.create({ data: { name, code, address } })
+  const warehouse = await sdb.warehouse.create({ data: { name, code, address } as any })
   return NextResponse.json({ ok: true, warehouse })
 }, 'inventory')
 

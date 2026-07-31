@@ -23,7 +23,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     const existing = await sdb.branch.findUnique({ where: { email } })
     if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
     const branch = await sdb.branch.create({
-      data: { name, email, password: await hashPassword(password), phone, address },
+      data: { name, email, password: await hashPassword(password), phone, address } as any,
     })
     return NextResponse.json({ ok: true, branch })
   } catch (err) {

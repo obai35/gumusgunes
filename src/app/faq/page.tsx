@@ -92,7 +92,7 @@ export default function FaqPage() {
           })}
 
           {filtered.length === 0 && (
-            <p className="text-center text-muted-foreground py-12">{t('faqPage.noResults', { search })}</p>
+            <p className="text-center text-muted-foreground py-12">{t('faqPage.noResults', search)}</p>
           )}
         </div>
       </main>

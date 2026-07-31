@@ -27,7 +27,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       productIds: productIds ? JSON.stringify(productIds) : null,
       discountId: discountId || null,
       platforms: JSON.stringify(platforms),
-    },
+    } as any,
   })
   return NextResponse.json(draft)
 }, 'social')

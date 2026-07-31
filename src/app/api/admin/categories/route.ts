@@ -62,7 +62,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
     const category = await sdb.category.create({
-      data: { name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible },
+      data: { name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible } as any,
     })
 
     return NextResponse.json(category)

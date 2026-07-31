@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { withRateLimit } from '@/lib/rate-limit'
 import { sanitize } from '@/lib/sanitize'
 import { z } from 'zod'
@@ -297,28 +298,29 @@ async function handlePost(req: NextRequest) {
     }
 
     // Persist conversation and messages
+    const { db: sdb, storeId } = await storefrontDb(req)
     let convId = conversationId || null
     if (convId) {
-      const existing = await db.conversation.findUnique({ where: { id: convId } })
+      const existing = await sdb.conversation.findUnique({ where: { id: convId } })
       if (!existing) {
         convId = null
       }
     }
     if (!convId) {
-      const conv = await db.conversation.create({
-        data: { source: 'website', status: 'ACTIVE', customerName: 'Website Visitor' },
+      const conv = await sdb.conversation.create({
+        data: { source: 'website', status: 'ACTIVE', customerName: 'Website Visitor', storeId },
       })
       convId = conv.id
     }
 
     try {
-      await db.message.create({
-        data: { conversationId: convId, content: message, role: 'CUSTOMER' },
+      await sdb.message.create({
+        data: { conversationId: convId, content: message, role: 'CUSTOMER', storeId },
       })
 
       if (reply) {
-        await db.message.create({
-          data: { conversationId: convId, content: reply, role: 'BOT' },
+        await sdb.message.create({
+          data: { conversationId: convId, content: reply, role: 'BOT', storeId },
         })
       }
 
@@ -327,7 +329,7 @@ async function handlePost(req: NextRequest) {
       const needsEscalation = reply && escalationKeywords.some(k => reply.toLowerCase().includes(k))
 
       if (needsEscalation) {
-        await db.conversation.update({
+        await sdb.conversation.update({
           where: { id: convId },
           data: { status: 'WAITING' },
         })

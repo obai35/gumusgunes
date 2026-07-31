@@ -35,6 +35,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Invalid signature' }, { status: 401 })
     }
     const body = JSON.parse(rawBody)
+    const { storefrontDb } = await import('@/lib/storefront-db')
+    const { storeId } = await storefrontDb(req)
 
     for (const entry of body.entry || []) {
       // Messenger messages
@@ -59,6 +61,7 @@ export async function POST(req: NextRequest) {
               customerPhone: senderId,
               source: 'messenger',
               status: 'WAITING',
+              storeId,
             },
           })
         } else if (conversation.status === 'CLOSED') {
@@ -73,6 +76,7 @@ export async function POST(req: NextRequest) {
             conversationId: conversation.id,
             content: messageText,
             role: 'CUSTOMER',
+            storeId,
           },
         })
 
@@ -112,6 +116,7 @@ export async function POST(req: NextRequest) {
               customerPhone: senderId,
               source: 'instagram',
               status: 'WAITING',
+              storeId,
             },
           })
         } else if (conversation.status === 'CLOSED') {
@@ -126,6 +131,7 @@ export async function POST(req: NextRequest) {
             conversationId: conversation.id,
             content: messageText,
             role: 'CUSTOMER',
+            storeId,
           },
         })
 

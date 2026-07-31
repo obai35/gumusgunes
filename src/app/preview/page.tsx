@@ -11,6 +11,7 @@ import { Footer } from '@/components/store/Footer'
 import { db } from '@/lib/db'
 import { PreviewListener } from '@/components/preview/PreviewListener'
 import { AmbientMist } from '@/components/ui/AmbientMist'
+import type { Category, Product } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,7 +52,7 @@ const DEFAULTS: Record<string, string> = {
 }
 
 export default async function PreviewPage() {
-  const [settings, categories, products] = await Promise.all([
+  const [settings, rawCategories, rawProducts] = await Promise.all([
     db.siteSetting.findMany(),
     db.category.findMany({
       orderBy: { name: 'asc' },
@@ -64,6 +65,9 @@ export default async function PreviewPage() {
       take: 100,
     }),
   ])
+
+  const categories = rawCategories as Category[]
+  const products = rawProducts as Product[]
 
   const map: Record<string, string> = { ...DEFAULTS }
   for (const s of settings) map[s.key] = s.value

@@ -40,8 +40,8 @@ export function TrustBadges() {
       .then(data => {
         if (data.ok && data.settings?.trustBadges) {
           try {
-            parsed = JSON.parse(data.settings.trustBadges)
-            setBadges(parsed.filter(b => b.active))
+            const next = JSON.parse(data.settings.trustBadges) as Badge[]
+            setBadges(next.filter(b => b.active))
           } catch {}
         }
       })

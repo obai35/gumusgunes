@@ -77,7 +77,7 @@ export async function getAPAging(storeId: string) {
   }
 
   for (const bill of bills) {
-    const daysOverdue = Math.max(0, Math.floor((now.getTime() - new Date(bill.dueAt).getTime()) / (1000 * 60 * 60 * 24)))
+    const daysOverdue = Math.max(0, Math.floor((now.getTime() - (bill.dueAt ? new Date(bill.dueAt).getTime() : now.getTime())) / (1000 * 60 * 60 * 24)))
     const key = daysOverdue === 0 ? 'current'
       : daysOverdue <= 30 ? '1-30'
       : daysOverdue <= 60 ? '31-60'
@@ -97,7 +97,6 @@ export async function getInventoryValuationDetail(storeId: string) {
     select: {
       id: true,
       name: true,
-      nameAr: true,
       sku: true,
       stock: true,
       costPrice: true,

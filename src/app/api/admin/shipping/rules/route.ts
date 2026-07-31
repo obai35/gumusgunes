@@ -26,7 +26,7 @@ export const POST = withAdmin(async (req, { admin }) => {
       isActive: body.isActive !== false,
       startDate: body.startDate ? new Date(body.startDate) : null,
       endDate: body.endDate ? new Date(body.endDate) : null,
-    },
+    } as any,
   })
   return NextResponse.json({ rule })
 }, 'shipping')

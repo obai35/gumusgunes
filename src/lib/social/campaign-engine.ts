@@ -21,7 +21,7 @@ export async function activateCampaign(campaignId: string) {
 }
 
 async function scheduleRecurringPosts(
-  campaign: { id: string; name: string; goal: string },
+  campaign: { id: string; name: string; goal: string; storeId: string },
   intervalDays: number,
 ) {
   const products = await db.product.findMany({
@@ -52,6 +52,7 @@ async function scheduleRecurringPosts(
 
     await db.socialPost.create({
       data: {
+        storeId: campaign.storeId,
         accountId: account.id,
         campaignId: campaign.id,
         platform: account.platform,

@@ -29,7 +29,7 @@ export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
     const body = await req.json()
     for (const [key, value] of Object.entries(body) as [string, string][]) {
       if (!SEO_KEYS.includes(key) || typeof value !== 'string') continue
-      await sdb.siteSetting.upsert({ where: { key }, update: { value: sanitize(value) }, create: { key, value: sanitize(value) } })
+      await sdb.siteSetting.upsert({ where: { key }, update: { value: sanitize(value) }, create: { key, value: sanitize(value) } as any })
     }
     return NextResponse.json({ ok: true })
   } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }) }

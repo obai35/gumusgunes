@@ -5,6 +5,7 @@ import { verifyToken } from '@/lib/customer-auth'
 import { getStripe } from '@/lib/stripe'
 import { encrypt } from '@/lib/encryption'
 import { encryptFields } from '@/lib/field-encryption'
+import { storefrontDb } from '@/lib/storefront-db'
 import { addAlsoBought } from '@/lib/product-graph'
 import { sanitize } from '@/lib/sanitize'
 import { autoAccountOrderPayment } from '@/lib/auto-accounting'
@@ -105,7 +106,8 @@ const orderHandler = async (req: NextRequest) => {
     const map = new Map(dbProducts.map((p) => [p.id, p]))
 
     let subtotal = 0
-    const orderItemsData = []
+    const { storeId } = await storefrontDb(req)
+    const orderItemsData: { productId: string; storeId: string; quantity: number; price: number }[] = []
     for (const item of items) {
       const p = map.get(item.productId)
       if (!p) {
@@ -124,6 +126,7 @@ const orderHandler = async (req: NextRequest) => {
       subtotal += lineTotal
       orderItemsData.push({
         productId: p.id,
+        storeId,
         quantity: item.quantity,
         price: p.price,
       })
@@ -190,6 +193,7 @@ const orderHandler = async (req: NextRequest) => {
       data: encryptFields(
         {
           orderNumber,
+          storeId,
           userId: authedUser?.userId || null,
           email: rest.email.toLowerCase(),
           fullName: rest.fullName,
@@ -214,7 +218,7 @@ const orderHandler = async (req: NextRequest) => {
           paymentStatus,
           items: { create: orderItemsData },
         },
-        ['fullName', 'phone', 'address', 'notes'] as (keyof any)[]
+        ['fullName', 'phone', 'address', 'notes']
       ),
       select: {
         id: true, orderNumber: true, userId: true, email: true, fullName: true, phone: true,

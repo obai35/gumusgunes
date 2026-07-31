@@ -29,7 +29,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       endDate: endDate ? new Date(endDate) : null,
       triggerType: triggerType || null,
       triggerConfig: triggerConfig || null,
-    },
+    } as any,
   })
   return NextResponse.json(campaign)
 }, 'social')

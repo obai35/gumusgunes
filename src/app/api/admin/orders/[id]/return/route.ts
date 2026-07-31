@@ -51,7 +51,7 @@ export const POST = withAdmin(async (req, { params, admin: adminCtx }: { params:
               refundAmount: ri.refundAmount || 0,
             })),
           },
-        },
+        } as any,
         include: { items: { include: { product: { select: { name: true } } } } },
       })
 
@@ -66,7 +66,7 @@ export const POST = withAdmin(async (req, { params, admin: adminCtx }: { params:
             type: 'RETURN',
             change: ri.quantity,
             note: `Return ${returnNumber} - Order ${order.orderNumber}`,
-          },
+          } as any,
         })
       }
 

@@ -20,7 +20,6 @@ export const POST = withAdmin(async (req, { admin }) => {
       description: body.description,
       type: body.type || 'margin',
       value: Number(body.value) || 0,
-      currency: body.currency || 'EGP',
       isDefault: body.isDefault || false,
       isActive: body.isActive ?? true,
       sortOrder: body.sortOrder ?? count,

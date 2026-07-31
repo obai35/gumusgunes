@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
-import { Ratelimit } from '@upstash/ratelimit'
+import { Ratelimit, Duration } from '@upstash/ratelimit'
 import { logger } from './logger'
 import { Redis } from '@upstash/redis'
 
 interface RateLimitOptions {
   limit: number
-  window: string
+  window: Duration
   identifier?: (req: Request) => string
   failClosed?: boolean
 }

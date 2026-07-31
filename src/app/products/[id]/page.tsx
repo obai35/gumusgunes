@@ -32,7 +32,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: product.name,
       description: product.description.slice(0, 160),
       images: [{ url: product.imageUrl, width: 1200, height: 1200 }],
-      type: 'product',
     },
   }
 }

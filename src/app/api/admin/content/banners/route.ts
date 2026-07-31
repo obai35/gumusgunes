@@ -38,7 +38,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
         ...rest,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
-      },
+      } as any,
     })
     return NextResponse.json(banner)
   } catch (err) {

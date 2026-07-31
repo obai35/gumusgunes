@@ -31,7 +31,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         name,
         enabled: !!enabled,
         description: description || null,
-      },
+      } as any,
     })
     clearFeatureFlagCache(flag.key)
     return NextResponse.json({ flag })

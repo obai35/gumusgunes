@@ -18,7 +18,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
   try {
     const { name, phone, email, address, notes } = await req.json()
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-    const supplier = await sdb.supplier.create({ data: { name, phone, email, address, notes } })
+    const supplier = await sdb.supplier.create({ data: { name, phone, email, address, notes } as any })
     return NextResponse.json(supplier)
   } catch {
     return NextResponse.json({ error: 'Failed to create supplier' }, { status: 500 })

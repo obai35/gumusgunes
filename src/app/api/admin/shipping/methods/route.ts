@@ -13,6 +13,6 @@ export const POST = withAdmin(async (req, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const { name, estimatedDays } = await req.json()
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
-  const method = await sdb.shippingMethod.create({ data: { name, estimatedDays: estimatedDays || '' } })
+  const method = await sdb.shippingMethod.create({ data: { name, estimatedDays: estimatedDays || '' } as any })
   return NextResponse.json({ method })
 }, 'shipping')

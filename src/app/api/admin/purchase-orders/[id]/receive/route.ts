@@ -36,7 +36,7 @@ export const POST = withAdmin(async (req: NextRequest, { params, admin }: { para
           type: 'PURCHASE',
           change: item.received,
           note: `PO ${po.poNumber} received ${item.received} units`,
-        },
+        } as any,
       })
     }
 

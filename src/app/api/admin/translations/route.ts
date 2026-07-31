@@ -22,7 +22,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     if (!key || en == null || ar == null) return NextResponse.json({ error: 'key, en, ar required' }, { status: 400 })
     const existing = await sdb.translation.findUnique({ where: { key } })
     if (existing) return NextResponse.json({ error: 'Key already exists' }, { status: 400 })
-    const translation = await sdb.translation.create({ data: { key, en, ar, group: group || 'general' } })
+    const translation = await sdb.translation.create({ data: { key, en, ar, group: group || 'general' } as any })
     invalidateTranslationCache()
     return NextResponse.json({ ok: true, translation })
   } catch (err) {

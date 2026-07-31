@@ -21,7 +21,6 @@ export const PUT = withAdmin(async (req: NextRequest, { admin, params }) => {
       description: body.description,
       type: body.type,
       value: Number(body.value),
-      currency: body.currency,
       isDefault: body.isDefault,
       isActive: body.isActive,
       sortOrder: body.sortOrder,

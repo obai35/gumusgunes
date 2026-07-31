@@ -62,7 +62,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
           unitCost: i.unitCost,
         })),
       },
-    },
+    } as any,
     include: {
       supplier: { select: { id: true, name: true } },
       items: { include: { product: { select: { id: true, name: true, sku: true } } } },

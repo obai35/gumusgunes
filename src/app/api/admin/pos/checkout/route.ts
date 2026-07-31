@@ -105,11 +105,11 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       for (const item of items) {
         await tx.branchStock.upsert({
           where: { branchId_productId: { branchId, productId: item.productId } },
-          create: { branchId, productId: item.productId, quantity: 0 },
+          create: { branchId, productId: item.productId, quantity: 0 } as any,
           update: { quantity: { decrement: item.quantity } },
         })
         await tx.inventoryLog.create({
-          data: { productId: item.productId, change: -item.quantity, type: 'SALE', note: `POS sale - Branch ${branchId}` },
+          data: { productId: item.productId, change: -item.quantity, type: 'SALE', note: `POS sale - Branch ${branchId}` } as any,
         })
       }
 
@@ -153,7 +153,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
               }
             }),
           },
-        },
+        } as any,
       })
     })
 
@@ -200,7 +200,7 @@ export const PUT = withAdmin(async (req: Request, { admin }) => {
         if (branchId) {
           await tx.branchStock.upsert({
             where: { branchId_productId: { branchId, productId: orderItem.productId } },
-            create: { branchId, productId: orderItem.productId, quantity: returnQty },
+            create: { branchId, productId: orderItem.productId, quantity: returnQty } as any,
             update: { quantity: { increment: returnQty } },
           })
         } else {
@@ -216,7 +216,7 @@ export const PUT = withAdmin(async (req: Request, { admin }) => {
             type: 'RETURN',
             change: returnQty,
             note: `POS return - Order ${order.orderNumber}`,
-          },
+          } as any,
         })
 
         const remaining = orderItem.quantity - returnQty
@@ -269,9 +269,9 @@ export const PUT = withAdmin(async (req: Request, { admin }) => {
               productId: ri.productId,
               quantity: ri.quantity,
               refundAmount: ri.refundAmount,
-            })),
+            })) as any,
           },
-        },
+        } as any,
         include: {
           items: { include: { product: { select: { id: true, name: true } } } },
           order: { select: { receiptNumber: true, orderNumber: true } },

@@ -27,7 +27,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
         minOrder: minOrder ? parseFloat(minOrder) : null,
         targetValue: targetValue || null,
         startDate: new Date(startDate), endDate: new Date(endDate),
-      },
+      } as any,
     })
     return NextResponse.json({ sale })
   } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }) }

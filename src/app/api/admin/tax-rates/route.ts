@@ -20,7 +20,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     const { name, rate, country, region, isActive } = await req.json()
     if (!name || rate == null) return NextResponse.json({ error: 'name and rate required' }, { status: 400 })
     const taxRate = await sdb.taxRate.create({
-      data: { name, rate: parseFloat(rate), country: country || 'EG', region: region || null, isActive: isActive ?? true },
+      data: { name, rate: parseFloat(rate), country: country || 'EG', region: region || null, isActive: isActive ?? true } as any,
     })
     return NextResponse.json({ ok: true, taxRate })
   } catch (err) {

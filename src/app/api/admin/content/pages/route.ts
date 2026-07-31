@@ -31,7 +31,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     const existing = await sdb.staticPage.findFirst({ where: { slug: parsed.data.slug } })
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
-    const page = await sdb.staticPage.create({ data: parsed.data })
+    const page = await sdb.staticPage.create({ data: parsed.data as any })
     return NextResponse.json(page)
   } catch (err) {
     console.error('Create static page error:', err)

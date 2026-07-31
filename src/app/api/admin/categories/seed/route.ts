@@ -67,10 +67,10 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
 
     for (const parent of HIERARCHY) {
       const { children, ...parentData } = parent
-      const created = await sdb.category.create({ data: parentData })
+      const created = await sdb.category.create({ data: parentData as any })
       for (const child of children) {
         await sdb.category.create({
-          data: { ...child, parentId: created.id },
+          data: { ...child, parentId: created.id } as any,
         })
       }
     }

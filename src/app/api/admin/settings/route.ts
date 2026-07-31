@@ -89,7 +89,7 @@ export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
       await sdb.siteSetting.upsert({
         where: { key },
         update: { value: sanitize(value) },
-        create: { key, value: sanitize(value) },
+        create: { key, value: sanitize(value) } as any,
       })
     }
     return NextResponse.json({ ok: true })

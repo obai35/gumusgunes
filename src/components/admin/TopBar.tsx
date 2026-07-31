@@ -96,10 +96,8 @@ const segmentTransKey: Record<string, string> = {
   'comments': 'comments',
   'posts': 'posts',
   'new': 'new',
-  'customer-service': 'customerService',
   'adjust': 'adjust',
   'agent': 'agent',
-  'settings': 'settings',
   'login': 'login',
   'advertising': 'advertising',
 }

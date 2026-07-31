@@ -35,7 +35,7 @@ export const POST = withAdmin(async (req, { admin }) => {
       price, stock, categoryId,
       images: JSON.stringify(images),
       tags: tags ? JSON.stringify(tags) : '[]',
-      weight,
+      weight: weight !== undefined ? String(weight) : null,
       isFeatured: featured ?? false,
       requiresShipping: requiresShipping ?? true,
     },

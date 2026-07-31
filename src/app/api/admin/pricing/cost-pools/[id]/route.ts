@@ -9,7 +9,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin, params }) => {
     where: { id },
     include: {
       _count: { select: { expenses: true } },
-      expenses: { take: 10, orderBy: { date: 'desc' } },
+      expenses: { take: 10, orderBy: { createdAt: 'desc' } },
     },
   })
   if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -24,7 +24,6 @@ export const PUT = withAdmin(async (req: NextRequest, { admin, params }) => {
     where: { id },
     data: {
       name: body.name,
-      code: body.code,
       description: body.description,
       category: body.category,
       basis: body.basis,

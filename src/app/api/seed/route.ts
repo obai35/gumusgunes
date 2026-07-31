@@ -381,14 +381,17 @@ export async function POST(req: NextRequest) {
     await db.category.deleteMany()
     await db.newsletter.deleteMany()
 
+    const seedStore = await db.store.findFirst({ where: { isActive: true }, orderBy: { createdAt: 'asc' }, select: { id: true } })
+    if (!seedStore) return NextResponse.json({ ok: false, error: 'No active store found. Run `prisma db seed` first.' }, { status: 500 })
+
     // Insert hierarchical categories
     const categoryMap: Record<string, string> = {}
     for (const parent of categories) {
       const { children, ...parentData } = parent
-      const createdParent = await db.category.create({ data: parentData })
+      const createdParent = await db.category.create({ data: { ...parentData, storeId: seedStore.id } })
       categoryMap[parentData.slug] = createdParent.id
       for (const child of children) {
-        const createdChild = await db.category.create({ data: { ...child, parentId: createdParent.id } })
+        const createdChild = await db.category.create({ data: { ...child, parentId: createdParent.id, storeId: seedStore.id } })
         categoryMap[child.slug] = createdChild.id
       }
     }
@@ -402,6 +405,7 @@ export async function POST(req: NextRequest) {
       const created = await db.product.create({
         data: {
           ...rest,
+          storeId: seedStore.id,
           categoryId,
           tags: JSON.stringify(tags),
           images: JSON.stringify([p.imageUrl]),
@@ -416,6 +420,7 @@ export async function POST(req: NextRequest) {
         const r = sampleReviews[(reviewIdx + i) % sampleReviews.length]
         await db.review.create({
           data: {
+            storeId: seedStore.id,
             productId: created.id,
             authorName: r.authorName,
             rating: r.rating,
@@ -434,7 +439,7 @@ export async function POST(req: NextRequest) {
       const branchPassword = process.env.SEED_BRANCH_PASSWORD
       if (!branchPassword) throw new Error('SEED_BRANCH_PASSWORD must be set for seeding')
       branch = await db.branch.create({
-        data: { name: 'Main Branch', email: 'main@gumusgunes.com', password: branchPassword },
+        data: { name: 'Main Branch', email: 'main@gumusgunes.com', password: branchPassword, storeId: seedStore.id },
       })
     }
     for (const p of products) {
@@ -442,7 +447,7 @@ export async function POST(req: NextRequest) {
       if (created) {
         await db.branchStock.upsert({
           where: { branchId_productId: { branchId: branch.id, productId: created.id } },
-          create: { branchId: branch.id, productId: created.id, quantity: p.stock },
+          create: { branchId: branch.id, productId: created.id, quantity: p.stock, storeId: seedStore.id },
           update: {},
         })
       }
@@ -455,6 +460,7 @@ export async function POST(req: NextRequest) {
       if (!seedAdminPassword) throw new Error('SEED_ADMIN_PASSWORD must be set for seeding')
       await db.admin.create({
         data: {
+          storeId: seedStore.id,
           email: 'admin@gumusgunes.com',
           name: 'Admin',
           password: await hashPassword(seedAdminPassword),

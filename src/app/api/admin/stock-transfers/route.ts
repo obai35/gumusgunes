@@ -29,7 +29,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     }
 
     const result = await sdb.$transaction(async (tx) => {
-      const transfers = []
+      const transfers: any[] = []
 
       for (const item of items) {
         if (fromType === 'warehouse') {
@@ -43,7 +43,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
         } else {
           await tx.branchStock.upsert({
             where: { branchId_productId: { branchId: toId!, productId: item.productId } },
-            create: { branchId: toId!, productId: item.productId, quantity: item.quantity },
+            create: { branchId: toId!, productId: item.productId, quantity: item.quantity } as any,
             update: { quantity: { increment: item.quantity } },
           })
         }
@@ -53,7 +53,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
             fromType, fromId: fromId || null, toType, toId: toId || null,
             productId: item.productId, quantity: item.quantity,
             note: note || null, createdById,
-          },
+          } as any,
         })
         transfers.push(transfer)
 
@@ -63,7 +63,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
             type: 'TRANSFER',
             change: toType === 'warehouse' ? item.quantity : -item.quantity,
             note: `Transfer ${fromType}${fromId ? `(${fromId})` : ''} → ${toType}${toId ? `(${toId})` : ''}${note ? `: ${note}` : ''}`,
-          },
+          } as any,
         })
       }
 

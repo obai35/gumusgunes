@@ -20,6 +20,7 @@ export async function GET(
         sku: true, imageUrl: true, images: true, material: true, weight: true, rating: true, reviewCount: true,
         stock: true, tags: true, isNew: true, isBestseller: true, isFeatured: true, createdAt: true,
         category: { select: { id: true, name: true, slug: true } },
+      categoryId: true,
         reviews: {
           orderBy: { createdAt: 'desc' },
           take: 20,

@@ -33,7 +33,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     }
     const maxSort = await sdb.faqEntry.aggregate({ _max: { sortOrder: true } })
     const entry = await sdb.faqEntry.create({
-      data: { ...parsed.data, sortOrder: parsed.data.sortOrder ?? (maxSort._max.sortOrder ?? 0) + 1 },
+      data: { ...parsed.data, sortOrder: parsed.data.sortOrder ?? (maxSort._max.sortOrder ?? 0) + 1 } as any,
     })
     return NextResponse.json(entry)
   } catch (err) {

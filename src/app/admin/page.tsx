@@ -217,7 +217,7 @@ function OrdersList({ t }: { t: (key: string) => string }) {
   )
 }
 
-function LowStockList({ onTotal, t }: { onTotal?: (n: number) => void; t: (key: string) => string }) {
+function LowStockList({ onTotal, t }: { onTotal?: (n: number) => void; t: (key: string, ...args: (string | number)[]) => string }) {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 

@@ -60,7 +60,7 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   }
 }
 
-export function orderConfirmationEmail(order: { orderNumber: string; fullName: string; totalAmount: number; items: { product?: { name?: string }; quantity: number; price: number }[] }): EmailPayload {
+export function orderConfirmationEmail(order: { orderNumber: string; fullName: string; totalAmount: number; email: string; items: { product?: { name?: string }; quantity: number; price: number }[] }): EmailPayload {
   const itemsHtml = order.items.map(i =>
     `<tr><td>${i.product?.name || 'Product'}</td><td>x${i.quantity}</td><td>${i.price.toFixed(2)}</td></tr>`
   ).join('')

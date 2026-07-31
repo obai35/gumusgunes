@@ -40,7 +40,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
 
       for (const item of order.items) {
         const revenue = item.price * item.quantity
-        const unitCost = item.product?.costPrice ?? item.product?.price * 0.6 ?? 0
+        const unitCost = item.product?.costPrice ?? (item.product?.price || 0) * 0.6
         const cost = unitCost * item.quantity
         monthlyData[monthKey].revenue += revenue
         monthlyData[monthKey].cost += cost

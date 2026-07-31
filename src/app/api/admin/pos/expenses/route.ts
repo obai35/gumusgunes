@@ -24,7 +24,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
     }
     const expense = await sdb.$transaction(async (tx) => {
       const e = await tx.expense.create({
-        data: { shiftId, supplierId, amount, paymentMethod, description, invoiceNumber, notes },
+        data: { shiftId, supplierId, amount, paymentMethod, description, invoiceNumber, notes } as any,
       })
       await tx.shift.update({
         where: { id: shiftId },

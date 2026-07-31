@@ -11,7 +11,7 @@ const Schema = z.object({
 
 async function handlePost(req: NextRequest) {
   try {
-    const { db: sdb } = await storefrontDb(req)
+    const { db: sdb, storeId } = await storefrontDb(req)
     const body = await req.json()
     const parsed = Schema.safeParse(body)
     if (!parsed.success) {
@@ -46,7 +46,7 @@ async function handlePost(req: NextRequest) {
     }
 
     await sdb.backInStock.create({
-      data: { email: email.toLowerCase(), productId },
+      data: { email: email.toLowerCase(), productId, storeId },
     })
 
     return NextResponse.json({ ok: true })

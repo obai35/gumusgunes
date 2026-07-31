@@ -3,7 +3,7 @@ import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest, { params, admin }: { params: { userId: string } }) => {
+export const GET = withAdmin(async (req: NextRequest, { params, admin }) => {
   try {
     const sdb = storeDb(admin.storeId)
     const customer = await sdb.user.findUnique({

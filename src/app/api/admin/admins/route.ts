@@ -42,8 +42,8 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const existing = await sdb.admin.findUnique({ where: { email } })
   if (existing) return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
 
-  const created = await sdb.admin.create({
-    data: { name, email, password: await hashPassword(password), roleId, phone },
+  const created: any = await sdb.admin.create({
+    data: { name, email, password: await hashPassword(password), roleId, phone } as any,
     include: { roleRel: { select: { name: true } } },
   })
 

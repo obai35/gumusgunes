@@ -12,6 +12,7 @@ function getJwtSecret(): string {
 export { hashPassword, verifyPassword }
 
 export interface CustomerTokenPayload {
+  sub?: string
   userId: string
   email: string
   tokenVersion: number

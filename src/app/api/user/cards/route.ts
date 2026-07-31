@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth-api'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { z } from 'zod'
 
 const CardSchema = z.object({
@@ -13,8 +14,9 @@ const CardSchema = z.object({
 export async function GET(req: NextRequest) {
   const user = getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const cards = await db.savedCard.findMany({
-    where: { userId: user.userId },
+  const { db: sdb, storeId } = await storefrontDb(req)
+  const cards = await sdb.savedCard.findMany({
+    where: { userId: user.userId, storeId },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(cards)
@@ -31,8 +33,9 @@ export async function POST(req: NextRequest) {
     )
   }
   const { nickname, lastFour, expiryMonth, expiryYear } = parsed.data
-  const card = await db.savedCard.create({
-    data: { userId: user.userId, nickname, lastFour, expiryMonth, expiryYear },
+  const { db: sdb, storeId } = await storefrontDb(req)
+  const card = await sdb.savedCard.create({
+    data: { userId: user.userId, storeId, nickname, lastFour, expiryMonth, expiryYear },
   })
   return NextResponse.json(card, { status: 201 })
 }

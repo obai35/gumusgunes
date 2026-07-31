@@ -31,7 +31,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         name,
         key: rawKey,
         permissions: JSON.stringify(permissions || []),
-      },
+      } as any,
     })
     return NextResponse.json({ apiKey: { ...apiKey, rawKey } })
   } catch (err: any) {

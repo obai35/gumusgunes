@@ -47,11 +47,13 @@ const accounts = [
 ]
 
 async function main() {
+  const store = await prisma.store.findFirst()
+  const storeId = store?.id || ''
   for (const acc of accounts) {
     await prisma.account.upsert({
       where: { code: acc.code },
       update: { name: acc.name, nameAr: acc.nameAr, type: acc.type },
-      create: acc,
+      create: { ...acc, storeId },
     })
   }
   console.log(`Seeded ${accounts.length} accounts`)

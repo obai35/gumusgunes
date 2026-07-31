@@ -35,7 +35,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const check = await sdb.qC_Check.create({
-    data: { productId, templateId: templateId || null, passed, notes, checkedBy: token.name },
+    data: { productId, templateId: templateId || null, passed, notes, checkedBy: token.name } as any,
     include: {
       product: { select: { name: true, sku: true } },
       template: { select: { name: true } },

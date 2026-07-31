@@ -65,7 +65,7 @@ export const PUT = withAdmin(async (req, { params, admin }: { params: Promise<{ 
                   type: 'ADJUSTMENT',
                   change: -diff,
                   note: `Order edit - ${order.orderNumber}`,
-                },
+                } as any,
               })
             }
             await tx.orderItem.update({

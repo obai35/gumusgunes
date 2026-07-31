@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async ({ admin }) => {
+export const GET = withAdmin(async (_req, { admin }) => {
   try {
     const sdb = storeDb(admin.storeId)
     const currencies = await sdb.currency.findMany({ orderBy: { createdAt: 'desc' } })
@@ -24,7 +24,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     if (isDefault) {
       await sdb.currency.updateMany({ where: { isDefault: true }, data: { isDefault: false } })
     }
-    const currency = await sdb.currency.create({ data: { code, name, symbol, exchangeRate, isDefault: isDefault || false, isActive: isActive ?? true } })
+    const currency = await sdb.currency.create({ data: { code, name, symbol, exchangeRate, isDefault: isDefault || false, isActive: isActive ?? true } as any })
     return NextResponse.json({ ok: true, currency })
   } catch (err) {
     console.error('POST /api/admin/currencies error:', err)

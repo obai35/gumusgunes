@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUserFromRequest } from '@/lib/auth-api'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { z } from 'zod'
 
 const AddressSchema = z.object({
@@ -17,8 +18,9 @@ const AddressSchema = z.object({
 export async function GET(req: NextRequest) {
   const user = getUserFromRequest(req)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const addresses = await db.address.findMany({
-    where: { userId: user.userId },
+  const { db: sdb, storeId } = await storefrontDb(req)
+  const addresses = await sdb.address.findMany({
+    where: { userId: user.userId, storeId },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(addresses)
@@ -35,11 +37,12 @@ export async function POST(req: NextRequest) {
     )
   }
   const { fullName, phone, street, city, state, postalCode, country, isDefault } = parsed.data
+  const { db: sdb, storeId } = await storefrontDb(req)
   if (isDefault) {
-    await db.address.updateMany({ where: { userId: user.userId }, data: { isDefault: false } })
+    await sdb.address.updateMany({ where: { userId: user.userId, storeId }, data: { isDefault: false } })
   }
-  const address = await db.address.create({
-    data: { userId: user.userId, fullName, phone: phone || null, street, city, state: state || null, postalCode, country, isDefault },
+  const address = await sdb.address.create({
+    data: { userId: user.userId, storeId, fullName, phone: phone || null, street, city, state: state || null, postalCode, country, isDefault },
   })
   return NextResponse.json(address, { status: 201 })
 }

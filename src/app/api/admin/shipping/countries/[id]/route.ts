@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
-export const PUT = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }> }) => {
+export const PUT = withAdmin(async (req, { params, admin }) => {
   const sdb = storeDb(admin.storeId)
   const { id } = await params
   const { name, nameAr, isoCode, isActive } = await req.json()
@@ -11,7 +11,7 @@ export const PUT = withAdmin(async (req, { params, admin }: { params: Promise<{ 
   return NextResponse.json({ country })
 }, 'shipping')
 
-export const DELETE = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }> }) => {
+export const DELETE = withAdmin(async (req, { params, admin }) => {
   const sdb = storeDb(admin.storeId)
   const { id } = await params
   await sdb.country.delete({ where: { id } })

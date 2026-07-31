@@ -29,7 +29,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin, params }: any) =
       type: 'production_issue',
       change: -Math.abs(body.quantity),
       note: `Issued to production order ${params.id}`,
-    },
+    } as any,
   })
 
   await sdb.product.update({

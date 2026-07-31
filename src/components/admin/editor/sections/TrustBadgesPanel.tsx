@@ -42,7 +42,7 @@ export function TrustBadgesPanel() {
 
   const add = () => {
     const id = String(Date.now())
-    persist([...badges, { id, icon: '✅', label: 'New Badge', active: true }])
+    persist([...badges, { id, icon: '✅', label: 'New Badge', desc: '', active: true }])
   }
 
   const remove = (id: string) => {

@@ -29,7 +29,7 @@ export const POST = withAdmin(async (req: NextRequest, { params, admin }: { para
           type: 'RETURN',
           change: returnRequest.quantity,
           note: `RMA ${returnRequest.rmaNumber} approved - restocked ${returnRequest.quantity} units`,
-        },
+        } as any,
       })
     }
   })

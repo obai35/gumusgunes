@@ -20,7 +20,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
   const account = await sdb.socialAccount.create({
-    data: { platform, accountId, accountName, accessToken, tokenExpires: tokenExpires ? new Date(tokenExpires) : null },
+    data: { platform, accountId, accountName, accessToken, tokenExpires: tokenExpires ? new Date(tokenExpires) : null } as any,
   })
   return NextResponse.json(account)
 }, 'social')

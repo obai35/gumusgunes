@@ -36,7 +36,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
                   status: { not: 'cancelled' },
                 },
               },
-              include: { order: { select: { totalAmount: true } } },
+              include: { order: { select: { totalAmount: true } }, product: { select: { costPrice: true, price: true } } },
             },
           },
         },
@@ -48,7 +48,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
         const items = cat.products.flatMap(p => p.orderItems)
         const revenue = items.reduce((s, i) => s + (i.price * i.quantity), 0)
         const cost = items.reduce((s, i) => {
-          const unitCost = i.product?.costPrice ?? i.product?.price * 0.6 ?? 0
+          const unitCost = i.product?.costPrice ?? (i.product?.price || 0) * 0.6
           return s + (unitCost * i.quantity)
         }, 0)
         const grossProfit = revenue - cost

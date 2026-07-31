@@ -11,7 +11,7 @@ import {
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { TableSkeleton } from './Skeleton'
+import { SkeletonTable } from './Skeleton'
 import { EmptyState } from './EmptyState'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 
@@ -86,7 +86,7 @@ export function DataTable<T extends Record<string, any>>({
   if (loading) {
     return (
       <div className="bg-card rounded-xl border-border overflow-hidden p-4">
-        <TableSkeleton rows={8} cols={columns.length + (selectable ? 1 : 0)} />
+        <SkeletonTable rows={8} cols={columns.length + (selectable ? 1 : 0)} />
       </div>
     )
   }
@@ -102,7 +102,7 @@ export function DataTable<T extends Record<string, any>>({
           >
             {columns.map((col) => {
               const cellValue = 'accessorKey' in col
-                ? String(col.accessorKey!.split('.').reduce((obj: any, key: string) => obj?.[key], item) ?? '')
+                ? String((col.accessorKey as string).split('.').reduce((obj: any, key: string) => obj?.[key], item) ?? '')
                 : ''
               return (
                 <div key={String(col.id || col.header)} className="flex items-center justify-between text-sm">

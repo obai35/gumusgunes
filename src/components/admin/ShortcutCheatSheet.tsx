@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Command, Keyboard } from 'lucide-react'
 import { useShortcut } from './KeyboardShortcutProvider'
 
-const DEFAULT_SHORTCUTS = [
+type Shortcut = { key: string; ctrl?: boolean; shift?: boolean; description: string }
+
+const DEFAULT_SHORTCUTS: Shortcut[] = [
   { key: 'n', ctrl: true, description: 'New order' },
   { key: 's', ctrl: true, description: 'Save / Confirm' },
   { key: '/', ctrl: true, description: 'Search / Focus search' },

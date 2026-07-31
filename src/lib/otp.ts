@@ -43,11 +43,12 @@ export async function sendOtpEmail(email: string, code: string): Promise<void> {
   })
 }
 
-export async function createOtpVerification(email: string): Promise<string> {
+export async function createOtpVerification(email: string, storeId: string): Promise<string> {
   const code = generateOtpCode()
   await db.otpVerification.create({
     data: {
       email,
+      storeId,
       code,
       type: 'checkout',
       expiresAt: getOtpExpiry(),

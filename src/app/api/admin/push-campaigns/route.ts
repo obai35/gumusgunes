@@ -12,6 +12,6 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
 
 export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
-  try { const { name, title, body, data, segment, scheduledAt } = await req.json(); if (!name || !title || !body) return NextResponse.json({ error: 'Required' }, { status: 400 }); const c = await sdb.pushCampaign.create({ data: { name, title, body, data: data ? JSON.stringify(data) : null, segment: segment || 'all', scheduledAt: scheduledAt ? new Date(scheduledAt) : null } }); return NextResponse.json({ campaign: c }) }
+  try { const { name, title, body, data, segment, scheduledAt } = await req.json(); if (!name || !title || !body) return NextResponse.json({ error: 'Required' }, { status: 400 }); const c = await sdb.pushCampaign.create({ data: { name, title, body, data: data ? JSON.stringify(data) : null, segment: segment || 'all', scheduledAt: scheduledAt ? new Date(scheduledAt) : null } as any }); return NextResponse.json({ campaign: c }) }
   catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }) }
 }, 'marketing')

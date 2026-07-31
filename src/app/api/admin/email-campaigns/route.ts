@@ -16,7 +16,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   try {
     const { name, subject, content, segment, segmentIds, scheduledAt } = await req.json()
     if (!name || !subject || !content) return NextResponse.json({ error: 'Required fields missing' }, { status: 400 })
-    const campaign = await sdb.emailCampaign.create({ data: { name, subject, content, segment: segment || 'all', segmentIds: segmentIds ? JSON.stringify(segmentIds) : null, scheduledAt: scheduledAt ? new Date(scheduledAt) : null } })
+    const campaign = await sdb.emailCampaign.create({ data: { name, subject, content, segment: segment || 'all', segmentIds: segmentIds ? JSON.stringify(segmentIds) : null, scheduledAt: scheduledAt ? new Date(scheduledAt) : null } as any })
     return NextResponse.json({ campaign })
   } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }) }
 }, 'marketing')

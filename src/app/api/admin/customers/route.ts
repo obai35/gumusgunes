@@ -11,7 +11,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const limit = 20
     const skip = (page - 1) * limit
 
-    const where = search ? {
+    const where: any = search ? {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
         { email: { contains: search, mode: 'insensitive' } },

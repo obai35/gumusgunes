@@ -14,7 +14,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const { name, items, isActive } = await req.json()
   if (!name || !items?.length) return NextResponse.json({ error: 'Name and items required' }, { status: 400 })
   const template = await sdb.qC_Template.create({
-    data: { name, items: JSON.stringify(items), isActive: isActive ?? true },
+    data: { name, items: JSON.stringify(items), isActive: isActive ?? true } as any,
   })
   return NextResponse.json({ ok: true, template: { ...template, items: JSON.parse(template.items) } })
 }, 'products')

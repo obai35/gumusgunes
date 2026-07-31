@@ -52,11 +52,11 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         const qty = item.quantity || 1
         await tx.branchStock.upsert({
           where: { branchId_productId: { branchId, productId: item.productId } },
-          create: { branchId, productId: item.productId, quantity: 0 },
+          create: { branchId, productId: item.productId, quantity: 0 } as any,
           update: { quantity: { decrement: qty } },
         })
         await tx.inventoryLog.create({
-          data: { productId: item.productId, change: -qty, type: 'SALE', note: `Manual POS order - Branch ${branchId}` },
+          data: { productId: item.productId, change: -qty, type: 'SALE', note: `Manual POS order - Branch ${branchId}` } as any,
         })
       }
 
@@ -89,7 +89,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
               return { productId: item.productId, quantity: qty, price }
             }),
           },
-        },
+        } as any,
       })
     })
 

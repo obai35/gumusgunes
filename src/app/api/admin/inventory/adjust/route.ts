@@ -15,7 +15,7 @@ export const POST = withAdmin(async (req, { admin }) => {
 
     await sdb.$transaction([
       sdb.product.update({ where: { id: productId }, data: { stock: newStock } }),
-      sdb.inventoryLog.create({ data: { productId, change, type: 'ADJUSTMENT', note: note || 'Manual adjustment' } }),
+      sdb.inventoryLog.create({ data: { productId, change, type: 'ADJUSTMENT', note: note || 'Manual adjustment' } as any }),
     ])
 
     return NextResponse.json({ success: true, newStock })

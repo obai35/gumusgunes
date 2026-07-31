@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOtpVerification, sendOtpEmail } from '@/lib/otp'
 import { withRateLimit } from '@/lib/rate-limit'
+import { storefrontDb } from '@/lib/storefront-db'
 
 const handler = async (req: NextRequest) => {
   try {
     const { email } = await req.json()
+    const { storeId } = await storefrontDb(req)
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ ok: false, error: 'Valid email is required' }, { status: 400 })
     }
 
-    const code = await createOtpVerification(email)
+    const code = await createOtpVerification(email, storeId)
     await sendOtpEmail(email, code)
 
     return NextResponse.json({ ok: true })

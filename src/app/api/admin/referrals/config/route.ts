@@ -17,7 +17,7 @@ export const PUT = withAdmin(async (req: NextRequest, { admin }) => {
     let config
     const d = { rewardType, rewardValue: parseFloat(rewardValue), minOrder: parseFloat(minOrder), maxPerUser: parseInt(maxPerUser), discountDays: parseInt(discountDays), isActive }
     if (existing) config = await sdb.referralConfig.update({ where: { id: existing.id }, data: d })
-    else config = await sdb.referralConfig.create({ data: d })
+    else config = await sdb.referralConfig.create({ data: d as any })
     return NextResponse.json({ config })
   } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }) }
 }, 'marketing')

@@ -7,11 +7,12 @@ type ActivityInput = {
   resource: string
   resourceId?: string
   details?: string
+  storeId?: string
 }
 
 export async function logActivity(input: ActivityInput) {
   try {
-    await db.activityLog.create({ data: input })
+    await db.activityLog.create({ data: { ...input, storeId: input.storeId ?? '' } })
   } catch {
     // silently fail - activity logging should never break the app
   }

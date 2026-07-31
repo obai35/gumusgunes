@@ -40,7 +40,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       return NextResponse.json({ error: `Invalid events: ${invalid.join(', ')}` }, { status: 400 })
     }
     const webhook = await sdb.webhook.create({
-      data: { name, url, events: JSON.stringify(events), isActive: isActive ?? true, secret: secret || null },
+      data: { name, url, events: JSON.stringify(events), isActive: isActive ?? true, secret: secret || null } as any,
     })
     return NextResponse.json({ webhook })
   } catch (err: any) {

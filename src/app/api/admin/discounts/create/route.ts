@@ -19,7 +19,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         targetValue: type === 'SHIPPING' ? null : (targetValue || null),
         minOrder: minOrder ? parseFloat(minOrder) : null,
         governorateId: governorateId || null,
-      },
+      } as any,
     })
     return NextResponse.json({ discount })
   } catch (err) {

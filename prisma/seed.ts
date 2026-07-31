@@ -90,11 +90,16 @@ async function main() {
   await seedDefaultStore()
 
   console.log('Seeding governorates...')
+  const country = await prisma.country.upsert({
+    where: { storeId_name: { storeId: DEFAULT_STORE_ID, name: 'Egypt' } },
+    update: {},
+    create: { storeId: DEFAULT_STORE_ID, name: 'Egypt', nameAr: 'مصر', isoCode: 'EG' },
+  })
   for (const g of governorates) {
     await prisma.governorate.upsert({
-      where: { name: g.name },
+      where: { storeId_name: { storeId: DEFAULT_STORE_ID, name: g.name } },
       update: {},
-      create: { ...g, storeId: DEFAULT_STORE_ID },
+      create: { ...g, storeId: DEFAULT_STORE_ID, countryId: country.id },
     })
   }
   console.log(`Seeded ${governorates.length} governorates`)

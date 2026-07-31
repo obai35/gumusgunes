@@ -22,7 +22,7 @@ export const PUT = withAdmin(async (req, { admin }) => {
       await tx.shippingRate.upsert({
         where: { methodId_governorateId: { methodId: r.methodId, governorateId: r.governorateId } },
         update: { price: r.price },
-        create: { methodId: r.methodId, governorateId: r.governorateId, price: r.price },
+        create: { methodId: r.methodId, governorateId: r.governorateId, price: r.price } as any,
       })
     }
   })

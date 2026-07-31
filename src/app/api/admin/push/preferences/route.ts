@@ -8,7 +8,7 @@ export const GET = withAdmin(async (req, { admin }) => {
   let prefs = await sdb.pushPreference.findUnique({ where: { adminId: admin.id } })
   if (!prefs) {
     prefs = await sdb.pushPreference.create({
-      data: { adminId: admin.id },
+      data: { adminId: admin.id } as any,
     })
   }
   return NextResponse.json(prefs)
@@ -28,8 +28,8 @@ export const PUT = withAdmin(async (req, { admin }) => {
 
   const prefs = await sdb.pushPreference.upsert({
     where: { adminId: admin.id },
-    create: { adminId: admin.id, ...data },
-    update: data,
+    create: { adminId: admin.id, ...data } as any,
+    update: data as any,
   })
 
   return NextResponse.json(prefs)

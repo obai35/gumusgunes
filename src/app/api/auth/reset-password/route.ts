@@ -28,7 +28,7 @@ const handler = async (req: NextRequest) => {
       where: { email: parsed.data.email, usedAt: null, expiresAt: { gt: new Date() } },
     })
 
-    let resetToken = null
+    let resetToken: (typeof records)[number] | null = null
     for (const r of records) {
       if (await bcrypt.compare(parsed.data.token, r.token)) {
         resetToken = r

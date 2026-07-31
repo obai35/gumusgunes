@@ -213,7 +213,7 @@ export function Header() {
                             className="w-full text-left px-5 py-2.5 text-sm font-medium text-navy hover:bg-secondary hover:text-gold transition-colors flex items-center justify-between"
                           >
                             {parent.name}
-                            {parent.children?.length > 0 && <ChevronDown className="h-3 w-3 text-muted-foreground -rotate-90" />}
+                            {(parent.children?.length ?? 0) > 0 && <ChevronDown className="h-3 w-3 text-muted-foreground -rotate-90" />}
                           </button>
                           {parent.children?.map((child: any) => (
                             <button

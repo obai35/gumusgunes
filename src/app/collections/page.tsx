@@ -30,6 +30,7 @@ const cardVariants: Variants = {
 }
 
 function CategoryCard({ category, index }: { category: Category; index: number }) {
+  const { t } = useTranslation()
   const imgSrc = category.imageUrl || '/products/placeholder.jpg'
 
   return (

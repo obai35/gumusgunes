@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'

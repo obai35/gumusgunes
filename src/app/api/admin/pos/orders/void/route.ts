@@ -24,7 +24,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         if (branchId) {
           await tx.branchStock.upsert({
             where: { branchId_productId: { branchId, productId: item.productId } },
-            create: { branchId, productId: item.productId, quantity: item.quantity },
+            create: { branchId, productId: item.productId, quantity: item.quantity } as any,
             update: { quantity: { increment: item.quantity } },
           })
         } else {
@@ -40,7 +40,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
             type: 'RETURN',
             change: item.quantity,
             note: `Voided order ${order.orderNumber}${reason ? ` — ${reason}` : ''}`,
-          },
+          } as any,
         })
       }
 

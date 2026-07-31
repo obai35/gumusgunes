@@ -26,7 +26,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
         initialBalance: parseFloat(initialBalance),
         balance: parseFloat(initialBalance),
         expiresAt: expiresAt ? new Date(expiresAt) : null,
-      },
+      } as any,
     })
     return NextResponse.json({ giftCard })
   } catch { return NextResponse.json({ error: 'Failed' }, { status: 500 }) }

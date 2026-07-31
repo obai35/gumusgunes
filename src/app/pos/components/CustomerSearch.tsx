@@ -21,7 +21,7 @@ export default function CustomerSearch({ customer, setCustomer, customerSearch, 
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
     if (!customerSearch.trim()) { setResults([]); return }

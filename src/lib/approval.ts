@@ -77,6 +77,7 @@ export async function reverseEntry(
 
   const reversal = await sdb.journalEntry.create({
     data: {
+      storeId,
       date: new Date(),
       description: `Reversal: ${entry.description}${reason ? ` (${reason})` : ''}`,
       reference: entry.reference,
@@ -86,6 +87,7 @@ export async function reverseEntry(
       lines: {
         create: entry.lines.map((l) => ({
           accountId: l.accountId,
+          storeId,
           debit: l.credit,
           credit: l.debit,
         })),

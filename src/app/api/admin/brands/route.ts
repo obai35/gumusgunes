@@ -67,7 +67,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
     if (existing) return NextResponse.json({ error: 'Slug already exists' }, { status: 400 })
 
     const brand = await sdb.brand.create({
-      data: { name, nameAr, slug, logo, isVisible },
+      data: { name, nameAr, slug, logo, isVisible } as any,
     })
 
     return NextResponse.json({ ok: true, brand })

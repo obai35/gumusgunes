@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { Prisma } from '@prisma/client'
 import { storeDb } from '@/lib/store-scoped'
 import { withAdmin } from '@/lib/admin-permissions'
 
@@ -14,7 +15,7 @@ export const GET = withAdmin(async (_req: NextRequest, { admin }) => {
   ])
 
   const posts = await sdb.socialPost.findMany({
-    where: { status: 'published', performance: { not: null } },
+    where: { status: 'published', performance: { not: Prisma.JsonNull } },
     select: { performance: true },
   })
 

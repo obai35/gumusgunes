@@ -156,6 +156,7 @@ export async function createJournalEntry(data: {
   const accountIds = await Promise.all(data.lines.map(l => getAccountId(l.accountCode)))
   const lines = data.lines.map((l, i) => ({
     accountId: accountIds[i],
+    storeId: data.storeId ?? '',
     debit: l.debit || 0,
     credit: l.credit || 0,
   }))

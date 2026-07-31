@@ -67,7 +67,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
       data: {
         title, slug, content, excerpt, featuredImage, category, status,
         publishedAt: status === 'published' ? new Date() : null,
-      },
+      } as any,
     })
 
     return NextResponse.json(post)

@@ -23,7 +23,6 @@ export const POST = withAdmin(async (req, { admin }) => {
   const item = await sdb.costPool.create({
     data: {
       name: body.name,
-      code: body.code,
       description: body.description,
       category: body.category || 'mfg_overhead',
       basis: body.basis || 'total_pct',

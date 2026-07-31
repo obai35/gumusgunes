@@ -38,6 +38,7 @@ export const POST = withAdmin(async (req: NextRequest, admin: any) => {
         content: message,
         role: 'ADMIN',
         adminId: admin.id,
+        storeId: conversation.storeId,
       },
     })
 

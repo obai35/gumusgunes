@@ -3,6 +3,7 @@ import { withRateLimit } from '@/lib/rate-limit'
 import { hashPassword, signToken } from '@/lib/customer-auth'
 import { sanitize } from '@/lib/sanitize'
 import { db } from '@/lib/db'
+import { storefrontDb } from '@/lib/storefront-db'
 import { z } from 'zod'
 
 const RegisterSchema = z.object({
@@ -26,6 +27,7 @@ const handler = async (req: NextRequest) => {
         { status: 400 }
       )
     }
+    const { storeId } = await storefrontDb(req)
     const { email, password, name } = parsed.data
 
     const existing = await db.user.findUnique({ where: { email } })
@@ -34,7 +36,7 @@ const handler = async (req: NextRequest) => {
     }
 
     const user = await db.user.create({
-      data: { email, name, password: await hashPassword(password), gender: parsed.data.gender },
+      data: { storeId, email, name, password: await hashPassword(password), gender: parsed.data.gender },
     })
 
     const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })

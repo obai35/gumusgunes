@@ -17,6 +17,6 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const existing = await sdb.role.findUnique({ where: { name } })
   if (existing) return NextResponse.json({ error: 'Role already exists' }, { status: 400 })
 
-  const role = await sdb.role.create({ data: { name, permissions: JSON.stringify(permissions || []) } })
+  const role = await sdb.role.create({ data: { name, permissions: JSON.stringify(permissions || []) } as any })
   return NextResponse.json({ ...role, permissions: JSON.parse(role.permissions) })
 }, 'security')

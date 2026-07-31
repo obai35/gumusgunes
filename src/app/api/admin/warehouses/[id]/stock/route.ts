@@ -30,7 +30,7 @@ export const POST = withAdmin(async (req: NextRequest, { params, admin }: { para
 
   const stockLevel = await sdb.stockLevel.upsert({
     where: { warehouseId_productId: { warehouseId: id, productId } },
-    create: { warehouseId: id, productId, quantity },
+    create: { warehouseId: id, productId, quantity } as any,
     update: { quantity },
   })
   return NextResponse.json({ ok: true, stockLevel })

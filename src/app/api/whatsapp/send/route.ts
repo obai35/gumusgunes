@@ -26,7 +26,7 @@ const handler = withAdmin(async (req, { admin }) => {
 
   if (conversation.source === 'website') {
     const msg = await db.message.create({
-      data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id },
+      data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id, storeId: conversation.storeId },
     })
     publish(conversationId, { type: 'message', message: msg })
     emitSocketEvent('message:new', { ...msg, adminName: admin.name })
@@ -36,7 +36,7 @@ const handler = withAdmin(async (req, { admin }) => {
   if (!conversation.customerPhone) return NextResponse.json({ error: 'No customer phone' }, { status: 400 })
 
   const msg = await db.message.create({
-    data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id },
+    data: { conversationId, content: message, role: 'ADMIN', adminId: admin.id, storeId: conversation.storeId },
   })
 
   try {

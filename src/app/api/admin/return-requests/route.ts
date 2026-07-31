@@ -41,7 +41,7 @@ export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const rmaNumber = `RMA-${String(count + 1).padStart(5, '0')}`
 
   const returnRequest = await sdb.returnRequest.create({
-    data: { orderId, productId, quantity, reason, notes, rmaNumber },
+    data: { orderId, productId, quantity, reason, notes, rmaNumber } as any,
     include: {
       order: { select: { orderNumber: true, fullName: true } },
       product: { select: { name: true, sku: true } },

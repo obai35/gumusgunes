@@ -17,7 +17,7 @@ const ReviewSchema = z.object({
 
 async function handlePost(req: NextRequest) {
   try {
-    const { db: sdb } = await storefrontDb(req)
+    const { db: sdb, storeId } = await storefrontDb(req)
     const body = await req.json()
     const parsed = ReviewSchema.safeParse(body)
     if (!parsed.success) {
@@ -38,7 +38,7 @@ async function handlePost(req: NextRequest) {
     }
 
     const review = await sdb.review.create({
-      data: { ...rest, authorName: sanitizedName, title: sanitizedTitle, comment: sanitizedComment, productId, authorEmail: rest.authorEmail || null },
+      data: { ...rest, authorName: sanitizedName, title: sanitizedTitle, comment: sanitizedComment, productId, storeId, authorEmail: rest.authorEmail || null },
     })
 
     // Recalculate rating + reviewCount
