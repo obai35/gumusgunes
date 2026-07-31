@@ -10,7 +10,7 @@ const MODELS_WITH_STORE_ID = new Set([
   'BackInStock', 'CustomerNote', 'CustomerSegment', 'LoyaltyTier',
   'AbandonedCart', 'EmailCampaign', 'PushCampaign', 'SaleCampaign',
   'GiftCard', 'Referral', 'ReferralConfig', 'SocialAccount',
-  'SocialPost', 'SocialDraft', 'SocialCampaign', 'Webhook',
+  'SocialPost', 'SocialDraft', 'SocialCampaign', 'Webhook', 'WebhookDelivery',
   'ApiKey', 'FeatureFlag', 'ActivityLog', 'Conversation', 'Message',
   'Account', 'Budget', 'BankAccount', 'BankTransaction', 'Invoice',
   'InvoiceItem', 'Bill', 'BillItem', 'JournalEntry', 'JournalLine',

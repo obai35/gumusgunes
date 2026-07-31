@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { withAdmin } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 import { hashPassword } from '@/lib/auth-utils'
-import { PrismaClient } from '@prisma/client'
 import { storeDb } from '@/lib/store-scoped'
-
-const prisma = new PrismaClient()
 
 export const POST = withAdmin(async (req, { admin }) => {
   const sdb = storeDb(admin.storeId)
@@ -25,7 +22,7 @@ export const POST = withAdmin(async (req, { admin }) => {
   if (!password) {
     return NextResponse.json({ error: 'ADMIN_SEED_PASSWORD environment variable must be set' }, { status: 500 })
   }
-  const existing = await prisma.admin.findUnique({ where: { email } })
+  const existing = await db.admin.findUnique({ where: { email } })
   if (existing) return NextResponse.json({ message: 'Admin already exists' })
   const newAdmin = await sdb.admin.create({
     data: { email, name: 'Admin', password: await hashPassword(password), role: 'superadmin' } as any,
