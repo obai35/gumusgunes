@@ -81,6 +81,7 @@ export default function POSPage() {
   const [returnOrderId, setReturnOrderId] = useState<string | null>(null)
   const offlineMode = usePosStore((s) => s.offlineMode)
   const setOfflineMode = usePosStore((s) => s.setOfflineMode)
+  const setOfflineReceipt = usePosStore((s) => s.setOfflineReceipt)
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
