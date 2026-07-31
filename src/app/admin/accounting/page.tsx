@@ -213,10 +213,10 @@ function OverviewTab({ data, loading, period, compareEnabled, customStart, custo
   const [compareData, setCompareData] = useState<any>(null)
   const [ratios, setRatios] = useState<any>(null)
   const [drillDown, setDrillDown] = useState<{ type: string; data: any } | null>(null)
-  const cp1000 = (data.cashPosition as any)?.['1000']?.balance || 0
-  const cp1100 = (data.cashPosition as any)?.['1100']?.balance || 0
+  const cp1000 = (data?.cashPosition as any)?.['1000']?.balance || 0
+  const cp1100 = (data?.cashPosition as any)?.['1100']?.balance || 0
   const totalLiquid = cp1000 + cp1100
-  const expenseTotal = (data.expenseBreakdown || []).reduce((s: number, e: any) => s + e.balance, 0)
+  const expenseTotal = (data?.expenseBreakdown || []).reduce((s: number, e: any) => s + e.balance, 0)
 
   useEffect(() => {
     fetch('/api/admin/accounting/ratios')
