@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -90,7 +91,7 @@ export default function POSPage() {
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
-      fetch(`/api/admin/pos/shifts/active?branchId=${user.branchId}`)
+      posFetch(`/api/admin/pos/shifts/active?branchId=${user.branchId}`)
         .then((res) => res.json())
         .then((data) => { if (data.ok && data.shift) setShift(data.shift) })
         .catch(() => {})
@@ -100,7 +101,7 @@ export default function POSPage() {
   useEffect(() => {
     if (view === 'assessment' && shift?.id) {
       setAssessmentLoading(true)
-      fetch(`/api/admin/pos/shifts/summary?shiftId=${shift.id}`)
+      posFetch(`/api/admin/pos/shifts/summary?shiftId=${shift.id}`)
         .then((res) => res.json())
         .then((data) => setAssessmentData(data))
         .catch(() => toast.error('Failed to load assessment'))
@@ -109,7 +110,7 @@ export default function POSPage() {
   }, [view, shift?.id])
 
   useEffect(() => {
-    fetch('/api/categories?flat=true')
+    posFetch('/api/categories?flat=true')
       .then((res) => res.json())
       .then((data) => { if (data.ok) setCategories(data.categories) })
       .catch(() => {})
@@ -126,7 +127,7 @@ export default function POSPage() {
       const branchId = user?.branchId || usePosAuth.getState().user?.branchId
       if (branchId) params.set('branchId', branchId)
       if (selectedCategoryId) params.set('categoryId', selectedCategoryId)
-      const res = await fetch(`/api/admin/pos/products?${params}`)
+      const res = await posFetch(`/api/admin/pos/products?${params}`)
       if (res.ok) {
         const data = await res.json()
         if (data.ok) {
@@ -168,7 +169,7 @@ export default function POSPage() {
   const handleStartShift = useCallback(async () => {
     if (!user?.branchId) return
     try {
-      const res = await fetch('/api/admin/pos/shifts/start', {
+      const res = await posFetch('/api/admin/pos/shifts/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ branchId: user.branchId, startingCash: parseFloat(startingCash) || 0 }),
@@ -188,7 +189,7 @@ export default function POSPage() {
 
   const handleCloseShift = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/pos/shifts/close', {
+      const res = await posFetch('/api/admin/pos/shifts/close', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shiftId: shift?.id, endingCash: parseFloat(endingCash) || 0, notes: shiftNotes }),
@@ -211,7 +212,7 @@ export default function POSPage() {
   const handleApplyDiscount = useCallback(async () => {
     if (!pos.discountCode.trim()) return
     try {
-      const res = await fetch('/api/admin/pos/validate-discount', {
+      const res = await posFetch('/api/admin/pos/validate-discount', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -307,7 +308,7 @@ export default function POSPage() {
         return
       }
 
-      const res = await fetch('/api/admin/pos/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const res = await posFetch('/api/admin/pos/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (res.ok) {
         const data = await res.json()
         pos.setReceipt({

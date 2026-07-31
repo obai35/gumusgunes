@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const GET = withAdmin(async (req: Request, { admin }) => {
+export const GET = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)

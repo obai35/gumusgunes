@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect, useCallback } from 'react'
 import { Clock, Loader2, RefreshCw } from 'lucide-react'
 import { formatPrice } from '@/lib/format'
@@ -27,7 +28,7 @@ export default function RecentOrders({ shiftId }: Props) {
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/pos/orders/recent?shiftId=${shiftId}&limit=5`)
+      const res = await posFetch(`/api/admin/pos/orders/recent?shiftId=${shiftId}&limit=5`)
       if (res.ok) {
         const data = await res.json()
         if (data.ok) setOrders(data.orders)

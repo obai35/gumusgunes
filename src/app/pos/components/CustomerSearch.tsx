@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, User } from 'lucide-react'
 
@@ -29,7 +30,7 @@ export default function CustomerSearch({ customer, setCustomer, customerSearch, 
     clearTimeout(timerRef.current)
     timerRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/admin/pos/customers?search=${encodeURIComponent(customerSearch)}`)
+        const res = await posFetch(`/api/admin/pos/customers?search=${encodeURIComponent(customerSearch)}`)
         const data = await res.json()
         setResults(data.customers)
       } catch { setResults([]) }

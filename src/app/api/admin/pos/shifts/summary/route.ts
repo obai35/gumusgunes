@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const GET = withAdmin(async (req: Request, { admin }) => {
+export const GET = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = new URL(req.url)
@@ -12,6 +11,9 @@ export const GET = withAdmin(async (req: Request, { admin }) => {
 
     const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
+    if (admin.branchId && shift.branchId !== admin.branchId) {
+      return NextResponse.json({ error: 'Shift does not belong to this branch' }, { status: 403 })
+    }
 
     const [orders, returns] = await Promise.all([
       sdb.order.findMany({

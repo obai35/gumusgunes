@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
+import { generateReturnNumber } from '@/lib/pos-utils'
 
-export const POST = withAdmin(async (req: Request, { admin }) => {
+export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { orderId, reason } = await req.json()
@@ -11,10 +11,16 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
 
     const order = await sdb.order.findFirst({
       where: { id: orderId },
-      include: { items: { include: { product: { select: { id: true } } } } },
+      include: {
+        items: { include: { product: { select: { id: true } } } },
+        shift: { select: { branchId: true } },
+      },
     })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.status === 'cancelled') return NextResponse.json({ error: 'Order is already voided' }, { status: 400 })
+    if (admin.branchId && order.shift?.branchId !== admin.branchId) {
+      return NextResponse.json({ error: 'Order does not belong to this branch' }, { status: 403 })
+    }
 
     await sdb.$transaction(async (tx) => {
       const shift = order.shiftId ? await tx.shift.findUnique({ where: { id: order.shiftId } }) : null
@@ -44,9 +50,31 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
         })
       }
 
-      await tx.order.update({
-        where: { id: orderId },
+      const cancelled = await tx.order.updateMany({
+        where: { id: orderId, status: { not: 'cancelled' } },
         data: { status: 'cancelled', notes: reason || null },
+      })
+      if (cancelled.count !== 1) return
+
+      await tx.return.create({
+        data: {
+          orderId: order.id,
+          shiftId: order.shiftId,
+          returnNumber: generateReturnNumber(),
+          reason: reason || 'other',
+          refundMethod: order.paymentMethod === 'split' ? 'cash' : order.paymentMethod,
+          refundAmount: order.totalAmount,
+          notes: `POS void — ${reason || 'no reason provided'}`,
+          restocked: true,
+          processedByName: admin.name || 'POS User',
+          items: {
+            create: order.items.map((item) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              refundAmount: item.quantity * item.price,
+            })),
+          },
+        } as any,
       })
     })
 

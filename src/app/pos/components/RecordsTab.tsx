@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Plus, X, Search as SearchIcon } from 'lucide-react'
@@ -31,7 +32,7 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
     if (!productSearch || productSearch.length < 2) { setProducts([]); return }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/admin/pos/products?search=${encodeURIComponent(productSearch)}`)
+        const res = await posFetch(`/api/admin/pos/products?search=${encodeURIComponent(productSearch)}`)
         if (res.ok) setProducts(await res.json())
       } catch {}
     }, 300)
@@ -76,7 +77,7 @@ function ManualOrderForm({ shiftId }: { shiftId: string }) {
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/admin/pos/orders/manual', {
+      const res = await posFetch('/api/admin/pos/orders/manual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -249,7 +250,7 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
     if (!supplierSearch || supplierSearch.length < 1) { setSuppliers([]); return }
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/admin/pos/suppliers?search=${encodeURIComponent(supplierSearch)}`)
+        const res = await posFetch(`/api/admin/pos/suppliers?search=${encodeURIComponent(supplierSearch)}`)
         if (res.ok) setSuppliers(await res.json())
       } catch {}
     }, 300)
@@ -259,7 +260,7 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
   async function handleCreateSupplier() {
     if (!newSupplierName.trim()) return
     try {
-      const res = await fetch('/api/admin/pos/suppliers', {
+      const res = await posFetch('/api/admin/pos/suppliers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newSupplierName, phone: newSupplierPhone || undefined, email: newSupplierEmail || undefined }),
@@ -287,7 +288,7 @@ function ExpenseForm({ shiftId }: { shiftId: string }) {
 
     setSubmitting(true)
     try {
-      const res = await fetch('/api/admin/pos/expenses', {
+      const res = await posFetch('/api/admin/pos/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

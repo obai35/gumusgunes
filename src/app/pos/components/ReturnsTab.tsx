@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Search, Undo2, ChevronDown, ChevronRight } from 'lucide-react'
@@ -65,7 +66,7 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
   useEffect(() => {
     const params = new URLSearchParams({ branchId: branchId || '', shiftId })
     if (returnOrderId) params.set('q', returnOrderId)
-    fetch(`/api/admin/pos/orders/search?${params}`)
+    posFetch(`/api/admin/pos/orders/search?${params}`)
       .then(r => r.json())
       .then(data => {
         if (data.orders) setReturns(data.orders)
@@ -151,7 +152,7 @@ export default function ReturnsTab({ shiftId, branchId, returnOrderId, onReturnO
 
     setReturningId(order.id)
     try {
-      const res = await fetch('/api/admin/pos/checkout', {
+      const res = await posFetch('/api/admin/pos/checkout', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

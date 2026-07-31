@@ -15,6 +15,10 @@ export function generateOrderNumber(): string {
   return `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
 }
 
+export function generateReturnNumber(): string {
+  return `RET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
+}
+
 export function formatEGP(value: number): string {
   return 'E£' + value.toFixed(2)
 }

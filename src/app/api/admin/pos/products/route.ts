@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { withAdmin } from '@/lib/admin-permissions'
+﻿import { NextRequest, NextResponse } from 'next/server'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 import { storeDb } from '@/lib/store-scoped'
 
-export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+export const GET = withPosOrAdmin(async (req: NextRequest, { admin }) => {
   try {
     const sdb = storeDb(admin.storeId)
     const search = req.nextUrl.searchParams.get('search') || ''
@@ -30,8 +30,8 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const where: any = { isActive: true }
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { sku: { contains: search } },
+        { name: { contains: search, mode: 'insensitive' } },
+        { sku: { contains: search, mode: 'insensitive' } },
       ]
     }
     if (categoryId) where.categoryId = categoryId

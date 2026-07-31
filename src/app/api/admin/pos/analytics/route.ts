@@ -1,7 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
+
+const CAIRO_TZ = 'Africa/Cairo'
+const dateKeyFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: CAIRO_TZ, year: 'numeric', month: '2-digit', day: '2-digit' })
+const monthKeyFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: CAIRO_TZ, year: 'numeric', month: '2-digit' })
+
+function trendKey(date: Date, period: string): string {
+  if (period === 'weekly') {
+    const weekStart = new Date(date)
+    const day = weekStart.getDay()
+    const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1)
+    weekStart.setDate(diff)
+    return dateKeyFormatter.format(weekStart)
+  }
+  if (period === 'monthly') {
+    return monthKeyFormatter.format(date)
+  }
+  return dateKeyFormatter.format(date)
+}
 
 function getDateRange(period: string, dateFrom?: string | null, dateTo?: string | null) {
   if (dateFrom && dateTo) {
@@ -40,7 +57,7 @@ function getDateRange(period: string, dateFrom?: string | null, dateTo?: string 
   return { start, end }
 }
 
-export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+export const GET = withPosOrAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { searchParams } = req.nextUrl
@@ -97,19 +114,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
 
     const trendMap: Record<string, { revenue: number; orders: number }> = {}
     for (const o of orders) {
-      let key: string
-      const d = new Date(o.createdAt)
-      if (period === 'weekly') {
-        const weekStart = new Date(d)
-        const day = weekStart.getDay()
-        const diff = weekStart.getDate() - day + (day === 0 ? -6 : 1)
-        weekStart.setDate(diff)
-        key = weekStart.toISOString().slice(0, 10)
-      } else if (period === 'monthly') {
-        key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      } else {
-        key = d.toISOString().slice(0, 10)
-      }
+      const key = trendKey(new Date(o.createdAt), period)
       if (!trendMap[key]) trendMap[key] = { revenue: 0, orders: 0 }
       trendMap[key].revenue += o.totalAmount
       trendMap[key].orders += 1

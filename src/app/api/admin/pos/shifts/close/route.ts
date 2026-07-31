@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 import { createJournalEntry, ACCOUNTS } from '@/lib/accounting'
 
 function getAssetAccount(method: string): string {
@@ -15,18 +14,25 @@ function getAssetAccount(method: string): string {
   return map[method] || ACCOUNTS.cash
 }
 
-export const POST = withAdmin(async (req: Request, { admin }) => {
+export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const { shiftId, endingCash, notes } = await req.json()
   if (!shiftId || endingCash === undefined) {
     return NextResponse.json({ error: 'shiftId and endingCash are required' }, { status: 400 })
   }
+  const validatedEndingCash = Number(endingCash)
+  if (!Number.isFinite(validatedEndingCash) || validatedEndingCash < 0) {
+    return NextResponse.json({ error: 'endingCash must be a non-negative number' }, { status: 400 })
+  }
 
   const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
   if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
   if (!shift.isOpen) return NextResponse.json({ error: 'Shift is already closed' }, { status: 400 })
+  if (admin.branchId && shift.branchId !== admin.branchId) {
+    return NextResponse.json({ error: 'Shift does not belong to this branch' }, { status: 403 })
+  }
 
-  const orders = await sdb.order.findMany({ where: { shiftId } })
+  const orders = await sdb.order.findMany({ where: { shiftId, status: { not: 'cancelled' } } })
 
   const totalSales = orders.reduce((sum, o) => sum + o.totalAmount, 0)
   const totalCash = orders.reduce((sum, o) => sum + (o.cashAmount || (o.paymentMethod === 'cash' ? o.totalAmount : 0)), 0)
@@ -37,12 +43,12 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
   const totalExpenses = await sdb.expense.aggregate({ where: { shiftId }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
   const orderCount = orders.length
 
-  const updated = await sdb.shift.update({
-    where: { id: shiftId },
+  const closed = await sdb.shift.updateMany({
+    where: { id: shiftId, isOpen: true },
     data: {
       isOpen: false,
       closedAt: new Date(),
-      endingCash,
+      endingCash: validatedEndingCash,
       totalSales,
       totalCash,
       totalCard,
@@ -54,6 +60,10 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       notes: notes || null,
     },
   })
+  if (closed.count !== 1) {
+    return NextResponse.json({ error: 'Shift is already closed' }, { status: 400 })
+  }
+  const updated = await sdb.shift.findFirst({ where: { id: shiftId } }) as any
 
   // Auto-accounting: create summary journal entries for this shift
   try {

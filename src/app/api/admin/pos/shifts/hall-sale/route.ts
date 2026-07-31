@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+export const GET = withPosOrAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const shiftId = req.nextUrl.searchParams.get('shiftId')
@@ -11,8 +10,11 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
 
     const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 })
+    if (admin.branchId && shift.branchId !== admin.branchId) {
+      return NextResponse.json({ error: 'Shift does not belong to this branch' }, { status: 403 })
+    }
 
-    const orders = await sdb.order.findMany({ where: { shiftId } })
+    const orders = await sdb.order.findMany({ where: { shiftId, status: { not: 'cancelled' } } })
     const expenses = await sdb.expense.findMany({ where: { shiftId } })
     const returns = await sdb.return.findMany({ where: { shiftId } })
 
@@ -38,7 +40,14 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const refundsByMethod: Record<string, number> = {}
     for (const ret of returns) {
       const method = ret.refundMethod
-      refundsByMethod[method] = (refundsByMethod[method] || 0) + ret.refundAmount
+      if (method === 'split') {
+        const cashMatch = (ret.notes || '').match(/Split refund:\s*EGP\s*([\d.]+)\s*cash/i)
+        refundsByMethod.cash = (refundsByMethod.cash || 0) + (cashMatch ? Number(cashMatch[1]) || 0 : 0)
+        const cardMatch = (ret.notes || '').match(/EGP\s*([\d.]+)\s*card/i)
+        refundsByMethod.card = (refundsByMethod.card || 0) + (cardMatch ? Number(cardMatch[1]) || 0 : 0)
+      } else {
+        refundsByMethod[method] = (refundsByMethod[method] || 0) + ret.refundAmount
+      }
     }
 
     const expensesByMethod: Record<string, number> = {}

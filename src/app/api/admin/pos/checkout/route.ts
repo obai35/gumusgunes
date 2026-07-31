@@ -1,39 +1,57 @@
-import { NextResponse } from 'next/server'
-import crypto from 'crypto'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
-import { VALID_PAYMENT_METHODS, generateReceiptNumber } from '@/lib/pos-utils'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
+import { VALID_PAYMENT_METHODS, generateReceiptNumber, generateOrderNumber } from '@/lib/pos-utils'
 
-export const POST = withAdmin(async (req: Request, { admin }) => {
+export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
-    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes, taxRate, taxAmount } = await req.json()
+    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes, taxRate } = await req.json()
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!paymentMethod || !VALID_PAYMENT_METHODS.includes(paymentMethod)) {
       return NextResponse.json({ error: 'Valid payment method is required' }, { status: 400 })
+    }
+    const validatedTaxRate = Number(taxRate) || 0
+    if (!Number.isFinite(validatedTaxRate) || validatedTaxRate < 0 || validatedTaxRate > 100) {
+      return NextResponse.json({ error: 'Invalid tax rate' }, { status: 400 })
     }
 
     if (!shiftId) return NextResponse.json({ error: 'An open shift is required to process sales' }, { status: 400 })
     const shift = await sdb.shift.findFirst({ where: { id: shiftId } })
     if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 400 })
     if (!shift.isOpen) return NextResponse.json({ error: 'Shift is not open' }, { status: 400 })
+    if (admin.branchId && shift.branchId !== admin.branchId) {
+      return NextResponse.json({ error: 'Shift does not belong to this branch' }, { status: 403 })
+    }
     const branchId = shift.branchId
 
-    const products = await sdb.product.findMany({ where: { id: { in: items.map((i: any) => i.productId ) } } })
+    const validatedItems = items.map((item: any) => {
+      if (typeof item.productId !== 'string' || !item.productId) return null
+      const quantity = Math.floor(Number(item.quantity))
+      if (!Number.isFinite(quantity) || quantity <= 0) return null
+      const discount = Number(item.discount) || 0
+      if (!Number.isFinite(discount) || discount < 0) return null
+      return { productId: item.productId, quantity, discount }
+    })
+    if (validatedItems.some((i: any) => !i)) return NextResponse.json({ error: 'Invalid cart item' }, { status: 400 })
+
+    const products = await sdb.product.findMany({ where: { id: { in: validatedItems.map((i: any) => i.productId) } } })
     const productMap = new Map(products.map((p) => [p.id, p]))
 
-    const branchStocks = await sdb.branchStock.findMany({ where: { branchId, productId: { in: items.map((i: any) => i.productId) } } })
+    const branchStocks = await sdb.branchStock.findMany({ where: { branchId, productId: { in: validatedItems.map((i: any) => i.productId) } } })
     const branchStockMap = new Map(branchStocks.map((bs) => [bs.productId, bs.quantity]))
 
     let subtotal = 0
     let totalItemDiscount = 0
-    for (const item of items) {
+    for (const item of validatedItems) {
       const product = productMap.get(item.productId)
       if (!product) return NextResponse.json({ error: `Product ${item.productId} not found` }, { status: 400 })
       const branchQty = branchStockMap.get(item.productId) || 0
       if (branchQty < item.quantity) return NextResponse.json({ error: `Insufficient stock at branch for ${product.name}. Branch: ${branchQty}, requested: ${item.quantity}` }, { status: 400 })
+      const lineDiscount = Math.min(item.discount, product.price * item.quantity)
       subtotal += product.price * item.quantity
-      totalItemDiscount += (item.discount || 0)
+      totalItemDiscount += lineDiscount
+      item.discount = lineDiscount
     }
 
     let discountAmount = 0
@@ -48,12 +66,12 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       if (appliedDiscount.appliesTo !== 'all' && appliedDiscount.targetValue && items?.length) {
         const target = appliedDiscount.targetValue.toLowerCase()
         const productsWithCat = await sdb.product.findMany({
-          where: { id: { in: items.map((i: any) => i.productId) } },
+          where: { id: { in: validatedItems.map((i: any) => i.productId) } },
           include: { category: { select: { name: true, parent: { select: { name: true } } } } },
         })
         const productCatMap = new Map(productsWithCat.map(p => [p.id, p]))
         eligibleSubtotal = 0
-        for (const item of items) {
+        for (const item of validatedItems) {
           const product = productCatMap.get(item.productId)
           if (!product) continue
           if (appliedDiscount.appliesTo === 'category') {
@@ -66,10 +84,13 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
           }
         }
       }
-      discountAmount = appliedDiscount.type === 'PERCENTAGE' ? eligibleSubtotal * (appliedDiscount.value / 100) : Math.min(appliedDiscount.value, eligibleSubtotal)
+      discountAmount = appliedDiscount.type === 'PERCENTAGE'
+        ? Math.min(eligibleSubtotal * (appliedDiscount.value / 100), eligibleSubtotal)
+        : Math.min(appliedDiscount.value, eligibleSubtotal)
     }
 
-    const total = Math.max(0, subtotal - totalItemDiscount - discountAmount)
+    const computedTax = (subtotal - totalItemDiscount) * (validatedTaxRate / 100)
+    const total = Math.max(0, subtotal - totalItemDiscount - discountAmount + computedTax)
 
     if (paymentMethod === 'split') {
       const cash = cashAmount || 0
@@ -98,23 +119,37 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       resolvedPhone = customerPhone || null
     }
 
-    const orderNumber = `P-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`
+    const orderNumber = generateOrderNumber()
     const receiptNumber = generateReceiptNumber()
 
     const order = await sdb.$transaction(async (tx) => {
-      for (const item of items) {
-        await tx.branchStock.upsert({
-          where: { branchId_productId: { branchId, productId: item.productId } },
-          create: { branchId, productId: item.productId, quantity: 0 } as any,
-          update: { quantity: { decrement: item.quantity } },
+      for (const item of validatedItems) {
+        const decremented = await tx.branchStock.updateMany({
+          where: { branchId, productId: item.productId, quantity: { gte: item.quantity } },
+          data: { quantity: { decrement: item.quantity } },
         })
+        if (decremented.count !== 1) {
+          const stockRow = await tx.branchStock.findUnique({
+            where: { branchId_productId: { branchId, productId: item.productId } },
+          })
+          const product = productMap.get(item.productId)!
+          throw new Error(`Insufficient stock at branch for ${product.name}. Branch: ${stockRow?.quantity ?? 0}, requested: ${item.quantity}`)
+        }
         await tx.inventoryLog.create({
           data: { productId: item.productId, change: -item.quantity, type: 'SALE', note: `POS sale - Branch ${branchId}` } as any,
         })
       }
 
       if (appliedDiscount) {
-        await tx.discount.update({ where: { id: appliedDiscount.id }, data: { usedCount: { increment: 1 } } })
+        if (appliedDiscount.maxUses) {
+          const used = await tx.discount.updateMany({
+            where: { id: appliedDiscount.id, usedCount: { lt: appliedDiscount.maxUses } },
+            data: { usedCount: { increment: 1 } },
+          })
+          if (used.count !== 1) throw new Error('Discount code usage limit reached')
+        } else {
+          await tx.discount.update({ where: { id: appliedDiscount.id }, data: { usedCount: { increment: 1 } } })
+        }
       }
 
       return tx.order.create({
@@ -133,7 +168,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
           totalAmount: total,
           subtotal,
           shipping: 0,
-          tax: taxAmount ?? 0,
+          tax: computedTax,
           discountAmount: (discountAmount + totalItemDiscount) || null,
           discountId: appliedDiscount?.id || null,
           status: 'confirmed',
@@ -143,7 +178,7 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
           notes: notes || null,
           paymentStatus: 'paid',
             items: {
-            create: items.map((item: any) => {
+            create: validatedItems.map((item: any) => {
               const product = productMap.get(item.productId)!
               return {
                 productId: item.productId,
@@ -162,12 +197,16 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })
     return NextResponse.json({ orderId: fullOrder!.id, total: fullOrder!.totalAmount, order: fullOrder })
-  } catch {
+  } catch (err) {
+    const message = err instanceof Error ? err.message : ''
+    if (message.startsWith('Insufficient stock') || message === 'Discount code usage limit reached') {
+      return NextResponse.json({ error: message }, { status: 400 })
+    }
     return NextResponse.json({ error: 'Checkout failed' }, { status: 500 })
   }
 }, 'pos')
 
-export const PUT = withAdmin(async (req: Request, { admin }) => {
+export const PUT = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { orderId, action, items: returnItems, fullReturn, reason, refundMethod, cashRefundAmount, cardRefundAmount } = await req.json()
@@ -179,6 +218,9 @@ export const PUT = withAdmin(async (req: Request, { admin }) => {
     })
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.status === 'cancelled') return NextResponse.json({ error: 'Order already returned' }, { status: 400 })
+    if (admin.branchId && order.shift?.branchId && order.shift.branchId !== admin.branchId) {
+      return NextResponse.json({ error: 'Order does not belong to this branch' }, { status: 403 })
+    }
 
     const branchId = order.shift?.branchId
     let totalRefund = 0
@@ -263,7 +305,7 @@ export const PUT = withAdmin(async (req: Request, { admin }) => {
           refundAmount: totalRefund,
           restocked: true,
           notes,
-          processedByName: 'POS User',
+          processedByName: admin.name || 'POS User',
           items: {
             create: returnedItems.map(ri => ({
               productId: ri.productId,

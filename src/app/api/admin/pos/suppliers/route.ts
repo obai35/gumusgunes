@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+export const GET = withPosOrAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const search = req.nextUrl.searchParams.get('search') || ''
   const suppliers = await sdb.supplier.findMany({
@@ -13,7 +12,7 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   return NextResponse.json(suppliers)
 }, 'pos')
 
-export const POST = withAdmin(async (req: Request, { admin }) => {
+export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { name, phone, email, address, notes } = await req.json()

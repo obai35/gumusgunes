@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Printer } from 'lucide-react'
@@ -20,7 +21,7 @@ export default function HallSaleTab({ shiftId }: { shiftId: string }) {
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/admin/pos/shifts/hall-sale?shiftId=${shiftId}`)
+    posFetch(`/api/admin/pos/shifts/hall-sale?shiftId=${shiftId}`)
       .then((res) => res.json())
       .then((result) => setData(result))
       .catch(() => toast.error('Failed to load hall sale data'))

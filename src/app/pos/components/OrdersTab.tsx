@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Search, X, Printer, Ban, AlertTriangle, Undo2 } from 'lucide-react'
@@ -54,7 +55,7 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
       if (shiftId) params.set('shiftId', shiftId)
       params.set('page', String(page))
 
-      const res = await fetch(`/api/admin/pos/orders/search?${params}`)
+      const res = await posFetch(`/api/admin/pos/orders/search?${params}`)
       if (res.ok) setResults(await res.json())
       else toast.error('Search failed')
     } catch {
@@ -77,7 +78,7 @@ export default function OrdersTab({ shiftId, onReturnOrder }: { shiftId?: string
   async function handleVoid(orderId: string) {
     setVoiding(true)
     try {
-      const res = await fetch('/api/admin/pos/orders/void', {
+      const res = await posFetch('/api/admin/pos/orders/void', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, reason: voidReason }),

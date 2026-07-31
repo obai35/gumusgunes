@@ -1,15 +1,19 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const GET = withAdmin(async (req: Request, { admin }) => {
+export const GET = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const { searchParams } = new URL(req.url)
   const shiftId = searchParams.get('shiftId')
-  const limit = Math.min(20, parseInt(searchParams.get('limit') || '10'))
+  const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') || '10') || 10))
 
   const orders = await sdb.order.findMany({
-    where: shiftId ? { shiftId } : undefined,
+    where: shiftId
+      ? { shiftId, ...(admin.branchId ? { shift: { branchId: admin.branchId } } : {}) }
+      : admin.branchId
+        ? { shift: { branchId: admin.branchId } }
+        : undefined,
     orderBy: { createdAt: 'desc' },
     take: limit,
     select: {
@@ -29,4 +33,4 @@ export const GET = withAdmin(async (req: Request, { admin }) => {
   })
 
   return NextResponse.json({ ok: true, orders })
-})
+}, 'pos')

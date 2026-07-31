@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const POST = withAdmin(async (req: Request, { admin }) => {
+export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const { code, subtotal, items } = await req.json()
@@ -12,25 +11,41 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
     if (discount.expiresAt && new Date(discount.expiresAt) < new Date()) return NextResponse.json({ error: 'Discount code expired' }, { status: 400 })
     if (discount.maxUses && discount.usedCount >= discount.maxUses) return NextResponse.json({ error: 'Usage limit reached' }, { status: 400 })
 
-    if (discount.minOrder && subtotal < discount.minOrder) {
-      return NextResponse.json({ error: `Minimum order amount of $${discount.minOrder.toFixed(2)} required` }, { status: 400 })
+    const clientSubtotal = Number(subtotal)
+    if (!Number.isFinite(clientSubtotal) || clientSubtotal < 0) {
+      return NextResponse.json({ error: 'Invalid subtotal' }, { status: 400 })
+    }
+    if (discount.minOrder && clientSubtotal < discount.minOrder) {
+      return NextResponse.json({ error: `Minimum order amount of E£${discount.minOrder.toFixed(2)} required` }, { status: 400 })
     }
 
-    let eligibleSubtotal = subtotal
+    const validatedItems: { productId: string; quantity: number }[] = []
+    for (const item of items || []) {
+      if (!item?.productId) return NextResponse.json({ error: 'Invalid cart item' }, { status: 400 })
+      const quantity = Math.floor(Number(item.quantity))
+      if (!Number.isFinite(quantity) || quantity <= 0) return NextResponse.json({ error: 'Invalid cart item' }, { status: 400 })
+      validatedItems.push({ productId: item.productId, quantity })
+    }
 
-    if (discount.appliesTo !== 'all' && discount.targetValue && items?.length) {
+    const productIds = validatedItems.map(i => i.productId)
+    const products = await sdb.product.findMany({
+      where: { id: { in: productIds } },
+      include: { category: { select: { name: true, parent: { select: { name: true } } } } },
+    })
+    const productMap = new Map(products.map(p => [p.id, p]))
+
+    const totalSubtotal = validatedItems.reduce((sum, item) => {
+      const product = productMap.get(item.productId)
+      return sum + (product ? product.price * item.quantity : 0)
+    }, 0)
+
+    let eligibleSubtotal = totalSubtotal
+
+    if (discount.appliesTo !== 'all' && discount.targetValue) {
       const target = discount.targetValue.toLowerCase()
-
-      const productIds = items.map((i: any) => i.productId)
-      const products = await sdb.product.findMany({
-        where: { id: { in: productIds } },
-        include: { category: { select: { name: true, parent: { select: { name: true } } } } },
-      })
-
-      const productMap = new Map(products.map(p => [p.id, p]))
       eligibleSubtotal = 0
 
-      for (const item of items) {
+      for (const item of validatedItems) {
         const product = productMap.get(item.productId)
         if (!product) continue
 
@@ -38,12 +53,12 @@ export const POST = withAdmin(async (req: Request, { admin }) => {
           const catName = product.category.name.toLowerCase()
           const parentName = (product.category as any).parent?.name?.toLowerCase()
           if (catName === target || parentName === target) {
-            eligibleSubtotal += item.price * item.quantity
+            eligibleSubtotal += product.price * item.quantity
           }
         } else if (discount.appliesTo === 'tag') {
           const tags: string[] = JSON.parse(product.tags || '[]')
           if (tags.some(t => t.toLowerCase().includes(target))) {
-            eligibleSubtotal += item.price * item.quantity
+            eligibleSubtotal += product.price * item.quantity
           }
         }
       }

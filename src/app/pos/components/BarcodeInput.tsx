@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { memo, useState, useRef } from 'react'
 import { toast } from 'sonner'
 import type { Product } from '../types'
@@ -19,7 +20,7 @@ function BarcodeInput({ onProductFound, onFocusSearch }: Props) {
     if (!value.trim()) return
     setLoading(true)
     try {
-      const res = await fetch(`/api/admin/pos/products?sku=${encodeURIComponent(value.trim())}`)
+      const res = await posFetch(`/api/admin/pos/products?sku=${encodeURIComponent(value.trim())}`)
       if (res.ok) {
         const data = await res.json()
         if (data.ok && data.items.length > 0) {

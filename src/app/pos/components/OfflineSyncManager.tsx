@@ -1,4 +1,5 @@
 'use client'
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect, useCallback } from 'react'
 import { Upload, RefreshCw, CheckCircle, AlertTriangle, Wifi, ChevronDown, Clock } from 'lucide-react'
 import { getUnsyncedOrders, getUnsyncedOrdersWithTempNumbers, markOrderSynced, markOrderSyncedWithRealInfo, markOrderSyncFailed } from '@/lib/pos-db'
@@ -41,7 +42,7 @@ export default function OfflineSyncManager() {
       setSyncProgress({ current: 0, total })
       for (const order of legacyOrders) {
         try {
-          const res = await fetch('/api/admin/pos/checkout', {
+          const res = await posFetch('/api/admin/pos/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(order),
@@ -68,7 +69,7 @@ export default function OfflineSyncManager() {
           if (order.customerPhone) body.customerPhone = order.customerPhone
           if (order.cashAmount != null && (order.paymentMethod === 'cash' || order.paymentMethod === 'split')) body.cashAmount = order.cashAmount
           if (order.cardAmount != null && order.paymentMethod === 'split') body.cardAmount = order.cardAmount
-          const res = await fetch('/api/admin/pos/checkout', {
+          const res = await posFetch('/api/admin/pos/checkout', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),

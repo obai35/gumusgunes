@@ -1,5 +1,6 @@
 'use client'
 
+import { posFetch } from '@/lib/pos-client-fetch'
 import { useState, useEffect } from 'react'
 import { X, Calculator } from 'lucide-react'
 
@@ -48,7 +49,7 @@ export default function ShiftCloseModal({ endingCash, onEndingCashChange, shiftN
 
   useEffect(() => {
     if (!shiftId) { setLoading(false); return }
-    fetch(`/api/admin/pos/shifts/hall-sale?shiftId=${shiftId}`)
+    posFetch(`/api/admin/pos/shifts/hall-sale?shiftId=${shiftId}`)
       .then((res) => res.json())
       .then((data) => {
         const totalRefunds = data.totalRefunds || 0

@@ -1,9 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { storeDb } from '@/lib/store-scoped'
-import { withAdmin } from '@/lib/admin-permissions'
+import { withPosOrAdmin } from '@/lib/pos-or-admin'
 
-export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+export const GET = withPosOrAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
   try {
     const searchParams = req.nextUrl.searchParams
@@ -13,8 +12,8 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const shiftId = searchParams.get('shiftId')
     const branchId = searchParams.get('branchId')
     const status = searchParams.get('status')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20') || 20))
 
     const where: any = {}
     if (q) {
@@ -32,7 +31,8 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     }
     if (shiftId) where.shiftId = shiftId
     if (status) where.status = status
-    if (branchId) where.shift = { branchId }
+    if (branchId && !admin.branchId) where.shift = { branchId }
+    if (admin.branchId) where.shift = { branchId: admin.branchId }
 
     const [orders, total] = await Promise.all([
       sdb.order.findMany({
