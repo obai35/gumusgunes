@@ -1,16 +1,11 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
+export const GET = withAdmin(async (req: NextRequest, { params, admin }) => {
   const { id } = await params
 
-  const group = await storeDb(storeId).group.findFirst({
+  const group = await storeDb(admin.storeId).group.findFirst({
     where: { id },
     include: {
       entities: { include: { entityStore: { select: { id: true, name: true, slug: true } } } },
@@ -24,20 +19,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   })
   if (!group) return NextResponse.json({ error: 'Not found' }, { status: 404 })
   return NextResponse.json({ group })
-}
+}, 'accounting')
 
-export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
+export const PUT = withAdmin(async (req: NextRequest, { params, admin }) => {
   const { id } = await params
 
   const body = await req.json()
-  const group = await storeDb(storeId).group.findFirst({ where: { id } })
+  const group = await storeDb(admin.storeId).group.findFirst({ where: { id } })
   if (!group) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const updated = await storeDb(storeId).group.update({
+  const updated = await storeDb(admin.storeId).group.update({
     where: { id },
     data: {
       name: body.name ?? group.name,
@@ -45,18 +36,14 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     },
   })
   return NextResponse.json({ group: updated })
-}
+}, 'accounting')
 
-export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
+export const DELETE = withAdmin(async (req: NextRequest, { params, admin }) => {
   const { id } = await params
 
-  const group = await storeDb(storeId).group.findFirst({ where: { id } })
+  const group = await storeDb(admin.storeId).group.findFirst({ where: { id } })
   if (!group) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  await storeDb(storeId).group.delete({ where: { id } })
+  await storeDb(admin.storeId).group.delete({ where: { id } })
   return NextResponse.json({ success: true })
-}
+}, 'accounting')

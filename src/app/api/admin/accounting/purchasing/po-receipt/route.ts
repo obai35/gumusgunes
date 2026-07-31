@@ -1,19 +1,13 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 import { createPOReceiptJournalEntry } from '@/lib/purchasing'
 
-export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
-
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const { poId } = await req.json()
   if (!poId) return NextResponse.json({ error: 'poId required' }, { status: 400 })
 
-  const po = await storeDb(storeId).purchaseOrder.findUnique({
+  const po = await storeDb(admin.storeId).purchaseOrder.findUnique({
     where: { id: poId },
     include: { items: true },
   })
@@ -28,4 +22,4 @@ export async function POST(req: Request) {
   })
 
   return NextResponse.json({ entry })
-}
+}, 'accounting')

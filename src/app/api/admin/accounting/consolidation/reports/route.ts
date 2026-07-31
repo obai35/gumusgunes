@@ -1,12 +1,8 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { getConsolidatedPL, getConsolidatedBalanceSheet } from '@/lib/consolidation'
 
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
+export const GET = withAdmin(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url)
   const groupId = searchParams.get('groupId')
   const reportType = searchParams.get('type') ?? 'pl'
@@ -30,4 +26,4 @@ export async function GET(req: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
-}
+}, 'accounting')

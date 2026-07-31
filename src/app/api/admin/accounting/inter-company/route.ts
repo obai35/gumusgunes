@@ -1,15 +1,9 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { storeDb } from '@/lib/store-scoped'
 import { recordInterCompanyTxn } from '@/lib/consolidation'
 
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
-
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
   const { searchParams } = new URL(req.url)
   const groupId = searchParams.get('groupId')
   const status = searchParams.get('status')
@@ -18,7 +12,7 @@ export async function GET(req: Request) {
   if (groupId) where.groupId = groupId
   if (status) where.status = status
 
-  const txns = await storeDb(storeId).interCompanyTransaction.findMany({
+  const txns = await storeDb(admin.storeId).interCompanyTransaction.findMany({
     where,
     include: {
       fromStore: { select: { id: true, name: true } },
@@ -28,20 +22,15 @@ export async function GET(req: Request) {
     take: 100,
   })
   return NextResponse.json({ transactions: txns })
-}
+}, 'accounting')
 
-export async function POST(req: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
-
+export const POST = withAdmin(async (req: NextRequest, { admin }) => {
   const body = await req.json()
   if (!body.groupId || !body.fromStoreId || !body.toStoreId || !body.amount || !body.description) {
     return NextResponse.json({ error: 'groupId, fromStoreId, toStoreId, amount, description required' }, { status: 400 })
   }
 
-  const group = await storeDb(storeId).group.findFirst({ where: { id: body.groupId } })
+  const group = await storeDb(admin.storeId).group.findFirst({ where: { id: body.groupId } })
   if (!group) return NextResponse.json({ error: 'Group not found' }, { status: 404 })
 
   const txn = await recordInterCompanyTxn({
@@ -58,4 +47,4 @@ export async function POST(req: Request) {
   })
 
   return NextResponse.json({ transaction: txn })
-}
+}, 'accounting')

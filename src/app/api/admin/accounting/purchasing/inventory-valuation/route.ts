@@ -1,14 +1,8 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { withAdmin } from '@/lib/admin-permissions'
 import { getInventoryValuationDetail } from '@/lib/purchasing'
 
-export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const storeId = session.user.storeId
-  if (!storeId) return NextResponse.json({ error: 'No store' }, { status: 400 })
-
-  const valuation = await getInventoryValuationDetail(storeId)
+export const GET = withAdmin(async (req: NextRequest, { admin }) => {
+  const valuation = await getInventoryValuationDetail(admin.storeId)
   return NextResponse.json({ valuation })
-}
+}, 'accounting')
