@@ -61,25 +61,34 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   }
   const updated = await sdb.shift.findFirst({ where: { id: shiftId } }) as any
 
-  // Auto-accounting: create summary journal entries for this shift
+  // Auto-accounting: per-order sale entries are posted at checkout; only backfill
+  // legacy shifts where no order has a sale entry yet
   try {
+    const orderIds = orders.map(o => o.id)
+    if (orderIds.length > 0) {
+      const saleEntries = await sdb.journalEntry.findMany({
+        where: { type: 'sale', orderId: { in: orderIds } },
+        select: { orderId: true },
+      })
+      if (saleEntries.length < orderIds.length) {
         const salesLines: { accountCode: string; debit?: number; credit?: number }[] = []
-        let totalDebit = 0
         for (const [method, total] of Object.entries({ cash: totals.totalCash, card: totals.totalCard, bank_transfer: totals.totalBankTransfer, instapay: totals.totalInstapay, wallet: totals.totalWallet }) as [string, number][]) {
           if (total > 0) {
             salesLines.push({ accountCode: getAssetAccount(method), debit: total })
-            totalDebit += total
           }
         }
         if (totals.totalSales > 0) {
           salesLines.push({ accountCode: ACCOUNTS.salesRevenue, credit: totals.totalSales })
-      await createJournalEntry({
-        date: new Date(),
-        description: `Shift close #${shiftId.slice(0, 8)} — Sales`,
-        reference: shiftId,
-        type: 'sale',
-        lines: salesLines,
-      })
+          await createJournalEntry({
+            date: new Date(),
+            description: `Shift close #${shiftId.slice(0, 8)} — Sales`,
+            reference: shiftId,
+            type: 'sale',
+            storeId: admin.storeId,
+            lines: salesLines,
+          })
+        }
+      }
     }
     if (totalExpenses > 0) {
       await createJournalEntry({
@@ -87,11 +96,33 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
         description: `Shift close #${shiftId.slice(0, 8)} — Expenses`,
         reference: shiftId,
         type: 'expense',
+        storeId: admin.storeId,
         lines: [
           { accountCode: ACCOUNTS.expenses.other, debit: totalExpenses },
           { accountCode: ACCOUNTS.cash, credit: totalExpenses },
         ],
       })
+    }
+    const cogsTotal = await sdb.orderItem
+      .aggregate({ where: { orderId: { in: orderIds } }, _sum: { actualCost: true } })
+      .then(r => r._sum.actualCost || 0)
+    if (cogsTotal > 0) {
+      const existingCogs = await sdb.journalEntry.findFirst({
+        where: { reference: `shift:${shiftId}:cogs`, type: 'cogs' },
+      })
+      if (!existingCogs) {
+        await createJournalEntry({
+          date: new Date(),
+          description: `Shift close #${shiftId.slice(0, 8)} — COGS`,
+          reference: `shift:${shiftId}:cogs`,
+          type: 'cogs',
+          storeId: admin.storeId,
+          lines: [
+            { accountCode: ACCOUNTS.cogs, debit: cogsTotal },
+            { accountCode: ACCOUNTS.inventory, credit: cogsTotal },
+          ],
+        })
+      }
     }
   } catch (e) {
     console.error('Shift auto-accounting failed (non-fatal):', e)

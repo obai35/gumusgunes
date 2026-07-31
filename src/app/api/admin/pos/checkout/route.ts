@@ -2,6 +2,7 @@
 import { storeDb } from '@/lib/store-scoped'
 import { withPosOrAdmin } from '@/lib/pos-or-admin'
 import { VALID_PAYMENT_METHODS, generateReceiptNumber, generateOrderNumber } from '@/lib/pos-utils'
+import { createSaleJournalEntry, createRefundJournalEntry } from '@/lib/accounting'
 
 export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
@@ -213,6 +214,27 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
       where: { id: order.id },
       include: { items: { include: { product: { select: { name: true, sku: true } } } } },
     })
+
+    try {
+      const existingSaleEntry = await sdb.journalEntry.findFirst({
+        where: { orderId: order.id, type: 'sale' },
+      })
+      if (!existingSaleEntry) {
+        await createSaleJournalEntry({
+          id: order.id,
+          totalAmount: order.totalAmount,
+          cashAmount: order.cashAmount,
+          cardAmount: order.cardAmount,
+          paymentMethod,
+          createdAt: order.createdAt,
+          tax: computedTax,
+          storeId: admin.storeId,
+        })
+      }
+    } catch (e) {
+      console.error('Failed to create POS sale journal entry (non-fatal):', e)
+    }
+
     return NextResponse.json({ orderId: fullOrder!.id, total: fullOrder!.totalAmount, order: fullOrder })
   } catch (err) {
     const message = err instanceof Error ? err.message : ''
@@ -347,6 +369,30 @@ export const PUT = withPosOrAdmin(async (req: Request, { admin }) => {
         },
       })
     })
+
+    try {
+      const refundMethodNorm = refundMethod || order.paymentMethod
+      if (refundMethodNorm !== 'no_refund' && refundMethodNorm !== 'store_credit') {
+        const existingRefundEntry = await sdb.journalEntry.findFirst({
+          where: { reference: returnRecord.id, type: 'refund' },
+        })
+        if (!existingRefundEntry) {
+          await createRefundJournalEntry({
+            id: returnRecord.id,
+            refundedAmount: totalRefund,
+            totalAmount: order.totalAmount,
+            paymentMethod: refundMethodNorm,
+            createdAt: returnRecord.createdAt,
+            tax: order.tax,
+            refundedCashAmount: refundMethodNorm === 'split' && cashRefundAmount !== undefined ? cashRefundAmount : undefined,
+            refundedCardAmount: refundMethodNorm === 'split' && cardRefundAmount !== undefined ? cardRefundAmount : undefined,
+            storeId: admin.storeId,
+          })
+        }
+      }
+    } catch (e) {
+      console.error('Failed to create POS refund journal entry (non-fatal):', e)
+    }
 
     return NextResponse.json({
       ok: true,

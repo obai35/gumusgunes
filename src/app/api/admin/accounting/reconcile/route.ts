@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { withAdmin, AdminInfo } from '@/lib/admin-permissions'
-import { createReconciliationJournalEntry } from '@/lib/accounting'
+import { createReconciliationJournalEntry, ACCOUNTS } from '@/lib/accounting'
 import { storeDb } from '@/lib/store-scoped'
 
 export const POST = withAdmin(async (req: Request, { admin }: { params: any; admin: AdminInfo }) => {
@@ -29,18 +29,35 @@ export const POST = withAdmin(async (req: Request, { admin }: { params: any; adm
       return NextResponse.json({ ok: true, alreadyReconciled: true })
     }
 
-    const entry = await createReconciliationJournalEntry({
-      id: order.id,
-      totalAmount: order.totalAmount,
-      createdAt: order.createdAt,
-    })
+    if (order.paymentMethod === 'cod') {
+      const entry = await createReconciliationJournalEntry({
+        id: order.id,
+        totalAmount: order.totalAmount,
+        createdAt: order.createdAt,
+        debitAccountCode: ACCOUNTS.cash,
+        storeId: admin.storeId,
+      })
+      await sdb.order.update({
+        where: { id: orderId },
+        data: { reconciledAt: new Date() },
+      })
+      return NextResponse.json({ ok: true, entry })
+    }
+
+    if (order.paymentMethod === 'bank_transfer') {
+      await sdb.order.update({
+        where: { id: orderId },
+        data: { reconciledAt: new Date() },
+      })
+      return NextResponse.json({ ok: true, alreadyBooked: true })
+    }
 
     await sdb.order.update({
       where: { id: orderId },
       data: { reconciledAt: new Date() },
     })
 
-    return NextResponse.json({ ok: true, entry })
+    return NextResponse.json({ ok: true, alreadyBooked: true })
   } catch (e) {
     console.error('Reconciliation error:', e)
     return NextResponse.json({ error: 'Failed' }, { status: 500 })

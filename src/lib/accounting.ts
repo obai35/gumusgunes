@@ -194,6 +194,7 @@ export async function createSaleJournalEntry(order: {
   tax?: number
   currency?: string
   exchangeRate?: number
+  storeId?: string
 }) {
   const creditLines: { accountCode: string; credit: number }[] = []
   const taxAmount = order.tax ?? 0
@@ -224,6 +225,7 @@ export async function createSaleJournalEntry(order: {
       reference: order.id,
       type: 'sale',
       orderId: order.id,
+      storeId: order.storeId,
       currency: order.currency,
       exchangeRate: order.exchangeRate,
       lines,
@@ -240,6 +242,7 @@ export async function createSaleJournalEntry(order: {
     reference: order.id,
     type: 'sale',
     orderId: order.id,
+    storeId: order.storeId,
     currency: order.currency,
     exchangeRate: order.exchangeRate,
     lines,
@@ -253,8 +256,10 @@ export async function createRefundJournalEntry(order: {
   paymentMethod: string
   createdAt: Date
   tax?: number
+  refundedCashAmount?: number
+  refundedCardAmount?: number
+  storeId?: string
 }) {
-  const creditAccount = getDebitAccount(order.paymentMethod)
   const taxAmount = order.tax ?? 0
   const totalAmt = order.totalAmount ?? order.refundedAmount
   const taxRate = totalAmt > 0 ? taxAmount / totalAmt : 0
@@ -263,17 +268,40 @@ export async function createRefundJournalEntry(order: {
 
   const lines: { accountCode: string; debit?: number; credit?: number }[] = [
     { accountCode: ACCOUNTS.salesReturns, debit: refundNet },
-    { accountCode: creditAccount, credit: order.refundedAmount },
   ]
   if (refundTax > 0) {
     lines.push({ accountCode: ACCOUNTS.taxPayable, debit: refundTax })
   }
+
+  if (order.paymentMethod === 'split') {
+    const refundedCash = order.refundedCashAmount ?? 0
+    const refundedCard = order.refundedCardAmount ?? 0
+    if (refundedCash <= 0 && refundedCard <= 0) {
+      throw new AccountingError(
+        'Split refund must specify refundedCashAmount or refundedCardAmount',
+        'INVALID_AMOUNT'
+      )
+    }
+    if (Math.abs(refundedCash + refundedCard - order.refundedAmount) > 0.01) {
+      throw new AccountingError(
+        `Split refund amounts (${refundedCash + refundedCard}) do not match refunded amount (${order.refundedAmount})`,
+        'INVALID_AMOUNT'
+      )
+    }
+    if (refundedCash > 0) lines.push({ accountCode: ACCOUNTS.cash, credit: refundedCash })
+    if (refundedCard > 0) lines.push({ accountCode: ACCOUNTS.bank, credit: refundedCard })
+  } else {
+    const creditAccount = getDebitAccount(order.paymentMethod)
+    lines.push({ accountCode: creditAccount, credit: order.refundedAmount })
+  }
+
   return createJournalEntry({
     date: order.createdAt,
     description: `Refund for #${order.id.slice(0, 8)}`,
     reference: order.id,
     type: 'refund',
     orderId: order.id,
+    storeId: order.storeId,
     lines,
   })
 }
@@ -305,6 +333,8 @@ export async function createReconciliationJournalEntry(order: {
   id: string
   totalAmount: number
   createdAt: Date
+  debitAccountCode?: string
+  storeId?: string
 }) {
   return createJournalEntry({
     date: new Date(),
@@ -312,8 +342,9 @@ export async function createReconciliationJournalEntry(order: {
     reference: order.id,
     type: 'reconciliation',
     orderId: order.id,
+    storeId: order.storeId,
     lines: [
-      { accountCode: ACCOUNTS.bank, debit: order.totalAmount },
+      { accountCode: order.debitAccountCode ?? ACCOUNTS.bank, debit: order.totalAmount },
       { accountCode: ACCOUNTS.ar, credit: order.totalAmount },
     ],
   })

@@ -75,23 +75,31 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
     if (result.autoClosed) {
       try {
         const closed = result.autoClosed
-        const salesLines: { accountCode: string; debit?: number; credit?: number }[] = []
-        let totalDebit = 0
-        for (const [method, total] of Object.entries({ cash: closed.totalCash, card: closed.totalCard, bank_transfer: closed.totalBankTransfer, instapay: closed.totalInstapay, wallet: closed.totalWallet }) as [string, number][]) {
-          if (total > 0) {
-            salesLines.push({ accountCode: getAssetAccount(method), debit: total })
-            totalDebit += total
-          }
-        }
-        if (closed.totalSales > 0) {
-          salesLines.push({ accountCode: ACCOUNTS.salesRevenue, credit: closed.totalSales })
-          await createJournalEntry({
-            date: new Date(),
-            description: `Shift close #${closed.id.slice(0, 8)} — Sales`,
-            reference: closed.id,
-            type: 'sale',
-            lines: salesLines,
+        const closedOrders = await sdb.order.findMany({ where: { shiftId: closed.id, status: { not: 'cancelled' } }, select: { id: true } })
+        if (closedOrders.length > 0) {
+          const saleEntries = await sdb.journalEntry.findMany({
+            where: { type: 'sale', orderId: { in: closedOrders.map(o => o.id) } },
+            select: { orderId: true },
           })
+          if (saleEntries.length < closedOrders.length) {
+            const salesLines: { accountCode: string; debit?: number; credit?: number }[] = []
+            for (const [method, total] of Object.entries({ cash: closed.totalCash, card: closed.totalCard, bank_transfer: closed.totalBankTransfer, instapay: closed.totalInstapay, wallet: closed.totalWallet }) as [string, number][]) {
+              if (total > 0) {
+                salesLines.push({ accountCode: getAssetAccount(method), debit: total })
+              }
+            }
+            if (closed.totalSales > 0) {
+              salesLines.push({ accountCode: ACCOUNTS.salesRevenue, credit: closed.totalSales })
+              await createJournalEntry({
+                date: new Date(),
+                description: `Shift close #${closed.id.slice(0, 8)} — Sales`,
+                reference: closed.id,
+                type: 'sale',
+                storeId: admin.storeId,
+                lines: salesLines,
+              })
+            }
+          }
         }
         const totalExpenses = await sdb.expense.aggregate({ where: { shiftId: closed.id }, _sum: { amount: true } }).then(r => r._sum.amount || 0)
         if (totalExpenses > 0) {
@@ -100,6 +108,7 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
             description: `Shift close #${closed.id.slice(0, 8)} — Expenses`,
             reference: closed.id,
             type: 'expense',
+            storeId: admin.storeId,
             lines: [
               { accountCode: ACCOUNTS.expenses.other, debit: totalExpenses },
               { accountCode: ACCOUNTS.cash, credit: totalExpenses },

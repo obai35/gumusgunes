@@ -6,6 +6,7 @@ import {
   createSaleJournalEntry,
   createReconciliationJournalEntry,
   AccountingError,
+  ACCOUNTS,
 } from '@/lib/accounting'
 import { logAudit } from '@/lib/audit'
 
@@ -24,18 +25,31 @@ export const POST = withAdmin(async (req: Request, { params, admin }: { params: 
       cardAmount: order.cardAmount,
       createdAt: order.createdAt,
       tax: order.tax,
+      storeId: admin.storeId,
     }
+    const existingSaleEntry = await sdb.journalEntry.findFirst({
+      where: { orderId: order.id, type: 'sale' },
+    })
+
     if (order.paymentMethod === 'bank_transfer') {
-      await createSaleJournalEntry(saleEntryArgs)
+      if (!existingSaleEntry) {
+        await createSaleJournalEntry(saleEntryArgs)
+      }
     } else if (order.paymentMethod === 'cod') {
-      await createSaleJournalEntry(saleEntryArgs)
+      if (!existingSaleEntry) {
+        await createSaleJournalEntry(saleEntryArgs)
+      }
       await createReconciliationJournalEntry({
         id: order.id,
         totalAmount: order.totalAmount,
         createdAt: order.createdAt,
+        debitAccountCode: ACCOUNTS.cash,
+        storeId: admin.storeId,
       })
     } else {
-      await createSaleJournalEntry(saleEntryArgs)
+      if (!existingSaleEntry) {
+        await createSaleJournalEntry(saleEntryArgs)
+      }
     }
 
     const updated = await sdb.order.update({
