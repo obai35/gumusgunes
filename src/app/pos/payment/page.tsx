@@ -1,7 +1,7 @@
 'use client'
 
 import { posFetch } from '@/lib/pos-client-fetch'
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowLeft, Receipt, ShoppingCart } from 'lucide-react'
@@ -64,6 +64,7 @@ export default function POSPaymentPage() {
   const offlineMode = usePosStore((s) => s.offlineMode)
   const offlineReceipt = usePosStore((s) => s.offlineReceipt)
   const setOfflineReceipt = usePosStore((s) => s.setOfflineReceipt)
+  const saleIdRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (hydrated && token && posHydrated && pos.cart.length === 0 && !pos.receipt && !offlineReceipt) {
@@ -128,9 +129,10 @@ export default function POSPaymentPage() {
   , [pos.cart.length, pos.checkoutLoading, pos.paymentMethod, pos.parsedCash, pos.parsedCard, pos.total])
 
   const handleCheckout = useCallback(async () => {
-    if (pos.cart.length === 0) return
+    if (pos.cart.length === 0 || pos.checkoutLoading) return
     const validationError = validatePayment()
     if (validationError) { toast.error(validationError); return }
+    if (!saleIdRef.current) saleIdRef.current = `sale_${crypto.randomUUID()}`
     pos.setCheckoutLoading(true)
     try {
       const items = pos.cart.map((i) => ({ productId: i.productId, quantity: i.quantity, discount: i.discount }))
@@ -142,6 +144,7 @@ export default function POSPaymentPage() {
         notes: pos.orderNotes || undefined,
         taxRate: pos.taxRate,
         taxAmount: pos.taxAmount,
+        idempotencyKey: saleIdRef.current,
       }
       if (pos.customer) {
         body.customerId = pos.customer.id
@@ -191,6 +194,7 @@ export default function POSPaymentPage() {
           taxAmount: pos.taxAmount,
         })
         toast.success(`Order saved as ${tempReceiptNumber}`)
+        saleIdRef.current = null
         pos.setCheckoutLoading(false)
         return
       }
@@ -198,6 +202,7 @@ export default function POSPaymentPage() {
       if (typeof navigator !== 'undefined' && !navigator.onLine) {
         await queueOrder(body)
         toast.success('Order queued for sync when back online')
+        saleIdRef.current = null
         pos.setCheckoutLoading(false)
         return
       }
@@ -218,6 +223,7 @@ export default function POSPaymentPage() {
           taxRate: pos.taxRate,
           taxAmount: data.order?.tax ?? pos.taxAmount,
         })
+        saleIdRef.current = null
         toast.success('Order completed!')
       } else {
         const err = await res.json()
@@ -229,6 +235,7 @@ export default function POSPaymentPage() {
 
   const handleNewSale = useCallback(() => {
     setOfflineReceipt(null)
+    saleIdRef.current = null
     pos.newSale()
     router.push('/pos')
   }, [pos, router])

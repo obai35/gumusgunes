@@ -5,11 +5,16 @@ import { VALID_PAYMENT_METHODS, generateReceiptNumber, generateOrderNumber } fro
 
 export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
   const sdb = storeDb(admin.storeId)
+  let idempotencyKey: string | undefined
   try {
-    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes, taxRate } = await req.json()
+    const { items, discountCode, paymentMethod, cashAmount, cardAmount, shiftId, customerId, customerName, customerEmail, customerPhone, notes, taxRate, idempotencyKey: rawKey } = await req.json()
+    if (rawKey !== undefined) idempotencyKey = typeof rawKey === 'string' ? rawKey : ''
     if (!items?.length) return NextResponse.json({ error: 'Cart is empty' }, { status: 400 })
     if (!paymentMethod || !VALID_PAYMENT_METHODS.includes(paymentMethod)) {
       return NextResponse.json({ error: 'Valid payment method is required' }, { status: 400 })
+    }
+    if (idempotencyKey !== undefined && (typeof idempotencyKey !== 'string' || idempotencyKey.length === 0 || idempotencyKey.length > 200)) {
+      return NextResponse.json({ error: 'Invalid idempotency key' }, { status: 400 })
     }
     const validatedTaxRate = Number(taxRate) || 0
     if (!Number.isFinite(validatedTaxRate) || validatedTaxRate < 0 || validatedTaxRate > 100) {
@@ -24,6 +29,17 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
       return NextResponse.json({ error: 'Shift does not belong to this branch' }, { status: 403 })
     }
     const branchId = shift.branchId
+
+    if (idempotencyKey) {
+      const existing = await sdb.order.findUnique({ where: { idempotencyKey } })
+      if (existing) {
+        const existingOrder = await sdb.order.findFirst({
+          where: { id: existing.id },
+          include: { items: { include: { product: { select: { name: true, sku: true } } } } },
+        })
+        return NextResponse.json({ orderId: existingOrder!.id, total: existingOrder!.totalAmount, order: existingOrder, duplicated: true })
+      }
+    }
 
     const validatedItems = items.map((item: any) => {
       if (typeof item.productId !== 'string' || !item.productId) return null
@@ -177,6 +193,7 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
           cardAmount: paymentMethod === 'split' ? (cardAmount || 0) : (paymentMethod === 'card' ? total : null),
           notes: notes || null,
           paymentStatus: 'paid',
+          idempotencyKey: idempotencyKey || undefined,
             items: {
             create: validatedItems.map((item: any) => {
               const product = productMap.get(item.productId)!
@@ -199,6 +216,16 @@ export const POST = withPosOrAdmin(async (req: Request, { admin }) => {
     return NextResponse.json({ orderId: fullOrder!.id, total: fullOrder!.totalAmount, order: fullOrder })
   } catch (err) {
     const message = err instanceof Error ? err.message : ''
+    if ((err as any)?.code === 'P2002' && idempotencyKey) {
+      const existing = await sdb.order.findUnique({ where: { idempotencyKey } })
+      if (existing) {
+        const existingOrder = await sdb.order.findFirst({
+          where: { id: existing.id },
+          include: { items: { include: { product: { select: { name: true, sku: true } } } } },
+        })
+        return NextResponse.json({ orderId: existingOrder!.id, total: existingOrder!.totalAmount, order: existingOrder, duplicated: true })
+      }
+    }
     if (message.startsWith('Insufficient stock') || message === 'Discount code usage limit reached') {
       return NextResponse.json({ error: message }, { status: 400 })
     }
