@@ -85,6 +85,11 @@ export default function POSPage() {
   const offlineMode = usePosStore((s) => s.offlineMode)
   const setOfflineMode = usePosStore((s) => s.setOfflineMode)
   const setOfflineReceipt = usePosStore((s) => s.setOfflineReceipt)
+  const search = usePosStore((s) => s.search)
+  const setProductPage = usePosStore((s) => s.setProductPage)
+  const setLoadingProducts = usePosStore((s) => s.setLoadingProducts)
+  const addToCart = usePosStore((s) => s.addToCart)
+  const setSearch = usePosStore((s) => s.setSearch)
 
   useEffect(() => {
     if (hydrated && token && user?.branchId) {
@@ -118,7 +123,7 @@ export default function POSPage() {
   const fetchProducts = useCallback(async (pageNum: number, append: boolean) => {
     const store = usePosStore.getState()
     if (store.isLoadingProducts) return
-    pos.setLoadingProducts(true)
+    setLoadingProducts(true)
     try {
       const params = new URLSearchParams({ search: store.search, page: String(pageNum) })
       const branchId = user?.branchId || usePosAuth.getState().user?.branchId
@@ -128,34 +133,34 @@ export default function POSPage() {
       if (res.ok) {
         const data = await res.json()
         if (data.ok) {
-          pos.setProductPage(data.items, data.total, data.page, data.totalPages, append)
+          setProductPage(data.items, data.total, data.page, data.totalPages, append)
           if (pageNum === 1) cacheProducts(data.items)
         }
       } else if (!offlineMode) {
         const cached = await getCachedProducts()
-        if (cached.length > 0 && !append) pos.setProductPage(cached, cached.length, 1, 1)
+        if (cached.length > 0 && !append) setProductPage(cached, cached.length, 1, 1)
       }
     } catch {
       if (!offlineMode) {
         const cached = await getCachedProducts()
-        if (cached.length > 0 && !append) pos.setProductPage(cached, cached.length, 1, 1)
+        if (cached.length > 0 && !append) setProductPage(cached, cached.length, 1, 1)
       }
     }
-    pos.setLoadingProducts(false)
-  }, [user?.branchId, selectedCategoryId, offlineMode, pos])
+    setLoadingProducts(false)
+  }, [user?.branchId, selectedCategoryId, offlineMode, setProductPage, setLoadingProducts])
 
   useEffect(() => {
     if (offlineMode) {
       getCachedProducts().then(cached => {
-        if (cached.length > 0) pos.setProductPage(cached, cached.length, 1, 1)
+        if (cached.length > 0) setProductPage(cached, cached.length, 1, 1)
       })
       return
     }
     const timer = setTimeout(() => {
       fetchProducts(1, false)
-    }, pos.search.length < 1 && !selectedCategoryId ? 0 : 300)
+    }, search.length < 1 && !selectedCategoryId ? 0 : 300)
     return () => clearTimeout(timer)
-  }, [pos.search, user?.branchId, selectedCategoryId, offlineMode, fetchProducts, pos])
+  }, [search, user?.branchId, selectedCategoryId, offlineMode, fetchProducts, setProductPage])
 
   const loadMore = useCallback(() => {
     const store = usePosStore.getState()
@@ -215,12 +220,12 @@ export default function POSPage() {
     setCustomPriceName('')
     setCustomPriceAmount('')
     toast.success(`Added ${name}`)
-  }, [customPriceName, customPriceAmount, pos])
+  }, [customPriceName, customPriceAmount, addToCart])
 
   const handleCategoryChange = useCallback((id: string | null) => {
     setSelectedCategoryId(id)
-    if (id) pos.setSearch('')
-  }, [pos])
+    if (id) setSearch('')
+  }, [setSearch])
 
   useEffect(() => {
     if (showCustomPrice) customPriceRef.current?.querySelector('input')?.focus()
