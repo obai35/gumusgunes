@@ -7,6 +7,7 @@ import { DataTable } from '@/components/admin/DataTable'
 import { PageHeader } from '@/components/admin/PageHeader'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Switch } from '@/components/ui/switch'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type FeatureFlag = {
   id: string
@@ -19,6 +20,7 @@ type FeatureFlag = {
 }
 
 export default function AdminFeatureFlags() {
+  const { ta } = useAdminTranslate()
   const [flags, setFlags] = useState<FeatureFlag[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -35,7 +37,7 @@ export default function AdminFeatureFlags() {
       const data = await res.json()
       setFlags(data.flags || [])
     } catch {
-      toast.error('Failed to load feature flags')
+      toast.error(ta('Failed to load feature flags'))
     } finally {
       setLoading(false)
     }
@@ -49,10 +51,10 @@ export default function AdminFeatureFlags() {
         body: JSON.stringify({ enabled: !flag.enabled }),
       })
       if (!res.ok) throw new Error()
-      toast.success(`${flag.name} ${flag.enabled ? 'disabled' : 'enabled'}`)
+      toast.success(`${flag.name} ${flag.enabled ? ta('disabled') : ta('enabled')}`)
       fetchFlags()
     } catch {
-      toast.error('Failed to toggle flag')
+      toast.error(ta('Failed to toggle flag'))
     }
   }
 
@@ -65,7 +67,7 @@ export default function AdminFeatureFlags() {
           body: JSON.stringify(form),
         })
         if (!res.ok) throw new Error()
-        toast.success('Feature flag updated')
+        toast.success(ta('Feature flag updated'))
       } else {
         const res = await fetch('/api/admin/system/feature-flags', {
           method: 'POST',
@@ -74,28 +76,28 @@ export default function AdminFeatureFlags() {
         })
         if (!res.ok) {
           const err = await res.json()
-          throw new Error(err.error || 'Failed to create')
+          throw new Error(err.error || ta('Failed to create'))
         }
-        toast.success('Feature flag created')
+        toast.success(ta('Feature flag created'))
       }
       setShowModal(false)
       setEditing(null)
       setForm({ key: '', name: '', description: '' })
       fetchFlags()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save')
+      toast.error(err.message || ta('Failed to save'))
     }
   }
 
   async function deleteFlag(flag: FeatureFlag) {
-    if (!confirm(`Delete "${flag.name}"? This cannot be undone.`)) return
+    if (!confirm(ta(`Delete "${flag.name}"? This cannot be undone.`))) return
     try {
       const res = await fetch(`/api/admin/system/feature-flags/${flag.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
-      toast.success('Feature flag deleted')
+      toast.success(ta('Feature flag deleted'))
       fetchFlags()
     } catch {
-      toast.error('Failed to delete')
+      toast.error(ta('Failed to delete'))
     }
   }
 
@@ -114,29 +116,29 @@ export default function AdminFeatureFlags() {
   const columns: ColumnDef<FeatureFlag>[] = [
     {
       accessorKey: 'key',
-      header: 'Key',
+      header: ta('Key'),
       cell: ({ row }) => (
         <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">{row.original.key}</span>
       ),
     },
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => <span className="font-medium text-navy">{row.original.name}</span>,
     },
     {
       accessorKey: 'description',
-      header: 'Description',
+      header: ta('Description'),
       cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.description || '—'}</span>,
     },
     {
       accessorKey: 'enabled',
-      header: 'Status',
+      header: ta('Status'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Switch checked={row.original.enabled} onCheckedChange={() => toggleFlag(row.original)} />
           <span className={`text-xs font-medium ${row.original.enabled ? 'text-green-600' : 'text-gray-400'}`}>
-            {row.original.enabled ? 'ON' : 'OFF'}
+            {row.original.enabled ? ta('ON') : ta('OFF')}
           </span>
         </div>
       ),
@@ -160,14 +162,14 @@ export default function AdminFeatureFlags() {
   return (
     <div>
       <PageHeader
-        title="Feature Flags"
-        subtitle="Toggle features on/off without deployment"
+        title={ta('Feature Flags')}
+        subtitle={ta('Toggle features on/off without deployment')}
         actions={
           <button
             onClick={openCreate}
             className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors"
           >
-            <Plus className="h-4 w-4" /> New Flag
+            <Plus className="h-4 w-4" /> {ta('New Flag')}
           </button>
         }
       />
@@ -177,44 +179,44 @@ export default function AdminFeatureFlags() {
         data={flags}
         keyExtractor={(f) => f.id}
         loading={loading}
-        emptyTitle="No feature flags"
-        emptyDescription="Create your first feature flag to get started"
-        emptyAction={{ label: 'Create Flag', onClick: openCreate }}
+        emptyTitle={ta('No feature flags')}
+        emptyDescription={ta('Create your first feature flag to get started')}
+        emptyAction={{ label: ta('Create Flag'), onClick: openCreate }}
       />
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 mx-4" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-navy mb-4">{editing ? 'Edit Flag' : 'New Feature Flag'}</h2>
+            <h2 className="text-lg font-semibold text-navy mb-4">{editing ? ta('Edit Flag') : ta('New Feature Flag')}</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Key</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Key')}</label>
                 <input
                   type="text"
                   value={form.key}
                   onChange={e => setForm(f => ({ ...f, key: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-border text-sm"
-                  placeholder="e.g. new_checkout_flow"
+                  placeholder={ta('e.g. new_checkout_flow')}
                   disabled={!!editing}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Name')}</label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-border text-sm"
-                  placeholder="e.g. New Checkout Flow"
+                  placeholder={ta('e.g. New Checkout Flow')}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Description')}</label>
                 <textarea
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-border text-sm min-h-[80px]"
-                  placeholder="Optional description..."
+                  placeholder={ta('Optional description...')}
                 />
               </div>
             </div>
@@ -223,14 +225,14 @@ export default function AdminFeatureFlags() {
                 onClick={() => { setShowModal(false); setEditing(null) }}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
               >
-                Cancel
+                {ta('Cancel')}
               </button>
               <button
                 onClick={saveFlag}
                 disabled={!form.key || !form.name}
                 className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors"
               >
-                {editing ? 'Update' : 'Create'}
+                {editing ? ta('Update') : ta('Create')}
               </button>
             </div>
           </div>

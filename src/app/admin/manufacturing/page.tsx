@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import {
   Plus, Play, CheckCircle, XCircle, Package, Wrench, DollarSign, TrendingDown,
   AlertCircle, Search, Settings2, GanttChartSquare, ClipboardList, Factory, Timer,
@@ -15,12 +16,13 @@ import { formatCurrency } from '../accounting/format'
 type Tab = 'dashboard' | 'orders' | 'routings' | 'work-centers' | 'boms'
 
 export default function ManufacturingPage() {
+  const { ta } = useAdminTranslate()
   const [tab, setTab] = useState<Tab>('dashboard')
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Manufacturing</h1>
+        <h1 className="text-2xl font-bold">{ta('Manufacturing')}</h1>
       </div>
 
       <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit overflow-x-auto">
@@ -33,7 +35,7 @@ export default function ManufacturingPage() {
         ] as [Tab, string, any][]).map(([key, label, Icon]) => (
           <button key={key} onClick={() => setTab(key)}
             className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${tab === key ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>
-            <Icon className="h-3.5 w-3.5" /> {label}
+            <Icon className="h-3.5 w-3.5" /> {ta(label)}
           </button>
         ))}
       </div>
@@ -48,6 +50,7 @@ export default function ManufacturingPage() {
 }
 
 function DashboardView() {
+  const { ta, fmtNum } = useAdminTranslate()
   const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -82,12 +85,12 @@ function DashboardView() {
   if (!stats) return <p className="text-muted-foreground text-sm">Failed to load dashboard</p>
 
   const cards = [
-    { label: 'Active Orders', value: stats.activeOrders, icon: Play, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Completed', value: stats.completedOrders, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: 'Routings', value: stats.totalRoutings, icon: GanttChartSquare, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: 'Work Centers', value: stats.totalWorkCenters, icon: Wrench, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Total MFG Cost', value: formatCurrency(stats.totalCost), icon: DollarSign, color: 'text-rose-600', bg: 'bg-rose-50' },
-    { label: 'Avg Margin', value: `${stats.avgMargin.toFixed(1)}%`, icon: TrendingDown, color: 'text-teal-600', bg: 'bg-teal-50' },
+    { label: ta('Active Orders'), value: fmtNum(stats.activeOrders), sub: ta('Orders in progress'), icon: ClipboardList, color: 'text-blue-600 bg-blue-100' },
+    { label: ta('Completed'), value: fmtNum(stats.completedOrders), sub: ta('All time'), icon: CheckCircle2, color: 'text-green-600 bg-green-100' },
+    { label: ta('Routings'), value: fmtNum(stats.totalRoutings), sub: ta('Production sequences'), icon: GanttChartSquare, color: 'text-purple-600 bg-purple-100' },
+    { label: ta('Work Centers'), value: fmtNum(stats.totalWorkCenters), sub: ta('Machines & stations'), icon: Wrench, color: 'text-orange-600 bg-orange-100' },
+    { label: ta('Total MFG Cost'), value: formatCurrency(stats.totalCost), sub: ta('All time'), icon: DollarSign, color: 'text-red-600 bg-red-100' },
+    { label: ta('Avg Margin'), value: `${fmtNum(stats.avgMargin, 1)}%`, sub: ta('Per completed order'), icon: TrendingUp, color: 'text-teal-600 bg-teal-100' },
   ]
 
   return (
@@ -136,6 +139,7 @@ function DashboardView() {
 }
 
 function ProductionOrdersView() {
+  const { ta, fmtNum } = useAdminTranslate()
   const [orders, setOrders] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [workCenters, setWorkCenters] = useState<any[]>([])
@@ -344,6 +348,7 @@ function ProductionOrdersView() {
 }
 
 function RoutingsView() {
+  const { ta, fmtNum } = useAdminTranslate()
   const [items, setItems] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -429,6 +434,7 @@ function RoutingsView() {
 }
 
 function RoutingDetail({ routing }: { routing: any }) {
+  const { ta, fmtNum } = useAdminTranslate()
   const [steps, setSteps] = useState<any[]>(routing.steps || [])
   const [workCenters, setWorkCenters] = useState<any[]>([])
   const [showStepForm, setShowStepForm] = useState(false)
@@ -512,6 +518,7 @@ function RoutingDetail({ routing }: { routing: any }) {
 }
 
 function WorkCentersView() {
+  const { ta } = useAdminTranslate()
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -579,6 +586,7 @@ function WorkCentersView() {
 }
 
 function BomsView() {
+  const { ta, fmtNum } = useAdminTranslate()
   const [items, setItems] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

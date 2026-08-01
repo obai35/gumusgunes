@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { BarChart3, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ExportButton } from '@/components/admin/ExportButton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
 } from 'recharts'
@@ -26,6 +27,7 @@ const DIMENSIONS = [
 ]
 
 export default function CustomReportBuilder() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>(['revenue', 'orders'])
   const [dimension, setDimension] = useState('date')
   const [from, setFrom] = useState(() => {
@@ -45,7 +47,7 @@ export default function CustomReportBuilder() {
 
   async function generateReport() {
     if (selectedMetrics.length === 0) {
-      toast.error('Select at least one metric')
+      toast.error(ta('Select at least one metric'))
       return
     }
     setLoading(true)
@@ -59,7 +61,7 @@ export default function CustomReportBuilder() {
       const d = await res.json()
       setData(d)
     } catch {
-      toast.error('Failed to generate report')
+      toast.error(ta('Failed to generate report'))
     } finally {
       setLoading(false)
     }
@@ -73,11 +75,11 @@ export default function CustomReportBuilder() {
       <div className="bg-white rounded-xl border border-border p-5 space-y-4">
         <h2 className="text-sm font-semibold text-navy flex items-center gap-2">
           <BarChart3 className="h-4 w-4" />
-          Report Configuration
+          {ta('Report Configuration')}
         </h2>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-2">Metrics</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-2">{ta('Metrics')}</label>
           <div className="flex flex-wrap gap-2">
             {METRICS.map(m => (
               <button
@@ -89,7 +91,7 @@ export default function CustomReportBuilder() {
                     : 'bg-white text-muted-foreground border-border hover:text-navy'
                 }`}
               >
-                {m.label}
+                {ta(m.label)}
               </button>
             ))}
           </div>
@@ -97,31 +99,31 @@ export default function CustomReportBuilder() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Dimension</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Dimension')}</label>
             <select value={dimension} onChange={e => setDimension(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-              {DIMENSIONS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+              {DIMENSIONS.map(d => <option key={d.value} value={d.value}>{ta(d.label)}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">From</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('From')}</label>
             <input type="date" value={from} onChange={e => setFrom(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">To</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('To')}</label>
             <input type="date" value={to} onChange={e => setTo(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Status Filter</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Status Filter')}</label>
             <select value={filters.status || ''} onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-              <option value="">All</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">{ta('All')}</option>
+              <option value="pending">{ta('Pending')}</option>
+              <option value="processing">{ta('Processing')}</option>
+              <option value="delivered">{ta('Delivered')}</option>
+              <option value="cancelled">{ta('Cancelled')}</option>
             </select>
           </div>
         </div>
@@ -132,7 +134,7 @@ export default function CustomReportBuilder() {
           className="px-6 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />}
-          Generate Report
+          {ta('Generate Report')}
         </button>
       </div>
 
@@ -153,26 +155,26 @@ export default function CustomReportBuilder() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {data.summary.totalRevenue !== undefined && (
                 <div className="bg-white rounded-xl border border-border p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Revenue</p>
-                  <p className="text-xl font-bold text-navy">E£{data.summary.totalRevenue.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Total Revenue')}</p>
+                  <p className="text-xl font-bold text-navy">{fmtCurrency(data.summary.totalRevenue)}</p>
                 </div>
               )}
               {data.summary.totalOrders !== undefined && (
                 <div className="bg-white rounded-xl border border-border p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Orders</p>
-                  <p className="text-xl font-bold text-navy">{data.summary.totalOrders}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Total Orders')}</p>
+                  <p className="text-xl font-bold text-navy">{fmtNum(data.summary.totalOrders)}</p>
                 </div>
               )}
               {data.summary.totalCustomers !== undefined && (
                 <div className="bg-white rounded-xl border border-border p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Customers</p>
-                  <p className="text-xl font-bold text-navy">{data.summary.totalCustomers}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Total Customers')}</p>
+                  <p className="text-xl font-bold text-navy">{fmtNum(data.summary.totalCustomers)}</p>
                 </div>
               )}
               {data.summary.avgOrderValue !== undefined && (
                 <div className="bg-white rounded-xl border border-border p-4">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Avg Order Value</p>
-                  <p className="text-xl font-bold text-navy">E£{data.summary.avgOrderValue.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Avg Order Value')}</p>
+                  <p className="text-xl font-bold text-navy">{fmtCurrency(data.summary.avgOrderValue)}</p>
                 </div>
               )}
             </div>
@@ -180,7 +182,7 @@ export default function CustomReportBuilder() {
 
           {chartData.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Chart</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Chart')}</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -194,7 +196,7 @@ export default function CustomReportBuilder() {
                     <Bar
                       key={m}
                       dataKey={m}
-                      name={METRICS.find(x => x.value === m)?.label || m}
+                      name={ta(METRICS.find(x => x.value === m)?.label || m)}
                       fill={colors[i % colors.length]}
                       radius={[4, 4, 0, 0]}
                     />
@@ -206,12 +208,12 @@ export default function CustomReportBuilder() {
 
           <div className="bg-white rounded-xl border border-border overflow-hidden">
             <div className="flex items-center justify-between p-3 border-b border-border">
-              <h3 className="text-sm font-semibold text-navy">Data Table</h3>
+              <h3 className="text-sm font-semibold text-navy">{ta('Data Table')}</h3>
               <ExportButton
                 filename={`custom-report-${dimension}`}
                 columns={[
-                  { header: dimension.charAt(0).toUpperCase() + dimension.slice(1), key: dimension },
-                  ...selectedMetrics.map(m => ({ header: METRICS.find(x => x.value === m)?.label || m, key: m })),
+                  { header: ta(dimension.charAt(0).toUpperCase() + dimension.slice(1)), key: dimension },
+                  ...selectedMetrics.map(m => ({ header: ta(METRICS.find(x => x.value === m)?.label || m), key: m })),
                 ]}
                 data={chartData}
               />
@@ -221,7 +223,7 @@ export default function CustomReportBuilder() {
                 <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
                   <th className="p-3 font-medium capitalize">{dimension}</th>
                   {selectedMetrics.map(m => (
-                    <th key={m} className="p-3 font-medium text-right">{METRICS.find(x => x.value === m)?.label || m}</th>
+                    <th key={m} className="p-3 font-medium text-right">{ta(METRICS.find(x => x.value === m)?.label || m)}</th>
                   ))}
                 </tr>
               </thead>
@@ -231,13 +233,13 @@ export default function CustomReportBuilder() {
                     <td className="p-3 font-medium text-navy">{row[dimension]}</td>
                     {selectedMetrics.map(m => (
                       <td key={m} className="p-3 text-right text-navy">
-                        {typeof row[m] === 'number' ? (m === 'orders' || m === 'customers' ? row[m] : `E£${row[m].toFixed(2)}`) : '-'}
+                        {typeof row[m] === 'number' ? (m === 'orders' || m === 'customers' ? fmtNum(row[m]) : fmtCurrency(row[m])) : '-'}
                       </td>
                     ))}
                   </tr>
                 ))}
                 {chartData.length === 0 && (
-                  <tr><td colSpan={selectedMetrics.length + 1} className="p-6 text-center text-muted-foreground">No data</td></tr>
+                  <tr><td colSpan={selectedMetrics.length + 1} className="p-6 text-center text-muted-foreground">{ta('No data')}</td></tr>
                 )}
               </tbody>
             </table>

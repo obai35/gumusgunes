@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Trash2, Plus } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 interface Tier {
   name: string
@@ -20,6 +21,7 @@ interface RewardItem {
 }
 
 export function RewardsSectionPanel() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const { settings, updateSetting } = useEditor()
 
   const title = settings.rewardsTitle ?? ''
@@ -49,67 +51,67 @@ export function RewardsSectionPanel() {
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-xs text-gray-500 font-medium">Section Title</label>
+        <label className="text-xs text-gray-500 font-medium">{ta('Section Title')}</label>
         <Input value={title} onChange={e => updateSetting('rewardsTitle', e.target.value)} />
       </div>
       <div>
-        <label className="text-xs text-gray-500 font-medium">Points per EGP</label>
+        <label className="text-xs text-gray-500 font-medium">{ta('Points per EGP')}</label>
         <Input type="number" min="0.1" step="0.1" value={pointsPerEGP} onChange={e => updateSetting('rewardsPointsPerEGP', e.target.value)} />
       </div>
 
       <div>
-        <label className="text-xs text-gray-500 font-medium">Loyalty Tiers</label>
+        <label className="text-xs text-gray-500 font-medium">{ta('Loyalty Tiers')}</label>
         {tiers.map((tier, idx) => (
           <div key={idx} className="border rounded p-2 mt-2 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Tier {idx + 1}</span>
+              <span className="text-xs font-medium">{ta('Tier')} {idx + 1}</span>
               <button onClick={() => persistTiers(tiers.filter((_, i) => i !== idx))} className="text-red-500">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Name" value={tier.name} onChange={e => {
+              <Input placeholder={ta('Name')} value={tier.name} onChange={e => {
                 const next = [...tiers]; next[idx] = { ...next[idx], name: e.target.value }; persistTiers(next)
               }} />
-              <Input type="number" placeholder="Min Points" value={tier.points} onChange={e => {
+              <Input type="number" placeholder={ta('Min Points')} value={tier.points} onChange={e => {
                 const next = [...tiers]; next[idx] = { ...next[idx], points: Number(e.target.value) }; persistTiers(next)
               }} />
             </div>
-            <Textarea placeholder="Benefits (one per line)" rows={3} value={tier.benefits} onChange={e => {
+            <Textarea placeholder={ta('Benefits (one per line)')} rows={3} value={tier.benefits} onChange={e => {
               const next = [...tiers]; next[idx] = { ...next[idx], benefits: e.target.value }; persistTiers(next)
             }} />
           </div>
         ))}
         <Button onClick={addTier} variant="outline" size="sm" className="w-full mt-2">
-          <Plus className="w-4 h-4 mr-1" /> Add Tier
+          <Plus className="w-4 h-4 mr-1" /> {ta('Add Tier')}
         </Button>
       </div>
 
       <div>
-        <label className="text-xs text-gray-500 font-medium">Reward Catalog</label>
+        <label className="text-xs text-gray-500 font-medium">{ta('Reward Catalog')}</label>
         {catalog.map((item, idx) => (
           <div key={idx} className="border rounded p-2 mt-2 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Item {idx + 1}</span>
+              <span className="text-xs font-medium">{ta('Item')} {idx + 1}</span>
               <button onClick={() => persistCatalog(catalog.filter((_, i) => i !== idx))} className="text-red-500">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Input placeholder="Item name" value={item.item} onChange={e => {
+              <Input placeholder={ta('Item name')} value={item.item} onChange={e => {
                 const next = [...catalog]; next[idx] = { ...next[idx], item: e.target.value }; persistCatalog(next)
               }} />
-              <Input type="number" placeholder="Points required" value={item.points} onChange={e => {
+              <Input type="number" placeholder={ta('Points required')} value={item.points} onChange={e => {
                 const next = [...catalog]; next[idx] = { ...next[idx], points: Number(e.target.value) }; persistCatalog(next)
               }} />
             </div>
-            <Input placeholder="Image URL (optional)" value={item.imageUrl} onChange={e => {
+            <Input placeholder={ta('Image URL (optional)')} value={item.imageUrl} onChange={e => {
               const next = [...catalog]; next[idx] = { ...next[idx], imageUrl: e.target.value }; persistCatalog(next)
             }} />
           </div>
         ))}
         <Button onClick={addCatalogItem} variant="outline" size="sm" className="w-full mt-2">
-          <Plus className="w-4 h-4 mr-1" /> Add Reward Item
+          <Plus className="w-4 h-4 mr-1" /> {ta('Add Reward Item')}
         </Button>
       </div>
     </div>

@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Plus, X, Warehouse as WarehouseIcon, Package, MapPin } from 'lucide-react'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function WarehousesPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [warehouses, setWarehouses] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -19,7 +21,7 @@ export default function WarehousesPage() {
       const res = await fetch('/api/admin/warehouses')
       const data = await res.json()
       if (data.ok) setWarehouses(data.warehouses || [])
-    } catch { toast.error('Failed to load warehouses') }
+    } catch { toast.error(ta('Failed to load warehouses')) }
     finally { setLoading(false) }
   }
 
@@ -29,16 +31,16 @@ export default function WarehousesPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!form.name || !form.code) { toast.error('Name and code required'); return }
+    if (!form.name || !form.code) { toast.error(ta('Name and code required')); return }
     setSubmitting(true)
     try {
       const url = '/api/admin/warehouses'
       const method = editing ? 'PUT' : 'POST'
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(editing ? { ...form, id: editing.id } : form) })
       const data = await res.json()
-      if (data.ok) { toast.success(editing ? 'Updated' : 'Created'); resetForm(); fetchWarehouses() }
-      else toast.error(data.error || 'Failed')
-    } catch { toast.error('Operation failed') }
+      if (data.ok) { toast.success(editing ? ta('Updated') : ta('Created')); resetForm(); fetchWarehouses() }
+      else toast.error(data.error || ta('Failed'))
+    } catch { toast.error(ta('Operation failed')) }
     finally { setSubmitting(false) }
   }
 
@@ -46,33 +48,33 @@ export default function WarehousesPage() {
     try {
       const res = await fetch('/api/admin/warehouses', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: w.id, name: w.name, code: w.code, address: w.address, isActive: !w.isActive }) })
       const data = await res.json()
-      if (data.ok) { toast.success('Toggled'); fetchWarehouses() }
-    } catch { toast.error('Failed') }
+      if (data.ok) { toast.success(ta('Toggled')); fetchWarehouses() }
+    } catch { toast.error(ta('Failed')) }
   }
 
   return (
     <div>
-      <PageHeader title="Warehouses" actions={<button onClick={() => { resetForm(); setShowForm(true) }} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors"><Plus className="h-4 w-4" /> Add Warehouse</button>} />
+      <PageHeader title={ta('Warehouses')} actions={<button onClick={() => { resetForm(); setShowForm(true) }} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors"><Plus className="h-4 w-4" /> {ta('Add Warehouse')}</button>} />
       {showForm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={resetForm}>
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-navy">{editing ? 'Edit' : 'Add'} Warehouse</h3>
+              <h3 className="font-semibold text-navy">{editing ? ta('Edit') : ta('Add')} {ta('Warehouse')}</h3>
               <button onClick={resetForm}><X className="h-4 w-4 text-muted-foreground" /></button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-3">
-              <div><label className="text-xs font-medium text-navy">Name</label><input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 border border-border rounded-lg text-sm mt-1" /></div>
-              <div><label className="text-xs font-medium text-navy">Code</label><input required value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} className="w-full px-3 py-2 border border-border rounded-lg text-sm mt-1" /></div>
-              <div><label className="text-xs font-medium text-navy">Address</label><textarea value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2 border border-border rounded-lg text-sm mt-1" rows={2} /></div>
+              <div><label className="text-xs font-medium text-navy">{ta('Name')}</label><input required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="w-full px-3 py-2 border border-border rounded-lg text-sm mt-1" /></div>
+              <div><label className="text-xs font-medium text-navy">{ta('Code')}</label><input required value={form.code} onChange={e => setForm(f => ({ ...f, code: e.target.value }))} className="w-full px-3 py-2 border border-border rounded-lg text-sm mt-1" /></div>
+              <div><label className="text-xs font-medium text-navy">{ta('Address')}</label><textarea value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} className="w-full px-3 py-2 border border-border rounded-lg text-sm mt-1" rows={2} /></div>
               <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={submitting} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{submitting ? 'Saving...' : 'Save'}</button>
-                <button type="button" onClick={resetForm} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">Cancel</button>
+                <button type="submit" disabled={submitting} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{submitting ? ta('Saving...') : ta('Save')}</button>
+                <button type="button" onClick={resetForm} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">{ta('Cancel')}</button>
               </div>
             </form>
           </div>
         </div>
       )}
-      {loading ? <div className="text-center py-12 text-muted-foreground">Loading...</div> : (
+      {loading ? <div className="text-center py-12 text-muted-foreground">{ta('Loading...')}</div> : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {warehouses.map(w => (
             <div key={w.id} className={`bg-white rounded-xl border p-5 ${!w.isActive ? 'opacity-60' : ''}`}>
@@ -90,14 +92,14 @@ export default function WarehousesPage() {
                 </label>
               </div>
               {w.address && <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2"><MapPin className="h-3 w-3" /> {w.address}</p>}
-              <p className="text-xs text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {w._count?.stockLevels || 0} products</p>
+              <p className="text-xs text-muted-foreground flex items-center gap-1"><Package className="h-3 w-3" /> {fmtNum(w._count?.stockLevels || 0)} {ta('products')}</p>
               <div className="flex gap-2 mt-3">
-                <button onClick={() => window.location.href = `/admin/warehouses/${w.id}`} className="text-xs text-gold hover:text-gold/80 font-medium">View Stock</button>
-                <button onClick={() => { setForm({ name: w.name, code: w.code, address: w.address || '' }); setEditing(w); setShowForm(true) }} className="text-xs text-muted-foreground hover:text-navy">Edit</button>
+                <button onClick={() => window.location.href = `/admin/warehouses/${w.id}`} className="text-xs text-gold hover:text-gold/80 font-medium">{ta('View Stock')}</button>
+                <button onClick={() => { setForm({ name: w.name, code: w.code, address: w.address || '' }); setEditing(w); setShowForm(true) }} className="text-xs text-muted-foreground hover:text-navy">{ta('Edit')}</button>
               </div>
             </div>
           ))}
-          {warehouses.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">No warehouses yet</div>}
+          {warehouses.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">{ta('No warehouses yet')}</div>}
         </div>
       )}
     </div>

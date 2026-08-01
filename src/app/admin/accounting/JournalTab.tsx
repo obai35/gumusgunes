@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCurrency } from './format'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function JournalTab() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [typeFilter, setTypeFilter] = useState('')
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   function fetchJournal() {
     setLoading(true)
@@ -18,7 +19,7 @@ export default function JournalTab() {
     fetch(`/api/admin/accounting/journal?${params}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => { setData(d); setLoading(false) })
-      .catch(() => { toast.error('Failed to load journal'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load journal')); setLoading(false) })
   }
 
   useEffect(() => { fetchJournal() }, [page, typeFilter])
@@ -35,11 +36,11 @@ export default function JournalTab() {
     <div>
       <div className="flex gap-2 mb-4">
         <select value={typeFilter} onChange={e => { setTypeFilter(e.target.value); setPage(1) }} className="px-3 py-2 border border-border rounded-lg text-sm">
-          <option value="">All Types</option>
-          <option value="sale">Sales</option>
-          <option value="refund">Refunds</option>
-          <option value="expense">Expenses</option>
-          <option value="reconciliation">Reconciliations</option>
+          <option value="">{ta('All Types')}</option>
+          <option value="sale">{ta('Sales')}</option>
+          <option value="refund">{ta('Refunds')}</option>
+          <option value="expense">{ta('Expenses')}</option>
+          <option value="reconciliation">{ta('Reconciliations')}</option>
         </select>
       </div>
 
@@ -50,18 +51,18 @@ export default function JournalTab() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
-                <th className="p-3 font-medium">Date</th>
-                <th className="p-3 font-medium">Description</th>
-                <th className="p-3 font-medium">Reference</th>
-                <th className="p-3 font-medium">Type</th>
-                <th className="p-3 font-medium">Account</th>
-                <th className="p-3 font-medium text-right">Debit</th>
-                <th className="p-3 font-medium text-right">Credit</th>
+                <th className="p-3 font-medium">{ta('Date')}</th>
+                <th className="p-3 font-medium">{ta('Description')}</th>
+                <th className="p-3 font-medium">{ta('Reference')}</th>
+                <th className="p-3 font-medium">{ta('Type')}</th>
+                <th className="p-3 font-medium">{ta('Account')}</th>
+                <th className="p-3 font-medium text-right">{ta('Debit')}</th>
+                <th className="p-3 font-medium text-right">{ta('Credit')}</th>
               </tr>
             </thead>
             <tbody>
               {(!data?.entries || data.entries.length === 0) && (
-                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No journal entries yet</td></tr>
+                <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{ta('No journal entries yet')}</td></tr>
               )}
               {data?.entries?.map((entry: any) => (
                 entry.lines.map((line: any, i: number) => (
@@ -69,7 +70,7 @@ export default function JournalTab() {
                     {i === 0 && (
                       <>
                         <td className="p-3 text-xs text-muted-foreground" rowSpan={entry.lines.length}>
-                          {new Date(entry.date).toLocaleDateString()}
+                          {fmtDate(entry.date)}
                         </td>
                         <td className="p-3 font-medium text-navy" rowSpan={entry.lines.length}>
                           {entry.description}
@@ -83,8 +84,8 @@ export default function JournalTab() {
                       </>
                     )}
                     <td className="p-3 text-muted-foreground">{line.account?.name || line.accountId}</td>
-                    <td className="p-3 text-right font-medium text-green-600">{line.debit > 0 ? formatCurrency(line.debit) : '-'}</td>
-                    <td className="p-3 text-right font-medium text-red-600">{line.credit > 0 ? formatCurrency(line.credit) : '-'}</td>
+                    <td className="p-3 text-right font-medium text-green-600">{line.debit > 0 ? fmtCurrency(line.debit) : '-'}</td>
+                    <td className="p-3 text-right font-medium text-red-600">{line.credit > 0 ? fmtCurrency(line.credit) : '-'}</td>
                   </tr>
                 ))
               ))}

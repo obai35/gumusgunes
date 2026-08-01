@@ -9,11 +9,8 @@ import { Pagination } from '@/components/admin/Pagination'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { ExportButton } from '@/components/admin/ExportButton'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ColumnDef } from '@tanstack/react-table'
-
-function formatCurrency(amount: number): string {
-  return '$' + amount.toFixed(2)
-}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<any[]>([])
@@ -28,6 +25,7 @@ export default function CustomersPage() {
   const [expandedOrders, setExpandedOrders] = useState<any[] | null>(null)
   const [loadingOrders, setLoadingOrders] = useState(false)
   const debouncedSearch = useDebounce(searchQuery, 300)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   const fetchCustomers = useCallback(async () => {
     setLoading(true)
@@ -36,13 +34,13 @@ export default function CustomersPage() {
       if (debouncedSearch) params.set('search', debouncedSearch)
       const res = await fetch('/api/admin/customers?' + params)
       const data = await res.json()
-      if (!res.ok) { toast.error(data.error || 'Failed to load customers'); return }
+      if (!res.ok) { toast.error(data.error || ta('Failed to load customers')); return }
       setCustomers(Array.isArray(data.customers) ? data.customers : [])
       setTotal(data.total)
       setTotalPages(data.totalPages)
       setStats(data.stats)
     } catch {
-      toast.error('Failed to load customers')
+      toast.error(ta('Failed to load customers'))
     } finally {
       setLoading(false)
     }
@@ -63,10 +61,10 @@ export default function CustomersPage() {
     try {
       const res = await fetch(`/api/admin/customers/${customerId}`)
       const data = await res.json()
-      if (!res.ok) { toast.error(data.error || 'Failed'); return }
+      if (!res.ok) { toast.error(data.error || ta('Failed')); return }
       setExpandedOrders(Array.isArray(data.customer.orders) ? data.customer.orders.slice(0, 5) : [])
     } catch {
-      toast.error('Failed to load customer details')
+      toast.error(ta('Failed to load customer details'))
     } finally {
       setLoadingOrders(false)
     }
@@ -75,45 +73,45 @@ export default function CustomersPage() {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => <span className="font-medium text-navy">{row.original.name || '—'}</span>,
     },
     {
       accessorKey: 'email',
-      header: 'Email',
+      header: ta('Email'),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.email}</span>,
     },
     {
       accessorKey: 'phone',
-      header: 'Phone',
+      header: ta('Phone'),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.phone || '—'}</span>,
     },
     {
       accessorKey: 'orderCount',
-      header: 'Orders',
+      header: ta('Orders'),
     },
     {
       accessorKey: 'totalSpend',
-      header: 'Total Spend',
-      cell: ({ row }) => <span className="font-medium text-navy">{formatCurrency(row.original.totalSpend)}</span>,
+      header: ta('Total Spend'),
+      cell: ({ row }) => <span className="font-medium text-navy">{fmtCurrency(row.original.totalSpend)}</span>,
     },
     {
       accessorKey: 'lastOrderDate',
-      header: 'Last Order',
-      cell: ({ row }) => <span className="text-muted-foreground text-xs">{row.original.lastOrderDate ? new Date(row.original.lastOrderDate).toLocaleDateString() : '—'}</span>,
+      header: ta('Last Order'),
+      cell: ({ row }) => <span className="text-muted-foreground text-xs">{row.original.lastOrderDate ? fmtDate(row.original.lastOrderDate) : '—'}</span>,
     },
     {
       accessorKey: 'createdAt',
-      header: 'Registered',
-      cell: ({ row }) => <span className="text-muted-foreground text-xs">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+      header: ta('Registered'),
+      cell: ({ row }) => <span className="text-muted-foreground text-xs">{fmtDate(row.original.createdAt)}</span>,
     },
     {
       accessorKey: 'loyaltyPoints',
-      header: 'Loyalty',
+      header: ta('Loyalty'),
       cell: ({ row }) => (
         <span className="text-muted-foreground text-xs">
-          {row.original.loyaltyPoints ?? 0} pts
-          {row.original.loyaltyTier ? ` (${row.original.loyaltyTier.name})` : ''}
+          {fmtNum(row.original.loyaltyPoints ?? 0)} {ta('pts')}
+          {row.original.loyaltyTier ? ta(` (${row.original.loyaltyTier.name})`) : ''}
         </span>
       ),
     },
@@ -127,7 +125,7 @@ export default function CustomersPage() {
             className="text-gold hover:text-gold/80 inline-flex items-center gap-1 text-xs font-medium"
             onClick={e => e.stopPropagation()}
           >
-            <FileText className="h-3 w-3" /> Orders
+            <FileText className="h-3 w-3" /> {ta('Orders')}
           </Link>
         </div>
       ),
@@ -137,16 +135,16 @@ export default function CustomersPage() {
   return (
     <div>
       <PageHeader
-        title="Customers"
+        title={ta('Customers')}
         actions={
           <ExportButton
             filename="customers-export"
             columns={[
-              { header: 'Name', key: 'name' },
-              { header: 'Email', key: 'email' },
-              { header: 'Phone', key: 'phone' },
-              { header: 'Orders', key: 'orderCount' },
-              { header: 'Total Spend', key: 'totalSpend' },
+              { header: ta('Name'), key: 'name' },
+              { header: ta('Email'), key: 'email' },
+              { header: ta('Phone'), key: 'phone' },
+              { header: ta('Orders'), key: 'orderCount' },
+              { header: ta('Total Spend'), key: 'totalSpend' },
             ]}
             data={customers}
           />
@@ -156,20 +154,20 @@ export default function CustomersPage() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Customers</p>
-          <p className="text-2xl font-semibold text-navy mt-1">{stats.totalCustomers}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Total Customers')}</p>
+          <p className="text-2xl font-semibold text-navy mt-1">{fmtNum(stats.totalCustomers)}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active (30d)</p>
-          <p className="text-2xl font-semibold text-navy mt-1">{stats.activeCustomers}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Active (30d)')}</p>
+          <p className="text-2xl font-semibold text-navy mt-1">{fmtNum(stats.activeCustomers)}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Revenue</p>
-          <p className="text-2xl font-semibold text-navy mt-1">{formatCurrency(stats.totalRevenue)}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Total Revenue')}</p>
+          <p className="text-2xl font-semibold text-navy mt-1">{fmtCurrency(stats.totalRevenue)}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Avg Order Value</p>
-          <p className="text-2xl font-semibold text-navy mt-1">{formatCurrency(stats.avgOrderValue)}</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Avg Order Value')}</p>
+          <p className="text-2xl font-semibold text-navy mt-1">{fmtCurrency(stats.avgOrderValue)}</p>
         </div>
       </div>
 
@@ -180,7 +178,7 @@ export default function CustomersPage() {
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by name, email, or phone..."
+            placeholder={ta('Search by name, email, or phone...')}
             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
           />
           {searchQuery && (
@@ -189,7 +187,7 @@ export default function CustomersPage() {
             </button>
           )}
         </div>
-        <span className="text-xs text-muted-foreground">{total} customer{total !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-muted-foreground">{fmtNum(total)} {ta(`customer${total !== 1 ? 's' : ''}`)}</span>
       </div>
 
       <DataTable
@@ -199,37 +197,37 @@ export default function CustomersPage() {
         loading={loading}
         responsiveCards
         onRowClick={(c) => toggleExpand(c.id)}
-        emptyTitle="No customers found"
-        emptyDescription={searchQuery ? 'Try adjusting your search terms' : undefined}
+        emptyTitle={ta('No customers found')}
+        emptyDescription={searchQuery ? ta('Try adjusting your search terms') : undefined}
       />
 
       {/* Expanded orders section */}
       {expandedRow && (
         <div className="bg-gray-50/50 border border-border rounded-xl p-4 mt-2 mb-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Recent Orders</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{ta('Recent Orders')}</p>
           {loadingOrders ? (
-            <div className="text-sm text-muted-foreground py-2">Loading orders...</div>
+            <div className="text-sm text-muted-foreground py-2">{ta('Loading orders...')}</div>
           ) : expandedOrders && expandedOrders.length > 0 ? (
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border/50 text-left text-muted-foreground">
-                  <th className="pb-1.5 pr-3 font-medium">Order #</th>
-                  <th className="pb-1.5 pr-3 font-medium">Date</th>
-                  <th className="pb-1.5 pr-3 font-medium">Items</th>
-                  <th className="pb-1.5 pr-3 font-medium">Total</th>
-                  <th className="pb-1.5 pr-3 font-medium">Status</th>
-                  <th className="pb-1.5 pr-3 font-medium">Branch</th>
+                  <th className="pb-1.5 pr-3 font-medium">{ta('Order #')}</th>
+                  <th className="pb-1.5 pr-3 font-medium">{ta('Date')}</th>
+                  <th className="pb-1.5 pr-3 font-medium">{ta('Items')}</th>
+                  <th className="pb-1.5 pr-3 font-medium">{ta('Total')}</th>
+                  <th className="pb-1.5 pr-3 font-medium">{ta('Status')}</th>
+                  <th className="pb-1.5 pr-3 font-medium">{ta('Branch')}</th>
                 </tr>
               </thead>
               <tbody>
                 {expandedOrders.map((o: any) => (
                   <tr key={o.id} className="border-b border-border/30">
                     <td className="py-1.5 pr-3 font-medium text-navy">{o.orderNumber}</td>
-                    <td className="py-1.5 pr-3 text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</td>
+                    <td className="py-1.5 pr-3 text-muted-foreground">{fmtDate(o.createdAt)}</td>
                     <td className="py-1.5 pr-3 text-muted-foreground">
-                      {o.items?.map((i: any) => `${i.product?.name || 'Product'} x${i.quantity}`).join(', ') || '—'}
+                      {o.items?.map((i: any) => ta(`${i.product?.name || 'Product'} x${i.quantity}`)).join(', ') || '—'}
                     </td>
-                    <td className="py-1.5 pr-3 font-medium text-navy">{formatCurrency(o.totalAmount)}</td>
+                    <td className="py-1.5 pr-3 font-medium text-navy">{fmtCurrency(o.totalAmount)}</td>
                     <td className="py-1.5 pr-3">
                       <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                         o.status === 'delivered' ? 'bg-green-100 text-green-700' :
@@ -244,7 +242,7 @@ export default function CustomersPage() {
               </tbody>
             </table>
           ) : (
-            <div className="text-sm text-muted-foreground py-2">No orders yet</div>
+            <div className="text-sm text-muted-foreground py-2">{ta('No orders yet')}</div>
           )}
         </div>
       )}

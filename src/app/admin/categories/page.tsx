@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/admin/PageHeader'
 import { Pagination } from '@/components/admin/Pagination'
 import { ExportButton } from '@/components/admin/ExportButton'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ColumnDef } from '@tanstack/react-table'
 
 type Category = {
@@ -41,6 +42,7 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false)
 
   const debouncedSearch = useDebounce(searchQuery, 300)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   const fetchCategories = useCallback(async () => {
     setLoading(true)
@@ -56,10 +58,10 @@ export default function CategoriesPage() {
         setTotal(data.total)
         setTotalPages(data.totalPages)
       } else {
-        toast.error(data.error || 'Failed to load categories')
+        toast.error(data.error || ta('Failed to load categories'))
       }
     } catch {
-      toast.error('Failed to load categories')
+      toast.error(ta('Failed to load categories'))
     } finally {
       setLoading(false)
     }
@@ -87,7 +89,7 @@ export default function CategoriesPage() {
   }
 
   async function handleSubmit() {
-    if (!name || !slug) { toast.error('Name and slug are required'); return }
+    if (!name || !slug) { toast.error(ta('Name and slug are required')); return }
     setSaving(true)
     try {
       const url = editId ? `/api/admin/categories/${editId}` : '/api/admin/categories'
@@ -98,29 +100,29 @@ export default function CategoriesPage() {
         body: JSON.stringify({ name, slug, description, imageUrl, icon, parentId: parentId || null, isVisible: formVisible }),
       })
       if (res.ok) {
-        toast.success(editId ? 'Category updated' : 'Category created')
+        toast.success(editId ? ta('Category updated') : ta('Category created'))
         resetForm(); setShowModal(false)
         fetchCategories()
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed')
+        toast.error(e.error || ta('Failed'))
       }
-    } catch { toast.error('Failed to save') }
+    } catch { toast.error(ta('Failed to save')) }
     finally { setSaving(false) }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this category?')) return
+    if (!confirm(ta('Delete this category?'))) return
     try {
       const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast.success('Category deleted')
+        toast.success(ta('Category deleted'))
         fetchCategories()
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed to delete')
+        toast.error(e.error || ta('Failed to delete'))
       }
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
   }
 
   async function toggleVisibility(cat: Category) {
@@ -131,7 +133,7 @@ export default function CategoriesPage() {
     })
     if (res.ok) {
       setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, isVisible: !c.isVisible } : c))
-    } else toast.error('Failed to toggle visibility')
+    } else toast.error(ta('Failed to toggle visibility'))
   }
 
   function openEdit(cat: Category) {
@@ -145,7 +147,7 @@ export default function CategoriesPage() {
   const columns: ColumnDef<Category>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => (
         <span className="font-semibold text-navy">
           {row.original.icon && <span className="mr-2">{row.original.icon}</span>}
@@ -155,34 +157,34 @@ export default function CategoriesPage() {
     },
     {
       accessorKey: 'slug',
-      header: 'Slug',
+      header: ta('Slug'),
       cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span>,
     },
     {
       accessorKey: 'parent',
-      header: 'Parent',
+      header: ta('Parent'),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.parent?.name || '—'}</span>,
     },
     {
       accessorKey: '_count.products',
-      header: 'Products',
+      header: ta('Products'),
     },
     {
       accessorKey: 'isVisible',
-      header: 'Visible',
+      header: ta('Visible'),
       cell: ({ row }) => (
         <button
           onClick={() => toggleVisibility(row.original)}
           className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${row.original.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
         >
           {row.original.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-          {row.original.isVisible ? 'Visible' : 'Hidden'}
+          {row.original.isVisible ? ta('Visible') : ta('Hidden')}
         </button>
       ),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: ta('Actions'),
       cell: ({ row }) => (
         <div className="flex gap-2">
           <button onClick={() => openEdit(row.original)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
@@ -195,21 +197,21 @@ export default function CategoriesPage() {
   return (
     <div>
       <PageHeader
-        title="Categories"
+        title={ta('Categories')}
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
               filename="categories-export"
               columns={[
-                { header: 'Name', key: 'name' },
-                { header: 'Slug', key: 'slug' },
-                { header: 'Products', key: '_count.products' },
-                { header: 'Visible', key: 'isVisible' },
+                { header: ta('Name'), key: 'name' },
+                { header: ta('Slug'), key: 'slug' },
+                { header: ta('Products'), key: '_count.products' },
+                { header: ta('Visible'), key: 'isVisible' },
               ]}
               data={categories}
             />
             <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-              <Plus className="h-4 w-4" /> New Category
+              <Plus className="h-4 w-4" /> {ta('New Category')}
             </button>
           </div>
         }
@@ -220,7 +222,7 @@ export default function CategoriesPage() {
         <input
           value={searchQuery}
           onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
-          placeholder="Search categories..."
+          placeholder={ta('Search categories...')}
           className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
         />
         {searchQuery && (
@@ -235,9 +237,9 @@ export default function CategoriesPage() {
         data={categories}
         keyExtractor={(c) => c.id}
         loading={loading}
-        emptyTitle={searchQuery ? 'No categories match your search' : 'No categories yet'}
-        emptyDescription={searchQuery ? 'Try adjusting your search terms' : 'Create your first category to organize products'}
-        emptyAction={searchQuery ? undefined : { label: 'New Category', onClick: () => { resetForm(); setShowModal(true) } }}
+        emptyTitle={searchQuery ? ta('No categories match your search') : ta('No categories yet')}
+        emptyDescription={searchQuery ? ta('Try adjusting your search terms') : ta('Create your first category to organize products')}
+        emptyAction={searchQuery ? undefined : { label: ta('New Category'), onClick: () => { resetForm(); setShowModal(true) } }}
       />
 
       <Pagination
@@ -266,29 +268,29 @@ export default function CategoriesPage() {
               className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-navy">{editId ? 'Edit Category' : 'New Category'}</h3>
+                <h3 className="font-semibold text-navy">{editId ? ta('Edit Category') : ta('New Category')}</h3>
                 <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="space-y-3">
-                <input value={name} onChange={e => { setName(e.target.value); autoSlug(e.target.value) }} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="Slug" className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono" />
-                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Image URL" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={icon} onChange={e => setIcon(e.target.value)} placeholder="Icon (emoji)" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={name} onChange={e => { setName(e.target.value); autoSlug(e.target.value) }} placeholder={ta('Name')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={slug} onChange={e => setSlug(e.target.value)} placeholder={ta('Slug')} className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono" />
+                <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder={ta('Description')} rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder={ta('Image URL')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={icon} onChange={e => setIcon(e.target.value)} placeholder={ta('Icon (emoji)')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                 <select value={parentId} onChange={e => setParentId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-                  <option value="">Top-level category</option>
+                  <option value="">{ta('Top-level category')}</option>
                   {parents.filter(p => p.id !== editId).map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={formVisible} onChange={e => setFormVisible(e.target.checked)} className="rounded" />
-                  Visible on storefront
+                  {ta('Visible on storefront')}
                 </label>
               </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
+                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? ta('Saving...') : editId ? ta('Update') : ta('Create')}</button>
               </div>
             </motion.div>
           </motion.div>

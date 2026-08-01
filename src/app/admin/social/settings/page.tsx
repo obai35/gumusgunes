@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function SocialSettings() {
+  const { ta } = useAdminTranslate()
   const [accounts, setAccounts] = useState<any[]>([])
   const [form, setForm] = useState({ platform: 'instagram', accountId: '', accountName: '', accessToken: '' })
   const [loading, setLoading] = useState(true)
@@ -14,7 +16,7 @@ export default function SocialSettings() {
 
   async function addAccount() {
     if (!form.accountId || !form.accountName || !form.accessToken) {
-      toast.error('All fields required')
+      toast.error(ta('All fields required'))
       return
     }
     const res = await fetch('/api/admin/social/accounts', {
@@ -23,67 +25,67 @@ export default function SocialSettings() {
       body: JSON.stringify(form),
     })
     if (res.ok) {
-      toast.success('Account connected')
+      toast.success(ta('Account connected'))
       setForm({ platform: 'instagram', accountId: '', accountName: '', accessToken: '' })
       const updated = await fetch('/api/admin/social/accounts').then(r => r.json())
       setAccounts(Array.isArray(updated) ? updated : [])
     } else {
-      toast.error('Failed to connect')
+      toast.error(ta('Failed to connect'))
     }
   }
 
   async function removeAccount(id: string) {
     const res = await fetch(`/api/admin/social/accounts/${id}`, { method: 'DELETE' })
     if (res.ok) {
-      toast.success('Account removed')
+      toast.success(ta('Account removed'))
       setAccounts(accounts.filter(a => a.id !== id))
     }
   }
 
-  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-muted-foreground">{ta('Loading...')}</div>
 
   return (
     <div className="space-y-8 p-6 max-w-2xl">
-      <h1 className="text-2xl font-display font-semibold">Social Media Settings</h1>
+      <h1 className="text-2xl font-display font-semibold">{ta('Social Media Settings')}</h1>
 
       <div className="space-y-3">
-        <h2 className="font-semibold">Connected Accounts</h2>
-        {accounts.length === 0 && <p className="text-sm text-muted-foreground">No accounts connected yet.</p>}
+        <h2 className="font-semibold">{ta('Connected Accounts')}</h2>
+        {accounts.length === 0 && <p className="text-sm text-muted-foreground">{ta('No accounts connected yet.')}</p>}
         {accounts.map(a => (
           <div key={a.id} className="flex items-center justify-between p-4 rounded-xl bg-secondary/40 border border-border/40">
             <div>
               <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gold/10 text-gold uppercase mr-2">{a.platform}</span>
               <span className="font-medium">{a.accountName}</span>
             </div>
-            <button onClick={() => removeAccount(a.id)} className="text-sm text-destructive hover:underline">Remove</button>
+            <button onClick={() => removeAccount(a.id)} className="text-sm text-destructive hover:underline">{ta('Remove')}</button>
           </div>
         ))}
       </div>
 
       <div className="p-6 rounded-2xl bg-secondary/30 border border-border/30 space-y-4">
-        <h2 className="font-semibold">Add Account</h2>
+        <h2 className="font-semibold">{ta('Add Account')}</h2>
         <select
           value={form.platform}
           onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
           className="w-full p-3 rounded-xl bg-background border border-border text-sm"
         >
-          <option value="instagram">Instagram</option>
-          <option value="facebook">Facebook</option>
+          <option value="instagram">{ta('Instagram')}</option>
+          <option value="facebook">{ta('Facebook')}</option>
         </select>
         <input
-          placeholder="Account ID"
+          placeholder={ta('Account ID')}
           value={form.accountId}
           onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))}
           className="w-full p-3 rounded-xl bg-background border border-border text-sm"
         />
         <input
-          placeholder="Account Name"
+          placeholder={ta('Account Name')}
           value={form.accountName}
           onChange={e => setForm(f => ({ ...f, accountName: e.target.value }))}
           className="w-full p-3 rounded-xl bg-background border border-border text-sm"
         />
         <input
-          placeholder="Access Token"
+          placeholder={ta('Access Token')}
           value={form.accessToken}
           onChange={e => setForm(f => ({ ...f, accessToken: e.target.value }))}
           className="w-full p-3 rounded-xl bg-background border border-border text-sm font-mono"
@@ -92,7 +94,7 @@ export default function SocialSettings() {
           onClick={addAccount}
           className="px-6 py-3 bg-navy text-silver rounded-full text-sm font-medium hover:bg-gold hover:text-navy-deep transition-colors"
         >
-          Connect Account
+          {ta('Connect Account')}
         </button>
       </div>
     </div>

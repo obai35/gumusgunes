@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Globe, MapPin } from 'lucide-react'
 
 type Governorate = { id: string; name: string; nameAr: string; countryId: string }
 type Country = { id: string; name: string; nameAr: string; isoCode: string; isActive: boolean; governorates: Governorate[] }
 
 export default function CountriesTab() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
@@ -42,13 +44,13 @@ export default function CountriesTab() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: countryName, nameAr: countryNameAr || countryName, isoCode: countryIso }),
       })
-      toast.success('Country updated')
+      toast.success(ta('Country updated'))
     } else {
       await fetch('/api/admin/shipping/countries', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: countryName, nameAr: countryNameAr || countryName, isoCode: countryIso }),
       })
-      toast.success('Country created')
+      toast.success(ta('Country created'))
     }
     resetCountryForm()
     fetchData()
@@ -56,7 +58,7 @@ export default function CountriesTab() {
 
   async function handleDeleteCountry(id: string) {
     await fetch(`/api/admin/shipping/countries/${id}`, { method: 'DELETE' })
-    toast.success('Country deleted')
+    toast.success(ta('Country deleted'))
     fetchData()
   }
 
@@ -67,13 +69,13 @@ export default function CountriesTab() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: govName, nameAr: govNameAr || govName, countryId: govCountryId }),
       })
-      toast.success('Governorate updated')
+      toast.success(ta('Governorate updated'))
     } else {
       await fetch('/api/admin/shipping/governorates', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: govName, nameAr: govNameAr || govName, countryId: govCountryId }),
       })
-      toast.success('Governorate created')
+      toast.success(ta('Governorate created'))
     }
     resetGovForm()
     fetchData()
@@ -81,7 +83,7 @@ export default function CountriesTab() {
 
   async function handleDeleteGov(id: string) {
     await fetch(`/api/admin/shipping/governorates/${id}`, { method: 'DELETE' })
-    toast.success('Governorate deleted')
+    toast.success(ta('Governorate deleted'))
     fetchData()
   }
 
@@ -89,22 +91,22 @@ export default function CountriesTab() {
     setExpanded(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
   }
 
-  if (loading) return <div className="text-muted-foreground text-sm">Loading...</div>
+  if (loading) return <div className="text-muted-foreground text-sm">{ta('Loading...')}</div>
 
   return (
     <div>
       {/* Country Form */}
       {showCountryForm && (
         <div className="bg-white rounded-xl border border-border p-4 mb-4 space-y-3">
-          <h3 className="font-semibold text-sm text-navy">{editingCountry ? 'Edit Country' : 'Add Country'}</h3>
+          <h3 className="font-semibold text-sm text-navy">{ta(editingCountry ? 'Edit Country' : 'Add Country')}</h3>
           <div className="grid grid-cols-3 gap-3">
-            <input value={countryName} onChange={e => setCountryName(e.target.value)} placeholder="Country name (en)" className="px-3 py-2 border border-border rounded-lg text-sm" />
-            <input value={countryNameAr} onChange={e => setCountryNameAr(e.target.value)} placeholder="Country name (ar)" className="px-3 py-2 border border-border rounded-lg text-sm" />
-            <input value={countryIso} onChange={e => setCountryIso(e.target.value)} placeholder="ISO code (e.g. EG)" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={countryName} onChange={e => setCountryName(e.target.value)} placeholder={ta('Country name (en)')} className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={countryNameAr} onChange={e => setCountryNameAr(e.target.value)} placeholder={ta('Country name (ar)')} className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={countryIso} onChange={e => setCountryIso(e.target.value)} placeholder={ta('ISO code (e.g. EG)')} className="px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSaveCountry} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium">{editingCountry ? 'Update' : 'Create'}</button>
-            <button onClick={resetCountryForm} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">Cancel</button>
+            <button onClick={handleSaveCountry} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium">{ta(editingCountry ? 'Update' : 'Create')}</button>
+            <button onClick={resetCountryForm} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">{ta('Cancel')}</button>
           </div>
         </div>
       )}
@@ -112,31 +114,31 @@ export default function CountriesTab() {
       {/* Governorate Form */}
       {showGovForm && (
         <div className="bg-white rounded-xl border border-border p-4 mb-4 space-y-3">
-          <h3 className="font-semibold text-sm text-navy">{editingGov ? 'Edit Governorate' : 'Add Governorate'}</h3>
+          <h3 className="font-semibold text-sm text-navy">{ta(editingGov ? 'Edit Governorate' : 'Add Governorate')}</h3>
           <div className="grid grid-cols-3 gap-3">
-            <input value={govName} onChange={e => setGovName(e.target.value)} placeholder="Governorate name (en)" className="px-3 py-2 border border-border rounded-lg text-sm" />
-            <input value={govNameAr} onChange={e => setGovNameAr(e.target.value)} placeholder="Governorate name (ar)" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={govName} onChange={e => setGovName(e.target.value)} placeholder={ta('Governorate name (en)')} className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={govNameAr} onChange={e => setGovNameAr(e.target.value)} placeholder={ta('Governorate name (ar)')} className="px-3 py-2 border border-border rounded-lg text-sm" />
             <select value={govCountryId} onChange={e => setGovCountryId(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm bg-white">
-              <option value="">Select country</option>
+              <option value="">{ta('Select country')}</option>
               {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="flex gap-2">
-            <button onClick={handleSaveGov} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium">{editingGov ? 'Update' : 'Create'}</button>
-            <button onClick={resetGovForm} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">Cancel</button>
+            <button onClick={handleSaveGov} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium">{ta(editingGov ? 'Update' : 'Create')}</button>
+            <button onClick={resetGovForm} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">{ta('Cancel')}</button>
           </div>
         </div>
       )}
 
       {/* Action Bar */}
       <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-muted-foreground">{countries.length} countries</p>
+        <p className="text-sm text-muted-foreground">{fmtNum(countries.length)} {ta('countries')}</p>
         <div className="flex gap-2">
           <button onClick={() => { resetGovForm(); setShowGovForm(!showGovForm) }} className="flex items-center gap-1 px-3 py-1.5 border border-border rounded-lg text-sm font-medium hover:bg-gray-50">
-            <MapPin className="h-3.5 w-3.5" /> {showGovForm ? 'Cancel' : 'Add Governorate'}
+            <MapPin className="h-3.5 w-3.5" /> {ta(showGovForm ? 'Cancel' : 'Add Governorate')}
           </button>
           <button onClick={() => { resetCountryForm(); setShowCountryForm(!showCountryForm) }} className="flex items-center gap-1 px-3 py-1.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-            <Plus className="h-3.5 w-3.5" /> {showCountryForm ? 'Cancel' : 'Add Country'}
+            <Plus className="h-3.5 w-3.5" /> {ta(showCountryForm ? 'Cancel' : 'Add Country')}
           </button>
         </div>
       </div>
@@ -152,20 +154,20 @@ export default function CountriesTab() {
                 <span className="font-medium text-navy">{country.name}</span>
                 <span className="text-xs text-muted-foreground">({country.nameAr})</span>
                 {country.isoCode && <span className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-muted-foreground">{country.isoCode}</span>}
-                <span className="text-xs text-muted-foreground">{country.governorates.length} governorates</span>
+                <span className="text-xs text-muted-foreground">{fmtNum(country.governorates.length)} {ta('governorates')}</span>
               </div>
               <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                 <button onClick={() => { setEditingCountry(country); setCountryName(country.name); setCountryNameAr(country.nameAr); setCountryIso(country.isoCode); setShowCountryForm(true) }} className="text-xs text-gold hover:underline flex items-center gap-1">
-                  <Pencil className="h-3 w-3" /> Edit
+                  <Pencil className="h-3 w-3" /> {ta('Edit')}
                 </button>
                 <button onClick={() => handleDeleteCountry(country.id)} className="text-xs text-red-500 hover:underline flex items-center gap-1">
-                  <Trash2 className="h-3 w-3" /> Delete
+                  <Trash2 className="h-3 w-3" /> {ta('Delete')}
                 </button>
               </div>
             </div>
             {expanded.has(country.id) && (
               <div className="border-t border-border">
-                {country.governorates.length === 0 && <p className="px-4 py-3 text-sm text-muted-foreground">No governorates added yet.</p>}
+                {country.governorates.length === 0 && <p className="px-4 py-3 text-sm text-muted-foreground">{ta('No governorates added yet.')}</p>}
                 {country.governorates.map(gov => (
                   <div key={gov.id} className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 last:border-b-0 hover:bg-gray-50/30">
                     <div className="flex items-center gap-2">
@@ -174,8 +176,8 @@ export default function CountriesTab() {
                       <span className="text-xs text-muted-foreground">({gov.nameAr})</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button onClick={() => { setEditingGov(gov); setGovName(gov.name); setGovNameAr(gov.nameAr); setGovCountryId(gov.countryId); setShowGovForm(true) }} className="text-xs text-gold hover:underline">Edit</button>
-                      <button onClick={() => handleDeleteGov(gov.id)} className="text-xs text-red-500 hover:underline">Delete</button>
+                      <button onClick={() => { setEditingGov(gov); setGovName(gov.name); setGovNameAr(gov.nameAr); setGovCountryId(gov.countryId); setShowGovForm(true) }} className="text-xs text-gold hover:underline">{ta('Edit')}</button>
+                      <button onClick={() => handleDeleteGov(gov.id)} className="text-xs text-red-500 hover:underline">{ta('Delete')}</button>
                     </div>
                   </div>
                 ))}
@@ -183,7 +185,7 @@ export default function CountriesTab() {
             )}
           </div>
         ))}
-        {countries.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">No countries added yet. Click &quot;Add Country&quot; to get started.</p>}
+        {countries.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">{ta('No countries added yet. Click &quot;Add Country&quot; to get started.')}</p>}
       </div>
     </div>
   )

@@ -5,12 +5,14 @@ import { toast } from 'sonner'
 import { Upload, Trash2, Copy, FileImage, Loader2, Check, RefreshCw } from 'lucide-react'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type MediaFile = {
   name: string; url: string; size: number; uploadedAt: string
 }
 
 export default function MediaPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [files, setFiles] = useState<MediaFile[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -23,7 +25,7 @@ export default function MediaPage() {
     fetch('/api/admin/content/media')
       .then(r => r.json())
       .then(d => setFiles(d.files || []))
-      .catch(() => toast.error('Failed to load media'))
+      .catch(() => toast.error(ta('Failed to load media')))
       .finally(() => setLoading(false))
   }
 
@@ -39,12 +41,12 @@ export default function MediaPage() {
       const res = await fetch('/api/admin/content/media', { method: 'POST', body: formData })
       const d = await res.json()
       if (d.ok) {
-        toast.success('File uploaded')
+        toast.success(ta('File uploaded'))
         fetchFiles()
       } else {
-        toast.error(d.error || 'Failed to upload')
+        toast.error(d.error || ta('Failed to upload'))
       }
-    } catch { toast.error('Failed to upload') }
+    } catch { toast.error(ta('Failed to upload')) }
     finally { setUploading(false); if (fileInputRef.current) fileInputRef.current.value = '' }
   }
 
@@ -52,7 +54,7 @@ export default function MediaPage() {
     navigator.clipboard.writeText(window.location.origin + url)
     setCopiedUrl(url)
     setTimeout(() => setCopiedUrl(null), 2000)
-    toast.success('URL copied')
+    toast.success(ta('URL copied'))
   }
 
   async function handleDelete() {
@@ -62,11 +64,11 @@ export default function MediaPage() {
       const d = await res.json()
       if (d.ok) {
         setFiles(prev => prev.filter(f => f.name !== deleteName))
-        toast.success('File deleted')
+        toast.success(ta('File deleted'))
       } else {
-        toast.error(d.error || 'Failed to delete')
+        toast.error(d.error || ta('Failed to delete'))
       }
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
     finally { setDeleteName(null) }
   }
 
@@ -79,16 +81,16 @@ export default function MediaPage() {
   return (
     <div>
       <PageHeader
-        title="Media Gallery"
-        subtitle={`${files.length} file${files.length !== 1 ? 's' : ''}`}
+        title={ta('Media Gallery')}
+        subtitle={`${files.length} ${ta(files.length !== 1 ? 'files' : 'file')}`}
         actions={
           <div className="flex items-center gap-2">
             <button onClick={fetchFiles} className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy flex items-center gap-1">
-              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              <RefreshCw className="h-3.5 w-3.5" /> {ta('Refresh')}
             </button>
             <label className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 cursor-pointer">
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-              {uploading ? 'Uploading...' : 'Upload'}
+              {uploading ? ta('Uploading...') : ta('Upload')}
               <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />
             </label>
           </div>
@@ -104,10 +106,10 @@ export default function MediaPage() {
       ) : files.length === 0 ? (
         <div className="text-center py-20">
           <FileImage className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-          <p className="text-muted-foreground mb-2">No files uploaded yet</p>
-          <p className="text-sm text-muted-foreground/70 mb-4">Upload images to use in blog posts, banners, and pages.</p>
+          <p className="text-muted-foreground mb-2">{ta('No files uploaded yet')}</p>
+          <p className="text-sm text-muted-foreground/70 mb-4">{ta('Upload images to use in blog posts, banners, and pages.')}</p>
           <label className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 cursor-pointer">
-            <Upload className="h-4 w-4" /> Upload First File
+            <Upload className="h-4 w-4" /> {ta('Upload First File')}
             <input type="file" accept="image/*" onChange={handleUpload} className="hidden" />
           </label>
         </div>
@@ -126,14 +128,14 @@ export default function MediaPage() {
                 <button
                   onClick={() => copyUrl(file.url)}
                   className="p-1.5 rounded-lg bg-white/90 shadow-sm text-muted-foreground hover:text-navy transition-colors"
-                  title="Copy URL"
+                  title={ta('Copy URL')}
                 >
                   {copiedUrl === file.url ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
                 </button>
                 <button
                   onClick={() => setDeleteName(file.name)}
                   className="p-1.5 rounded-lg bg-white/90 shadow-sm text-red-400 hover:text-red-600 transition-colors"
-                  title="Delete"
+                  title={ta('Delete')}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -146,9 +148,9 @@ export default function MediaPage() {
       <ConfirmDialog
         open={deleteName !== null}
         onOpenChange={o => { if (!o) setDeleteName(null) }}
-        title="Delete file"
-        description="Are you sure you want to delete this file? This cannot be undone."
-        confirmLabel="Delete"
+        title={ta('Delete file')}
+        description={ta('Are you sure you want to delete this file? This cannot be undone.')}
+        confirmLabel={ta('Delete')}
         onConfirm={handleDelete}
         destructive
       />

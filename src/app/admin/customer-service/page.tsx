@@ -10,11 +10,13 @@ import { PageHeader } from '@/components/admin/PageHeader'
 import { SearchInput } from '@/components/admin/SearchInput'
 import { ExportButton } from '@/components/admin/ExportButton'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ColumnDef } from '@tanstack/react-table'
 
 type Agent = { id: string; email: string; name: string; phone: string | null; role: string; roleId: string | null; createdAt: string }
 
 export default function CustomerServicePage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [agents, setAgents] = useState<Agent[]>([])
   const [roles, setRoles] = useState<{ id: string; name: string; permissions: string[] }[]>([])
   const [showModal, setShowModal] = useState(false)
@@ -41,8 +43,8 @@ export default function CustomerServicePage() {
   useEffect(() => { setPage(1) }, [search])
 
   async function handleSubmit() {
-    if (!name || !email || !roleId) { toast.error('Name, email, and role are required'); return }
-    if (!editId && !password) { toast.error('Password is required for new agent'); return }
+    if (!name || !email || !roleId) { toast.error(ta('Name, email, and role are required')); return }
+    if (!editId && !password) { toast.error(ta('Password is required for new agent')); return }
     setLoading(true)
     try {
       const url = editId ? `/api/admin/admins/${editId}` : '/api/admin/admins'
@@ -51,7 +53,7 @@ export default function CustomerServicePage() {
       if (password) body.password = password
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (res.ok) {
-        toast.success(editId ? 'Agent updated' : 'Agent created')
+        toast.success(editId ? ta('Agent updated') : ta('Agent created'))
         resetForm(); setShowModal(false)
         const updated = await fetch('/api/admin/admins').then((r) => r.json())
         setAgents(Array.isArray(updated) ? updated : [])
@@ -60,7 +62,7 @@ export default function CustomerServicePage() {
         const msg = e.details ? `${e.error}: ${Object.values(e.details).flat().join(', ')}` : e.error
         toast.error(msg)
       }
-    } catch { toast.error('Failed') }
+    } catch { toast.error(ta('Failed')) }
     finally { setLoading(false) }
   }
 
@@ -73,9 +75,9 @@ export default function CustomerServicePage() {
     if (!confirmDeleteId) return
     try {
       const res = await fetch(`/api/admin/admins/${confirmDeleteId}`, { method: 'DELETE' })
-      if (res.ok) { toast.success('Agent deleted'); setAgents(agents.filter((a) => a.id !== confirmDeleteId)) }
+      if (res.ok) { toast.success(ta('Agent deleted')); setAgents(agents.filter((a) => a.id !== confirmDeleteId)) }
       else { const e = await res.json(); toast.error(e.error) }
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
     finally { setConfirmOpen(false); setConfirmDeleteId(null) }
   }
 
@@ -99,7 +101,7 @@ export default function CustomerServicePage() {
   const columns: ColumnDef<Agent>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => (
         <span className="font-medium text-navy flex items-center gap-2">
           <Headset className="h-4 w-4 text-gold" />
@@ -109,25 +111,25 @@ export default function CustomerServicePage() {
     },
     {
       accessorKey: 'email',
-      header: 'Email',
+      header: ta('Email'),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.email}</span>,
     },
     {
       accessorKey: 'phone',
-      header: 'Phone',
+      header: ta('Phone'),
       cell: ({ row }) => <span className="text-muted-foreground text-sm">{row.original.phone || '—'}</span>,
     },
     {
       accessorKey: 'role',
-      header: 'Role',
+      header: ta('Role'),
       cell: ({ row }) => (
         <span className="px-2 py-0.5 bg-navy/5 text-navy rounded text-xs font-medium">{row.original.role}</span>
       ),
     },
     {
       accessorKey: 'createdAt',
-      header: 'Created',
-      cell: ({ row }) => <span className="text-muted-foreground text-xs">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+      header: ta('Created'),
+      cell: ({ row }) => <span className="text-muted-foreground text-xs">{fmtDate(new Date(row.original.createdAt))}</span>,
     },
     {
       id: 'actions',
@@ -144,38 +146,38 @@ export default function CustomerServicePage() {
   return (
     <div>
       <PageHeader
-        title="Customer Service"
-        subtitle="Manage customer service agents"
+        title={ta('Customer Service')}
+        subtitle={ta('Manage customer service agents')}
         actions={
           <>
             <ExportButton
               filename="customer-service-agents"
               columns={[
-                { header: 'Name', key: 'name' },
-                { header: 'Email', key: 'email' },
-                { header: 'Phone', key: 'phone' },
-                { header: 'Role', key: 'role' },
-                { header: 'Created', key: 'createdAt' },
+                { header: ta('Name'), key: 'name' },
+                { header: ta('Email'), key: 'email' },
+                { header: ta('Phone'), key: 'phone' },
+                { header: ta('Role'), key: 'role' },
+                { header: ta('Created'), key: 'createdAt' },
               ]}
               data={agents}
             />
             <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-              <Plus className="h-4 w-4" /> New Agent
+              <Plus className="h-4 w-4" /> {ta('New Agent')}
             </button>
           </>
         }
       />
 
       <div className="mb-4">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search by name or email..." />
+        <SearchInput value={search} onChange={setSearch} placeholder={ta('Search by name or email...')} />
       </div>
 
       <DataTable
         columns={columns}
         data={paginated}
         keyExtractor={(a) => a.id}
-        emptyTitle="No agents found"
-        emptyDescription={search ? 'Try adjusting your search terms' : undefined}
+        emptyTitle={ta('No agents found')}
+        emptyDescription={search ? ta('Try adjusting your search terms') : undefined}
       />
 
       <Pagination
@@ -204,22 +206,22 @@ export default function CustomerServicePage() {
               className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-navy">{editId ? 'Edit Agent' : 'New Agent'}</h3>
+                <h3 className="font-semibold text-navy">{editId ? ta('Edit Agent') : ta('New Agent')}</h3>
                 <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="space-y-3">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" type="email" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone" type="tel" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={editId ? 'New password (leave blank)' : 'Password'} type="password" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={name} onChange={(e) => setName(e.target.value)} placeholder={ta('Name')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={ta('Email')} type="email" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={ta('Phone')} type="tel" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={editId ? ta('New password (leave blank)') : ta('Password')} type="password" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                 <select value={roleId} onChange={(e) => setRoleId(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-                  <option value="">Select role...</option>
+                  <option value="">{ta('Select role...')}</option>
                   {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-                <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
+                <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{loading ? ta('Saving...') : editId ? ta('Update') : ta('Create')}</button>
               </div>
             </motion.div>
           </motion.div>
@@ -229,9 +231,9 @@ export default function CustomerServicePage() {
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Delete Agent"
-        description="Are you sure you want to delete this agent? This action cannot be undone."
-        confirmLabel="Delete"
+        title={ta('Delete Agent')}
+        description={ta('Are you sure you want to delete this agent? This action cannot be undone.')}
+        confirmLabel={ta('Delete')}
         onConfirm={handleDeleteConfirm}
         destructive
       />

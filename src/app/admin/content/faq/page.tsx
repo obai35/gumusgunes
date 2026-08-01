@@ -6,6 +6,7 @@ import { Plus, Pencil, Trash2, GripVertical, Eye, EyeOff, X } from 'lucide-react
 import { DataTable } from '@/components/admin/DataTable'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -25,13 +26,14 @@ export default function FaqAdminPage() {
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   function fetchEntries() {
     setLoading(true)
     fetch('/api/admin/content/faq')
       .then(r => r.json())
       .then(data => setEntries(Array.isArray(data) ? data : []))
-      .catch(() => toast.error('Failed to load FAQ entries'))
+      .catch(() => toast.error(ta('Failed to load FAQ entries')))
       .finally(() => setLoading(false))
   }
 
@@ -42,7 +44,7 @@ export default function FaqAdminPage() {
   }
 
   async function handleSubmit() {
-    if (!question || !answer) { toast.error('Question and answer are required'); return }
+    if (!question || !answer) { toast.error(ta('Question and answer are required')); return }
     setSaving(true)
     try {
       const url = editId ? `/api/admin/content/faq/${editId}` : '/api/admin/content/faq'
@@ -53,13 +55,13 @@ export default function FaqAdminPage() {
         body: JSON.stringify({ question, answer, category }),
       })
       if (res.ok) {
-        toast.success(editId ? 'FAQ updated' : 'FAQ created')
+        toast.success(editId ? ta('FAQ updated') : ta('FAQ created'))
         resetForm(); setShowModal(false); fetchEntries()
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed')
+        toast.error(e.error || ta('Failed'))
       }
-    } catch { toast.error('Failed to save') }
+    } catch { toast.error(ta('Failed to save')) }
     finally { setSaving(false) }
   }
 
@@ -69,12 +71,12 @@ export default function FaqAdminPage() {
       const res = await fetch(`/api/admin/content/faq/${deleteId}`, { method: 'DELETE' })
       if (res.ok) {
         setEntries(prev => prev.filter(e => e.id !== deleteId))
-        toast.success('FAQ entry deleted')
+        toast.success(ta('FAQ entry deleted'))
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed to delete')
+        toast.error(e.error || ta('Failed to delete'))
       }
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
     finally { setDeleteId(null) }
   }
 
@@ -86,7 +88,7 @@ export default function FaqAdminPage() {
     })
     if (res.ok) {
       setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, isActive: !e.isActive } : e))
-    } else toast.error('Failed to toggle')
+    } else toast.error(ta('Failed to toggle'))
   }
 
   async function handleDragEnd() {
@@ -98,7 +100,7 @@ export default function FaqAdminPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: reordered }),
     })
-    if (!res.ok) { toast.error('Failed to save order'); fetchEntries() }
+    if (!res.ok) { toast.error(ta('Failed to save order')); fetchEntries() }
   }
 
   function openEdit(entry: FaqEntry) {
@@ -133,26 +135,26 @@ export default function FaqAdminPage() {
     },
     {
       accessorKey: 'question',
-      header: 'Question',
+      header: ta('Question'),
       cell: ({ row }) => <span className="font-medium text-navy">{row.original.question}</span>,
     },
     {
       accessorKey: 'category',
-      header: 'Category',
+      header: ta('Category'),
       cell: ({ row }) => (
         <span className="text-xs px-2 py-1 rounded-full bg-secondary/50 text-muted-foreground font-medium">{row.original.category}</span>
       ),
     },
     {
       accessorKey: 'isActive',
-      header: 'Active',
+      header: ta('Active'),
       cell: ({ row }) => (
         <button
           onClick={() => toggleActive(row.original)}
           className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${row.original.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
         >
           {row.original.isActive ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-          {row.original.isActive ? 'Active' : 'Inactive'}
+          {row.original.isActive ? ta('Active') : ta('Inactive')}
         </button>
       ),
     },
@@ -175,11 +177,11 @@ export default function FaqAdminPage() {
   return (
     <div>
       <PageHeader
-        title="FAQ Management"
-        subtitle={`${entries.length} entr${entries.length !== 1 ? 'ies' : 'y'}`}
+        title={ta('FAQ Management')}
+        subtitle={ta(`${fmtNum(entries.length)} entr${entries.length !== 1 ? 'ies' : 'y'}`)}
         actions={
           <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-            <Plus className="h-4 w-4" /> New FAQ
+            <Plus className="h-4 w-4" /> {ta('New FAQ')}
           </button>
         }
       />
@@ -189,9 +191,9 @@ export default function FaqAdminPage() {
         data={entries}
         loading={loading}
         keyExtractor={e => e.id}
-        emptyTitle="No FAQ entries yet"
-        emptyDescription="Add frequently asked questions for your customers."
-        emptyAction={{ label: 'New FAQ', onClick: () => { resetForm(); setShowModal(true) } }}
+        emptyTitle={ta('No FAQ entries yet')}
+        emptyDescription={ta('Add frequently asked questions for your customers.')}
+        emptyAction={{ label: ta('New FAQ'), onClick: () => { resetForm(); setShowModal(true) } }}
       />
 
       <AnimatePresence>
@@ -205,17 +207,17 @@ export default function FaqAdminPage() {
               className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-navy">{editId ? 'Edit FAQ' : 'New FAQ'}</h3>
+                <h3 className="font-semibold text-navy">{editId ? ta('Edit FAQ') : ta('New FAQ')}</h3>
                 <button onClick={() => { setShowModal(false); resetForm() }}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="space-y-3">
-                <input value={question} onChange={e => setQuestion(e.target.value)} placeholder="Question" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <textarea value={answer} onChange={e => setAnswer(e.target.value)} placeholder="Answer" rows={4} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={category} onChange={e => setCategory(e.target.value)} placeholder="Category (e.g. Shipping, Returns)" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={question} onChange={e => setQuestion(e.target.value)} placeholder={ta('Question')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <textarea value={answer} onChange={e => setAnswer(e.target.value)} placeholder={ta('Answer')} rows={4} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={category} onChange={e => setCategory(e.target.value)} placeholder={ta('Category (e.g. Shipping, Returns)')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
               </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => { setShowModal(false); resetForm() }} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+                <button onClick={() => { setShowModal(false); resetForm() }} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
+                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? ta('Saving...') : editId ? ta('Update') : ta('Create')}</button>
               </div>
             </motion.div>
           </motion.div>
@@ -225,9 +227,9 @@ export default function FaqAdminPage() {
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={o => { if (!o) setDeleteId(null) }}
-        title="Delete FAQ entry"
-        description="Are you sure you want to delete this FAQ entry?"
-        confirmLabel="Delete"
+        title={ta('Delete FAQ entry')}
+        description={ta('Are you sure you want to delete this FAQ entry?')}
+        confirmLabel={ta('Delete')}
         onConfirm={handleDelete}
         destructive
       />

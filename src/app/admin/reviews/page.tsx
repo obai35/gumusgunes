@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { Star, RefreshCw, CheckCircle, XCircle, Trash2, MessageSquareText } from 'lucide-react'
 import { DataTable } from '@/components/admin/DataTable'
 import { Pagination } from '@/components/admin/Pagination'
@@ -33,6 +34,7 @@ type Review = {
 }
 
 export default function AdminReviews() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -63,10 +65,10 @@ export default function AdminReviews() {
           setTotal(d.total)
           setTotalPages(d.totalPages)
         } else {
-          toast.error(d.error || 'Failed to load reviews')
+          toast.error(ta(d.error || 'Failed to load reviews'))
         }
       })
-      .catch(() => toast.error('Failed to load reviews'))
+      .catch(() => toast.error(ta('Failed to load reviews')))
       .finally(() => setLoading(false))
   }
 
@@ -85,19 +87,19 @@ export default function AdminReviews() {
       const d = await res.json()
       if (d.ok) {
         setReviews(prev => prev.map(r => r.id === id ? d.review : r))
-        toast.success('Review updated')
+        toast.success(ta('Review updated'))
       } else {
-        toast.error(d.error || 'Failed to update review')
+        toast.error(ta(d.error || 'Failed to update review'))
       }
     } catch {
-      toast.error('Failed to update review')
+      toast.error(ta('Failed to update review'))
     } finally {
       setToggling(null)
     }
   }
 
   async function deleteReview(id: string) {
-    if (!confirm('Delete this review permanently?')) return
+    if (!confirm(ta('Delete this review permanently?'))) return
     setDeleting(id)
     try {
       const res = await fetch(`/api/admin/reviews?id=${id}`, { method: 'DELETE' })
@@ -105,12 +107,12 @@ export default function AdminReviews() {
       if (d.ok) {
         setReviews(prev => prev.filter(r => r.id !== id))
         setTotal(prev => prev - 1)
-        toast.success('Review deleted')
+        toast.success(ta('Review deleted'))
       } else {
-        toast.error(d.error || 'Failed to delete review')
+        toast.error(ta(d.error || 'Failed to delete review'))
       }
     } catch {
-      toast.error('Failed to delete review')
+      toast.error(ta('Failed to delete review'))
     } finally {
       setDeleting(null)
     }
@@ -132,12 +134,12 @@ export default function AdminReviews() {
   const columns: ColumnDef<Review>[] = [
     {
       accessorKey: 'product.name',
-      header: 'Product',
+      header: ta('Product'),
       cell: ({ row }) => <span className="font-medium text-navy max-w-[180px] truncate block">{row.original.product.name}</span>,
     },
     {
       accessorKey: 'authorName',
-      header: 'Author',
+      header: ta('Author'),
       cell: ({ row }) => (
         <div>
           <span className="text-muted-foreground">{row.original.authorName}</span>
@@ -147,28 +149,28 @@ export default function AdminReviews() {
     },
     {
       accessorKey: 'rating',
-      header: 'Rating',
+      header: ta('Rating'),
       cell: ({ row }) => <StarRating rating={row.original.rating} />,
     },
     {
       accessorKey: 'comment',
-      header: 'Comment',
+      header: ta('Comment'),
       cell: ({ row }) => <span className="text-muted-foreground max-w-[240px] truncate block">{row.original.comment}</span>,
     },
     {
       accessorKey: 'isVerified',
-      header: 'Verified',
+      header: ta('Verified'),
       cell: ({ row }) => (
         <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${row.original.isVerified ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
           {row.original.isVerified ? <CheckCircle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-          {row.original.isVerified ? 'Verified' : 'Unverified'}
+          {ta(row.original.isVerified ? 'Verified' : 'Unverified')}
         </span>
       ),
     },
     {
       accessorKey: 'createdAt',
-      header: 'Date',
-      cell: ({ row }) => <span className="text-muted-foreground text-xs">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+      header: ta('Date'),
+      cell: ({ row }) => <span className="text-muted-foreground text-xs">{fmtDate(row.original.createdAt)}</span>,
     },
     {
       id: 'actions',
@@ -179,7 +181,7 @@ export default function AdminReviews() {
             disabled={toggling === row.original.id}
             onClick={e => { e.stopPropagation(); toggleVerified(row.original.id) }}
             className={`p-1.5 rounded-lg text-xs font-medium transition-colors ${row.original.isVerified ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`}
-            title={row.original.isVerified ? 'Unverify' : 'Verify'}
+            title={ta(row.original.isVerified ? 'Unverify' : 'Verify')}
           >
             {toggling === row.original.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : row.original.isVerified ? <XCircle className="h-3.5 w-3.5" /> : <CheckCircle className="h-3.5 w-3.5" />}
           </button>
@@ -187,7 +189,7 @@ export default function AdminReviews() {
             disabled={deleting === row.original.id}
             onClick={e => { e.stopPropagation(); deleteReview(row.original.id) }}
             className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-            title="Delete"
+            title={ta('Delete')}
           >
             {deleting === row.original.id ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
           </button>
@@ -199,16 +201,16 @@ export default function AdminReviews() {
   return (
     <div>
       <PageHeader
-        title="Reviews"
+        title={ta('Reviews')}
         actions={
           <ExportButton
             filename="reviews-export"
             columns={[
-              { header: 'Product', key: 'product.name' },
-              { header: 'Author', key: 'authorName' },
-              { header: 'Rating', key: 'rating' },
-              { header: 'Comment', key: 'comment' },
-              { header: 'Verified', key: 'isVerified' },
+              { header: ta('Product'), key: 'product.name' },
+              { header: ta('Author'), key: 'authorName' },
+              { header: ta('Rating'), key: 'rating' },
+              { header: ta('Comment'), key: 'comment' },
+              { header: ta('Verified'), key: 'isVerified' },
             ]}
             data={reviews}
           />
@@ -218,22 +220,22 @@ export default function AdminReviews() {
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs text-muted-foreground mb-1">Total Reviews</p>
+          <p className="text-xs text-muted-foreground mb-1">{ta('Total Reviews')}</p>
           <p className="text-2xl font-bold text-navy">{total}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs text-muted-foreground mb-1">Avg Rating</p>
+          <p className="text-xs text-muted-foreground mb-1">{ta('Avg Rating')}</p>
           <p className="text-2xl font-bold text-navy flex items-center gap-2">
             {stats.avgRating.toFixed(1)}
             <StarRating rating={Math.round(stats.avgRating)} size={14} />
           </p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs text-muted-foreground mb-1">5-Star Reviews</p>
+          <p className="text-xs text-muted-foreground mb-1">{ta('5-Star Reviews')}</p>
           <p className="text-2xl font-bold text-navy">{stats.fiveStar}</p>
         </div>
         <div className="bg-white rounded-xl border border-border p-4">
-          <p className="text-xs text-muted-foreground mb-1">Pending Verification</p>
+          <p className="text-xs text-muted-foreground mb-1">{ta('Pending Verification')}</p>
           <p className="text-2xl font-bold text-amber-600">{stats.pendingVerification}</p>
         </div>
       </div>
@@ -246,7 +248,7 @@ export default function AdminReviews() {
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by product or author..."
+            placeholder={ta('Search by product or author...')}
             className="w-full pl-3 pr-8 py-2 rounded-lg border border-gray-200 text-sm"
           />
           {searchQuery && (
@@ -256,22 +258,22 @@ export default function AdminReviews() {
           )}
         </div>
         <select value={ratingFilter} onChange={e => { setRatingFilter(e.target.value); setPage(1) }} className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600">
-          <option value="">All Ratings</option>
-          <option value="5">5 Stars</option>
-          <option value="4">4 Stars</option>
-          <option value="3">3 Stars</option>
-          <option value="2">2 Stars</option>
-          <option value="1">1 Star</option>
+          <option value="">{ta('All Ratings')}</option>
+          <option value="5">{ta('5 Stars')}</option>
+          <option value="4">{ta('4 Stars')}</option>
+          <option value="3">{ta('3 Stars')}</option>
+          <option value="2">{ta('2 Stars')}</option>
+          <option value="1">{ta('1 Star')}</option>
         </select>
         <select value={verifiedFilter} onChange={e => { setVerifiedFilter(e.target.value); setPage(1) }} className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600">
-          <option value="">All Reviews</option>
-          <option value="verified">Verified</option>
-          <option value="unverified">Unverified</option>
+          <option value="">{ta('All Reviews')}</option>
+          <option value="verified">{ta('Verified')}</option>
+          <option value="unverified">{ta('Unverified')}</option>
         </select>
         <button onClick={fetchReviews} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:text-navy flex items-center gap-1">
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          <RefreshCw className="h-3.5 w-3.5" /> {ta('Refresh')}
         </button>
-        <span className="text-xs text-muted-foreground ml-auto">{total} review{total !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-muted-foreground ml-auto">{fmtNum(total)} {ta(total !== 1 ? 'reviews' : 'review')}</span>
       </FilterBar>
 
       <DataTable
@@ -280,8 +282,8 @@ export default function AdminReviews() {
         keyExtractor={(r) => r.id}
         loading={loading}
         onRowClick={(r) => setExpandedId(expandedId === r.id ? null : r.id)}
-        emptyTitle="No reviews found"
-        emptyDescription={searchQuery ? 'Try adjusting your search terms' : undefined}
+        emptyTitle={ta('No reviews found')}
+        emptyDescription={searchQuery ? ta('Try adjusting your search terms') : undefined}
       />
 
       {/* Expanded comment */}

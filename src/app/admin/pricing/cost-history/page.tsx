@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { History, Search, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type CostEntry = {
   id: string
@@ -29,6 +30,7 @@ export default function CostHistoryPage() {
   const [typeFilter, setTypeFilter] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   const fetchEntries = () => {
     const params = new URLSearchParams()
@@ -65,7 +67,7 @@ export default function CostHistoryPage() {
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <History className="h-6 w-6" /> Cost History
+            <History className="h-6 w-6" /> {ta('Cost History')}
           </h1>
         </div>
       </div>
@@ -79,7 +81,7 @@ export default function CostHistoryPage() {
               onChange={e => setProductFilter(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-lg border border-border text-sm appearance-none bg-white"
             >
-              <option value="">All Products</option>
+              <option value="">{ta('All Products')}</option>
               {products.map(p => (
                 <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
               ))}
@@ -91,21 +93,21 @@ export default function CostHistoryPage() {
           onChange={e => setTypeFilter(e.target.value)}
           className="w-48 px-3 py-2 rounded-lg border border-border text-sm bg-white"
         >
-          <option value="">All Types</option>
-          <option value="purchase">Purchase</option>
-          <option value="manufactured">Manufactured</option>
-          <option value="manual_adjustment">Manual Adjustment</option>
+          <option value="">{ta('All Types')}</option>
+          <option value="purchase">{ta('Purchase')}</option>
+          <option value="manufactured">{ta('Manufactured')}</option>
+          <option value="manual_adjustment">{ta('Manual Adjustment')}</option>
         </select>
       </div>
 
       <div className="rounded-lg border">
         <div className="border-b px-4 py-3 text-sm font-medium text-muted-foreground grid grid-cols-12 gap-4">
-          <span className="col-span-3">Product</span>
-          <span className="col-span-2">Unit Cost</span>
-          <span className="col-span-1">Qty</span>
-          <span className="col-span-2">Total</span>
-          <span className="col-span-2">Type</span>
-          <span className="col-span-2 text-right">Date</span>
+          <span className="col-span-3">{ta('Product')}</span>
+          <span className="col-span-2">{ta('Unit Cost')}</span>
+          <span className="col-span-1">{ta('Qty')}</span>
+          <span className="col-span-2">{ta('Total')}</span>
+          <span className="col-span-2">{ta('Type')}</span>
+          <span className="col-span-2 text-right">{ta('Date')}</span>
         </div>
         <div className="divide-y">
           {entries.map((e, i) => (
@@ -122,9 +124,9 @@ export default function CostHistoryPage() {
                 </Link>
                 <span className="text-muted-foreground ml-1">({e.product.sku})</span>
               </div>
-              <span className="col-span-2 font-medium">{e.unitCost.toFixed(2)}</span>
-              <span className="col-span-1 text-muted-foreground">{e.quantity}</span>
-              <span className="col-span-2">{e.totalCost.toFixed(2)}</span>
+              <span className="col-span-2 font-medium">{fmtCurrency(e.unitCost)}</span>
+              <span className="col-span-1 text-muted-foreground">{fmtNum(e.quantity)}</span>
+              <span className="col-span-2">{fmtCurrency(e.totalCost)}</span>
               <span className="col-span-2">
                 <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-medium ${
                   e.type === 'purchase' ? 'bg-blue-100 text-blue-700' :
@@ -133,15 +135,15 @@ export default function CostHistoryPage() {
                 }`}>{e.type.replace('_', ' ')}</span>
               </span>
               <span className="col-span-2 text-right text-muted-foreground">
-                {new Date(e.createdAt).toLocaleDateString()}
+                {fmtDate(e.createdAt)}
               </span>
             </motion.div>
           ))}
           {entries.length === 0 && !loading && (
-            <p className="px-4 py-8 text-center text-muted-foreground">No cost history entries found</p>
+            <p className="px-4 py-8 text-center text-muted-foreground">{ta('No cost history entries found')}</p>
           )}
           {loading && (
-            <p className="px-4 py-8 text-center text-muted-foreground">Loading...</p>
+            <p className="px-4 py-8 text-center text-muted-foreground">{ta('Loading...')}</p>
           )}
         </div>
       </div>
@@ -153,17 +155,17 @@ export default function CostHistoryPage() {
             onClick={() => setPage(p => Math.max(1, p - 1))}
             className="px-3 py-1.5 rounded border text-sm disabled:opacity-40"
           >
-            Previous
+            {ta('Previous')}
           </button>
           <span className="px-3 py-1.5 text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            {ta(`Page ${page} of ${totalPages}`)}
           </span>
           <button
             disabled={page >= totalPages}
             onClick={() => setPage(p => p + 1)}
             className="px-3 py-1.5 rounded border text-sm disabled:opacity-40"
           >
-            Next
+            {ta('Next')}
           </button>
         </div>
       )}

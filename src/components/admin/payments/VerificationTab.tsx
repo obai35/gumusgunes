@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Order = {
   id: string
@@ -32,6 +33,7 @@ type Order = {
 }
 
 export default function VerificationTab() {
+  const { ta, fmtNum, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [orders, setOrders] = useState<Order[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -67,8 +69,8 @@ export default function VerificationTab() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ orderId }),
     })
-    if (res.ok) { toast.success('Payment verified'); fetchOrders() }
-    else toast.error('Failed to verify')
+    if (res.ok) { toast.success(ta('Payment verified')); fetchOrders() }
+    else toast.error(ta('Failed to verify'))
   }
 
   function handleRejectClick(orderId: string) {
@@ -80,7 +82,7 @@ export default function VerificationTab() {
   async function handleRejectConfirm() {
     if (!rejectOrderId) return
     if (!rejectReason.trim()) {
-      toast.error('Please provide a reason for rejection')
+      toast.error(ta('Please provide a reason for rejection'))
       return
     }
     const res = await fetch('/api/admin/payments/reject', {
@@ -89,66 +91,66 @@ export default function VerificationTab() {
       body: JSON.stringify({ orderId: rejectOrderId, reason: rejectReason }),
     })
     if (res.ok) {
-      toast.success('Payment rejected')
+      toast.success(ta('Payment rejected'))
       setRejectOrderId(null)
       setRejectReason('')
       setRejectDialogOpen(false)
       fetchOrders()
     } else {
-      toast.error('Failed to reject')
+      toast.error(ta('Failed to reject'))
     }
   }
 
   const columns: ColumnDef<Order>[] = [
     {
       accessorKey: 'orderNumber',
-      header: 'Order Number',
+      header: ta('Order Number'),
     },
     {
       accessorKey: 'fullName',
-      header: 'Customer Name',
+      header: ta('Customer Name'),
     },
     {
       accessorKey: 'totalAmount',
-      header: 'Total Amount',
-      cell: ({ row }) => `E£${row.original.totalAmount.toFixed(2)}`,
+      header: ta('Total Amount'),
+      cell: ({ row }) => fmtCurrency(row.original.totalAmount),
     },
     {
       accessorKey: 'paymentMethod',
-      header: 'Payment Method',
+      header: ta('Payment Method'),
     },
     {
       id: 'walletInfo',
-      header: 'Wallet / Reference',
+      header: ta('Wallet / Reference'),
       cell: ({ row }) => {
         const o = row.original
         const parts: string[] = []
         if (o.walletProvider) parts.push(o.walletProvider)
-        if (o.paymentReference) parts.push(`Ref: ${o.paymentReference}`)
+        if (o.paymentReference) parts.push(ta(`Ref: ${o.paymentReference}`))
         return parts.length ? parts.join(' \u2014 ') : '\u2014'
       },
     },
     {
       accessorKey: 'createdAt',
-      header: 'Date',
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleString(),
+      header: ta('Date'),
+      cell: ({ row }) => fmtDateTime(row.original.createdAt),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: ta('Actions'),
       cell: ({ row }) => (
         <div className="flex gap-2">
           <button
             onClick={() => handleVerify(row.original.id)}
             className="flex items-center gap-1 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100"
           >
-            <CheckCircle className="h-3.5 w-3.5" /> Approve
+            <CheckCircle className="h-3.5 w-3.5" /> {ta('Approve')}
           </button>
           <button
             onClick={() => handleRejectClick(row.original.id)}
             className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100"
           >
-            <XCircle className="h-3.5 w-3.5" /> Reject
+            <XCircle className="h-3.5 w-3.5" /> {ta('Reject')}
           </button>
         </div>
       ),
@@ -156,21 +158,21 @@ export default function VerificationTab() {
   ]
 
   const exportColumns = [
-    { header: 'Order Number', key: 'orderNumber' },
-    { header: 'Customer Name', key: 'fullName' },
-    { header: 'Total Amount', key: 'totalAmount' },
-    { header: 'Payment Method', key: 'paymentMethod' },
-    { header: 'Wallet Provider', key: 'walletProvider' },
-    { header: 'Payment Reference', key: 'paymentReference' },
-    { header: 'Date', key: 'createdAt' },
+    { header: ta('Order Number'), key: 'orderNumber' },
+    { header: ta('Customer Name'), key: 'fullName' },
+    { header: ta('Total Amount'), key: 'totalAmount' },
+    { header: ta('Payment Method'), key: 'paymentMethod' },
+    { header: ta('Wallet Provider'), key: 'walletProvider' },
+    { header: ta('Payment Reference'), key: 'paymentReference' },
+    { header: ta('Date'), key: 'createdAt' },
   ]
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <SearchInput value={search} onChange={setSearch} placeholder="Search orders..." className="w-72" />
-          <p className="text-sm text-muted-foreground">{total} orders awaiting verification</p>
+          <SearchInput value={search} onChange={setSearch} placeholder={ta('Search orders...')} className="w-72" />
+          <p className="text-sm text-muted-foreground">{fmtNum(total)} {ta('orders awaiting verification')}</p>
         </div>
         <ExportButton
           filename="payment-verifications"
@@ -184,8 +186,8 @@ export default function VerificationTab() {
         data={orders}
         loading={loading}
         keyExtractor={(o) => o.id}
-        emptyTitle="No pending verifications"
-        emptyDescription="All payment verifications have been processed."
+        emptyTitle={ta('No pending verifications')}
+        emptyDescription={ta('All payment verifications have been processed.')}
       />
 
       <Pagination
@@ -199,21 +201,21 @@ export default function VerificationTab() {
       <AlertDialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject Payment</AlertDialogTitle>
+            <AlertDialogTitle>{ta('Reject Payment')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Provide a reason for rejecting this payment verification.
+              {ta('Provide a reason for rejecting this payment verification.')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="px-6 pb-2">
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Reason for rejection..."
+              placeholder={ta('Reason for rejection...')}
               className="w-full px-3 py-2 border border-border rounded-lg text-sm resize-none h-24"
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{ta('Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault()
@@ -221,7 +223,7 @@ export default function VerificationTab() {
               }}
               className="bg-red-600 hover:bg-red-700"
             >
-              Reject
+              {ta('Reject')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

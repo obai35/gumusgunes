@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { ArrowLeft, Plus, Trash2, Save, X } from 'lucide-react'
 import Link from 'next/link'
 
@@ -24,6 +25,7 @@ type PriceListDetail = {
 }
 
 export default function PriceListDetailPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const params = useParams()
   const router = useRouter()
   const [list, setList] = useState<PriceListDetail | null>(null)
@@ -59,8 +61,8 @@ export default function PriceListDetailPage() {
         currency: form.currency, isActive: form.isActive,
       }),
     })
-    if (!res.ok) { toast.error('Failed to save'); return }
-    toast.success('Saved')
+    if (!res.ok) { toast.error(ta('Failed to save')); return }
+    toast.success(ta('Saved'))
     setEditing(false)
     fetchList()
   }
@@ -74,14 +76,14 @@ export default function PriceListDetailPage() {
 
   const addItem = async (productId: string) => {
     const price = Number(newPrice) || 0
-    if (!price) { toast.error('Enter a price'); return }
+    if (!price) { toast.error(ta('Enter a price')); return }
     const res = await fetch(`/api/admin/pricing/price-lists/${params.id}/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId, price, minQuantity: 1 }),
     })
-    if (!res.ok) { toast.error('Failed to add'); return }
-    toast.success('Item added')
+    if (!res.ok) { toast.error(ta('Failed to add')); return }
+    toast.success(ta('Item added'))
     setAddProduct(false)
     setSearch('')
     setNewPrice('')
@@ -90,15 +92,15 @@ export default function PriceListDetailPage() {
   }
 
   const removeItem = async (itemId: string) => {
-    if (!confirm('Remove this item?')) return
+    if (!confirm(ta('Remove this item?'))) return
     const res = await fetch(`/api/admin/pricing/price-lists/${params.id}/items/${itemId}`, { method: 'DELETE' })
-    if (!res.ok) { toast.error('Failed to remove'); return }
-    toast.success('Removed')
+    if (!res.ok) { toast.error(ta('Failed to remove')); return }
+    toast.success(ta('Removed'))
     fetchList()
   }
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>
-  if (!list) return <div className="p-8 text-center text-muted-foreground">Not found</div>
+  if (loading) return <div className="p-8 text-center text-muted-foreground">{ta('Loading...')}</div>
+  if (!list) return <div className="p-8 text-center text-muted-foreground">{ta('Not found')}</div>
 
   return (
     <div className="space-y-6">
@@ -113,37 +115,37 @@ export default function PriceListDetailPage() {
           </div>
         </div>
         <button onClick={() => setEditing(!editing)} className="inline-flex items-center gap-1 rounded-lg border px-3 py-2 text-sm">
-          <Save className="h-4 w-4" /> {editing ? 'Cancel' : 'Edit'}
+          <Save className="h-4 w-4" /> {ta(editing ? 'Cancel' : 'Edit')}
         </button>
       </div>
 
       {editing && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="rounded-lg border p-4 space-y-3">
           <div className="grid gap-3 sm:grid-cols-3">
-            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder="Name" />
-            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder="Description" />
+            <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder={ta('Name')} />
+            <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder={ta('Description')} />
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="rounded border px-3 py-2 text-sm">
-              <option value="markup">Markup %</option>
-              <option value="fixed">Fixed Price</option>
+              <option value="markup">{ta('Markup %')}</option>
+              <option value="fixed">{ta('Fixed Price')}</option>
             </select>
-            <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder="Default value" />
-            <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder="Currency" />
+            <input type="number" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder={ta('Default value')} />
+            <input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className="rounded border px-3 py-2 text-sm" placeholder={ta('Currency')} />
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-              Active
+              {ta('Active')}
             </label>
           </div>
           <button onClick={saveList} className="rounded bg-primary px-3 py-1.5 text-sm text-primary-foreground">
-            <Save className="inline h-4 w-4 mr-1" /> Save Changes
+            <Save className="inline h-4 w-4 mr-1" /> {ta('Save Changes')}
           </button>
         </motion.div>
       )}
 
       <div className="rounded-lg border">
         <div className="border-b px-4 py-3 flex items-center justify-between">
-          <span className="font-semibold">Items ({list.items.length})</span>
+          <span className="font-semibold">{ta('Items')} ({fmtNum(list.items.length)})</span>
           <button onClick={() => setAddProduct(!addProduct)} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-            <Plus className="h-4 w-4" /> Add Product
+            <Plus className="h-4 w-4" /> {ta('Add Product')}
           </button>
         </div>
 
@@ -152,7 +154,7 @@ export default function PriceListDetailPage() {
             <input
               value={search}
               onChange={(e) => searchProducts(e.target.value)}
-              placeholder="Search products..."
+              placeholder={ta('Search products...')}
               className="w-full rounded border px-3 py-2 text-sm"
             />
             {searchResults.length > 0 && (
@@ -163,11 +165,11 @@ export default function PriceListDetailPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
-                        placeholder="Price"
+                        placeholder={ta('Price')}
                         className="w-24 rounded border px-2 py-1 text-xs"
                         onChange={(e) => setNewPrice(e.target.value)}
                       />
-                      <button onClick={() => addItem(p.id)} className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">Add</button>
+                      <button onClick={() => addItem(p.id)} className="rounded bg-primary px-2 py-1 text-xs text-primary-foreground">{ta('Add')}</button>
                     </div>
                   </div>
                 ))}
@@ -183,24 +185,24 @@ export default function PriceListDetailPage() {
                 {item.product.imageUrl && <img src={item.product.imageUrl} alt="" className="h-8 w-8 rounded object-cover" />}
                 <div>
                   <p className="font-medium">{item.product.name}</p>
-                  <p className="text-xs text-muted-foreground">{item.product.sku} · Cost: {item.product.costPrice?.toFixed(2) ?? '-'}</p>
+                  <p className="text-xs text-muted-foreground">{item.product.sku} · {ta('Cost')}: {item.product.costPrice?.toFixed(2) ?? '-'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <p className="font-semibold">{item.price.toFixed(2)} {list.currency}</p>
                 {item.product.costPrice && item.product.costPrice > 0 && (
                   <span className="text-xs text-muted-foreground">
-                    Margin: {((item.price - item.product.costPrice) / item.price * 100).toFixed(1)}%
+                    {ta('Margin')}: {((item.price - item.product.costPrice) / item.price * 100).toFixed(1)}%
                   </span>
                 )}
-                {item.minQuantity > 1 && <span className="text-xs text-muted-foreground">Min: {item.minQuantity}</span>}
+                {item.minQuantity > 1 && <span className="text-xs text-muted-foreground">{ta('Min')}: {fmtNum(item.minQuantity)}</span>}
                 <button onClick={() => removeItem(item.id)} className="text-muted-foreground hover:text-red-500">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>
           ))}
-          {list.items.length === 0 && <p className="px-4 py-8 text-center text-muted-foreground">No items yet</p>}
+          {list.items.length === 0 && <p className="px-4 py-8 text-center text-muted-foreground">{ta('No items yet')}</p>}
         </div>
       </div>
     </div>

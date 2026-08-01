@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/admin/PageHeader'
 import { Pagination } from '@/components/admin/Pagination'
 import { ExportButton } from '@/components/admin/ExportButton'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ColumnDef } from '@tanstack/react-table'
 
 type Brand = {
@@ -24,6 +25,7 @@ type Brand = {
 }
 
 export default function BrandsPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [brands, setBrands] = useState<Brand[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -56,10 +58,10 @@ export default function BrandsPage() {
         setTotal(data.total)
         setTotalPages(data.totalPages)
       } else {
-        toast.error(data.error || 'Failed to load brands')
+        toast.error(data.error || ta('Failed to load brands'))
       }
     } catch {
-      toast.error('Failed to load brands')
+      toast.error(ta('Failed to load brands'))
     } finally {
       setLoading(false)
     }
@@ -78,7 +80,7 @@ export default function BrandsPage() {
   }
 
   async function handleSubmit() {
-    if (!name || !slug) { toast.error('Name and slug are required'); return }
+    if (!name || !slug) { toast.error(ta('Name and slug are required')); return }
     setSaving(true)
     try {
       const url = editId ? `/api/admin/brands/${editId}` : '/api/admin/brands'
@@ -89,29 +91,29 @@ export default function BrandsPage() {
         body: JSON.stringify({ name, nameAr, slug, logo, isVisible: formVisible }),
       })
       if (res.ok) {
-        toast.success(editId ? 'Brand updated' : 'Brand created')
+        toast.success(editId ? ta('Brand updated') : ta('Brand created'))
         resetForm(); setShowModal(false)
         fetchBrands()
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed')
+        toast.error(e.error || ta('Failed'))
       }
-    } catch { toast.error('Failed to save') }
+    } catch { toast.error(ta('Failed to save')) }
     finally { setSaving(false) }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm('Delete this brand?')) return
+    if (!confirm(ta('Delete this brand?'))) return
     try {
       const res = await fetch(`/api/admin/brands/${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast.success('Brand deleted')
+        toast.success(ta('Brand deleted'))
         fetchBrands()
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed to delete')
+        toast.error(e.error || ta('Failed to delete'))
       }
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
   }
 
   async function toggleVisibility(brand: Brand) {
@@ -122,7 +124,7 @@ export default function BrandsPage() {
     })
     if (res.ok) {
       setBrands(prev => prev.map(b => b.id === brand.id ? { ...b, isVisible: !b.isVisible } : b))
-    } else toast.error('Failed to toggle visibility')
+    } else toast.error(ta('Failed to toggle visibility'))
   }
 
   function openEdit(brand: Brand) {
@@ -133,7 +135,7 @@ export default function BrandsPage() {
   const columns: ColumnDef<Brand>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           {row.original.logo && (
@@ -145,29 +147,29 @@ export default function BrandsPage() {
     },
     {
       accessorKey: 'slug',
-      header: 'Slug',
+      header: ta('Slug'),
       cell: ({ row }) => <span className="font-mono text-xs text-muted-foreground">{row.original.slug}</span>,
     },
     {
       accessorKey: '_count.products',
-      header: 'Products',
+      header: ta('Products'),
     },
     {
       accessorKey: 'isVisible',
-      header: 'Visible',
+      header: ta('Visible'),
       cell: ({ row }) => (
         <button
           onClick={() => toggleVisibility(row.original)}
           className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium ${row.original.isVisible ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
         >
           {row.original.isVisible ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-          {row.original.isVisible ? 'Visible' : 'Hidden'}
+          {row.original.isVisible ? ta('Visible') : ta('Hidden')}
         </button>
       ),
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: ta('Actions'),
       cell: ({ row }) => (
         <div className="flex gap-2">
           <button onClick={() => openEdit(row.original)} className="text-navy hover:text-gold"><Pencil className="h-4 w-4" /></button>
@@ -180,21 +182,21 @@ export default function BrandsPage() {
   return (
     <div>
       <PageHeader
-        title="Brands"
+        title={ta('Brands')}
         actions={
           <div className="flex items-center gap-2">
             <ExportButton
               filename="brands-export"
               columns={[
-                { header: 'Name', key: 'name' },
-                { header: 'Slug', key: 'slug' },
-                { header: 'Products', key: '_count.products' },
-                { header: 'Visible', key: 'isVisible' },
+                { header: ta('Name'), key: 'name' },
+                { header: ta('Slug'), key: 'slug' },
+                { header: ta('Products'), key: '_count.products' },
+                { header: ta('Visible'), key: 'isVisible' },
               ]}
               data={brands}
             />
             <button onClick={() => { resetForm(); setShowModal(true) }} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-              <Plus className="h-4 w-4" /> New Brand
+              <Plus className="h-4 w-4" /> {ta('New Brand')}
             </button>
           </div>
         }
@@ -205,7 +207,7 @@ export default function BrandsPage() {
         <input
           value={searchQuery}
           onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
-          placeholder="Search brands..."
+          placeholder={ta('Search brands...')}
           className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
         />
         {searchQuery && (
@@ -220,9 +222,9 @@ export default function BrandsPage() {
         data={brands}
         keyExtractor={(b) => b.id}
         loading={loading}
-        emptyTitle={searchQuery ? 'No brands match your search' : 'No brands yet'}
-        emptyDescription={searchQuery ? 'Try adjusting your search terms' : 'Create your first brand to organize products'}
-        emptyAction={searchQuery ? undefined : { label: 'New Brand', onClick: () => { resetForm(); setShowModal(true) } }}
+        emptyTitle={searchQuery ? ta('No brands match your search') : ta('No brands yet')}
+        emptyDescription={searchQuery ? ta('Try adjusting your search terms') : ta('Create your first brand to organize products')}
+        emptyAction={searchQuery ? undefined : { label: ta('New Brand'), onClick: () => { resetForm(); setShowModal(true) } }}
       />
 
       <Pagination
@@ -251,22 +253,22 @@ export default function BrandsPage() {
               className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-navy">{editId ? 'Edit Brand' : 'New Brand'}</h3>
+                <h3 className="font-semibold text-navy">{editId ? ta('Edit Brand') : ta('New Brand')}</h3>
                 <button onClick={() => setShowModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="space-y-3">
-                <input value={name} onChange={e => { setName(e.target.value); autoSlug(e.target.value) }} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder="Arabic Name (optional)" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-                <input value={slug} onChange={e => setSlug(e.target.value)} placeholder="Slug" className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono" />
-                <input value={logo} onChange={e => setLogo(e.target.value)} placeholder="Logo URL" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={name} onChange={e => { setName(e.target.value); autoSlug(e.target.value) }} placeholder={ta('Name')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={nameAr} onChange={e => setNameAr(e.target.value)} placeholder={ta('Arabic Name (optional)')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+                <input value={slug} onChange={e => setSlug(e.target.value)} placeholder={ta('Slug')} className="w-full px-3 py-2 border border-border rounded-lg text-sm font-mono" />
+                <input value={logo} onChange={e => setLogo(e.target.value)} placeholder={ta('Logo URL')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={formVisible} onChange={e => setFormVisible(e.target.checked)} className="rounded" />
-                  Visible on storefront
+                  {ta('Visible on storefront')}
                 </label>
               </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? 'Saving...' : editId ? 'Update' : 'Create'}</button>
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
+                <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? ta('Saving...') : editId ? ta('Update') : ta('Create')}</button>
               </div>
             </motion.div>
           </motion.div>
