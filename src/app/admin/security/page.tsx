@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Shield, ShieldOff, Smartphone, Copy, Check } from 'lucide-react'
 import { useAdminAuth } from '@/lib/admin-auth-store'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function AdminSecurity() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function AdminSecurity() {
   const [totpEnabled, setTotpEnabled] = useState(false)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   useEffect(() => {
     if (!user) { router.push('/admin/login'); return }
@@ -36,7 +38,7 @@ export default function AdminSecurity() {
       setStep('showSecret')
     } else {
       const err = await res.json()
-      toast.error(err.error || 'Setup failed')
+      toast.error(err.error || ta('Setup failed'))
     }
     setLoading(false)
   }
@@ -51,10 +53,10 @@ export default function AdminSecurity() {
     if (res.ok) {
       setTotpEnabled(true)
       setStep('idle')
-      toast.success('2FA enabled!')
+      toast.success(ta('2FA enabled!'))
     } else {
       const err = await res.json()
-      toast.error(err.error || 'Verification failed')
+      toast.error(err.error || ta('Verification failed'))
     }
     setLoading(false)
   }
@@ -69,10 +71,10 @@ export default function AdminSecurity() {
     if (res.ok) {
       setTotpEnabled(false)
       setDisableCode('')
-      toast.success('2FA disabled')
+      toast.success(ta('2FA disabled'))
     } else {
       const err = await res.json()
-      toast.error(err.error || 'Failed to disable')
+      toast.error(err.error || ta('Failed to disable'))
     }
     setLoading(false)
   }
@@ -85,7 +87,7 @@ export default function AdminSecurity() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Security Settings</h1>
+      <h1 className="text-2xl font-display font-semibold text-navy mb-6">{ta('Security Settings')}</h1>
 
       <div className="bg-white rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-6">
@@ -94,13 +96,13 @@ export default function AdminSecurity() {
               {totpEnabled ? <Shield className="h-5 w-5 text-green-600" /> : <ShieldOff className="h-5 w-5 text-muted-foreground" />}
             </div>
             <div>
-              <h2 className="font-semibold text-navy">Two-Factor Authentication</h2>
-              <p className="text-sm text-muted-foreground">{totpEnabled ? 'Active' : 'Not set up'}</p>
+              <h2 className="font-semibold text-navy">{ta('Two-Factor Authentication')}</h2>
+              <p className="text-sm text-muted-foreground">{totpEnabled ? ta('Active') : ta('Not set up')}</p>
             </div>
           </div>
           {!totpEnabled && (
             <button onClick={startSetup} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">
-              {loading ? 'Setting up...' : 'Set Up'}
+              {loading ? ta('Setting up...') : ta('Set Up')}
             </button>
           )}
         </div>
@@ -109,7 +111,7 @@ export default function AdminSecurity() {
           <div className="mb-4">
             <div className="bg-green-50 text-green-700 text-sm px-4 py-3 rounded-lg flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Two-factor authentication is enabled
+              {ta('Two-factor authentication is enabled')}
             </div>
           </div>
         )}
@@ -117,13 +119,13 @@ export default function AdminSecurity() {
         {step === 'showSecret' && (
           <div className="space-y-4 border-t border-border pt-4">
             <p className="text-sm text-muted-foreground">
-              Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.):
+              {ta('Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.):')}
             </p>
             <div className="flex justify-center">
-              {qrCode && <img src={qrCode} alt="QR Code" className="h-48 w-48 border border-border rounded-lg" />}
+              {qrCode && <img src={qrCode} alt={ta('QR Code')} className="h-48 w-48 border border-border rounded-lg" />}
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">Or enter this key manually:</p>
+              <p className="text-sm text-muted-foreground mb-1">{ta('Or enter this key manually:')}</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 px-3 py-2 bg-gray-50 rounded-lg text-sm font-mono break-all">{secret}</code>
                 <button onClick={copySecret} className="p-2 text-muted-foreground hover:text-navy rounded-lg hover:bg-gray-100">
@@ -132,11 +134,11 @@ export default function AdminSecurity() {
               </div>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-2">Verify with code from app:</p>
+              <p className="text-sm text-muted-foreground mb-2">{ta('Verify with code from app:')}</p>
               <div className="flex gap-2">
                 <input type="text" inputMode="numeric" maxLength={6} value={verifyCode} onChange={e => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-border text-center text-lg tracking-widest font-mono" placeholder="000000" />
                 <button onClick={verifyTotp} disabled={loading || verifyCode.length !== 6} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors">
-                  {loading ? '...' : 'Verify'}
+                  {loading ? '...' : ta('Verify')}
                 </button>
               </div>
             </div>
@@ -146,11 +148,11 @@ export default function AdminSecurity() {
         {/* Show disable section when totp is enabled and we're not in setup */}
         {totpEnabled && step === 'idle' && (
           <div className="border-t border-border pt-4 space-y-3">
-            <p className="text-sm text-muted-foreground">To disable 2FA, enter the current code from your authenticator app:</p>
+            <p className="text-sm text-muted-foreground">{ta('To disable 2FA, enter the current code from your authenticator app:')}</p>
             <div className="flex gap-2">
               <input type="text" inputMode="numeric" maxLength={6} value={disableCode} onChange={e => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))} className="flex-1 px-3 py-2 rounded-lg border border-border text-center text-lg tracking-widest font-mono" placeholder="000000" />
               <button onClick={disableTotp} disabled={loading || disableCode.length !== 6} className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors">
-                {loading ? '...' : 'Disable'}
+                {loading ? '...' : ta('Disable')}
               </button>
             </div>
           </div>

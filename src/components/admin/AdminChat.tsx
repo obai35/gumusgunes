@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Send, Loader2, Sparkles, ChevronDown, ChevronRight, Bot, Check, X, AlertTriangle, Terminal, FileCode, Database } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type PendingAction = {
   index: number
@@ -44,8 +45,9 @@ function getToolIcon(tool: string) {
 }
 
 export function AdminChat() {
+  const { ta } = useAdminTranslate()
   const [open, setOpen] = useState(false)
-  const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: 'Hello! I am your admin assistant. How can I help you manage the store?' }])
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: ta('Hello! I am your admin assistant. How can I help you manage the store?') }])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
@@ -85,10 +87,10 @@ export function AdminChat() {
         setMessages(prev => [...prev, assistantMsg])
         if (data.sessionId) setSessionId(data.sessionId)
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
+        setMessages(prev => [...prev, { role: 'assistant', content: ta('Sorry, I encountered an error. Please try again.') }])
       }
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Connection error. Please check your network and try again.' }])
+      setMessages(prev => [...prev, { role: 'assistant', content: ta('Connection error. Please check your network and try again.') }])
     } finally {
       setLoading(false)
     }
@@ -108,10 +110,10 @@ export function AdminChat() {
       if (data.ok && data.reply) {
         setMessages(prev => [...prev, { role: 'assistant', content: data.reply }])
       } else if (data.ok && data.rejected) {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Action rejected. You can ask the agent to try a different approach.' }])
+        setMessages(prev => [...prev, { role: 'assistant', content: ta('Action rejected. You can ask the agent to try a different approach.') }])
       }
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to process approval.' }])
+      setMessages(prev => [...prev, { role: 'assistant', content: ta('Failed to process approval.') }])
     } finally {
       setLoading(false)
     }
@@ -125,7 +127,7 @@ export function AdminChat() {
       >
         {open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
         <Bot className="h-4 w-4 text-gold" />
-        <span className="font-medium">AI Assistant</span>
+        <span className="font-medium">{ta('AI Assistant')}</span>
         {!open && messages.length > 1 && (
           <span className="ml-auto h-2 w-2 rounded-full bg-gold animate-pulse" />
         )}
@@ -190,7 +192,7 @@ export function AdminChat() {
                 </div>
                 <div className="bg-silver/5 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Thinking...
+                  {ta('Thinking...')}
                 </div>
               </div>
             )}
@@ -204,7 +206,7 @@ export function AdminChat() {
               ref={inputRef}
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Ask anything..."
+              placeholder={ta('Ask anything...')}
               className="flex-1 bg-navy-soft/50 rounded-lg px-2.5 py-1.5 text-xs text-silver placeholder:text-silver/30 outline-none focus:ring-1 focus:ring-gold/40 border border-silver/10"
             />
             <button

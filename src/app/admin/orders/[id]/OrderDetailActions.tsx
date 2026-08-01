@@ -2,6 +2,7 @@
 
 import { AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import ReturnModal from './ReturnModal'
 import EditOrderModal from './EditOrderModal'
 
@@ -15,15 +16,16 @@ interface OrderDetailActionsProps {
 export default function OrderDetailActions({ orderId, items, customer, adminId }: OrderDetailActionsProps) {
   const [showReturn, setShowReturn] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
+  const { ta } = useAdminTranslate()
 
   return (
     <>
       <div className="flex flex-col gap-2">
         <button onClick={() => setShowReturn(true)} className="w-full px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
-          Process Return
+          {ta('Process Return')}
         </button>
         <button onClick={() => setShowEdit(true)} className="w-full px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">
-          Edit Order
+          {ta('Edit Order')}
         </button>
       </div>
       <AnimatePresence>

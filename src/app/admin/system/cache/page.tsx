@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Database, RefreshCw, Globe, Trash2, CheckCircle2, XCircle, Server, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type CacheAction = 'clear-redis' | 'delete-redis-key' | 'clear-isr' | 'clear-cdn'
 
@@ -11,13 +12,14 @@ export default function AdminCache() {
   const [loading, setLoading] = useState<CacheAction | null>(null)
   const [results, setResults] = useState<Record<string, any> | null>(null)
   const [redisKey, setRedisKey] = useState('')
+  const { ta } = useAdminTranslate()
 
   async function executeAction(action: CacheAction) {
     if (action === 'delete-redis-key' && !redisKey) {
-      toast.error('Enter a Redis key to delete')
+      toast.error(ta('Enter a Redis key to delete'))
       return
     }
-    if (!confirm(`Are you sure you want to ${action.replace(/-/g, ' ')}?`)) return
+    if (!confirm(ta(`Are you sure you want to ${action.replace(/-/g, ' ')}?`))) return
     setLoading(action)
     setResults(null)
     try {
@@ -28,17 +30,17 @@ export default function AdminCache() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-      if (!res.ok) throw new Error('Request failed')
+      if (!res.ok) throw new Error(ta('Request failed'))
       const data = await res.json()
       setResults(data.results || data)
       const allSuccess = Object.values(data.results || {}).every((r: any) => r.success)
       if (allSuccess) {
-        toast.success(`${action.replace(/-/g, ' ')} completed successfully`)
+        toast.success(ta(`${action.replace(/-/g, ' ')} completed successfully`))
       } else {
-        toast.warning('Some cache operations had errors')
+        toast.warning(ta('Some cache operations had errors'))
       }
     } catch (err: any) {
-      toast.error(err.message || 'Failed to clear cache')
+      toast.error(err.message || ta('Failed to clear cache'))
     } finally {
       setLoading(null)
     }
@@ -47,32 +49,32 @@ export default function AdminCache() {
   const actions = [
     {
       id: 'clear-redis' as CacheAction,
-      title: 'Clear Redis Cache',
-      description: 'Flush all Redis keys. This will clear cached data, sessions, and temporary data.',
+      title: ta('Clear Redis Cache'),
+      description: ta('Flush all Redis keys. This will clear cached data, sessions, and temporary data.'),
       icon: Database,
       color: 'text-orange-600 bg-orange-50',
       requiresKey: false,
     },
     {
       id: 'delete-redis-key' as CacheAction,
-      title: 'Delete Redis Key',
-      description: 'Delete a specific Redis key by name.',
+      title: ta('Delete Redis Key'),
+      description: ta('Delete a specific Redis key by name.'),
       icon: Trash2,
       color: 'text-yellow-600 bg-yellow-50',
       requiresKey: true,
     },
     {
       id: 'clear-isr' as CacheAction,
-      title: 'Clear ISR Cache',
-      description: 'Revalidate all Next.js Incremental Static Regeneration (ISR) cache. Pages will be regenerated on next request.',
+      title: ta('Clear ISR Cache'),
+      description: ta('Revalidate all Next.js Incremental Static Regeneration (ISR) cache. Pages will be regenerated on next request.'),
       icon: RefreshCw,
       color: 'text-blue-600 bg-blue-50',
       requiresKey: false,
     },
     {
       id: 'clear-cdn' as CacheAction,
-      title: 'Purge CDN Cache',
-      description: 'Send a purge request to the CDN to clear cached static assets.',
+      title: ta('Purge CDN Cache'),
+      description: ta('Send a purge request to the CDN to clear cached static assets.'),
       icon: Globe,
       color: 'text-purple-600 bg-purple-50',
       requiresKey: false,
@@ -82,8 +84,8 @@ export default function AdminCache() {
   return (
     <div>
       <PageHeader
-        title="Cache Management"
-        subtitle="Clear and manage system caches"
+        title={ta('Cache Management')}
+        subtitle={ta('Clear and manage system caches')}
       />
 
       <div className="grid gap-4">
@@ -102,7 +104,7 @@ export default function AdminCache() {
                       type="text"
                       value={redisKey}
                       onChange={e => setRedisKey(e.target.value)}
-                      placeholder="e.g. product:123"
+                      placeholder={ta('e.g. product:123')}
                       className="mt-3 px-3 py-2 rounded-lg border border-border text-sm font-mono w-full max-w-sm"
                     />
                   )}
@@ -118,7 +120,7 @@ export default function AdminCache() {
                 ) : (
                   <Trash2 className="h-4 w-4" />
                 )}
-                {loading === action.id ? 'Clearing...' : 'Clear'}
+                {loading === action.id ? ta('Clearing...') : ta('Clear')}
               </button>
             </div>
 
@@ -132,8 +134,8 @@ export default function AdminCache() {
                 }`}>
                   {result.success ? <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" /> : <XCircle className="h-4 w-4 mt-0.5 shrink-0" />}
                   <div>
-                    {result.success ? 'Operation completed successfully' : result.error || 'Operation failed'}
-                    {result.key && <span className="block font-mono text-xs mt-1">Key: {result.key}</span>}
+                    {result.success ? ta('Operation completed successfully') : result.error || ta('Operation failed')}
+                    {result.key && <span className="block font-mono text-xs mt-1">{ta('Key:')} {result.key}</span>}
                     {result.status && <span className="block text-xs mt-1">HTTP {result.status}</span>}
                   </div>
                 </div>

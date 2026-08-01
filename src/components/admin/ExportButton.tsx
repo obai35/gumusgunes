@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import * as XLSX from 'exceljs'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type ExportColumn = { header: string; key: string; width?: number }
 
@@ -22,6 +23,7 @@ type ExportButtonProps = {
 
 export function ExportButton({ filename, columns, data, label = 'Export' }: ExportButtonProps) {
   const [exporting, setExporting] = useState(false)
+  const { ta } = useAdminTranslate()
 
   const exportCSV = async () => {
     setExporting(true)
@@ -71,12 +73,12 @@ export function ExportButton({ filename, columns, data, label = 'Export' }: Expo
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" disabled={exporting}>
           <Download className="h-4 w-4 mr-2" />
-          {exporting ? 'Exporting...' : label}
+          {exporting ? ta('Exporting...') : ta(label)}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={exportCSV}>Export as CSV</DropdownMenuItem>
-        <DropdownMenuItem onClick={exportExcel}>Export as Excel</DropdownMenuItem>
+        <DropdownMenuItem onClick={exportCSV}>{ta('Export as CSV')}</DropdownMenuItem>
+        <DropdownMenuItem onClick={exportExcel}>{ta('Export as Excel')}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

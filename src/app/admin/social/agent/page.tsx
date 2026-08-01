@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Bot, TrendingUp, Video, BarChart3, Target, Lightbulb, Send, Loader2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { PageHeader } from '@/components/admin/PageHeader'
 
 type Tab = 'trends' | 'videos' | 'ads' | 'insights' | 'strategy'
@@ -12,6 +13,7 @@ export default function SocialAgentPage() {
   const [activeTab, setActiveTab] = useState<Tab>('trends')
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<Record<string, any>>({})
+  const { ta } = useAdminTranslate()
 
   const [niche, setNiche] = useState('jewelry, accessories, fashion')
   const [region, setRegion] = useState('egypt')
@@ -37,31 +39,31 @@ export default function SocialAgentPage() {
       const data = await res.json()
       if (!data.ok) throw new Error(data.error)
       setResults(prev => ({ ...prev, [action]: data.data }))
-      toast.success('Analysis complete')
+      toast.success(ta('Analysis complete'))
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Request failed')
+      toast.error(err instanceof Error ? err.message : ta('Request failed'))
     } finally {
       setLoading(false)
     }
   }, [])
 
   const tabs = [
-    { id: 'trends' as Tab, label: 'Trend Analysis', icon: TrendingUp },
-    { id: 'videos' as Tab, label: 'Video Ideas', icon: Video },
-    { id: 'ads' as Tab, label: 'Ad Manager', icon: Target },
-    { id: 'insights' as Tab, label: 'Analytics Insights', icon: BarChart3 },
-    { id: 'strategy' as Tab, label: 'Content Strategy', icon: Lightbulb },
+    { id: 'trends' as Tab, label: ta('Trend Analysis'), icon: TrendingUp },
+    { id: 'videos' as Tab, label: ta('Video Ideas'), icon: Video },
+    { id: 'ads' as Tab, label: ta('Ad Manager'), icon: Target },
+    { id: 'insights' as Tab, label: ta('Analytics Insights'), icon: BarChart3 },
+    { id: 'strategy' as Tab, label: ta('Content Strategy'), icon: Lightbulb },
   ]
 
   return (
     <div>
       <PageHeader
-        title="AI Social Media Agent"
-        subtitle="Your intelligent brand manager for Instagram & Facebook"
+        title={ta('AI Social Media Agent')}
+        subtitle={ta('Your intelligent brand manager for Instagram & Facebook')}
         actions={
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="h-4 w-4 text-gold" />
-            <span>Powered by GROQ AI</span>
+            <span>{ta('Powered by GROQ AI')}</span>
           </div>
         }
       />
@@ -87,24 +89,24 @@ export default function SocialAgentPage() {
       {activeTab === 'trends' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h3 className="font-semibold text-navy mb-4">Trend Analysis</h3>
+            <h3 className="font-semibold text-navy mb-4">{ta('Trend Analysis')}</h3>
             <div className="grid sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Niche / Industry</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Niche / Industry')}</label>
                 <input value={niche} onChange={e => setNiche(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
               </div>
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Region</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Region')}</label>
                 <select value={region} onChange={e => setRegion(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm">
-                  <option value="egypt">Egypt</option>
-                  <option value="gulf">Gulf</option>
-                  <option value="global">Global</option>
+                  <option value="egypt">{ta('Egypt')}</option>
+                  <option value="gulf">{ta('Gulf')}</option>
+                  <option value="global">{ta('Global')}</option>
                 </select>
               </div>
             </div>
             <button onClick={() => callAgent('analyze-trends', { niche, region })} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <TrendingUp className="h-4 w-4" />}
-              {loading ? 'Analyzing...' : 'Analyze Trends'}
+              {loading ? ta('Analyzing...') : ta('Analyze Trends')}
             </button>
           </div>
 
@@ -124,7 +126,7 @@ export default function SocialAgentPage() {
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                           t.relevance === 'high' ? 'bg-gold/10 text-gold' :
                           'bg-gray-50 text-gray-500'
-                        }`}>{t.relevance} relevance</span>
+                        }`}>{t.relevance} {ta('relevance')}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">{t.suggestion}</p>
                     </div>
@@ -132,9 +134,9 @@ export default function SocialAgentPage() {
                 ))}
               </div>
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="font-semibold text-navy mb-2">Niche Insights</h4>
+                <h4 className="font-semibold text-navy mb-2">{ta('Niche Insights')}</h4>
                 <p className="text-sm text-muted-foreground mb-4">{results['analyze-trends'].nicheInsights}</p>
-                <h4 className="font-semibold text-navy mb-2">Recommended Actions</h4>
+                <h4 className="font-semibold text-navy mb-2">{ta('Recommended Actions')}</h4>
                 <ul className="space-y-2">
                   {results['analyze-trends'].recommendedActions?.map((a: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
@@ -152,32 +154,32 @@ export default function SocialAgentPage() {
       {activeTab === 'videos' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h3 className="font-semibold text-navy mb-4">Video Content Suggestions</h3>
+            <h3 className="font-semibold text-navy mb-4">{ta('Video Content Suggestions')}</h3>
             <div className="grid sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Product Name</label>
-                <input value={productName} onChange={e => setProductName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. Solstice Necklace" />
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Product Name')}</label>
+                <input value={productName} onChange={e => setProductName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. Solstice Necklace')} />
               </div>
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Price (EGP)</label>
-                <input value={productPrice} onChange={e => setProductPrice(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. 450" />
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Price (EGP)')}</label>
+                <input value={productPrice} onChange={e => setProductPrice(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. 450')} />
               </div>
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Material</label>
-                <input value={productMaterial} onChange={e => setProductMaterial(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. Stainless Steel" />
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Material')}</label>
+                <input value={productMaterial} onChange={e => setProductMaterial(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. Stainless Steel')} />
               </div>
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Number of Ideas</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Number of Ideas')}</label>
                 <input type="number" min={1} max={5} value={videoCount} onChange={e => setVideoCount(Number(e.target.value))} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
               </div>
             </div>
             <div className="mb-4">
-              <label className="text-sm font-medium text-navy block mb-1">Description</label>
-              <textarea value={productDesc} onChange={e => setProductDesc(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-border text-sm resize-none" placeholder="Describe the product..." />
+              <label className="text-sm font-medium text-navy block mb-1">{ta('Description')}</label>
+              <textarea value={productDesc} onChange={e => setProductDesc(e.target.value)} rows={3} className="w-full px-3 py-2 rounded-lg border border-border text-sm resize-none" placeholder={ta('Describe the product...')} />
             </div>
             <button onClick={() => callAgent('suggest-videos', { product: { name: productName, price: Number(productPrice), material: productMaterial, description: productDesc }, count: videoCount })} disabled={loading || !productName} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
-              {loading ? 'Generating...' : 'Generate Video Ideas'}
+              {loading ? ta('Generating...') : ta('Generate Video Ideas')}
             </button>
           </div>
 
@@ -191,11 +193,11 @@ export default function SocialAgentPage() {
                   </div>
                   <p className="text-sm text-muted-foreground mb-3">{v.concept}</p>
                   <div className="bg-secondary/30 rounded-lg p-3 mb-3">
-                    <p className="text-xs text-muted-foreground mb-1">🎯 Hook</p>
+                    <p className="text-xs text-muted-foreground mb-1">🎯 {ta('Hook')}</p>
                     <p className="text-sm font-medium text-navy">{v.hook}</p>
                   </div>
                   <div className="mb-3">
-                    <p className="text-xs text-muted-foreground mb-2">📋 Structure</p>
+                    <p className="text-xs text-muted-foreground mb-2">📋 {ta('Structure')}</p>
                     <div className="flex flex-wrap gap-2">
                       {v.structure?.map((s: string, j: number) => (
                         <span key={j} className="px-2 py-1 bg-navy/5 text-navy rounded text-xs">{s}</span>
@@ -206,7 +208,7 @@ export default function SocialAgentPage() {
                     <p className="text-xs text-muted-foreground mb-1">🎵 {v.musicStyle}</p>
                   </div>
                   <div className="bg-secondary/30 rounded-lg p-3 mb-3">
-                    <p className="text-xs text-muted-foreground mb-1">📝 Caption</p>
+                    <p className="text-xs text-muted-foreground mb-1">📝 {ta('Caption')}</p>
                     <p className="text-sm text-navy">{v.caption}</p>
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -224,29 +226,29 @@ export default function SocialAgentPage() {
       {activeTab === 'ads' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h3 className="font-semibold text-navy mb-4">Ad Campaign Recommendations</h3>
+            <h3 className="font-semibold text-navy mb-4">{ta('Ad Campaign Recommendations')}</h3>
             <div className="grid sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Campaign Goal</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Campaign Goal')}</label>
                 <select value={adGoal} onChange={e => setAdGoal(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm">
-                  <option value="awareness">Brand Awareness</option>
-                  <option value="engagement">Engagement</option>
-                  <option value="sales">Sales / Conversions</option>
-                  <option value="followers">Followers Growth</option>
+                  <option value="awareness">{ta('Brand Awareness')}</option>
+                  <option value="engagement">{ta('Engagement')}</option>
+                  <option value="sales">{ta('Sales / Conversions')}</option>
+                  <option value="followers">{ta('Followers Growth')}</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium text-navy block mb-1">Budget (EGP)</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta('Budget (EGP)')}</label>
                 <input value={adBudget} onChange={e => setAdBudget(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
               </div>
             </div>
             <div className="mb-4">
-              <label className="text-sm font-medium text-navy block mb-1">Target Audience</label>
-              <input value={adTarget} onChange={e => setAdTarget(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. women 18-45 Egypt interested in fashion" />
+              <label className="text-sm font-medium text-navy block mb-1">{ta('Target Audience')}</label>
+              <input value={adTarget} onChange={e => setAdTarget(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. women 18-45 Egypt interested in fashion')} />
             </div>
             <button onClick={() => callAgent('recommend-ads', { goal: adGoal, budget: Number(adBudget), target: adTarget })} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Target className="h-4 w-4" />}
-              {loading ? 'Generating...' : 'Get Recommendations'}
+              {loading ? ta('Generating...') : ta('Get Recommendations')}
             </button>
           </div>
 
@@ -258,20 +260,20 @@ export default function SocialAgentPage() {
                   <p className="text-sm text-muted-foreground mb-3">{campaign.objective}</p>
                   <div className="grid sm:grid-cols-2 gap-4 mb-3">
                     <div className="bg-secondary/30 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground mb-1">💰 Budget</p>
+                      <p className="text-xs text-muted-foreground mb-1">💰 {ta('Budget')}</p>
                       <p className="text-sm font-medium text-navy">{campaign.budgetSuggestion}</p>
                     </div>
                     <div className="bg-secondary/30 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground mb-1">🎯 Reach</p>
+                      <p className="text-xs text-muted-foreground mb-1">🎯 {ta('Reach')}</p>
                       <p className="text-sm font-medium text-navy">{campaign.estimatedReach}</p>
                     </div>
                   </div>
                   {campaign.targeting && (
                     <div className="mb-3">
-                      <p className="text-xs text-muted-foreground mb-2">Targeting</p>
+                      <p className="text-xs text-muted-foreground mb-2">{ta('Targeting')}</p>
                       <div className="flex flex-wrap gap-2">
-                        {campaign.targeting.ageRange && <span className="px-2 py-1 bg-navy/5 text-navy rounded text-xs">Age: {campaign.targeting.ageRange}</span>}
-                        {campaign.targeting.gender && <span className="px-2 py-1 bg-navy/5 text-navy rounded text-xs">Gender: {campaign.targeting.gender}</span>}
+                        {campaign.targeting.ageRange && <span className="px-2 py-1 bg-navy/5 text-navy rounded text-xs">{ta('Age')}: {campaign.targeting.ageRange}</span>}
+                        {campaign.targeting.gender && <span className="px-2 py-1 bg-navy/5 text-navy rounded text-xs">{ta('Gender')}: {campaign.targeting.gender}</span>}
                         {Array.isArray(campaign.targeting.interests) && campaign.targeting.interests.map((int: string, j: number) => (
                           <span key={j} className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">{int}</span>
                         ))}
@@ -282,7 +284,7 @@ export default function SocialAgentPage() {
                     </div>
                   )}
                   <div className="bg-secondary/30 rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Creative Strategy</p>
+                    <p className="text-xs text-muted-foreground mb-1">{ta('Creative Strategy')}</p>
                     <p className="text-sm text-navy">{campaign.creativeStrategy}</p>
                   </div>
                   <div className="flex gap-2 mt-3">
@@ -300,18 +302,18 @@ export default function SocialAgentPage() {
       {activeTab === 'insights' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h3 className="font-semibold text-navy mb-4">Analytics Insights</h3>
-            <p className="text-sm text-muted-foreground mb-4">Generate AI-powered insights from your social media performance data.</p>
+            <h3 className="font-semibold text-navy mb-4">{ta('Analytics Insights')}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{ta('Generate AI-powered insights from your social media performance data.')}</p>
             <button onClick={() => callAgent('generate-insights', {})} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {loading ? 'Analyzing...' : 'Generate Insights'}
+              {loading ? ta('Analyzing...') : ta('Generate Insights')}
             </button>
           </div>
 
           {results['generate-insights'] && (
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2"><BarChart3 className="h-4 w-4 text-gold" /> Key Findings</h4>
+                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2"><BarChart3 className="h-4 w-4 text-gold" /> {ta('Key Findings')}</h4>
                 <ul className="space-y-2">
                   {results['generate-insights'].findings?.map((f: string, i: number) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-gold mt-0.5">•</span>{f}</li>
@@ -319,7 +321,7 @@ export default function SocialAgentPage() {
                 </ul>
               </div>
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2"><Lightbulb className="h-4 w-4 text-gold" /> Opportunities</h4>
+                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2"><Lightbulb className="h-4 w-4 text-gold" /> {ta('Opportunities')}</h4>
                 <ul className="space-y-2">
                   {results['generate-insights'].opportunities?.map((o: string, i: number) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-green-500 mt-0.5">•</span>{o}</li>
@@ -327,7 +329,7 @@ export default function SocialAgentPage() {
                 </ul>
               </div>
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2">⚠ Risks</h4>
+                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2">⚠ {ta('Risks')}</h4>
                 <ul className="space-y-2">
                   {results['generate-insights'].risks?.map((r: string, i: number) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-red-500 mt-0.5">•</span>{r}</li>
@@ -335,7 +337,7 @@ export default function SocialAgentPage() {
                 </ul>
               </div>
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2">✅ Recommended Actions</h4>
+                <h4 className="font-semibold text-navy mb-3 flex items-center gap-2">✅ {ta('Recommended Actions')}</h4>
                 <ul className="space-y-2">
                   {results['generate-insights'].actions?.map((a: string, i: number) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-gold mt-0.5">•</span>{a}</li>
@@ -350,25 +352,25 @@ export default function SocialAgentPage() {
       {activeTab === 'strategy' && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h3 className="font-semibold text-navy mb-4">Content Strategy Generator</h3>
+            <h3 className="font-semibold text-navy mb-4">{ta('Content Strategy Generator')}</h3>
             <div className="mb-4">
-              <label className="text-sm font-medium text-navy block mb-1">Products (comma-separated)</label>
-              <input value={productName} onChange={e => setProductName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. Solstice Necklace, Stackable Rings, Gift Sets" />
+              <label className="text-sm font-medium text-navy block mb-1">{ta('Products (comma-separated)')}</label>
+              <input value={productName} onChange={e => setProductName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. Solstice Necklace, Stackable Rings, Gift Sets')} />
             </div>
             <div className="mb-4">
-              <label className="text-sm font-medium text-navy block mb-1">Goals</label>
-              <input value={adTarget} onChange={e => setAdTarget(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. increase engagement, drive sales, build brand awareness" />
+              <label className="text-sm font-medium text-navy block mb-1">{ta('Goals')}</label>
+              <input value={adTarget} onChange={e => setAdTarget(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. increase engagement, drive sales, build brand awareness')} />
             </div>
             <button onClick={() => callAgent('content-strategy', { products: productName.split(',').map(s => s.trim()), goals: adTarget })} disabled={loading} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
-              {loading ? 'Generating...' : 'Generate Strategy'}
+              {loading ? ta('Generating...') : ta('Generate Strategy')}
             </button>
           </div>
 
           {results['content-strategy'] && (
             <div className="space-y-4">
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="font-semibold text-navy mb-2">Strategy Overview</h4>
+                <h4 className="font-semibold text-navy mb-2">{ta('Strategy Overview')}</h4>
                 <p className="text-sm text-muted-foreground">{results['content-strategy'].overview}</p>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -387,7 +389,7 @@ export default function SocialAgentPage() {
               </div>
               {results['content-strategy'].weeklyPlan?.length > 0 && (
                 <div className="bg-white rounded-xl border border-border p-5">
-                  <h4 className="font-semibold text-navy mb-3">Weekly Plan</h4>
+                  <h4 className="font-semibold text-navy mb-3">{ta('Weekly Plan')}</h4>
                   <ul className="space-y-2">
                     {results['content-strategy'].weeklyPlan.map((w: string, i: number) => (
                       <li key={i} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-gold mt-0.5">•</span>{w}</li>
@@ -397,7 +399,7 @@ export default function SocialAgentPage() {
               )}
               {results['content-strategy'].metrics?.length > 0 && (
                 <div className="bg-white rounded-xl border border-border p-5">
-                  <h4 className="font-semibold text-navy mb-3">KPIs to Track</h4>
+                  <h4 className="font-semibold text-navy mb-3">{ta('KPIs to Track')}</h4>
                   <div className="flex flex-wrap gap-2">
                     {results['content-strategy'].metrics.map((m: string, i: number) => (
                       <span key={i} className="px-3 py-1 bg-navy/5 text-navy rounded-lg text-sm">{m}</span>

@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { SkeletonTable } from './Skeleton'
 import { EmptyState } from './EmptyState'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type DataTableProps<T extends Record<string, any>> = {
   columns: ColumnDef<T>[]
@@ -37,6 +38,7 @@ export function DataTable<T extends Record<string, any>>({
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const isMobile = useMediaQuery('(max-width: 767px)')
+  const { ta } = useAdminTranslate()
 
   const allColumns = useMemo(() => {
     const cols: ColumnDef<T>[] = []
@@ -50,7 +52,7 @@ export function DataTable<T extends Record<string, any>>({
               const allIds = v ? new Set(data.map(keyExtractor)) : new Set<string>()
               onSelectionChange?.(allIds)
             }}
-            aria-label="Select all"
+            aria-label={ta('Select all')}
           />
         ),
         cell: ({ row }) => (
@@ -63,7 +65,7 @@ export function DataTable<T extends Record<string, any>>({
               else next.delete(id)
               onSelectionChange?.(next)
             }}
-            aria-label={`Select row ${keyExtractor(row.original)}`}
+            aria-label={ta(`Select row ${keyExtractor(row.original)}`)}
           />
         ),
         size: 40,
@@ -128,7 +130,7 @@ export function DataTable<T extends Record<string, any>>({
   if (data.length === 0) {
     return (
       <div className="bg-card rounded-xl border-border overflow-hidden">
-        <div className="p-8 text-center text-muted-foreground">No data found</div>
+        <div className="p-8 text-center text-muted-foreground">{ta('No data found')}</div>
       </div>
     )
   }

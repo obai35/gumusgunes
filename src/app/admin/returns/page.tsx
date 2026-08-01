@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/admin/PageHeader'
 import { DataTable } from '@/components/admin/DataTable'
 import { Pagination } from '@/components/admin/Pagination'
 import type { ColumnDef } from '@tanstack/react-table'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type ReturnReq = {
   id: string
@@ -28,6 +29,7 @@ export default function ReturnsDashboard() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   async function fetchReturns() {
     setLoading(true)
@@ -39,7 +41,7 @@ export default function ReturnsDashboard() {
       const res = await fetch(`/api/admin/return-requests?${params}`)
       const data = await res.json()
       if (data.ok) { setReturns(data.returnRequests || []); setTotalPages(data.totalPages || 1) }
-    } catch { toast.error('Failed to load return requests') }
+    } catch { toast.error(ta('Failed to load return requests')) }
     finally { setLoading(false) }
   }
 
@@ -54,15 +56,15 @@ export default function ReturnsDashboard() {
         body: JSON.stringify({ status }),
       })
       const data = await res.json()
-      if (data.ok) { toast.success(`Return ${status}`); fetchReturns() }
-      else toast.error(data.error || 'Failed')
-    } catch { toast.error('Failed to update status') }
+      if (data.ok) { toast.success(ta(`Return ${status}`)); fetchReturns() }
+      else toast.error(data.error || ta('Failed'))
+    } catch { toast.error(ta('Failed to update status')) }
     finally { setActionLoading(null) }
   }
 
   const reasonLabels: Record<string, string> = {
-    customer_change: 'Changed Mind', defective: 'Defective', wrong_item: 'Wrong Item',
-    damaged: 'Damaged', other: 'Other',
+    customer_change: ta('Changed Mind'), defective: ta('Defective'), wrong_item: ta('Wrong Item'),
+    damaged: ta('Damaged'), other: ta('Other'),
   }
 
   const statusBadge = (s: string) => {
@@ -71,11 +73,11 @@ export default function ReturnsDashboard() {
   }
 
   const columns: ColumnDef<ReturnReq>[] = [
-    { accessorKey: 'rmaNumber', header: 'RMA #', cell: ({ row }) => <span className="font-mono font-medium text-navy">{row.original.rmaNumber}</span> },
-    { accessorKey: 'order.orderNumber', header: 'Order', cell: ({ row }) => <span className="text-navy">{row.original.order.orderNumber}</span> },
-    { accessorKey: 'order.fullName', header: 'Customer' },
+    { accessorKey: 'rmaNumber', header: ta('RMA #'), cell: ({ row }) => <span className="font-mono font-medium text-navy">{row.original.rmaNumber}</span> },
+    { accessorKey: 'order.orderNumber', header: ta('Order'), cell: ({ row }) => <span className="text-navy">{row.original.order.orderNumber}</span> },
+    { accessorKey: 'order.fullName', header: ta('Customer') },
     {
-      accessorKey: 'product.name', header: 'Product',
+      accessorKey: 'product.name', header: ta('Product'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           {row.original.product.imageUrl && <img src={row.original.product.imageUrl} className="h-7 w-7 rounded object-cover" />}
@@ -83,18 +85,18 @@ export default function ReturnsDashboard() {
         </div>
       ),
     },
-    { accessorKey: 'quantity', header: 'Qty', cell: ({ row }) => <span className="font-medium text-navy">{row.original.quantity}</span> },
-    { accessorKey: 'reason', header: 'Reason', cell: ({ row }) => <span className="text-xs text-muted-foreground">{reasonLabels[row.original.reason] || row.original.reason}</span> },
-    { accessorKey: 'status', header: 'Status', cell: ({ row }) => statusBadge(row.original.status) },
-    { accessorKey: 'createdAt', header: 'Date', cell: ({ row }) => <span className="text-xs text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span> },
+    { accessorKey: 'quantity', header: ta('Qty'), cell: ({ row }) => <span className="font-medium text-navy">{fmtNum(row.original.quantity)}</span> },
+    { accessorKey: 'reason', header: ta('Reason'), cell: ({ row }) => <span className="text-xs text-muted-foreground">{reasonLabels[row.original.reason] || row.original.reason}</span> },
+    { accessorKey: 'status', header: ta('Status'), cell: ({ row }) => statusBadge(row.original.status) },
+    { accessorKey: 'createdAt', header: ta('Date'), cell: ({ row }) => <span className="text-xs text-muted-foreground">{fmtDate(row.original.createdAt)}</span> },
     {
       id: 'actions', header: '',
       cell: ({ row }) => {
         if (row.original.status !== 'pending') return <span className="text-xs text-muted-foreground">—</span>
         return (
           <div className="flex gap-1">
-            <button onClick={() => updateStatus(row.original.id, 'approved')} disabled={actionLoading === row.original.id} className="p-1.5 rounded bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50" title="Approve"><CheckCircle className="h-4 w-4" /></button>
-            <button onClick={() => updateStatus(row.original.id, 'rejected')} disabled={actionLoading === row.original.id} className="p-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50" title="Reject"><XCircle className="h-4 w-4" /></button>
+            <button onClick={() => updateStatus(row.original.id, 'approved')} disabled={actionLoading === row.original.id} className="p-1.5 rounded bg-green-100 text-green-700 hover:bg-green-200 disabled:opacity-50" title={ta('Approve')}><CheckCircle className="h-4 w-4" /></button>
+            <button onClick={() => updateStatus(row.original.id, 'rejected')} disabled={actionLoading === row.original.id} className="p-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200 disabled:opacity-50" title={ta('Reject')}><XCircle className="h-4 w-4" /></button>
           </div>
         )
       },
@@ -103,21 +105,21 @@ export default function ReturnsDashboard() {
 
   return (
     <div>
-      <PageHeader title="Returns Dashboard" subtitle="Manage RMA requests" />
+      <PageHeader title={ta('Returns Dashboard')} subtitle={ta('Manage RMA requests')} />
       <div className="flex gap-3 mb-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder="Search RMA or order..." className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm" />
+          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} placeholder={ta('Search RMA or order...')} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm" />
         </div>
         <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }} className="px-3 py-2 border border-border rounded-lg text-sm">
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-          <option value="refunded">Refunded</option>
+          <option value="">{ta('All Statuses')}</option>
+          <option value="pending">{ta('Pending')}</option>
+          <option value="approved">{ta('Approved')}</option>
+          <option value="rejected">{ta('Rejected')}</option>
+          <option value="refunded">{ta('Refunded')}</option>
         </select>
       </div>
-      <DataTable columns={columns} data={returns} keyExtractor={r => r.id} loading={loading} emptyTitle="No return requests" />
+      <DataTable columns={columns} data={returns} keyExtractor={r => r.id} loading={loading} emptyTitle={ta('No return requests')} />
       <Pagination page={page} totalPages={totalPages} totalItems={returns.length} pageSize={20} onPageChange={setPage} onPageSizeChange={() => {}} />
     </div>
   )

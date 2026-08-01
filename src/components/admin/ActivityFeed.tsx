@@ -3,6 +3,7 @@
 import { Clock, Plus, UserCheck, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const ACTION_ICONS: Record<string, string> = {
   create: 'green', update: 'blue', delete: 'red', login: 'purple', logout: 'gray',
@@ -42,18 +43,19 @@ type ActivityFeedProps = {
 }
 
 export function ActivityFeed({ activities, loading }: ActivityFeedProps) {
+  const { ta, fmtDateTime } = useAdminTranslate()
   return (
     <div className="bg-white rounded-xl border border-border p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-semibold text-navy flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          Recent Activity
+          {ta('Recent Activity')}
         </h2>
         <Link
           href="/admin/admins?tab=activity"
           className="text-xs text-gold hover:text-gold/80 font-medium flex items-center gap-1"
         >
-          View All <ChevronRight className="h-3 w-3" />
+          {ta('View All')} <ChevronRight className="h-3 w-3" />
         </Link>
       </div>
       {loading ? (
@@ -69,7 +71,7 @@ export function ActivityFeed({ activities, loading }: ActivityFeedProps) {
           ))}
         </div>
       ) : activities.length === 0 ? (
-        <p className="text-sm text-muted-foreground py-4 text-center">No recent activity.</p>
+        <p className="text-sm text-muted-foreground py-4 text-center">{ta('No recent activity.')}</p>
       ) : (
         <div className="space-y-1">
           {activities.map((log) => (
@@ -77,14 +79,14 @@ export function ActivityFeed({ activities, loading }: ActivityFeedProps) {
               <ActivityIcon action={log.action} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-navy">
-                  <span className="font-medium">{log.adminName || 'System'}</span>
+                  <span className="font-medium">{log.adminName || ta('System')}</span>
                   {' '}
                   <span className="text-muted-foreground capitalize">{log.action}d</span>
                   {' '}
                   <span className="font-medium">{log.resource}</span>
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(log.createdAt).toLocaleString()}
+                  {fmtDateTime(log.createdAt)}
                 </p>
               </div>
             </div>

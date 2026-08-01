@@ -12,6 +12,7 @@ import { RevenueChart } from '@/components/admin/RevenueChart'
 import { StatsCard } from '@/components/admin/StatsCard'
 import { DataTable } from '@/components/admin/DataTable'
 import { ErrorBoundary } from '@/components/admin/ErrorBoundary'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type AnalyticsData = {
   overview: { totalSales: number; orderCount: number; avgOrderValue: number; totalReturns: number }
@@ -68,6 +69,7 @@ export default function AdminPOSAnalyticsPage() {
   const [chartPeriod, setChartPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily')
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   const fetchData = useCallback(async (p: Period, from: string, to: string, cp: 'daily' | 'weekly' | 'monthly') => {
     setLoading(true)
@@ -75,10 +77,10 @@ export default function AdminPOSAnalyticsPage() {
       const params = new URLSearchParams({ period: cp, dateFrom: from, dateTo: to })
       const res = await fetch(`/api/admin/pos/analytics?${params}`)
       const json = await res.json()
-      if (!json.ok) throw new Error(json.error || 'Failed to fetch analytics')
+      if (!json.ok) throw new Error(json.error || ta('Failed to fetch analytics'))
       setData(json)
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to fetch analytics')
+      toast.error(err instanceof Error ? err.message : ta('Failed to fetch analytics'))
     } finally {
       setLoading(false)
     }
@@ -106,47 +108,47 @@ export default function AdminPOSAnalyticsPage() {
 
   const topProductColumns: ColumnDef<AnalyticsData['topProducts'][0]>[] = [
     {
-      header: 'Rank',
+      header: ta('Rank'),
       id: 'rank',
       cell: ({ row }) => row.index + 1,
       size: 50,
     },
-    { header: 'Product Name', accessorKey: 'name' },
-    { header: 'SKU', accessorKey: 'sku' },
+    { header: ta('Product Name'), accessorKey: 'name' },
+    { header: ta('SKU'), accessorKey: 'sku' },
     {
-      header: 'Quantity Sold',
+      header: ta('Quantity Sold'),
       accessorKey: 'quantity',
-      cell: ({ row }) => row.original.quantity.toLocaleString(),
+      cell: ({ row }) => fmtNum(row.original.quantity),
     },
     {
-      header: 'Revenue',
+      header: ta('Revenue'),
       accessorKey: 'revenue',
-      cell: ({ row }) => `\u00A3${row.original.revenue.toFixed(2)}`,
+      cell: ({ row }) => fmtCurrency(row.original.revenue),
     },
   ]
 
   const shiftColumns: ColumnDef<AnalyticsData['shiftPerformance'][0]>[] = [
-    { header: 'Branch', accessorKey: 'branchName' },
+    { header: ta('Branch'), accessorKey: 'branchName' },
     {
-      header: 'Started',
+      header: ta('Started'),
       accessorKey: 'startedAt',
-      cell: ({ row }) => new Date(row.original.startedAt).toLocaleString(),
+      cell: ({ row }) => fmtDateTime(row.original.startedAt),
     },
     {
-      header: 'Closed',
+      header: ta('Closed'),
       accessorKey: 'closedAt',
-      cell: ({ row }) => (row.original.closedAt ? new Date(row.original.closedAt).toLocaleString() : '\u2014'),
+      cell: ({ row }) => (row.original.closedAt ? fmtDateTime(row.original.closedAt) : '\u2014'),
     },
     {
-      header: 'Sales',
+      header: ta('Sales'),
       accessorKey: 'totalSales',
-      cell: ({ row }) => `\u00A3${row.original.totalSales.toFixed(2)}`,
+      cell: ({ row }) => fmtCurrency(row.original.totalSales),
     },
-    { header: 'Orders', accessorKey: 'orderCount' },
+    { header: ta('Orders'), accessorKey: 'orderCount' },
     {
-      header: 'Avg Order',
+      header: ta('Avg Order'),
       accessorKey: 'avgOrderValue',
-      cell: ({ row }) => `\u00A3${row.original.avgOrderValue.toFixed(2)}`,
+      cell: ({ row }) => fmtCurrency(row.original.avgOrderValue),
     },
   ]
 
@@ -154,8 +156,8 @@ export default function AdminPOSAnalyticsPage() {
     <ErrorBoundary>
       <div className="p-6 space-y-6">
         <PageHeader
-          title="POS Analytics"
-          subtitle="Sales performance and insights"
+          title={ta('POS Analytics')}
+          subtitle={ta('Sales performance and insights')}
           actions={
             <PeriodSelector
               value={period}
@@ -171,23 +173,23 @@ export default function AdminPOSAnalyticsPage() {
           <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               icon={DollarSign}
-              label="Total Sales"
-              value={data ? `\u00A3${data.overview.totalSales.toFixed(2)}` : '\u2014'}
+              label={ta('Total Sales')}
+              value={data ? fmtCurrency(data.overview.totalSales) : '\u2014'}
             />
             <StatsCard
               icon={ShoppingCart}
-              label="Order Count"
-              value={data ? data.overview.orderCount.toLocaleString() : '\u2014'}
+              label={ta('Order Count')}
+              value={data ? fmtNum(data.overview.orderCount) : '\u2014'}
             />
             <StatsCard
               icon={Receipt}
-              label="Avg Order Value"
-              value={data ? `\u00A3${data.overview.avgOrderValue.toFixed(2)}` : '\u2014'}
+              label={ta('Avg Order Value')}
+              value={data ? fmtCurrency(data.overview.avgOrderValue) : '\u2014'}
             />
             <StatsCard
               icon={RotateCcw}
-              label="Total Returns"
-              value={data ? `\u00A3${data.overview.totalReturns.toFixed(2)}` : '\u2014'}
+              label={ta('Total Returns')}
+              value={data ? fmtCurrency(data.overview.totalReturns) : '\u2014'}
             />
           </motion.div>
 
@@ -201,7 +203,7 @@ export default function AdminPOSAnalyticsPage() {
           </motion.div>
 
           <motion.div variants={item}>
-            <h3 className="text-sm font-semibold text-navy mb-3">Top Products</h3>
+            <h3 className="text-sm font-semibold text-navy mb-3">{ta('Top Products')}</h3>
             <DataTable
               columns={topProductColumns}
               data={data?.topProducts || []}
@@ -212,7 +214,7 @@ export default function AdminPOSAnalyticsPage() {
 
           <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-sm font-semibold text-navy mb-3">Payment Breakdown</h3>
+              <h3 className="text-sm font-semibold text-navy mb-3">{ta('Payment Breakdown')}</h3>
               {loading ? (
                 <div className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
                   {[1, 2, 3, 4].map((i) => (
@@ -231,23 +233,23 @@ export default function AdminPOSAnalyticsPage() {
                       </span>
                       <div className="text-right">
                         <span className="text-sm font-semibold text-navy">
-                          \u00A3{pm.total.toFixed(2)}
+                          {fmtCurrency(pm.total)}
                         </span>
                         <span className="text-xs text-gray-400 ml-2">
-                          ({pm.count} orders)
+                          {ta(`(${fmtNum(pm.count)} orders)`)}
                         </span>
                       </div>
                     </div>
                   ))}
                   {(!data?.paymentBreakdown || data.paymentBreakdown.length === 0) && (
-                    <div className="p-8 text-center text-gray-400">No payment data found</div>
+                    <div className="p-8 text-center text-gray-400">{ta('No payment data found')}</div>
                   )}
                 </div>
               )}
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-navy mb-3">Recent Shifts</h3>
+              <h3 className="text-sm font-semibold text-navy mb-3">{ta('Recent Shifts')}</h3>
               <DataTable
                 columns={shiftColumns}
                 data={data?.shiftPerformance || []}

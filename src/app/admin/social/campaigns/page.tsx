@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Campaign = {
   id: string
@@ -27,6 +28,7 @@ const statusStyles: Record<string, string> = {
 export default function CampaignsList() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [loading, setLoading] = useState(true)
+  const { ta, fmtNum, fmtDate, fmtCurrency } = useAdminTranslate()
 
   useEffect(() => {
     fetch('/api/admin/social/campaigns')
@@ -35,23 +37,23 @@ export default function CampaignsList() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-muted-foreground">{ta('Loading...')}</div>
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-semibold">Campaigns</h1>
+        <h1 className="text-2xl font-display font-semibold">{ta('Campaigns')}</h1>
         <Link
           href="/admin/social/campaigns/new"
           className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-full text-sm font-medium hover:bg-gold hover:text-navy-deep transition-colors"
         >
-          <Plus className="h-4 w-4" /> New Campaign
+          <Plus className="h-4 w-4" /> {ta('New Campaign')}
         </Link>
       </div>
 
       {campaigns.length === 0 ? (
         <div className="p-12 rounded-2xl bg-secondary/30 border border-border/30 text-center">
-          <p className="text-muted-foreground">No campaigns yet. Create your first campaign to start automating your social media marketing.</p>
+          <p className="text-muted-foreground">{ta('No campaigns yet. Create your first campaign to start automating your social media marketing.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -67,15 +69,15 @@ export default function CampaignsList() {
                   {c.status}
                 </span>
               </div>
-              <p className="text-sm text-muted-foreground capitalize">Goal: {c.goal}</p>
+              <p className="text-sm text-muted-foreground capitalize">{ta('Goal:')} {c.goal}</p>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span>{c._count.posts} posts</span>
-                {c.budget && <span>E£{c.budget.toFixed(2)}</span>}
+                <span>{fmtNum(c._count.posts)} {ta('posts')}</span>
+                {c.budget && <span>{fmtCurrency(c.budget)}</span>}
                 {c.triggerType && <span className="capitalize">{c.triggerType}</span>}
               </div>
               {c.startDate && (
                 <p className="text-xs text-muted-foreground">
-                  {new Date(c.startDate).toLocaleDateString()}{c.endDate ? ` — ${new Date(c.endDate).toLocaleDateString()}` : ''}
+                  {fmtDate(c.startDate)}{c.endDate ? ` — ${fmtDate(c.endDate)}` : ''}
                 </p>
               )}
             </Link>

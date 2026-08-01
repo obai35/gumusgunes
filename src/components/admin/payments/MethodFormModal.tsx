@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type PaymentMethod = {
   id: string; code: string; name: string; nameAr: string | null
@@ -55,6 +56,7 @@ const CONFIG_FIELDS: Record<string, { key: string; label: string; type: string }
 }
 
 export default function MethodFormModal({ method, onSave, onClose }: Props) {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [name, setName] = useState(method.name)
   const [nameAr, setNameAr] = useState(method.nameAr || '')
   const [sortOrder, setSortOrder] = useState(method.sortOrder)
@@ -75,28 +77,28 @@ export default function MethodFormModal({ method, onSave, onClose }: Props) {
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-navy">Configure: {method.name}</h3>
+          <h3 className="font-semibold text-navy">{ta('Configure')}: {method.name}</h3>
           <button onClick={onClose}><X className="h-4 w-4" /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-muted-foreground">Name (English)</label>
+              <label className="text-xs text-muted-foreground">{ta('Name (English)')}</label>
               <input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground">Name (Arabic)</label>
+              <label className="text-xs text-muted-foreground">{ta('Name (Arabic)')}</label>
               <input value={nameAr} onChange={e => setNameAr(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground">Sort Order</label>
+            <label className="text-xs text-muted-foreground">{ta('Sort Order')}</label>
             <input value={sortOrder} onChange={e => setSortOrder(parseInt(e.target.value) || 0)} type="number" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
           {fields.length > 0 && <hr className="border-border" />}
           {fields.map(f => (
             <div key={f.key}>
-              <label className="text-xs text-muted-foreground">{f.label}</label>
+              <label className="text-xs text-muted-foreground">{ta(f.label)}</label>
               {f.type === 'textarea' ? (
                 <textarea value={config[f.key] || ''} onChange={e => setConfigValue(f.key, e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm resize-none h-20" />
               ) : f.type === 'checkbox' ? (

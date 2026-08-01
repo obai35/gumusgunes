@@ -6,6 +6,7 @@ import {
   CartesianGrid, Legend,
 } from 'recharts'
 import { BarChart3 } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type RevenueData = { date: string; revenue: number; orders?: number }
 
@@ -25,6 +26,7 @@ const periods = [
 
 export function RevenueChart({ data, period, onPeriodChange, comparison, loading }: RevenueChartProps) {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar')
+  const { ta, fmtNum } = useAdminTranslate()
 
   if (loading) {
     return (
@@ -39,7 +41,7 @@ export function RevenueChart({ data, period, onPeriodChange, comparison, loading
     <div className="bg-white rounded-xl border border-border p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-navy">Revenue</h3>
+          <h3 className="text-sm font-semibold text-navy">{ta('Revenue')}</h3>
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
             {periods.map(p => (
               <button
@@ -49,7 +51,7 @@ export function RevenueChart({ data, period, onPeriodChange, comparison, loading
                   period === p.value ? 'bg-white text-navy shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {p.label}
+                {ta(p.label)}
               </button>
             ))}
           </div>
@@ -57,7 +59,7 @@ export function RevenueChart({ data, period, onPeriodChange, comparison, loading
         <div className="flex items-center gap-2">
           {comparison && (
             <span className={`text-xs font-medium ${comparison.positive ? 'text-green-600' : 'text-red-600'}`}>
-              {comparison.positive ? '+' : ''}{comparison.value}% vs last {period}
+              {comparison.positive ? '+' : ''}{ta(`${comparison.value}% vs last ${period}`)}
             </span>
           )}
           <button
@@ -70,17 +72,17 @@ export function RevenueChart({ data, period, onPeriodChange, comparison, loading
       </div>
       {data.length === 0 ? (
         <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
-          No revenue data for this period
+          {ta('No revenue data for this period')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v: string) => v.slice(5)} />
-            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `$${v}`} />
+            <YAxis tick={{ fontSize: 10 }} tickFormatter={(v: number) => `$${fmtNum(v)}`} />
             <Tooltip
               contentStyle={{ fontSize: 12, borderRadius: 8, border: '1px solid #e5e7eb' }}
-              formatter={(v: number) => [`$${v.toFixed(2)}`, period === 'daily' ? 'Revenue' : 'Revenue']}
+              formatter={(v: number) => [`$${fmtNum(v, 2)}`, ta('Revenue')]}
             />
             {chartType === 'bar' ? (
               <Bar dataKey="revenue" fill="#b8860b" radius={[4, 4, 0, 0]} />

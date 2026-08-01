@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Search, ExternalLink, Receipt, DollarSign, CreditCard, SplitSquareVertical } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Order = {
   id: string
@@ -26,6 +27,7 @@ export default function ReceiptsPage() {
   const [loading, setLoading] = useState(false)
   const [orders, setOrders] = useState<Order[]>([])
   const [searched, setSearched] = useState(false)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   async function handleSearch() {
     if (!search.trim()) return
@@ -37,10 +39,10 @@ export default function ReceiptsPage() {
         const data = await res.json()
         setOrders(data.orders || [])
       } else {
-        toast.error('Search failed')
+        toast.error(ta('Search failed'))
       }
     } catch {
-      toast.error('Search failed')
+      toast.error(ta('Search failed'))
     }
     setLoading(false)
   }
@@ -56,7 +58,7 @@ export default function ReceiptsPage() {
 
   function getPaymentLabel(method: string, cashAmount: number | null, cardAmount: number | null) {
     if (method === 'split') {
-      return `Split (Cash $${(cashAmount || 0).toFixed(2)} + Card $${(cardAmount || 0).toFixed(2)})`
+      return ta(`Split (Cash ${fmtCurrency(cashAmount || 0)} + Card ${fmtCurrency(cardAmount || 0)})`)
     }
     return method.charAt(0).toUpperCase() + method.slice(1)
   }
@@ -73,7 +75,7 @@ export default function ReceiptsPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-semibold text-navy mb-6 flex items-center gap-2">
-        <Receipt className="h-6 w-6 text-gold" /> Receipt Lookup
+        <Receipt className="h-6 w-6 text-gold" /> {ta('Receipt Lookup')}
       </h1>
 
       {/* Search */}
@@ -84,7 +86,7 @@ export default function ReceiptsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="Search by receipt number (R-...) or order number (P-... or O-...)"
+            placeholder={ta('Search by receipt number (R-...) or order number (P-... or O-...)')}
             className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-border text-sm"
             autoFocus
           />
@@ -94,7 +96,7 @@ export default function ReceiptsPage() {
           disabled={loading || !search.trim()}
           className="px-5 py-2.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50 transition-colors"
         >
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? ta('Searching...') : ta('Search')}
         </button>
       </div>
 
@@ -104,7 +106,7 @@ export default function ReceiptsPage() {
           {orders.length === 0 ? (
             <div className="bg-white rounded-xl border border-border p-8 text-center">
               <Receipt className="h-12 w-12 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-muted-foreground">No receipts found for "{search}"</p>
+              <p className="text-muted-foreground">{ta(`No receipts found for "${search}"`)}</p>
             </div>
           ) : (
             orders.map((order) => (
@@ -117,36 +119,36 @@ export default function ReceiptsPage() {
                       )}
                       <span className="text-xs text-muted-foreground font-mono">#{order.orderNumber}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()} {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-xs text-muted-foreground">{fmtDateTime(order.createdAt)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColor[order.status] || 'bg-gray-100 text-gray-700'}`}>{order.status}</span>
                     <Link href={`/admin/orders/${order.id}`} className="text-gold hover:text-gold/80 inline-flex items-center gap-1 text-xs font-medium">
-                      View <ExternalLink className="h-3 w-3" />
+                      {ta('View')} <ExternalLink className="h-3 w-3" />
                     </Link>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Customer</p>
+                    <p className="text-xs text-muted-foreground">{ta('Customer')}</p>
                     <p className="font-medium text-navy">{order.fullName}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="font-bold text-navy">${order.totalAmount.toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">{ta('Total')}</p>
+                    <p className="font-bold text-navy">{fmtCurrency(order.totalAmount)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Payment</p>
+                    <p className="text-xs text-muted-foreground">{ta('Payment')}</p>
                     <p className="font-medium text-navy flex items-center gap-1">
                       {getPaymentIcon(order.paymentMethod)}
                       {getPaymentLabel(order.paymentMethod, order.cashAmount, order.cardAmount)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Discount</p>
+                    <p className="text-xs text-muted-foreground">{ta('Discount')}</p>
                     <p className={`font-medium ${order.discountAmount ? 'text-green-600' : 'text-muted-foreground'}`}>
-                      {order.discountAmount ? `-$${order.discountAmount.toFixed(2)}` : 'None'}
+                      {order.discountAmount ? ta(`-${fmtCurrency(order.discountAmount)}`) : ta('None')}
                     </p>
                   </div>
                 </div>
@@ -159,9 +161,9 @@ export default function ReceiptsPage() {
       {!searched && (
         <div className="bg-white rounded-xl border border-border p-8 text-center">
           <Receipt className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="font-display text-lg font-semibold text-navy mb-2">Find a Receipt</h3>
+          <h3 className="font-display text-lg font-semibold text-navy mb-2">{ta('Find a Receipt')}</h3>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Enter a receipt number (e.g. RCP-20260626-XXXXXX) or order number (e.g. POS-XXX-XXXX) to look up the details.
+            {ta('Enter a receipt number (e.g. RCP-20260626-XXXXXX) or order number (e.g. POS-XXX-XXXX) to look up the details.')}
           </p>
         </div>
       )}

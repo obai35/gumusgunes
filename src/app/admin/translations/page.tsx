@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function AdminTranslationsPage() {
+  const { ta } = useAdminTranslate()
   const [translations, setTranslations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)

@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { EditorToolbar } from '@/components/admin/editor/EditorToolbar'
 import SectionPanel from '@/components/admin/editor/SectionPanel'
 import { Skeleton } from '@/components/admin/Skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { SectionKey } from '@/components/admin/editor/types'
 
 function useDebounce<T extends (...args: any[]) => void>(fn: T, delay: number): T {
@@ -24,6 +25,7 @@ export default function SiteEditor() {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const iframeKey = useRef(0)
   const [showPanel, setShowPanel] = useState(true)
+  const { ta } = useAdminTranslate()
 
   useEffect(() => {
     fetch('/api/admin/settings')
@@ -69,13 +71,13 @@ export default function SiteEditor() {
         body: JSON.stringify(settings),
       })
       if (res.ok) {
-        toast.success('Settings saved')
+        toast.success(ta('Settings saved'))
         iframeKey.current++
       } else {
         const data = await res.json().catch(() => ({}))
-        toast.error(data.error || `Failed (${res.status})`)
+        toast.error(data.error || ta(`Failed (${res.status})`))
       }
-    } catch { toast.error('Failed to save') }
+    } catch { toast.error(ta('Failed to save')) }
     setSaving(false)
   }, [settings])
 
@@ -144,7 +146,7 @@ export default function SiteEditor() {
               src={`/preview?t=${Date.now()}`}
               className="w-full border-0"
               style={{ height: iframeHeight }}
-              title="Preview"
+              title={ta('Preview')}
               key={iframeKey.current}
             />
           </div>

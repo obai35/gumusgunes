@@ -7,9 +7,9 @@ import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import {
-  Plus, Play, CheckCircle, XCircle, Package, Wrench, DollarSign, TrendingDown,
+  Plus, Play, CheckCircle, CheckCircle2, XCircle, Package, Wrench, DollarSign, TrendingDown,
   AlertCircle, Search, Settings2, GanttChartSquare, ClipboardList, Factory, Timer,
-  Users, ArrowRight, Pause, RefreshCw, FileText, BarChart3
+  Users, ArrowRight, Pause, RefreshCw, FileText, BarChart3, TrendingUp
 } from 'lucide-react'
 import { formatCurrency } from '../accounting/format'
 
@@ -99,7 +99,7 @@ function DashboardView() {
         {cards.map((card, i) => (
           <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0, transition: { delay: i * 0.05 } }}
             className="rounded-lg border bg-card p-4">
-            <div className={`h-8 w-8 rounded-lg ${card.bg} flex items-center justify-center mb-2`}>
+            <div className={`h-8 w-8 rounded-lg ${card.color} flex items-center justify-center mb-2`}>
               <card.icon className={`h-4 w-4 ${card.color}`} />
             </div>
             <p className="text-2xl font-bold">{card.value}</p>
