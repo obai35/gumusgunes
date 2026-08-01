@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { Download, TrendingUp, TrendingDown, DollarSign, Receipt, Wallet, Banknote, BarChart3, PieChart as PieIcon, LineChart, FileSpreadsheet, Building2, CreditCard, ArrowUpRight, ArrowDownRight, Percent, Calendar } from 'lucide-react'
 import { formatCurrency } from './format'
 import { generatePdf } from '@/lib/pdf-export'
@@ -96,7 +97,8 @@ function MiniBar({ value, max, color }: { value: number; max: number; color: str
 }
 
 function DataTable({ columns, rows, keyColumn }: { columns: { key: string; label: string; align?: 'left' | 'right'; format?: 'currency' | 'number' | 'text' }[]; rows: any[]; keyColumn: string }) {
-  if (!rows.length) return <p className="text-sm text-muted-foreground text-center py-8">No data</p>
+  const { ta, fmtNum } = useAdminTranslate()
+  if (!rows.length) return <p className="text-sm text-muted-foreground text-center py-8">{ta('No data')}</p>
   return (
     <div className="bg-white rounded-xl border border-border overflow-hidden">
       <table className="w-full text-sm">
@@ -113,7 +115,7 @@ function DataTable({ columns, rows, keyColumn }: { columns: { key: string; label
               {columns.map(col => {
                 let val = row[col.key]
                 if (col.format === 'currency') val = formatCurrency(val)
-                if (col.format === 'number' && val != null) val = Number(val).toLocaleString()
+                if (col.format === 'number' && val != null) val = fmtNum(Number(val))
                 return (
                   <td key={col.key} className={`p-3 ${col.align === 'right' ? 'text-right' : ''} text-navy`}>{val ?? '-'}</td>
                 )
@@ -127,6 +129,7 @@ function DataTable({ columns, rows, keyColumn }: { columns: { key: string; label
 }
 
 export default function ReportsTab() {
+  const { ta, fmtNum, fmtDate } = useAdminTranslate()
   const [reportType, setReportType] = useState<ReportType>('executive-summary')
   const [period, setPeriod] = useState<Period>('month')
   const [customStart, setCustomStart] = useState('')
@@ -191,7 +194,7 @@ export default function ReportsTab() {
         setLoading(false)
       })
       .catch(() => {
-        toast.error('Failed to load report data')
+        toast.error(ta('Failed to load report data'))
         setLoading(false)
       })
 
@@ -273,8 +276,8 @@ export default function ReportsTab() {
     }
 
     await genPdf({
-      title: REPORT_LABELS[reportType],
-      subtitle: PERIOD_OPTIONS.find(p => p.value === period)?.label,
+      title: ta(REPORT_LABELS[reportType]),
+      subtitle: ta(PERIOD_OPTIONS.find(p => p.value === period)?.label || ''),
       columns: ['Metric', 'Value'],
       rows: rows.length ? rows : [['No data', '']],
     })
@@ -289,44 +292,44 @@ export default function ReportsTab() {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Total Revenue" value={formatCurrency(overview.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" trend={revTrend} />
-          <StatCard label="Net Revenue" value={formatCurrency(overview.netRevenue)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" trend={netTrend} />
-          <StatCard label="Total Orders" value={overview.totalOrders} icon={Receipt} color="text-navy" bg="bg-blue-50" trend={orderTrend} />
-          <StatCard label="Avg Order" value={formatCurrency(overview.avgOrderValue)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" />
+          <StatCard label={ta('Total Revenue')} value={formatCurrency(overview.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" trend={revTrend} />
+          <StatCard label={ta('Net Revenue')} value={formatCurrency(overview.netRevenue)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" trend={netTrend} />
+          <StatCard label={ta('Total Orders')} value={overview.totalOrders} icon={Receipt} color="text-navy" bg="bg-blue-50" trend={orderTrend} />
+          <StatCard label={ta('Avg Order')} value={formatCurrency(overview.avgOrderValue)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" />
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Returns" value={formatCurrency(overview.totalReturns)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" />
-          <StatCard label="Expenses" value={formatCurrency(overview.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
-          <StatCard label="Pending Orders" value={overview.pendingOrders} icon={Receipt} color="text-amber-600" bg="bg-amber-50" />
-          <StatCard label="Unreconciled" value={overview.unreconciledOrders} icon={CreditCard} color="text-red-600" bg="bg-red-50" />
+          <StatCard label={ta('Returns')} value={formatCurrency(overview.totalReturns)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" />
+          <StatCard label={ta('Expenses')} value={formatCurrency(overview.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
+          <StatCard label={ta('Pending Orders')} value={overview.pendingOrders} icon={Receipt} color="text-amber-600" bg="bg-amber-50" />
+          <StatCard label={ta('Unreconciled')} value={overview.unreconciledOrders} icon={CreditCard} color="text-red-600" bg="bg-red-50" />
         </div>
 
         <div className="bg-gradient-to-r from-navy to-navy/90 rounded-xl p-5 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-80">Net Revenue</p>
+              <p className="text-sm opacity-80">{ta('Net Revenue')}</p>
               <p className="text-3xl font-bold mt-1">{formatCurrency(overview.netRevenue)}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs opacity-60">Revenue - Returns - Expenses</p>
+              <p className="text-xs opacity-60">{ta('Revenue - Returns - Expenses')}</p>
               <p className={`text-sm font-medium mt-1 flex items-center gap-1 ${overview.netRevenue >= 0 ? 'text-green-300' : 'text-red-300'}`}>
                 {overview.netRevenue >= 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
-                Net Result
+                {ta('Net Result')}
               </p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/20 text-sm">
             <div>
-              <p className="text-xs opacity-60">Revenue</p>
+              <p className="text-xs opacity-60">{ta('Revenue')}</p>
               <p className="font-semibold text-green-300">+{formatCurrency(overview.totalRevenue)}</p>
             </div>
             <div>
-              <p className="text-xs opacity-60">Returns</p>
+              <p className="text-xs opacity-60">{ta('Returns')}</p>
               <p className="font-semibold text-red-300">-{formatCurrency(overview.totalReturns)}</p>
             </div>
             <div>
-              <p className="text-xs opacity-60">Expenses</p>
+              <p className="text-xs opacity-60">{ta('Expenses')}</p>
               <p className="font-semibold text-orange-300">-{formatCurrency(overview.totalExpenses)}</p>
             </div>
           </div>
@@ -335,17 +338,17 @@ export default function ReportsTab() {
         {overview.paymentBreakdown && (
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2"><CreditCard className="h-4 w-4 text-muted-foreground" /> Payment Breakdown</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2"><CreditCard className="h-4 w-4 text-muted-foreground" /> {ta('Payment Breakdown')}</h3>
               <div className="flex items-center gap-4">
                 <ResponsiveContainer width={140} height={140}>
                   <PieChart>
                     <Pie data={[
-                      { name: 'Cash', value: overview.paymentBreakdown.cash || 0 },
-                      { name: 'Card', value: overview.paymentBreakdown.card || 0 },
-                      { name: 'Split', value: overview.paymentBreakdown.split || 0 },
-                      { name: 'Bank Transfer', value: overview.paymentBreakdown.bank_transfer || 0 },
-                      { name: 'InstaPay', value: overview.paymentBreakdown.instapay || 0 },
-                      { name: 'Wallet', value: overview.paymentBreakdown.wallet || 0 },
+                      { name: ta('Cash'), value: overview.paymentBreakdown.cash || 0 },
+                      { name: ta('Card'), value: overview.paymentBreakdown.card || 0 },
+                      { name: ta('Split'), value: overview.paymentBreakdown.split || 0 },
+                      { name: ta('Bank Transfer'), value: overview.paymentBreakdown.bank_transfer || 0 },
+                      { name: ta('InstaPay'), value: overview.paymentBreakdown.instapay || 0 },
+                      { name: ta('Wallet'), value: overview.paymentBreakdown.wallet || 0 },
                     ].filter(d => d.value > 0)} cx="50%" cy="50%" innerRadius={35} outerRadius={60} dataKey="value">
                       {CHART_COLORS.map((c, i) => <Cell key={i} fill={c} />)}
                     </Pie>
@@ -354,12 +357,12 @@ export default function ReportsTab() {
                 </ResponsiveContainer>
                 <div className="space-y-1.5 flex-1">
                   {[
-                    { key: 'cash', label: 'Cash', color: '#10b981' },
-                    { key: 'card', label: 'Card', color: '#3b82f6' },
-                    { key: 'split', label: 'Split', color: '#8b5cf6' },
-                    { key: 'bank_transfer', label: 'Bank Transfer', color: '#f59e0b' },
-                    { key: 'instapay', label: 'InstaPay', color: '#06b6d4' },
-                    { key: 'wallet', label: 'Wallet', color: '#ec4899' },
+                    { key: 'cash', label: ta('Cash'), color: '#10b981' },
+                    { key: 'card', label: ta('Card'), color: '#3b82f6' },
+                    { key: 'split', label: ta('Split'), color: '#8b5cf6' },
+                    { key: 'bank_transfer', label: ta('Bank Transfer'), color: '#f59e0b' },
+                    { key: 'instapay', label: ta('InstaPay'), color: '#06b6d4' },
+                    { key: 'wallet', label: ta('Wallet'), color: '#ec4899' },
                   ].map(({ key, label, color }) => (
                     <div key={key} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />{label}</span>
@@ -372,7 +375,7 @@ export default function ReportsTab() {
 
             {overview.branchRevenue && Object.keys(overview.branchRevenue).length > 0 && (
               <div className="bg-white rounded-xl border border-border p-5">
-                <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" /> Branch Revenue</h3>
+                <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2"><Building2 className="h-4 w-4 text-muted-foreground" /> {ta('Branch Revenue')}</h3>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={Object.entries(overview.branchRevenue).map(([name, amount]) => ({ name, revenue: amount }))}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -396,29 +399,29 @@ export default function ReportsTab() {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Total Revenue" value={formatCurrency(reports?.summary?.totalRevenue || 0)} icon={DollarSign} color="text-green-600" bg="bg-green-50" />
-          <StatCard label="Total Orders" value={reports?.summary?.totalOrders || 0} icon={Receipt} color="text-navy" bg="bg-blue-50" />
-          <StatCard label="Avg Order Value" value={formatCurrency(reports?.summary?.avgOrderValue || 0)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" />
-          <StatCard label="Periods" value={reports?.periods?.length || 0} icon={Calendar} color="text-cyan-600" bg="bg-cyan-50" />
+          <StatCard label={ta('Total Revenue')} value={formatCurrency(reports?.summary?.totalRevenue || 0)} icon={DollarSign} color="text-green-600" bg="bg-green-50" />
+          <StatCard label={ta('Total Orders')} value={reports?.summary?.totalOrders || 0} icon={Receipt} color="text-navy" bg="bg-blue-50" />
+          <StatCard label={ta('Avg Order Value')} value={formatCurrency(reports?.summary?.avgOrderValue || 0)} icon={Wallet} color="text-purple-600" bg="bg-purple-50" />
+          <StatCard label={ta('Periods')} value={reports?.periods?.length || 0} icon={Calendar} color="text-cyan-600" bg="bg-cyan-50" />
         </div>
 
         {reports?.periods && reports.periods.length > 0 && (
           <>
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Revenue Trend</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Revenue Trend')}</h3>
               <ResponsiveContainer width="100%" height={280}>
                 <AreaChart data={reports.periods}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip formatter={(v: number) => [formatCurrency(v), 'Revenue']} />
+                  <Tooltip formatter={(v: number) => [formatCurrency(v), ta('Revenue')]} />
                   <Area type="monotone" dataKey="revenue" stroke="#1e3a5f" fill="#1e3a5f" fillOpacity={0.1} strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
 
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Revenue vs Orders</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Revenue vs Orders')}</h3>
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={reports.periods}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -426,8 +429,8 @@ export default function ReportsTab() {
                   <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
                   <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar yAxisId="left" dataKey="revenue" fill="#10b981" radius={[3, 3, 0, 0]} name="Revenue" />
-                  <Bar yAxisId="right" dataKey="orderCount" fill="#3b82f6" radius={[3, 3, 0, 0]} name="Orders" />
+                  <Bar yAxisId="left" dataKey="revenue" fill="#10b981" radius={[3, 3, 0, 0]} name={ta('Revenue')} />
+                  <Bar yAxisId="right" dataKey="orderCount" fill="#3b82f6" radius={[3, 3, 0, 0]} name={ta('Orders')} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -436,7 +439,7 @@ export default function ReportsTab() {
 
         {overview?.paymentBreakdown && (
           <div className="bg-white rounded-xl border border-border p-5">
-            <h3 className="text-sm font-semibold text-navy mb-4">Revenue by Payment Method</h3>
+            <h3 className="text-sm font-semibold text-navy mb-4">{ta('Revenue by Payment Method')}</h3>
             <div className="space-y-3">
               {Object.entries(overview.paymentBreakdown).filter(([, v]) => (v as number) > 0).map(([method, amount], i) => (
                 <div key={method}>
@@ -453,10 +456,10 @@ export default function ReportsTab() {
 
         <DataTable
           columns={[
-            { key: 'period', label: 'Period' },
-            { key: 'revenue', label: 'Revenue', align: 'right', format: 'currency' },
-            { key: 'orderCount', label: 'Orders', align: 'right', format: 'number' },
-            { key: 'avgOrderValue', label: 'Avg Order', align: 'right', format: 'currency' },
+            { key: 'period', label: ta('Period') },
+            { key: 'revenue', label: ta('Revenue'), align: 'right', format: 'currency' },
+            { key: 'orderCount', label: ta('Orders'), align: 'right', format: 'number' },
+            { key: 'avgOrderValue', label: ta('Avg Order'), align: 'right', format: 'currency' },
           ]}
           rows={reports?.periods || []}
           keyColumn="period"
@@ -474,20 +477,20 @@ export default function ReportsTab() {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Total Expenses" value={formatCurrency(expenses.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
-          <StatCard label="Count" value={expenses.count || 0} icon={Receipt} color="text-navy" bg="bg-blue-50" />
-          <StatCard label="Avg per Transaction" value={expenses.count > 0 ? formatCurrency(expenses.totalExpenses / expenses.count) : formatCurrency(0)} icon={DollarSign} color="text-purple-600" bg="bg-purple-50" />
+          <StatCard label={ta('Total Expenses')} value={formatCurrency(expenses.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
+          <StatCard label={ta('Count')} value={expenses.count || 0} icon={Receipt} color="text-navy" bg="bg-blue-50" />
+          <StatCard label={ta('Avg per Transaction')} value={expenses.count > 0 ? formatCurrency(expenses.totalExpenses / expenses.count) : formatCurrency(0)} icon={DollarSign} color="text-purple-600" bg="bg-purple-50" />
         </div>
 
         {Object.keys(expenses.byMethod || {}).length > 0 && (
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">By Payment Method</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('By Payment Method')}</h3>
               <div className="space-y-3">
                 {Object.entries(expenses.byMethod).map(([method, amount]) => (
                   <div key={method}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-muted-foreground">{methodLabel[method] || method}</span>
+                      <span className="text-muted-foreground">{methodLabel[method] ? ta(methodLabel[method]) : method}</span>
                       <span className="font-medium text-navy">{formatCurrency(amount as number)}</span>
                     </div>
                     <MiniBar value={amount as number} max={maxMethod} color={methodColor[method] || 'bg-gray-500'} />
@@ -497,11 +500,11 @@ export default function ReportsTab() {
             </div>
 
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Distribution</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Distribution')}</h3>
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
-                  <Pie data={Object.entries(expenses.byMethod).map(([name, value], i) => ({ name: methodLabel[name] || name, value }))}
-                    cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                  <Pie data={Object.entries(expenses.byMethod).map(([name, value], i) => ({ name: methodLabel[name] ? ta(methodLabel[name]) : name, value }))}
+                    cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${fmtNum(Math.round(percent * 100))}%`}>
                     {CHART_COLORS.map((c, i) => <Cell key={i} fill={c} />)}
                   </Pie>
                   <Tooltip formatter={(v: number) => formatCurrency(v)} />
@@ -514,13 +517,13 @@ export default function ReportsTab() {
         {Array.isArray(expenses.expenses) && expenses.expenses.length > 0 && (
           <DataTable
             columns={[
-              { key: 'date', label: 'Date' },
-              { key: 'description', label: 'Description' },
-              { key: 'amount', label: 'Amount', align: 'right', format: 'currency' },
-              { key: 'method', label: 'Method' },
-              { key: 'branch', label: 'Branch' },
+              { key: 'date', label: ta('Date') },
+              { key: 'description', label: ta('Description') },
+              { key: 'amount', label: ta('Amount'), align: 'right', format: 'currency' },
+              { key: 'method', label: ta('Method') },
+              { key: 'branch', label: ta('Branch') },
             ]}
-            rows={expenses.expenses.map((e: any) => ({ ...e, date: new Date(e.createdAt).toLocaleDateString(), method: methodLabel[e.paymentMethod] || e.paymentMethod, branch: e.branch?.name || '-', description: e.description }))}
+            rows={expenses.expenses.map((e: any) => ({ ...e, date: fmtDate(e.createdAt), method: methodLabel[e.paymentMethod] ? ta(methodLabel[e.paymentMethod]) : e.paymentMethod, branch: e.branch?.name || '-', description: e.description }))}
             keyColumn="createdAt"
           />
         )}
@@ -532,28 +535,28 @@ export default function ReportsTab() {
     if (!ratios) return null
     return (
       <div className="bg-white rounded-xl border border-border p-5">
-        <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2"><LineChart className="h-4 w-4" /> Financial Ratios</h3>
+        <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2"><LineChart className="h-4 w-4" /> {ta('Financial Ratios')}</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {Object.entries(ratios.profitability || {}).map(([key, r]: [string, any]) => (
             <div key={key} className="p-3 rounded-lg bg-gray-50">
               <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
               <p className={`text-lg font-bold ${r.benchmark !== undefined ? (r.value >= r.benchmark ? 'text-green-600' : 'text-red-600') : 'text-navy'}`}>
-                {(r.value * 100).toFixed(1)}%
+                {fmtNum(r.value * 100, 1)}%
               </p>
-              {r.benchmark !== undefined && <p className="text-xs text-muted-foreground mt-0.5">Benchmark: {(r.benchmark * 100).toFixed(0)}%</p>}
+              {r.benchmark !== undefined && <p className="text-xs text-muted-foreground mt-0.5">{ta('Benchmark:')} {fmtNum(r.benchmark * 100)}%</p>}
             </div>
           ))}
           {Object.entries(ratios.liquidity || {}).map(([key, r]: [string, any]) => (
             <div key={key} className="p-3 rounded-lg bg-gray-50">
               <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
-              <p className={`text-lg font-bold ${r.benchmark !== undefined ? (r.value >= r.benchmark ? 'text-green-600' : 'text-red-600') : 'text-navy'}`}>{r.value.toFixed(2)}</p>
-              {r.benchmark !== undefined && <p className="text-xs text-muted-foreground mt-0.5">Benchmark: {r.benchmark.toFixed(1)}</p>}
+              <p className={`text-lg font-bold ${r.benchmark !== undefined ? (r.value >= r.benchmark ? 'text-green-600' : 'text-red-600') : 'text-navy'}`}>{fmtNum(r.value, 2)}</p>
+              {r.benchmark !== undefined && <p className="text-xs text-muted-foreground mt-0.5">{ta('Benchmark:')} {fmtNum(r.benchmark, 1)}</p>}
             </div>
           ))}
           {Object.entries(ratios.efficiency || {}).map(([key, r]: [string, any]) => (
             <div key={key} className="p-3 rounded-lg bg-gray-50">
               <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
-              <p className="text-lg font-bold text-navy">{r.value.toFixed(2)}</p>
+              <p className="text-lg font-bold text-navy">{fmtNum(r.value, 2)}</p>
             </div>
           ))}
         </div>
@@ -574,21 +577,21 @@ export default function ReportsTab() {
 
     if (reportType === 'profit-loss') {
       const pl = data[0]
-      if (!pl) return <p className="text-sm text-muted-foreground">No P&L data available</p>
+      if (!pl) return <p className="text-sm text-muted-foreground">{ta('No P&L data available')}</p>
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <StatCard label="Total Revenue" value={formatCurrency(pl.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" />
-            <StatCard label="Total Expenses" value={formatCurrency(pl.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
-            <StatCard label="Net Income" value={formatCurrency(pl.netIncome)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" />
+            <StatCard label={ta('Total Revenue')} value={formatCurrency(pl.totalRevenue)} icon={DollarSign} color="text-green-600" bg="bg-green-50" />
+            <StatCard label={ta('Total Expenses')} value={formatCurrency(pl.totalExpenses)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
+            <StatCard label={ta('Net Income')} value={formatCurrency(pl.netIncome)} icon={TrendingUp} color="text-emerald-600" bg="bg-emerald-50" />
           </div>
           {pl.income && pl.income.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Income Breakdown</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Income Breakdown')}</h3>
               <div className="space-y-3">
                 {pl.income.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
-                    <span className="text-sm text-navy">{item.category || item.name || 'Revenue'}</span>
+                    <span className="text-sm text-navy">{item.category || item.name || ta('Revenue')}</span>
                     <span className="text-sm font-medium text-green-600">{formatCurrency(item.amount || item.revenue || 0)}</span>
                   </div>
                 ))}
@@ -597,11 +600,11 @@ export default function ReportsTab() {
           )}
           {pl.expenses && pl.expenses.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Expense Breakdown</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Expense Breakdown')}</h3>
               <div className="space-y-3">
                 {pl.expenses.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between items-center py-1.5 border-b border-border/50 last:border-0">
-                    <span className="text-sm text-navy">{item.category || item.name || 'Expense'}</span>
+                    <span className="text-sm text-navy">{item.category || item.name || ta('Expense')}</span>
                     <span className="text-sm font-medium text-orange-600">{formatCurrency(item.amount || 0)}</span>
                   </div>
                 ))}
@@ -610,10 +613,10 @@ export default function ReportsTab() {
           )}
           <DataTable
             columns={[
-              { key: 'category', label: 'Category' },
-              { key: 'amount', label: 'Amount', align: 'right', format: 'currency' },
+              { key: 'category', label: ta('Category') },
+              { key: 'amount', label: ta('Amount'), align: 'right', format: 'currency' },
             ]}
-            rows={[...(pl.income || []).map((i: any) => ({ category: i.category || i.name || 'Revenue', amount: i.amount || i.revenue || 0 })), ...(pl.expenses || []).map((e: any) => ({ category: e.category || e.name || 'Expense', amount: e.amount || 0 }))]}
+            rows={[...(pl.income || []).map((i: any) => ({ category: i.category || i.name || ta('Revenue'), amount: i.amount || i.revenue || 0 })), ...(pl.expenses || []).map((e: any) => ({ category: e.category || e.name || ta('Expense'), amount: e.amount || 0 }))]}
             keyColumn="category"
           />
         </div>
@@ -622,17 +625,17 @@ export default function ReportsTab() {
 
     if (reportType === 'balance-sheet') {
       const bs = data[0]
-      if (!bs) return <p className="text-sm text-muted-foreground">No balance sheet data available</p>
+      if (!bs) return <p className="text-sm text-muted-foreground">{ta('No balance sheet data available')}</p>
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <StatCard label="Total Assets" value={formatCurrency(bs.totalAssets)} icon={Wallet} color="text-green-600" bg="bg-green-50" />
-            <StatCard label="Total Liabilities" value={formatCurrency(bs.totalLiabilities)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
-            <StatCard label="Equity" value={formatCurrency(bs.totalEquity)} icon={TrendingUp} color="text-purple-600" bg="bg-purple-50" />
+            <StatCard label={ta('Total Assets')} value={formatCurrency(bs.totalAssets)} icon={Wallet} color="text-green-600" bg="bg-green-50" />
+            <StatCard label={ta('Total Liabilities')} value={formatCurrency(bs.totalLiabilities)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
+            <StatCard label={ta('Equity')} value={formatCurrency(bs.totalEquity)} icon={TrendingUp} color="text-purple-600" bg="bg-purple-50" />
           </div>
           {bs.assets && bs.assets.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Assets</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Assets')}</h3>
               <div className="space-y-2">
                 {bs.assets.map((a: any, i: number) => (
                   <div key={i} className="flex justify-between py-1.5 border-b border-border/50 last:border-0">
@@ -645,7 +648,7 @@ export default function ReportsTab() {
           )}
           {bs.liabilities && bs.liabilities.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Liabilities</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Liabilities')}</h3>
               <div className="space-y-2">
                 {bs.liabilities.map((l: any, i: number) => (
                   <div key={i} className="flex justify-between py-1.5 border-b border-border/50 last:border-0">
@@ -658,7 +661,7 @@ export default function ReportsTab() {
           )}
           {bs.equity && bs.equity.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Equity</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Equity')}</h3>
               <div className="space-y-2">
                 {bs.equity.map((e: any, i: number) => (
                   <div key={i} className="flex justify-between py-1.5 border-b border-border/50 last:border-0">
@@ -675,21 +678,21 @@ export default function ReportsTab() {
 
     if (reportType === 'cash-flow') {
       const cf = data[0]
-      if (!cf) return <p className="text-sm text-muted-foreground">No cash flow data available</p>
+      if (!cf) return <p className="text-sm text-muted-foreground">{ta('No cash flow data available')}</p>
       const opNet = cf.operating?.netOperating ?? 0
       const invNet = cf.investing?.netInvesting ?? 0
       const finNet = cf.financing?.netFinancing ?? 0
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard label="Operating" value={formatCurrency(opNet)} icon={TrendingUp} color={opNet >= 0 ? 'text-green-600' : 'text-red-600'} bg={opNet >= 0 ? 'bg-green-50' : 'bg-red-50'} />
-            <StatCard label="Investing" value={formatCurrency(invNet)} icon={Banknote} color={invNet >= 0 ? 'text-green-600' : 'text-orange-600'} bg={invNet >= 0 ? 'bg-green-50' : 'bg-orange-50'} />
-            <StatCard label="Financing" value={formatCurrency(finNet)} icon={CreditCard} color={finNet >= 0 ? 'text-green-600' : 'text-purple-600'} bg={finNet >= 0 ? 'bg-green-50' : 'bg-purple-50'} />
-            <StatCard label="Net Change" value={formatCurrency(cf.netCashFlow ?? 0)} icon={DollarSign} color={(cf.netCashFlow ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'} bg={(cf.netCashFlow ?? 0) >= 0 ? 'bg-green-50' : 'bg-red-50'} />
+            <StatCard label={ta('Operating')} value={formatCurrency(opNet)} icon={TrendingUp} color={opNet >= 0 ? 'text-green-600' : 'text-red-600'} bg={opNet >= 0 ? 'bg-green-50' : 'bg-red-50'} />
+            <StatCard label={ta('Investing')} value={formatCurrency(invNet)} icon={Banknote} color={invNet >= 0 ? 'text-green-600' : 'text-orange-600'} bg={invNet >= 0 ? 'bg-green-50' : 'bg-orange-50'} />
+            <StatCard label={ta('Financing')} value={formatCurrency(finNet)} icon={CreditCard} color={finNet >= 0 ? 'text-green-600' : 'text-purple-600'} bg={finNet >= 0 ? 'bg-green-50' : 'bg-purple-50'} />
+            <StatCard label={ta('Net Change')} value={formatCurrency(cf.netCashFlow ?? 0)} icon={DollarSign} color={(cf.netCashFlow ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'} bg={(cf.netCashFlow ?? 0) >= 0 ? 'bg-green-50' : 'bg-red-50'} />
           </div>
           {cf.operating?.items?.length > 0 && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Operating Activities</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Operating Activities')}</h3>
               <div className="space-y-2">
                 {cf.operating.items.map((d: any, i: number) => (
                   <div key={i} className="flex justify-between py-1.5 border-b border-border/50 last:border-0">
@@ -710,20 +713,20 @@ export default function ReportsTab() {
 
     if (reportType === 'tax-summary') {
       const tax = data[0]
-      if (!tax) return <p className="text-sm text-muted-foreground">No tax data available</p>
+      if (!tax) return <p className="text-sm text-muted-foreground">{ta('No tax data available')}</p>
       return (
         <div className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <StatCard label="Tax Collected" value={formatCurrency(tax.taxCollected || 0)} icon={DollarSign} color="text-green-600" bg="bg-green-50" />
-            <StatCard label="Tax Paid" value={formatCurrency(tax.taxPaid || 0)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
-            <StatCard label="Net Tax Liability" value={formatCurrency(tax.netLiability || 0)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" />
+            <StatCard label={ta('Tax Collected')} value={formatCurrency(tax.taxCollected || 0)} icon={DollarSign} color="text-green-600" bg="bg-green-50" />
+            <StatCard label={ta('Tax Paid')} value={formatCurrency(tax.taxPaid || 0)} icon={Banknote} color="text-orange-600" bg="bg-orange-50" />
+            <StatCard label={ta('Net Tax Liability')} value={formatCurrency(tax.netLiability || 0)} icon={TrendingDown} color="text-red-600" bg="bg-red-50" />
           </div>
           {tax.rates && tax.rates.length > 0 && (
             <DataTable
               columns={[
-                { key: 'rate', label: 'Tax Rate' },
-                { key: 'taxable', label: 'Taxable Amount', align: 'right', format: 'currency' },
-                { key: 'tax', label: 'Tax Amount', align: 'right', format: 'currency' },
+                { key: 'rate', label: ta('Tax Rate') },
+                { key: 'taxable', label: ta('Taxable Amount'), align: 'right', format: 'currency' },
+                { key: 'tax', label: ta('Tax Amount'), align: 'right', format: 'currency' },
               ]}
               rows={tax.rates}
               keyColumn="rate"
@@ -736,26 +739,26 @@ export default function ReportsTab() {
     if (reportType === 'budget-vs-actual') {
       const budget = data[0]
       const overview = data[1]
-      if (!budget && !overview) return <p className="text-sm text-muted-foreground">No budget data available</p>
+      if (!budget && !overview) return <p className="text-sm text-muted-foreground">{ta('No budget data available')}</p>
       return (
         <div className="space-y-6">
           {overview?.budgetComparison && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h3 className="text-sm font-semibold text-navy mb-4">Budget vs Actual</h3>
+              <h3 className="text-sm font-semibold text-navy mb-4">{ta('Budget vs Actual')}</h3>
               <div className="flex items-center justify-between mb-2">
                 <span className={`text-sm font-medium ${overview.budgetComparison.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  Variance: {overview.budgetComparison.variance >= 0 ? '+' : ''}{overview.budgetComparison.variancePct}%
+                  {ta('Variance:')} {overview.budgetComparison.variance >= 0 ? '+' : ''}{overview.budgetComparison.variancePct}%
                 </span>
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex-1 space-y-3">
-                  <div><div className="flex justify-between text-sm mb-1"><span className="text-muted-foreground">Budget</span><span className="font-medium text-navy">{formatCurrency(overview.budgetComparison.budgeted)}</span></div>
+                  <div><div className="flex justify-between text-sm mb-1"><span className="text-muted-foreground">{ta('Budget')}</span><span className="font-medium text-navy">{formatCurrency(overview.budgetComparison.budgeted)}</span></div>
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min((overview.budgetComparison.budgeted / overview.budgetComparison.budgeted) * 100, 100)}%` }} /></div></div>
-                  <div><div className="flex justify-between text-sm mb-1"><span className="text-muted-foreground">Actual</span><span className="font-medium text-navy">{formatCurrency(overview.budgetComparison.actual)}</span></div>
+                  <div><div className="flex justify-between text-sm mb-1"><span className="text-muted-foreground">{ta('Actual')}</span><span className="font-medium text-navy">{formatCurrency(overview.budgetComparison.actual)}</span></div>
                     <div className="h-3 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-green-500 rounded-full" style={{ width: `${Math.min((overview.budgetComparison.actual / overview.budgetComparison.budgeted) * 100, 100)}%` }} /></div></div>
                 </div>
                 <div className="text-center p-4 bg-gray-50 rounded-lg min-w-[120px]">
-                  <p className="text-xs text-muted-foreground">Variance</p>
+                  <p className="text-xs text-muted-foreground">{ta('Variance')}</p>
                   <p className={`text-xl font-bold ${overview.budgetComparison.variance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {overview.budgetComparison.variance >= 0 ? '+' : ''}{formatCurrency(overview.budgetComparison.variance)}
                   </p>
@@ -766,10 +769,10 @@ export default function ReportsTab() {
           {(budget?.actual || budget?.budget) && (
             <DataTable
               columns={[
-                { key: 'category', label: 'Category' },
-                { key: 'budget', label: 'Budget', align: 'right', format: 'currency' },
-                { key: 'actual', label: 'Actual', align: 'right', format: 'currency' },
-                { key: 'variance', label: 'Variance', align: 'right', format: 'currency' },
+                { key: 'category', label: ta('Category') },
+                { key: 'budget', label: ta('Budget'), align: 'right', format: 'currency' },
+                { key: 'actual', label: ta('Actual'), align: 'right', format: 'currency' },
+                { key: 'variance', label: ta('Variance'), align: 'right', format: 'currency' },
               ]}
               rows={budget.actual?.map?.((a: any, i: number) => ({
                 category: a.category || a.name || a.account,
@@ -791,9 +794,9 @@ export default function ReportsTab() {
     if (reportType === 'comprehensive') {
       return (
         <div className="space-y-6">
-          <h3 className="text-sm font-semibold text-navy">Executive Overview</h3>
+          <h3 className="text-sm font-semibold text-navy">{ta('Executive Overview')}</h3>
           {renderOverview(data[0], data[2])}
-          <h3 className="text-sm font-semibold text-navy pt-4 border-t border-border">Revenue Detail</h3>
+          <h3 className="text-sm font-semibold text-navy pt-4 border-t border-border">{ta('Revenue Detail')}</h3>
           {renderRevenueAnalysis(data[1], data[0])}
         </div>
       )
@@ -811,7 +814,7 @@ export default function ReportsTab() {
             return (
               <button key={key} onClick={() => setReportType(key)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${reportType === key ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>
-                <Icon className="h-3.5 w-3.5" /> {label}
+                <Icon className="h-3.5 w-3.5" /> {ta(label)}
               </button>
             )
           })}
@@ -819,7 +822,7 @@ export default function ReportsTab() {
             <select value={reportType} onChange={e => setReportType(e.target.value as ReportType)}
               className="px-3 py-1.5 text-xs font-medium rounded-md bg-transparent text-muted-foreground hover:text-navy appearance-none cursor-pointer">
               {REPORT_LABELS['budget-vs-actual'] && (Object.entries(REPORT_LABELS) as [ReportType, string][]).slice(5).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
+                <option key={key} value={key}>{ta(label)}</option>
               ))}
             </select>
           </div>
@@ -831,32 +834,32 @@ export default function ReportsTab() {
           {PERIOD_OPTIONS.map(opt => (
             <button key={opt.value} onClick={() => setPeriod(opt.value)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${period === opt.value ? 'bg-white text-navy shadow-sm' : 'text-muted-foreground hover:text-navy'}`}>
-              {opt.label}
+              {ta(opt.label)}
             </button>
           ))}
         </div>
         {period === 'custom' && (
           <div className="flex items-center gap-2">
             <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
-            <span className="text-xs text-muted-foreground">to</span>
+            <span className="text-xs text-muted-foreground">{ta('to')}</span>
             <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
           </div>
         )}
         {branches.length > 0 && (
           <select value={branchFilter} onChange={e => setBranchFilter(e.target.value)} className="px-3 py-1.5 border border-border rounded-lg text-xs">
-            <option value="">All Branches</option>
+            <option value="">{ta('All Branches')}</option>
             {branches.map((b: any) => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
         )}
         <button onClick={() => setComparison(!comparison)}
           className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${comparison ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
-          vs Previous
+          {ta('vs Previous')}
         </button>
         <button onClick={handleExportCSV} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
-          <Download className="h-3.5 w-3.5" /> CSV
+          <Download className="h-3.5 w-3.5" /> {ta('CSV')}
         </button>
         <button onClick={handleExportPDF} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700 transition-colors flex items-center gap-1.5">
-          <Download className="h-3.5 w-3.5" /> PDF
+              <Download className="h-3.5 w-3.5" /> {ta('PDF')}
         </button>
       </div>
 
