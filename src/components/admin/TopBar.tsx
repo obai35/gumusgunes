@@ -6,7 +6,7 @@ import { useAdminAuth } from '@/lib/admin-auth-store'
 import { useTranslation } from '@/hooks/use-translation'
 import { useState, useEffect } from 'react'
 import {
-  Menu, Search, Bell, ChevronRight, Package, ShoppingCart, Users, Settings,
+  Menu, Search, Bell, ChevronRight, Package, ShoppingCart, Users, Settings, Loader2,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -19,13 +19,21 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  CommandDialog,
+  Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { useDebounce } from '@/hooks/useDebounce'
 import { SheetTrigger } from '@/components/ui/sheet'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 
@@ -108,12 +116,23 @@ function formatSegment(t: (key: string) => string, seg: string): string {
   return seg.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
+type SearchProduct = { id: string; name: string; sku: string; price: number; imageUrl: string | null; isActive: boolean }
+type SearchOrder = { id: string; orderNumber: string; fullName: string | null; email: string | null; status: string; totalAmount: number }
+type SearchCustomer = { id: string; name: string | null; email: string | null; phone: string | null }
+type SearchResults = { products: SearchProduct[]; orders: SearchOrder[]; customers: SearchCustomer[] }
+
+const EMPTY_RESULTS: SearchResults = { products: [], orders: [], customers: [] }
+
 export function TopBar() {
   const pathname = usePathname()
   const router = useRouter()
   const { user } = useAdminAuth()
   const { t } = useTranslation()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [results, setResults] = useState<SearchResults>(EMPTY_RESULTS)
+  const debouncedQuery = useDebounce(searchQuery, 300)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -126,6 +145,38 @@ export function TopBar() {
     return () => document.removeEventListener('keydown', down)
   }, [])
 
+  useEffect(() => {
+    const q = debouncedQuery.trim()
+    if (!searchOpen || !q) {
+      setSearching(false)
+      setResults(EMPTY_RESULTS)
+      return
+    }
+    let cancelled = false
+    setSearching(true)
+    fetch(`/api/admin/search?q=${encodeURIComponent(q)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setResults(d && Array.isArray(d.products) && Array.isArray(d.orders) && Array.isArray(d.customers)
+          ? d
+          : EMPTY_RESULTS)
+      })
+      .catch(() => {
+        if (!cancelled) setResults(EMPTY_RESULTS)
+      })
+      .finally(() => {
+        if (!cancelled) setSearching(false)
+      })
+    return () => { cancelled = true }
+  }, [debouncedQuery, searchOpen])
+
+  const closeSearch = (href: string) => {
+    setSearchOpen(false)
+    setSearchQuery('')
+    setResults(EMPTY_RESULTS)
+    router.push(href)
+  }
+
   const segments = pathname.split('/').filter(Boolean)
 
   const searchItems = [
@@ -134,6 +185,9 @@ export function TopBar() {
     { label: 'Customers', icon: Users, href: '/admin/customers' },
     { label: 'Settings', icon: Settings, href: '/admin/settings' },
   ]
+
+  const query = searchQuery.trim()
+  const hasResults = results.products.length > 0 || results.orders.length > 0 || results.customers.length > 0
 
   return (
     <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border">
@@ -224,26 +278,79 @@ export function TopBar() {
         </div>
       </div>
 
-      <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <CommandInput placeholder={t('admin.common.searchDot')} />
-        <CommandList>
-          <CommandEmpty>{t('admin.common.noResults')}</CommandEmpty>
-          <CommandGroup heading={t('admin.common.quickNavigate')}>
-            {searchItems.map((item) => (
-              <CommandItem
-                key={item.href}
-                onSelect={() => {
-                  setSearchOpen(false)
-                  router.push(item.href)
-                }}
-              >
-                <item.icon className="mr-2 h-4 w-4" />
-                <span>{item.label}</span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
+      <Dialog open={searchOpen} onOpenChange={(open) => { setSearchOpen(open); if (!open) { setSearchQuery(''); setResults(EMPTY_RESULTS) } }}>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Search</DialogTitle>
+          <DialogDescription>Search products, orders and customers</DialogDescription>
+        </DialogHeader>
+        <DialogContent className="overflow-hidden p-0" showCloseButton={false}>
+          <Command shouldFilter={false} className="[&_[cmdk-group-heading]]:text-muted-foreground **:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+            <CommandInput value={searchQuery} onValueChange={setSearchQuery} placeholder={t('admin.common.searchDot')} />
+            <CommandList>
+              {!query && (
+                <CommandGroup heading={t('admin.common.quickNavigate')}>
+                  {searchItems.map((item) => (
+                    <CommandItem
+                      key={item.href}
+                      onSelect={() => closeSearch(item.href)}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      <span>{item.label}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {query && searching && (
+                <CommandItem disabled>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <span>{t('admin.common.loading')}</span>
+                </CommandItem>
+              )}
+
+              {query && !searching && !hasResults && (
+                <CommandEmpty>{t('admin.common.noResults')}</CommandEmpty>
+              )}
+
+              {query && !searching && results.products.length > 0 && (
+                <CommandGroup heading={t('admin.sidebar.products')}>
+                  {results.products.map((p) => (
+                    <CommandItem key={p.id} onSelect={() => closeSearch(`/admin/products/${p.id}/edit`)}>
+                      <Package className="mr-2 h-4 w-4" />
+                      <span>{p.name}</span>
+                      {p.sku && <span className="ml-auto text-xs text-muted-foreground">{p.sku}</span>}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {query && !searching && results.orders.length > 0 && (
+                <CommandGroup heading={t('admin.sidebar.orders')}>
+                  {results.orders.map((o) => (
+                    <CommandItem key={o.id} onSelect={() => closeSearch(`/admin/orders/${o.id}`)}>
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      <span>{o.orderNumber}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{o.fullName || o.email || ''}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+
+              {query && !searching && results.customers.length > 0 && (
+                <CommandGroup heading={t('admin.sidebar.customers')}>
+                  {results.customers.map((c) => (
+                    <CommandItem key={c.id} onSelect={() => closeSearch(`/admin/customers/${c.id}`)}>
+                      <Users className="mr-2 h-4 w-4" />
+                      <span>{c.name || c.email || c.phone || '—'}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{c.email || c.phone || ''}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+            </CommandList>
+          </Command>
+        </DialogContent>
+      </Dialog>
     </header>
   )
 }

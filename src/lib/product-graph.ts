@@ -111,6 +111,7 @@ function normalizeProduct(row: any): Product {
   return {
     id: row.id,
     name: row.name,
+    nameAr: row.nameAr,
     slug: row.slug,
     description: row.description,
     price: Number(row.price),
