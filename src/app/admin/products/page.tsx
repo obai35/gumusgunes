@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Search, X, ArrowRight, DollarSign, Package, Star } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { DataTable } from '@/components/admin/DataTable'
 import { FilterBar } from '@/components/admin/FilterBar'
 import { Pagination } from '@/components/admin/Pagination'
@@ -25,6 +26,7 @@ type Product = {
 }
 
 export default function AdminProducts() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -61,10 +63,10 @@ export default function AdminProducts() {
         setTotal(data.total)
         setTotalPages(data.totalPages)
       } else {
-        toast.error(data.error || 'Failed to load products')
+        toast.error(ta(data.error || 'Failed to load products'))
       }
     } catch {
-      toast.error('Failed to load products')
+      toast.error(ta('Failed to load products'))
     } finally {
       setLoading(false)
     }
@@ -97,7 +99,7 @@ export default function AdminProducts() {
       })
       const data = await res.json()
       if (data.ok) {
-        toast.success(`${action === 'toggleActive' ? (value !== false ? 'Activated' : 'Deactivated') : action === 'setFeatured' ? (value ? 'Set featured' : 'Unset featured') : action === 'setCategory' ? 'Category updated' : action === 'adjustPrice' ? 'Price adjusted' : 'Stock adjusted'} ${data.count} product(s)`)
+        toast.success(ta(`${action === 'toggleActive' ? (value !== false ? 'Activated' : 'Deactivated') : action === 'setFeatured' ? (value ? 'Set featured' : 'Unset featured') : action === 'setCategory' ? 'Category updated' : action === 'adjustPrice' ? 'Price adjusted' : 'Stock adjusted'} ${data.count} product(s)`))
         setSelectedIds(new Set())
         setCategoryValue('')
         setPriceValue({ type: 'percentage', amount: '', direction: 'increase' })
@@ -106,10 +108,10 @@ export default function AdminProducts() {
         setShowStockModal(false)
         fetchProducts()
       } else {
-        toast.error(data.error || 'Operation failed')
+        toast.error(ta(data.error || 'Operation failed'))
       }
     } catch {
-      toast.error('Operation failed')
+      toast.error(ta('Operation failed'))
     } finally {
       setBusy(new Set())
     }
@@ -120,7 +122,7 @@ export default function AdminProducts() {
   const columns: ColumnDef<Product>[] = [
     {
       accessorKey: 'name',
-      header: 'Product',
+      header: ta('Product'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           <img src={row.original.imageUrl} alt={row.original.name} className="h-10 w-10 rounded-lg object-cover" />
@@ -130,22 +132,22 @@ export default function AdminProducts() {
     },
     {
       accessorKey: 'sku',
-      header: 'SKU',
+      header: ta('SKU'),
     },
     {
       accessorKey: 'category.name',
-      header: 'Category',
+      header: ta('Category'),
       cell: ({ row }) => <span className="text-muted-foreground">{row.original.category.name}</span>,
     },
     {
       accessorKey: 'price',
-      header: 'Price',
+      header: ta('Price'),
       enableSorting: true,
-      cell: ({ row }) => <span className="font-medium text-navy">${row.original.price.toFixed(2)}</span>,
+      cell: ({ row }) => <span className="font-medium text-navy">{fmtCurrency(row.original.price)}</span>,
     },
     {
       accessorKey: 'stock',
-      header: 'Stock',
+      header: ta('Stock'),
       enableSorting: true,
       cell: ({ row }) => (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${row.original.stock < 5 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
@@ -155,16 +157,16 @@ export default function AdminProducts() {
     },
     {
       accessorKey: 'isFeatured',
-      header: 'Featured',
+      header: ta('Featured'),
       cell: ({ row }) => row.original.isFeatured ? (
         <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700">
-          <Star className="h-3 w-3" /> Featured
+          <Star className="h-3 w-3" /> {ta('Featured')}
         </span>
       ) : <span className="text-xs text-muted-foreground">—</span>,
     },
     {
       accessorKey: 'isActive',
-      header: 'Active',
+      header: ta('Active'),
       cell: ({ row }) => <ProductToggle productId={row.original.id} field="isActive" value={row.original.isActive} />,
     },
     {
@@ -183,13 +185,13 @@ export default function AdminProducts() {
   return (
     <div>
       <PageHeader
-        title="Products"
+        title={ta('Products')}
         actions={
           <Link
             href="/admin/products/new"
             className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors"
           >
-            <Plus className="h-4 w-4" /> Add Product
+            <Plus className="h-4 w-4" /> {ta('Add Product')}
           </Link>
         }
       />
@@ -201,7 +203,7 @@ export default function AdminProducts() {
             <input
               value={searchQuery}
               onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
-              placeholder="Search by name or SKU..."
+              placeholder={ta('Search by name or SKU...')}
               className="w-full pl-9 pr-8 py-2 rounded-lg border border-border text-sm"
             />
             {searchQuery && (
@@ -216,17 +218,17 @@ export default function AdminProducts() {
               onChange={e => { setCategoryFilter(e.target.value); setPage(1) }}
               className="px-3 py-2 rounded-lg border border-border text-sm"
             >
-              <option value="">All Categories</option>
+              <option value="">{ta('All Categories')}</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <ExportButton
               filename="products-export"
               columns={[
-                { header: 'Name', key: 'name' },
-                { header: 'SKU', key: 'sku' },
-                { header: 'Category', key: 'category.name' },
-                { header: 'Price', key: 'price' },
-                { header: 'Stock', key: 'stock' },
+                { header: ta('Name'), key: 'name' },
+                { header: ta('SKU'), key: 'sku' },
+                { header: ta('Category'), key: 'category.name' },
+                { header: ta('Price'), key: 'price' },
+                { header: ta('Stock'), key: 'stock' },
               ]}
               data={products}
             />
@@ -243,9 +245,9 @@ export default function AdminProducts() {
         responsiveCards
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
-        emptyTitle={searchQuery ? 'No products match your search' : 'No products yet'}
-        emptyDescription={searchQuery ? 'Try adjusting your search terms' : 'Add your first product to get started'}
-        emptyAction={searchQuery ? undefined : { label: 'Add Product', onClick: () => router.push('/admin/products/new') }}
+        emptyTitle={ta(searchQuery ? 'No products match your search' : 'No products yet')}
+        emptyDescription={ta(searchQuery ? 'Try adjusting your search terms' : 'Add your first product to get started')}
+        emptyAction={searchQuery ? undefined : { label: ta('Add Product'), onClick: () => router.push('/admin/products/new') }}
       />
 
       <Pagination
@@ -261,12 +263,12 @@ export default function AdminProducts() {
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         actions={[
-          { label: 'Activate', onClick: () => doBulk('toggleActive', true) },
-          { label: 'Deactivate', onClick: () => doBulk('toggleActive', false), variant: 'destructive' },
-          { label: 'Set Featured', onClick: () => doBulk('setFeatured', true) },
-          { label: 'Unset Featured', onClick: () => doBulk('setFeatured', false), variant: 'outline' },
-          { label: 'Adjust Price', onClick: () => setShowPriceModal(true) },
-          { label: 'Adjust Stock', onClick: () => setShowStockModal(true) },
+          { label: ta('Activate'), onClick: () => doBulk('toggleActive', true) },
+          { label: ta('Deactivate'), onClick: () => doBulk('toggleActive', false), variant: 'destructive' },
+          { label: ta('Set Featured'), onClick: () => doBulk('setFeatured', true) },
+          { label: ta('Unset Featured'), onClick: () => doBulk('setFeatured', false), variant: 'outline' },
+          { label: ta('Adjust Price'), onClick: () => setShowPriceModal(true) },
+          { label: ta('Adjust Stock'), onClick: () => setShowStockModal(true) },
         ]}
       />
 
@@ -288,7 +290,7 @@ export default function AdminProducts() {
               className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-navy">Adjust Price</h3>
+                <h3 className="font-semibold text-navy">{ta('Adjust Price')}</h3>
                 <button onClick={() => setShowPriceModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="space-y-3">
@@ -296,21 +298,21 @@ export default function AdminProducts() {
                   <button
                     onClick={() => setPriceValue(p => ({ ...p, type: 'percentage' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.type === 'percentage' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
-                  >Percentage</button>
+                  >{ta('Percentage')}</button>
                   <button
                     onClick={() => setPriceValue(p => ({ ...p, type: 'fixed' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.type === 'fixed' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
-                  >Fixed</button>
+                  >{ta('Fixed')}</button>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setPriceValue(p => ({ ...p, direction: 'increase' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.direction === 'increase' ? 'bg-green-100 text-green-700 border-green-300' : 'border-border hover:bg-gray-50'}`}
-                  >Increase</button>
+                  >{ta('Increase')}</button>
                   <button
                     onClick={() => setPriceValue(p => ({ ...p, direction: 'decrease' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${priceValue.direction === 'decrease' ? 'bg-red-100 text-red-700 border-red-300' : 'border-border hover:bg-gray-50'}`}
-                  >Decrease</button>
+                  >{ta('Decrease')}</button>
                 </div>
                 <input
                   type="number"
@@ -318,17 +320,17 @@ export default function AdminProducts() {
                   min="0"
                   value={priceValue.amount}
                   onChange={e => setPriceValue(p => ({ ...p, amount: e.target.value }))}
-                  placeholder={priceValue.type === 'percentage' ? 'Percentage (e.g. 10)' : 'Amount (e.g. 5.00)'}
+                  placeholder={ta(priceValue.type === 'percentage' ? 'Percentage (e.g. 10)' : 'Amount (e.g. 5.00)')}
                   className="w-full px-3 py-2 border border-border rounded-lg text-sm"
                 />
               </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setShowPriceModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button onClick={() => setShowPriceModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
                 <button
                   onClick={() => doBulk('adjustPrice', { type: priceValue.type, amount: parseFloat(priceValue.amount), direction: priceValue.direction })}
                   disabled={busy.size > 0 || !priceValue.amount}
                   className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
-                >Apply</button>
+                >{ta('Apply')}</button>
               </div>
             </motion.div>
           </motion.div>
@@ -353,7 +355,7 @@ export default function AdminProducts() {
               className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-navy">Adjust Stock</h3>
+                <h3 className="font-semibold text-navy">{ta('Adjust Stock')}</h3>
                 <button onClick={() => setShowStockModal(false)}><X className="h-4 w-4 text-muted-foreground" /></button>
               </div>
               <div className="space-y-3">
@@ -361,15 +363,15 @@ export default function AdminProducts() {
                   <button
                     onClick={() => setStockValue(s => ({ ...s, type: 'set' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'set' ? 'bg-navy text-silver border-navy' : 'border-border hover:bg-gray-50'}`}
-                  >Set</button>
+                  >{ta('Set')}</button>
                   <button
                     onClick={() => setStockValue(s => ({ ...s, type: 'add' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'add' ? 'bg-green-100 text-green-700 border-green-300' : 'border-border hover:bg-gray-50'}`}
-                  >Add</button>
+                  >{ta('Add')}</button>
                   <button
                     onClick={() => setStockValue(s => ({ ...s, type: 'subtract' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border ${stockValue.type === 'subtract' ? 'bg-red-100 text-red-700 border-red-300' : 'border-border hover:bg-gray-50'}`}
-                  >Subtract</button>
+                  >{ta('Subtract')}</button>
                 </div>
                 <input
                   type="number"
@@ -377,17 +379,17 @@ export default function AdminProducts() {
                   min="0"
                   value={stockValue.amount}
                   onChange={e => setStockValue(s => ({ ...s, amount: e.target.value }))}
-                  placeholder="Quantity"
+                  placeholder={ta('Quantity')}
                   className="w-full px-3 py-2 border border-border rounded-lg text-sm"
                 />
               </div>
               <div className="flex justify-end gap-2 mt-6">
-                <button onClick={() => setShowStockModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
+                <button onClick={() => setShowStockModal(false)} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
                 <button
                   onClick={() => doBulk('adjustStock', { type: stockValue.type, amount: parseInt(stockValue.amount, 10) })}
                   disabled={busy.size > 0 || stockValue.amount === ''}
                   className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
-                >Apply</button>
+                >{ta('Apply')}</button>
               </div>
             </motion.div>
           </motion.div>

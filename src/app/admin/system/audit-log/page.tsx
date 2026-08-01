@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { DataTable } from '@/components/admin/DataTable'
 import { PageHeader } from '@/components/admin/PageHeader'
 import type { ColumnDef } from '@tanstack/react-table'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type AuditLog = {
   id: string
@@ -26,6 +27,7 @@ type Filters = {
 }
 
 export default function AdminAuditLog() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
@@ -56,7 +58,7 @@ export default function AdminAuditLog() {
         setAvailableResources(data.filters.resources || [])
       }
     } catch {
-      toast.error('Failed to load audit logs')
+      toast.error(ta('Failed to load audit logs'))
     } finally {
       setLoading(false)
     }
@@ -84,7 +86,7 @@ export default function AdminAuditLog() {
   const columns: ColumnDef<AuditLog>[] = [
     {
       accessorKey: 'createdAt',
-      header: 'Time',
+      header: ta('Time'),
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground whitespace-nowrap">
           {new Date(row.original.createdAt).toLocaleString()}
@@ -93,14 +95,14 @@ export default function AdminAuditLog() {
     },
     {
       accessorKey: 'adminName',
-      header: 'Admin',
+      header: ta('Admin'),
       cell: ({ row }) => (
-        <span className="text-sm font-medium text-navy">{row.original.adminName || 'System'}</span>
+        <span className="text-sm font-medium text-navy">{row.original.adminName || ta('System')}</span>
       ),
     },
     {
       accessorKey: 'action',
-      header: 'Action',
+      header: ta('Action'),
       cell: ({ row }) => {
         const colorMap: Record<string, string> = {
           create: 'text-green-600 bg-green-50',
@@ -119,21 +121,21 @@ export default function AdminAuditLog() {
     },
     {
       accessorKey: 'resource',
-      header: 'Resource',
+      header: ta('Resource'),
       cell: ({ row }) => (
         <span className="text-sm text-gray-700">{row.original.resource}</span>
       ),
     },
     {
       accessorKey: 'resourceId',
-      header: 'Resource ID',
+      header: ta('Resource ID'),
       cell: ({ row }) => (
         <span className="text-xs font-mono text-gray-400">{row.original.resourceId || '—'}</span>
       ),
     },
     {
       accessorKey: 'details',
-      header: 'Details',
+      header: ta('Details'),
       cell: ({ row }) => {
         const details = row.original.details
         if (!details) return <span className="text-gray-400">—</span>
@@ -150,8 +152,8 @@ export default function AdminAuditLog() {
   return (
     <div>
       <PageHeader
-        title="Audit Log"
-        subtitle="Track all admin actions across the system"
+        title={ta('Audit Log')}
+        subtitle={ta('Track all admin actions across the system')}
       />
 
       <div className="bg-white rounded-xl border border-border mb-6">
@@ -160,7 +162,7 @@ export default function AdminAuditLog() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search logs..."
+              placeholder={ta('Search logs...')}
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-navy/20"
@@ -173,12 +175,12 @@ export default function AdminAuditLog() {
             }`}
           >
             <Filter className="h-4 w-4" />
-            Filters
+            {ta('Filters')}
             {hasFilters && <span className="w-2 h-2 rounded-full bg-gold" />}
           </button>
           {hasFilters && (
             <button onClick={clearFilters} className="flex items-center gap-1 px-3 py-2 text-sm text-red-500 hover:text-red-600">
-              <X className="h-4 w-4" /> Clear
+              <X className="h-4 w-4" /> {ta('Clear')}
             </button>
           )}
         </div>
@@ -187,33 +189,33 @@ export default function AdminAuditLog() {
           <div className="p-4 border-b border-border bg-gray-50/50">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Action</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{ta('Action')}</label>
                 <select
                   value={filters.action}
                   onChange={e => { setFilters(f => ({ ...f, action: e.target.value })); setPage(1) }}
                   className="w-full px-3 py-2 rounded-lg border border-border text-sm bg-white"
                 >
-                  <option value="">All Actions</option>
+                  <option value="">{ta('All Actions')}</option>
                   {availableActions.map(a => (
                     <option key={a.value} value={a.value}>{a.value} ({a.count})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Resource</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{ta('Resource')}</label>
                 <select
                   value={filters.resource}
                   onChange={e => { setFilters(f => ({ ...f, resource: e.target.value })); setPage(1) }}
                   className="w-full px-3 py-2 rounded-lg border border-border text-sm bg-white"
                 >
-                  <option value="">All Resources</option>
+                  <option value="">{ta('All Resources')}</option>
                   {availableResources.map(r => (
                     <option key={r.value} value={r.value}>{r.value} ({r.count})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">Start Date</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{ta('Start Date')}</label>
                 <input
                   type="date"
                   value={filters.startDate}
@@ -222,7 +224,7 @@ export default function AdminAuditLog() {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">End Date</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{ta('End Date')}</label>
                 <input
                   type="date"
                   value={filters.endDate}
@@ -240,14 +242,14 @@ export default function AdminAuditLog() {
         data={filteredLogs}
         keyExtractor={(l) => l.id}
         loading={loading}
-        emptyTitle="No audit logs found"
-        emptyDescription={hasFilters ? 'Try adjusting your filters' : 'No admin actions have been recorded yet'}
+        emptyTitle={ta('No audit logs found')}
+        emptyDescription={hasFilters ? ta('Try adjusting your filters') : ta('No admin actions have been recorded yet')}
       />
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
           <span className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            {ta('Page')} {page} {ta('of')} {totalPages}
           </span>
           <div className="flex gap-2">
             <button
@@ -255,14 +257,14 @@ export default function AdminAuditLog() {
               disabled={page <= 1}
               className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {ta('Previous')}
             </button>
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
               className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {ta('Next')}
             </button>
           </div>
         </div>

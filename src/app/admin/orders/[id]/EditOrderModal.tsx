@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 interface EditOrderModalProps {
   orderId: string
@@ -14,6 +15,7 @@ interface EditOrderModalProps {
 }
 
 export default function EditOrderModal({ orderId, items, customer, adminId, onClose, onSuccess }: EditOrderModalProps) {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [editItems, setEditItems] = useState(items.map((i) => ({ id: i.id, productId: i.productId, name: i.product.name, quantity: i.quantity, maxQty: i.quantity })))
   const [fullName, setFullName] = useState(customer.fullName)
   const [phone, setPhone] = useState(customer.phone || '')
@@ -29,7 +31,7 @@ export default function EditOrderModal({ orderId, items, customer, adminId, onCl
 
   async function handleSave() {
     const validItems = editItems.filter((i) => i.quantity > 0)
-    if (validItems.length === 0) { toast.error('At least one item required'); return }
+    if (validItems.length === 0) { toast.error(ta('At least one item required')); return }
 
     setLoading(true)
     try {
@@ -42,9 +44,9 @@ export default function EditOrderModal({ orderId, items, customer, adminId, onCl
           editedById: adminId,
         }),
       })
-      if (res.ok) { toast.success('Order updated'); onSuccess(); onClose() }
+      if (res.ok) { toast.success(ta('Order updated')); onSuccess(); onClose() }
       else { const e = await res.json(); toast.error(e.error) }
-    } catch { toast.error('Failed to update order') }
+    } catch { toast.error(ta('Failed to update order')) }
     finally { setLoading(false) }
   }
 
@@ -65,14 +67,14 @@ export default function EditOrderModal({ orderId, items, customer, adminId, onCl
         className="bg-white rounded-xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-navy mb-4">Edit Order</h2>
+        <h2 className="text-lg font-semibold text-navy mb-4">{ta('Edit Order')}</h2>
         <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium text-navy mb-2">Items</h3>
+            <h3 className="text-sm font-medium text-navy mb-2">{ta('Items')}</h3>
             {editItems.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-2 border-b border-border/50">
                 <span className="text-sm text-navy flex-1">{item.name}</span>
-                <button onClick={() => updateItemQty(item.id, 0)} className="text-xs text-red-600 hover:text-red-800 mr-2">Remove</button>
+                <button onClick={() => updateItemQty(item.id, 0)} className="text-xs text-red-600 hover:text-red-800 mr-2">{ta('Remove')}</button>
                 <input
                   type="number" min={0} max={999} value={item.quantity}
                   onChange={(e) => updateItemQty(item.id, parseInt(e.target.value) || 0)}
@@ -83,34 +85,34 @@ export default function EditOrderModal({ orderId, items, customer, adminId, onCl
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-navy block mb-1">Full Name</label>
+              <label className="text-xs font-medium text-navy block mb-1">{ta('Full Name')}</label>
               <input value={fullName} onChange={(e) => setFullName(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-navy block mb-1">Phone</label>
+              <label className="text-xs font-medium text-navy block mb-1">{ta('Phone')}</label>
               <input value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-medium text-navy block mb-1">Address</label>
+              <label className="text-xs font-medium text-navy block mb-1">{ta('Address')}</label>
               <input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-navy block mb-1">City</label>
+              <label className="text-xs font-medium text-navy block mb-1">{ta('City')}</label>
               <input value={city} onChange={(e) => setCity(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div>
-              <label className="text-xs font-medium text-navy block mb-1">Postal Code</label>
+              <label className="text-xs font-medium text-navy block mb-1">{ta('Postal Code')}</label>
               <input value={postalCode} onChange={(e) => setPostalCode(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div className="col-span-2">
-              <label className="text-xs font-medium text-navy block mb-1">Notes</label>
+              <label className="text-xs font-medium text-navy block mb-1">{ta('Notes')}</label>
               <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" rows={2} />
             </div>
           </div>
           <div className="flex gap-2 pt-2">
-            <button onClick={onClose} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:text-navy">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
             <button onClick={handleSave} disabled={loading} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? ta('Saving...') : ta('Save Changes')}
             </button>
           </div>
         </div>

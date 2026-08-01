@@ -140,13 +140,13 @@ export default function ForecastingTab() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold text-navy mb-3">Historical Data</h3>
+          <h3 className="text-sm font-semibold text-navy mb-3">{ta('Historical Data')}</h3>
           <div className="max-h-60 overflow-y-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground text-xs border-b border-border">
-                  <th className="pb-2 font-medium">Month</th>
-                  <th className="pb-2 font-medium text-right">Revenue</th>
+                  <th className="pb-2 font-medium">{ta('Month')}</th>
+                  <th className="pb-2 font-medium text-right">{ta('Revenue')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,13 +162,13 @@ export default function ForecastingTab() {
         </div>
 
         <div className="bg-white rounded-xl border border-border p-4">
-          <h3 className="text-sm font-semibold text-navy mb-3">Forecast</h3>
+          <h3 className="text-sm font-semibold text-navy mb-3">{ta('Forecast')}</h3>
           <div className="max-h-60 overflow-y-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted-foreground text-xs border-b border-border">
-                  <th className="pb-2 font-medium">Month</th>
-                  <th className="pb-2 font-medium text-right">Predicted Revenue</th>
+                  <th className="pb-2 font-medium">{ta('Month')}</th>
+                  <th className="pb-2 font-medium text-right">{ta('Predicted Revenue')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -184,3 +184,5 @@ export default function ForecastingTab() {
         </div>
       </div>
     </motion.div>
+  )
+}

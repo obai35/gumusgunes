@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function EditTierPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const { id } = useParams()
   const router = useRouter()
   const [name, setName] = useState('')
@@ -31,13 +33,13 @@ export default function EditTierPage() {
         if (b.freeShipping) setFreeShipping(true)
         if (b.pointsMultiplier) setPointsMultiplier(String(b.pointsMultiplier))
       })
-      .catch(() => toast.error('Failed to load tier'))
+      .catch(() => toast.error(ta('Failed to load tier')))
       .finally(() => setLoading(false))
   }, [id])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim() || !minPoints) { toast.error('Name and Min Points are required'); return }
+    if (!name.trim() || !minPoints) { toast.error(ta('Name and Min Points are required')); return }
     setSaving(true)
     const benefits: Record<string, any> = {}
     if (discountPercent) benefits.discountPercent = parseFloat(discountPercent)
@@ -49,54 +51,54 @@ export default function EditTierPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.trim(), minPoints: parseInt(minPoints), benefits, isActive }),
       })
-      if (!res.ok) { toast.error('Failed to update'); return }
-      toast.success('Tier updated')
+      if (!res.ok) { toast.error(ta('Failed to update')); return }
+      toast.success(ta('Tier updated'))
       router.push('/admin/customers/tiers')
     } catch {
-      toast.error('Failed to update')
+      toast.error(ta('Failed to update'))
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-muted-foreground">{ta('Loading...')}</div>
 
   return (
     <div>
-      <PageHeader title="Edit Loyalty Tier" backHref="/admin/customers/tiers" />
+      <PageHeader title={ta('Edit Loyalty Tier')} backHref="/admin/customers/tiers" />
       <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
             <div>
-              <label className="block text-sm font-medium mb-1">Tier Name *</label>
+              <label className="block text-sm font-medium mb-1">{ta('Tier Name *')}</label>
               <input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Minimum Points *</label>
+              <label className="block text-sm font-medium mb-1">{ta('Minimum Points *')}</label>
               <input type="number" value={minPoints} onChange={e => setMinPoints(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Discount (%)</label>
+              <label className="block text-sm font-medium mb-1">{ta('Discount (%)')}</label>
               <input type="number" value={discountPercent} onChange={e => setDiscountPercent(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Points Multiplier</label>
+              <label className="block text-sm font-medium mb-1">{ta('Points Multiplier')}</label>
               <input type="number" step="0.1" value={pointsMultiplier} onChange={e => setPointsMultiplier(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm" />
             </div>
             <div className="flex items-center gap-2">
               <input type="checkbox" checked={freeShipping} onChange={e => setFreeShipping(e.target.checked)} className="rounded border-border" id="freeShipping" />
-              <label htmlFor="freeShipping" className="text-sm font-medium">Free Shipping</label>
+              <label htmlFor="freeShipping" className="text-sm font-medium">{ta('Free Shipping')}</label>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Active</label>
+              <label className="text-sm font-medium">{ta('Active')}</label>
               <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded border-border" />
             </div>
             <div className="flex gap-3 pt-2">
               <button type="submit" disabled={saving || !name.trim() || !minPoints} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? ta('Saving...') : ta('Save Changes')}
               </button>
               <button type="button" onClick={() => router.back()} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:text-navy transition-colors">
-                Cancel
+                {ta('Cancel')}
               </button>
             </div>
           </form>

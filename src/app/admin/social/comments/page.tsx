@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { MessageCircle, Send } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Account = { id: string; accountName: string; platform: string }
 type Post = { id: string; caption: string | null; platformPostId: string | null }
@@ -15,6 +16,7 @@ type Comment = {
 }
 
 export default function SocialComments() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [accounts, setAccounts] = useState<Account[]>([])
   const [posts, setPosts] = useState<Post[]>([])
   const [comments, setComments] = useState<Comment[]>([])
@@ -43,7 +45,7 @@ export default function SocialComments() {
     setLoading(true)
     const post = posts.find(p => p.id === postId)
     if (!post?.platformPostId) {
-      toast.error('This post has no platform ID')
+      toast.error(ta('This post has no platform ID'))
       setLoading(false)
       return
     }
@@ -52,7 +54,7 @@ export default function SocialComments() {
       const data = await res.json()
       setComments(Array.isArray(data) ? data : [])
     } catch {
-      toast.error('Failed to load comments')
+      toast.error(ta('Failed to load comments'))
     }
     setLoading(false)
   }
@@ -68,14 +70,14 @@ export default function SocialComments() {
         body: JSON.stringify({ commentId, message }),
       })
       if (res.ok) {
-        toast.success('Reply sent!')
+        toast.success(ta('Reply sent!'))
         setReplies(r => ({ ...r, [commentId]: '' }))
         loadComments(selectedPostId)
       } else {
-        toast.error('Failed to send reply')
+        toast.error(ta('Failed to send reply'))
       }
     } catch {
-      toast.error('Failed to send reply')
+      toast.error(ta('Failed to send reply'))
     }
     setSendingReply(null)
   }
@@ -83,45 +85,45 @@ export default function SocialComments() {
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-2xl font-display font-semibold text-navy flex items-center gap-2">
-        <MessageCircle className="h-6 w-6" /> Comments Inbox
+        <MessageCircle className="h-6 w-6" /> {ta('Comments Inbox')}
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Select Account</label>
+          <label className="text-sm font-medium text-navy">{ta('Select Account')}</label>
           <select
             value={selectedAccountId}
             onChange={e => { setSelectedAccountId(e.target.value); loadPosts(e.target.value) }}
             className="w-full p-3 rounded-xl bg-background border border-border text-sm"
           >
-            <option value="">Choose an account...</option>
+            <option value="">{ta('Choose an account...')}</option>
             {accounts.map(a => (
               <option key={a.id} value={a.id}>{a.accountName} ({a.platform})</option>
             ))}
           </select>
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Select Post</label>
+          <label className="text-sm font-medium text-navy">{ta('Select Post')}</label>
           <select
             value={selectedPostId}
             onChange={e => { setSelectedPostId(e.target.value); loadComments(e.target.value) }}
             className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             disabled={!selectedAccountId}
           >
-            <option value="">Choose a post...</option>
+            <option value="">{ta('Choose a post...')}</option>
             {posts.map(p => (
               <option key={p.id} value={p.id}>
-                {(p.caption || 'Untitled').slice(0, 60)}...
+                {(p.caption || ta('Untitled')).slice(0, 60)}...
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {loading && <div className="text-muted-foreground text-sm py-12 text-center">Loading comments...</div>}
+      {loading && <div className="text-muted-foreground text-sm py-12 text-center">{ta('Loading comments...')}</div>}
 
       {!loading && comments.length === 0 && selectedPostId && (
-        <div className="text-muted-foreground text-sm py-12 text-center">No comments yet.</div>
+        <div className="text-muted-foreground text-sm py-12 text-center">{ta('No comments yet.')}</div>
       )}
 
       <div className="space-y-3">
@@ -139,14 +141,14 @@ export default function SocialComments() {
               </div>
               {comment.replyCount > 0 && (
                 <span className="text-xs text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded-full">
-                  {comment.replyCount} replies
+                  {comment.replyCount} {ta(comment.replyCount === 1 ? 'reply' : 'replies')}
                 </span>
               )}
             </div>
             <p className="text-sm text-navy mb-3">{comment.message}</p>
             <div className="flex items-center gap-2">
               <input
-                placeholder="Write a reply..."
+                placeholder={ta('Write a reply...')}
                 value={replies[comment.id] || ''}
                 onChange={e => setReplies(r => ({ ...r, [comment.id]: e.target.value }))}
                 className="flex-1 p-2 rounded-lg bg-background border border-border text-sm"

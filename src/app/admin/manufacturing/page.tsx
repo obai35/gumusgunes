@@ -82,7 +82,7 @@ function DashboardView() {
 
   if (loading) return <div className="grid gap-4 sm:grid-cols-3"><Skeleton className="h-24" /><Skeleton className="h-24" /><Skeleton className="h-24" /></div>
 
-  if (!stats) return <p className="text-muted-foreground text-sm">Failed to load dashboard</p>
+  if (!stats) return <p className="text-muted-foreground text-sm">{ta('Failed to load dashboard')}</p>
 
   const cards = [
     { label: ta('Active Orders'), value: fmtNum(stats.activeOrders), sub: ta('Orders in progress'), icon: ClipboardList, color: 'text-blue-600 bg-blue-100' },
@@ -111,7 +111,7 @@ function DashboardView() {
       {stats.recentOrders?.length > 0 && (
         <div className="rounded-lg border">
           <div className="border-b px-4 py-3 font-semibold text-sm flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" /> Recent Orders
+            <ClipboardList className="h-4 w-4" /> {ta('Recent Orders')}
           </div>
           <div className="divide-y">
             {stats.recentOrders.map((o: any) => (
@@ -162,20 +162,20 @@ function ProductionOrdersView() {
       setProducts(Array.isArray(p) ? p : [])
       setWorkCenters(Array.isArray(w) ? w : [])
       setRoutings(Array.isArray(r) ? r : [])
-    }).catch(() => toast.error('Failed to load')).finally(() => setLoading(false))
+    }).catch(() => toast.error(ta('Failed to load'))).finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchAll() }, [])
 
   async function createOrder() {
-    if (!form.productId) { toast.error('Select product'); return }
+    if (!form.productId) { toast.error(ta('Select product')); return }
     const res = await fetch('/api/admin/accounting/production-orders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...form, quantity: Number(form.quantity), plannedStart: form.plannedStart || null }),
     })
-    if (!res.ok) { toast.error('Failed'); return }
-    toast.success('Order created')
+    if (!res.ok) { toast.error(ta('Failed')); return }
+    toast.success(ta('Order created'))
     setShowForm(false)
     setForm({ productId: '', workCenterId: '', routingId: '', quantity: '1', plannedStart: '', notes: '' })
     fetchAll()
@@ -187,7 +187,7 @@ function ProductionOrdersView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
     })
-    if (!res.ok) { toast.error('Failed'); return }
+    if (!res.ok) { toast.error(ta('Failed')); return }
     if (status === 'in_progress') {
       const routing = orders.find(o => o.id === id)?.routingId
       if (routing) {
@@ -203,7 +203,7 @@ function ProductionOrdersView() {
         }
       }
     }
-    toast.success(`Status: ${status}`)
+    toast.success(ta(`Status: ${status}`))
     fetchAll()
   }
 
@@ -221,8 +221,8 @@ function ProductionOrdersView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isCompleted: !op.isCompleted, status: op.isCompleted ? 'pending' : 'completed' }),
     })
-    if (!res.ok) { toast.error('Failed'); return }
-    toast.success(op.isCompleted ? 'Reopened' : 'Completed')
+    if (!res.ok) { toast.error(ta('Failed')); return }
+    toast.success(op.isCompleted ? ta('Reopened') : ta('Completed'))
     loadOps(op.productionOrderId)
   }
 
@@ -231,9 +231,9 @@ function ProductionOrdersView() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-navy">Production Orders</h3>
+        <h3 className="text-sm font-semibold text-navy">{ta('Production Orders')}</h3>
         <button onClick={() => setShowForm(!showForm)} className="px-3 py-1.5 bg-navy text-silver rounded-lg text-xs font-medium hover:bg-navy/90 transition-colors flex items-center gap-1">
-          <Plus className="h-3.5 w-3.5" /> New Order
+          <Plus className="h-3.5 w-3.5" /> {ta('New Order')}
         </button>
       </div>
 
@@ -241,24 +241,24 @@ function ProductionOrdersView() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-gray-50 rounded-xl border border-border p-4 mb-4 space-y-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <select value={form.productId} onChange={e => setForm({ ...form, productId: e.target.value })} className="rounded border px-3 py-2 text-sm">
-              <option value="">Select Product</option>
+              <option value="">{ta('Select Product')}</option>
               {products.map((p: any) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
             </select>
             <select value={form.workCenterId} onChange={e => setForm({ ...form, workCenterId: e.target.value })} className="rounded border px-3 py-2 text-sm">
-              <option value="">Work Center (optional)</option>
+              <option value="">{ta('Work Center (optional)')}</option>
               {workCenters.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
             <select value={form.routingId} onChange={e => setForm({ ...form, routingId: e.target.value })} className="rounded border px-3 py-2 text-sm">
-              <option value="">Routing (optional)</option>
+              <option value="">{ta('Routing (optional)')}</option>
               {routings.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
-            <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder="Quantity" className="rounded border px-3 py-2 text-sm" />
+            <input type="number" value={form.quantity} onChange={e => setForm({ ...form, quantity: e.target.value })} placeholder={ta('Quantity')} className="rounded border px-3 py-2 text-sm" />
             <input type="datetime-local" value={form.plannedStart} onChange={e => setForm({ ...form, plannedStart: e.target.value })} className="rounded border px-3 py-2 text-sm" />
-            <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder="Notes" className="rounded border px-3 py-2 text-sm col-span-2" />
+            <input value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} placeholder={ta('Notes')} className="rounded border px-3 py-2 text-sm col-span-2" />
           </div>
           <div className="flex gap-2">
-            <button onClick={createOrder} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">Create</button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-sm">Cancel</button>
+            <button onClick={createOrder} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">{ta('Create')}</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-sm">{ta('Cancel')}</button>
           </div>
         </motion.div>
       )}
@@ -267,23 +267,23 @@ function ProductionOrdersView() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-muted-foreground border-b border-border bg-gray-50">
-              <th className="p-3 font-medium">Order #</th>
-              <th className="p-3 font-medium">Product</th>
-              <th className="p-3 font-medium">Qty</th>
-              <th className="p-3 font-medium">Status</th>
-              <th className="p-3 font-medium text-right">Std Cost</th>
-              <th className="p-3 font-medium text-right">Actual Cost</th>
-              <th className="p-3 font-medium">Actions</th>
+              <th className="p-3 font-medium">{ta('Order #')}</th>
+              <th className="p-3 font-medium">{ta('Product')}</th>
+              <th className="p-3 font-medium">{ta('Qty')}</th>
+              <th className="p-3 font-medium">{ta('Status')}</th>
+              <th className="p-3 font-medium text-right">{ta('Std Cost')}</th>
+              <th className="p-3 font-medium text-right">{ta('Actual Cost')}</th>
+              <th className="p-3 font-medium">{ta('Actions')}</th>
             </tr>
           </thead>
           <tbody>
-            {orders.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No production orders</td></tr>}
+            {orders.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">{ta('No production orders')}</td></tr>}
             {orders.map((o: any) => (
               <>
                 <tr key={o.id} className={`border-b border-border/50 hover:bg-gray-50 ${expanded === o.id ? 'bg-blue-50/50' : ''}`}>
                   <td className="p-3 font-medium text-navy">{o.orderNumber}</td>
                   <td className="p-3">{o.product?.name || '-'}</td>
-                  <td className="p-3">{o.quantity}</td>
+                  <td className="p-3">{fmtNum(o.quantity)}</td>
                   <td className="p-3">
                     <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
                       o.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -298,12 +298,12 @@ function ProductionOrdersView() {
                   <td className="p-3">
                     <div className="flex items-center gap-1">
                       {(o.status === 'planned' || o.status === 'pending') && (
-                        <button onClick={() => updateStatus(o.id, 'in_progress')} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Start"><Play className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => updateStatus(o.id, 'in_progress')} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title={ta('Start')}><Play className="h-3.5 w-3.5" /></button>
                       )}
                       {o.status === 'in_progress' && (
-                        <button onClick={() => updateStatus(o.id, 'completed')} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title="Complete"><CheckCircle className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => updateStatus(o.id, 'completed')} className="p-1.5 text-green-600 hover:bg-green-50 rounded" title={ta('Complete')}><CheckCircle className="h-3.5 w-3.5" /></button>
                       )}
-                      <button onClick={() => loadOps(o.id)} className="p-1.5 text-muted-foreground hover:bg-gray-100 rounded" title="Operations">
+                      <button onClick={() => loadOps(o.id)} className="p-1.5 text-muted-foreground hover:bg-gray-100 rounded" title={ta('Operations')}>
                         <GanttChartSquare className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -313,8 +313,8 @@ function ProductionOrdersView() {
                   <tr key={`${o.id}-ops`}>
                     <td colSpan={7} className="p-0">
                       <div className="bg-gray-50 px-6 py-4 space-y-3">
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Operation Steps</h4>
-                        {ops.length === 0 && <p className="text-xs text-muted-foreground">No operations. Start the order to auto-generate from routing.</p>}
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{ta('Operation Steps')}</h4>
+                        {ops.length === 0 && <p className="text-xs text-muted-foreground">{ta('No operations. Start the order to auto-generate from routing.')}</p>}
                         {ops.map((op: any) => (
                           <div key={op.id} className="flex items-center gap-3 bg-white rounded-lg border p-3">
                             <button onClick={() => toggleOp(op)} className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${op.isCompleted ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-blue-400'}`}>
@@ -322,7 +322,7 @@ function ProductionOrdersView() {
                             </button>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">{op.step?.name || `Step ${op.sortOrder + 1}`}</span>
+                                <span className="text-sm font-medium">{op.step?.name || ta(`Step ${op.sortOrder + 1}`)}</span>
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded ${
                                   op.status === 'completed' ? 'bg-green-100 text-green-700' :
                                   op.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
@@ -365,18 +365,18 @@ function RoutingsView() {
     ]).then(([r, p]) => {
       setItems(Array.isArray(r) ? r : [])
       setProducts(Array.isArray(p) ? p : [])
-    }).catch(() => toast.error('Failed to load')).finally(() => setLoading(false))
+    }).catch(() => toast.error(ta('Failed to load'))).finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchData() }, [])
 
   async function handleCreate() {
-    if (!form.name || !form.productId) { toast.error('Name and product required'); return }
+    if (!form.name || !form.productId) { toast.error(ta('Name and product required')); return }
     const res = await fetch('/api/admin/accounting/routings', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form),
     })
-    if (!res.ok) { toast.error('Failed'); return }
-    toast.success('Routing created')
+    if (!res.ok) { toast.error(ta('Failed')); return }
+    toast.success(ta('Routing created'))
     setShowForm(false); setForm({ productId: '', name: '', description: '' })
     fetchData()
   }
@@ -386,9 +386,9 @@ function RoutingsView() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-navy">Routings</h3>
+        <h3 className="text-sm font-semibold text-navy">{ta('Routings')}</h3>
         <button onClick={() => setShowForm(!showForm)} className="px-3 py-1.5 bg-navy text-silver rounded-lg text-xs font-medium hover:bg-navy/90 transition-colors flex items-center gap-1">
-          <Plus className="h-3.5 w-3.5" /> New Routing
+          <Plus className="h-3.5 w-3.5" /> {ta('New Routing')}
         </button>
       </div>
 
@@ -396,15 +396,15 @@ function RoutingsView() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-gray-50 rounded-xl border border-border p-4 mb-4 space-y-3">
           <div className="grid gap-3 sm:grid-cols-3">
             <select value={form.productId} onChange={e => setForm({ ...form, productId: e.target.value })} className="rounded border px-3 py-2 text-sm">
-              <option value="">Select Product</option>
+              <option value="">{ta('Select Product')}</option>
               {products.map((p: any) => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
             </select>
-            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Routing Name" className="rounded border px-3 py-2 text-sm" />
-            <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Description" className="rounded border px-3 py-2 text-sm" />
+            <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder={ta('Routing Name')} className="rounded border px-3 py-2 text-sm" />
+            <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder={ta('Description')} className="rounded border px-3 py-2 text-sm" />
           </div>
           <div className="flex gap-2">
-            <button onClick={handleCreate} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">Create</button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-sm">Cancel</button>
+            <button onClick={handleCreate} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">{ta('Create')}</button>
+            <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-sm">{ta('Cancel')}</button>
           </div>
         </motion.div>
       )}
@@ -415,11 +415,11 @@ function RoutingsView() {
             <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => setExpandedId(expandedId === routing.id ? null : routing.id)}>
               <div>
                 <h4 className="font-medium text-sm">{routing.name}</h4>
-                <p className="text-xs text-muted-foreground">{routing.product?.name} · {routing.steps?.length || 0} steps · {routing.totalStandardTime || 0} min total</p>
+                <p className="text-xs text-muted-foreground">{routing.product?.name} · {fmtNum(routing.steps?.length || 0)} {ta('steps')} · {fmtNum(routing.totalStandardTime || 0)} {ta('min total')}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`text-xs px-1.5 py-0.5 rounded ${routing.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                  {routing.isActive ? 'Active' : 'Inactive'}
+                  {routing.isActive ? ta('Active') : ta('Inactive')}
                 </span>
                 <ArrowRight className={`h-4 w-4 text-muted-foreground transition-transform ${expandedId === routing.id ? 'rotate-90' : ''}`} />
               </div>
@@ -427,7 +427,7 @@ function RoutingsView() {
             {expandedId === routing.id && <RoutingDetail routing={routing} />}
           </div>
         ))}
-        {items.length === 0 && <p className="text-center py-12 text-muted-foreground">No routings defined</p>}
+        {items.length === 0 && <p className="text-center py-12 text-muted-foreground">{ta('No routings defined')}</p>}
       </div>
     </div>
   )
@@ -449,65 +449,65 @@ function RoutingDetail({ routing }: { routing: any }) {
   }
 
   async function addStep() {
-    if (!stepForm.workCenterId || !stepForm.name) { toast.error('Work center and name required'); return }
+    if (!stepForm.workCenterId || !stepForm.name) { toast.error(ta('Work center and name required')); return }
     const res = await fetch(`/api/admin/accounting/routings/${routing.id}/steps`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(stepForm),
     })
-    if (!res.ok) { toast.error('Failed'); return }
-    toast.success('Step added')
+    if (!res.ok) { toast.error(ta('Failed')); return }
+    toast.success(ta('Step added'))
     setShowStepForm(false)
     setStepForm({ workCenterId: '', name: '', standardTime: '', setupTime: '', laborCost: '', machineCost: '', notes: '' })
     fetchSteps()
   }
 
   async function deleteStep(stepId: string) {
-    if (!confirm('Remove this step?')) return
+    if (!confirm(ta('Remove this step?'))) return
     const res = await fetch(`/api/admin/accounting/routings/${routing.id}/steps/${stepId}`, { method: 'DELETE' })
-    if (!res.ok) { toast.error('Failed'); return }
-    toast.success('Removed')
+    if (!res.ok) { toast.error(ta('Failed')); return }
+    toast.success(ta('Removed'))
     fetchSteps()
   }
 
   return (
     <div className="border-t border-border p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Steps</h5>
-        <button onClick={() => setShowStepForm(!showStepForm)} className="text-xs text-primary hover:underline flex items-center gap-1"><Plus className="h-3 w-3" /> Add Step</button>
+        <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{ta('Steps')}</h5>
+        <button onClick={() => setShowStepForm(!showStepForm)} className="text-xs text-primary hover:underline flex items-center gap-1"><Plus className="h-3 w-3" /> {ta('Add Step')}</button>
       </div>
 
       {showStepForm && (
         <div className="bg-gray-50 rounded-lg p-3 space-y-2">
           <div className="grid gap-2 sm:grid-cols-3">
             <select value={stepForm.workCenterId} onChange={e => setStepForm({ ...stepForm, workCenterId: e.target.value })} className="rounded border px-2 py-1.5 text-xs">
-              <option value="">Work Center</option>
+              <option value="">{ta('Work Center')}</option>
               {workCenters.map((w: any) => <option key={w.id} value={w.id}>{w.name}</option>)}
             </select>
-            <input value={stepForm.name} onChange={e => setStepForm({ ...stepForm, name: e.target.value })} placeholder="Step name" className="rounded border px-2 py-1.5 text-xs" />
-            <input type="number" value={stepForm.standardTime} onChange={e => setStepForm({ ...stepForm, standardTime: e.target.value })} placeholder="Std time (min)" className="rounded border px-2 py-1.5 text-xs" />
-            <input type="number" value={stepForm.setupTime} onChange={e => setStepForm({ ...stepForm, setupTime: e.target.value })} placeholder="Setup (min)" className="rounded border px-2 py-1.5 text-xs" />
-            <input type="number" value={stepForm.laborCost} onChange={e => setStepForm({ ...stepForm, laborCost: e.target.value })} placeholder="Labor cost" className="rounded border px-2 py-1.5 text-xs" />
-            <input type="number" value={stepForm.machineCost} onChange={e => setStepForm({ ...stepForm, machineCost: e.target.value })} placeholder="Machine cost" className="rounded border px-2 py-1.5 text-xs" />
+            <input value={stepForm.name} onChange={e => setStepForm({ ...stepForm, name: e.target.value })} placeholder={ta('Step name')} className="rounded border px-2 py-1.5 text-xs" />
+            <input type="number" value={stepForm.standardTime} onChange={e => setStepForm({ ...stepForm, standardTime: e.target.value })} placeholder={ta('Std time (min)')} className="rounded border px-2 py-1.5 text-xs" />
+            <input type="number" value={stepForm.setupTime} onChange={e => setStepForm({ ...stepForm, setupTime: e.target.value })} placeholder={ta('Setup (min)')} className="rounded border px-2 py-1.5 text-xs" />
+            <input type="number" value={stepForm.laborCost} onChange={e => setStepForm({ ...stepForm, laborCost: e.target.value })} placeholder={ta('Labor cost')} className="rounded border px-2 py-1.5 text-xs" />
+            <input type="number" value={stepForm.machineCost} onChange={e => setStepForm({ ...stepForm, machineCost: e.target.value })} placeholder={ta('Machine cost')} className="rounded border px-2 py-1.5 text-xs" />
           </div>
           <div className="flex gap-2">
-            <button onClick={addStep} className="px-3 py-1.5 bg-navy text-silver rounded text-xs font-medium">Add</button>
-            <button onClick={() => setShowStepForm(false)} className="px-3 py-1.5 border rounded text-xs">Cancel</button>
+            <button onClick={addStep} className="px-3 py-1.5 bg-navy text-silver rounded text-xs font-medium">{ta('Add')}</button>
+            <button onClick={() => setShowStepForm(false)} className="px-3 py-1.5 border rounded text-xs">{ta('Cancel')}</button>
           </div>
         </div>
       )}
 
-      {steps.length === 0 && <p className="text-xs text-muted-foreground">No steps yet. Add the first production step.</p>}
+      {steps.length === 0 && <p className="text-xs text-muted-foreground">{ta('No steps yet. Add the first production step.')}</p>}
       <div className="space-y-2">
         {steps.map((step, i) => (
           <div key={step.id} className="flex items-center gap-3 bg-gray-50 rounded-lg p-3 text-xs">
-            <span className="h-6 w-6 rounded-full bg-navy text-silver flex items-center justify-center font-bold text-[10px] shrink-0">{i + 1}</span>
+            <span className="h-6 w-6 rounded-full bg-navy text-silver flex items-center justify-center font-bold text-[10px] shrink-0">{fmtNum(i + 1)}</span>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-navy">{step.name}</p>
               <p className="text-muted-foreground">{step.workCenter?.name}</p>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
-              <span title="Std Time"><Timer className="h-3 w-3 inline" /> {step.standardTime || 0}m</span>
-              <span title="Setup"><Settings2 className="h-3 w-3 inline" /> {step.setupTime || 0}m</span>
-              <span title="Labor Cost"><DollarSign className="h-3 w-3 inline" /> {formatCurrency(step.laborCost || 0)}</span>
+              <span title={ta('Std Time')}><Timer className="h-3 w-3 inline" /> {fmtNum(step.standardTime || 0)}m</span>
+              <span title={ta('Setup')}><Settings2 className="h-3 w-3 inline" /> {fmtNum(step.setupTime || 0)}m</span>
+              <span title={ta('Labor Cost')}><DollarSign className="h-3 w-3 inline" /> {formatCurrency(step.laborCost || 0)}</span>
             </div>
             <button onClick={() => deleteStep(step.id)} className="text-red-400 hover:text-red-600"><XCircle className="h-3.5 w-3.5" /></button>
           </div>
@@ -531,7 +531,7 @@ function WorkCentersView() {
     setLoading(true)
     fetch('/api/admin/accounting/work-centers')
       .then(r => r.json()).then(d => { setItems(Array.isArray(d) ? d : []); setLoading(false) })
-      .catch(() => { toast.error('Failed to load'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load')); setLoading(false) })
   }
 
   useEffect(() => { fetchData() }, [])
@@ -541,8 +541,8 @@ function WorkCentersView() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, code, description, hourlyRate: parseFloat(hourlyRate) || 0 }),
     })
-    if (res.ok) { toast.success('Created'); setShowForm(false); setName(''); setCode(''); setDescription(''); setHourlyRate(''); fetchData() }
-    else toast.error('Failed')
+    if (res.ok) { toast.success(ta('Created')); setShowForm(false); setName(''); setCode(''); setDescription(''); setHourlyRate(''); fetchData() }
+    else toast.error(ta('Failed'))
   }
 
   if (loading) return <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
@@ -550,32 +550,32 @@ function WorkCentersView() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-navy">Work Centers</h3>
+        <h3 className="text-sm font-semibold text-navy">{ta('Work Centers')}</h3>
         <button onClick={() => setShowForm(!showForm)} className="px-3 py-1.5 bg-navy text-silver rounded-lg text-xs font-medium hover:bg-navy/90 transition-colors flex items-center gap-1"><Plus className="h-3.5 w-3.5" /> Add</button>
       </div>
       {showForm && (
         <div className="bg-gray-50 rounded-xl border border-border p-4 mb-4 space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-            <input value={code} onChange={e => setCode(e.target.value)} placeholder="Code (e.g. WC-001)" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-            <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-            <input value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} type="number" placeholder="Hourly Rate" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={name} onChange={e => setName(e.target.value)} placeholder={ta('Name')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={code} onChange={e => setCode(e.target.value)} placeholder={ta('Code (e.g. WC-001)')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={description} onChange={e => setDescription(e.target.value)} placeholder={ta('Description')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+            <input value={hourlyRate} onChange={e => setHourlyRate(e.target.value)} type="number" placeholder={ta('Hourly Rate')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
-          <div className="flex gap-2"><button onClick={handleCreate} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">Save</button><button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-sm">Cancel</button></div>
+          <div className="flex gap-2"><button onClick={handleCreate} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">{ta('Save')}</button><button onClick={() => setShowForm(false)} className="px-4 py-2 border border-border rounded-lg text-sm">{ta('Cancel')}</button></div>
         </div>
       )}
       <div className="bg-white rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead><tr className="text-left text-muted-foreground border-b border-border bg-gray-50"><th className="p-3 font-medium">Name</th><th className="p-3 font-medium">Code</th><th className="p-3 font-medium">Description</th><th className="p-3 font-medium text-right">Hourly Rate</th><th className="p-3 font-medium">Active</th></tr></thead>
+          <thead><tr className="text-left text-muted-foreground border-b border-border bg-gray-50"><th className="p-3 font-medium">{ta('Name')}</th><th className="p-3 font-medium">{ta('Code')}</th><th className="p-3 font-medium">{ta('Description')}</th><th className="p-3 font-medium text-right">{ta('Hourly Rate')}</th><th className="p-3 font-medium">{ta('Active')}</th></tr></thead>
           <tbody>
-            {items.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">No work centers</td></tr>}
+            {items.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-muted-foreground">{ta('No work centers')}</td></tr>}
             {items.map((wc: any) => (
               <tr key={wc.id} className="border-b border-border/50 hover:bg-gray-50">
                 <td className="p-3 font-medium text-navy">{wc.name}</td>
                 <td className="p-3 text-muted-foreground">{wc.code || '-'}</td>
                 <td className="p-3 text-muted-foreground">{wc.description || '-'}</td>
                 <td className="p-3 text-right font-mono">{formatCurrency(wc.hourlyRate)}/hr</td>
-                <td className="p-3">{wc.isActive ? <span className="text-green-600 text-xs font-medium">Active</span> : <span className="text-red-600 text-xs font-medium">Inactive</span>}</td>
+                <td className="p-3">{wc.isActive ? <span className="text-green-600 text-xs font-medium">{ta('Active')}</span> : <span className="text-red-600 text-xs font-medium">{ta('Inactive')}</span>}</td>
               </tr>
             ))}
           </tbody>
@@ -610,8 +610,8 @@ function BomsView() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-navy">Bill of Materials</h3>
-        <Link href="/admin/accounting" className="text-xs text-primary hover:underline">Full BOM management in Accounting</Link>
+        <h3 className="text-sm font-semibold text-navy">{ta('Bill of Materials')}</h3>
+        <Link href="/admin/accounting" className="text-xs text-primary hover:underline">{ta('Full BOM management in Accounting')}</Link>
       </div>
       <div className="grid gap-3">
         {items.map((bom: any) => (
@@ -619,14 +619,14 @@ function BomsView() {
             <div className="p-4 flex items-center justify-between cursor-pointer" onClick={() => setExpandedBom(expandedBom === bom.id ? null : bom.id)}>
               <div>
                 <p className="font-medium text-sm">{bom.name || bom.product?.name}</p>
-                <p className="text-xs text-muted-foreground">{bom.product?.sku} · {bom.items?.length || 0} materials</p>
+                <p className="text-xs text-muted-foreground">{bom.product?.sku} · {fmtNum(bom.items?.length || 0)} {ta('materials')}</p>
               </div>
               <ArrowRight className={`h-4 w-4 text-muted-foreground transition-transform ${expandedBom === bom.id ? 'rotate-90' : ''}`} />
             </div>
             {expandedBom === bom.id && (
               <div className="border-t border-border p-4">
                 <table className="w-full text-xs">
-                  <thead><tr className="text-left text-muted-foreground border-b"><th className="pb-2 font-medium">Material</th><th className="pb-2 font-medium">Qty</th><th className="pb-2 font-medium text-right">Unit Cost</th><th className="pb-2 font-medium text-right">Total</th></tr></thead>
+                  <thead><tr className="text-left text-muted-foreground border-b"><th className="pb-2 font-medium">{ta('Material')}</th><th className="pb-2 font-medium">{ta('Qty')}</th><th className="pb-2 font-medium text-right">{ta('Unit Cost')}</th><th className="pb-2 font-medium text-right">{ta('Total')}</th></tr></thead>
                   <tbody>
                     {bom.items?.map((item: any) => (
                       <tr key={item.id} className="border-b border-border/50">
@@ -637,7 +637,7 @@ function BomsView() {
                       </tr>
                     ))}
                     <tr className="font-medium">
-                      <td colSpan={3} className="pt-2 text-right">Total:</td>
+                      <td colSpan={3} className="pt-2 text-right">{ta('Total:')}</td>
                       <td className="pt-2 text-right font-mono">{formatCurrency(bom.items?.reduce((s: number, i: any) => s + (i.unitCost || 0) * i.quantity, 0) || 0)}</td>
                     </tr>
                   </tbody>
@@ -646,7 +646,7 @@ function BomsView() {
             )}
           </div>
         ))}
-        {items.length === 0 && <p className="text-center py-8 text-muted-foreground text-sm">No BOMs found</p>}
+        {items.length === 0 && <p className="text-center py-8 text-muted-foreground text-sm">{ta('No BOMs found')}</p>}
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { DollarSign, TrendingUp, History, Plus } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type CostEntry = {
   id: string
@@ -41,6 +42,7 @@ type PriceList = {
 }
 
 export default function ProductPriceEditor({ productId, costPrice, price }: { productId: string; costPrice: number | null; price: number }) {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [priceLists, setPriceLists] = useState<PriceList[]>([])
   const [costHistory, setCostHistory] = useState<CostEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,7 +60,7 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
       const history = historyRes.items ?? historyRes
       setCostHistory(Array.isArray(history) ? history : [])
     }).catch(() => {
-      toast.error('Failed to load pricing data')
+      toast.error(ta('Failed to load pricing data'))
     }).finally(() => setLoading(false))
   }, [productId])
 
@@ -66,7 +68,7 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
 
   async function handleRecordCost(e: React.FormEvent) {
     e.preventDefault()
-    if (!unitCost || parseFloat(unitCost) <= 0) { toast.error('Enter a valid cost'); return }
+    if (!unitCost || parseFloat(unitCost) <= 0) { toast.error(ta('Enter a valid cost')); return }
     setSaving(true)
     try {
       const res = await fetch('/api/admin/pricing/cost-history', {
@@ -75,17 +77,17 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
         body: JSON.stringify({ productId, unitCost: parseFloat(unitCost), quantity: 1, note: costNote || undefined }),
       })
       if (!res.ok) throw new Error('Failed')
-      toast.success('Cost recorded')
+      toast.success(ta('Cost recorded'))
       setUnitCost(''); setCostNote(''); setRecordCost(false)
       const historyRes = await fetch(`/api/admin/pricing/cost-history?productId=${productId}&limit=10`).then(r => r.json())
       const history = historyRes.items ?? historyRes
       setCostHistory(Array.isArray(history) ? history : [])
-    } catch { toast.error('Failed to record cost') } finally { setSaving(false) }
+    } catch { toast.error(ta('Failed to record cost')) } finally { setSaving(false) }
   }
 
   async function handleToggleItem(priceListId: string, action: 'add' | 'remove') {
     if (action === 'add') {
-      const priceVal = prompt('Enter price for this product in the list:')
+      const priceVal = prompt(ta('Enter price for this product in the list:'))
       if (!priceVal || parseFloat(priceVal) <= 0) return
       try {
         const res = await fetch(`/api/admin/pricing/price-lists/${priceListId}/items`, {
@@ -94,10 +96,10 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
           body: JSON.stringify({ productId, price: parseFloat(priceVal) }),
         })
         if (!res.ok) throw new Error('Failed')
-        toast.success('Product added to price list')
+        toast.success(ta('Product added to price list'))
         const lists = await fetch(`/api/admin/pricing/price-lists?productId=${productId}`).then(r => r.json())
         setPriceLists(Array.isArray(lists) ? lists : [])
-      } catch { toast.error('Failed to add product') }
+      } catch { toast.error(ta('Failed to add product')) }
     }
   }
 
@@ -112,20 +114,20 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
   return (
     <div className="bg-white rounded-xl border border-border p-5 mt-6">
       <h2 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
-        <DollarSign className="h-5 w-5" /> Pricing &amp; Cost
+        <DollarSign className="h-5 w-5" /> {ta('Pricing & Cost')}
       </h2>
 
       <div className="grid grid-cols-3 gap-4 mb-5">
         <div className="p-3 rounded-lg bg-secondary/20">
-          <p className="text-xs text-muted-foreground">Selling Price</p>
-          <p className="text-xl font-semibold text-navy">{price.toFixed(2)}</p>
+          <p className="text-xs text-muted-foreground">{ta('Selling Price')}</p>
+          <p className="text-xl font-semibold text-navy">{fmtCurrency(price)}</p>
         </div>
         <div className="p-3 rounded-lg bg-secondary/20">
-          <p className="text-xs text-muted-foreground">Cost Price</p>
-          <p className="text-xl font-semibold text-navy">{costPrice ? costPrice.toFixed(2) : '—'}</p>
+          <p className="text-xs text-muted-foreground">{ta('Cost Price')}</p>
+          <p className="text-xl font-semibold text-navy">{costPrice ? fmtCurrency(costPrice) : '—'}</p>
         </div>
         <div className="p-3 rounded-lg bg-secondary/20">
-          <p className="text-xs text-muted-foreground">Margin</p>
+          <p className="text-xs text-muted-foreground">{ta('Margin')}</p>
           <p className={`text-xl font-semibold ${margin !== null && margin >= 0 ? 'text-green-600' : 'text-muted-foreground'}`}>
             {margin !== null ? `${margin.toFixed(1)}%` : '—'}
           </p>
@@ -134,20 +136,20 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
 
       <div className="mb-5">
         <button onClick={() => setRecordCost(!recordCost)} className="flex items-center gap-2 text-sm font-medium text-navy mb-3">
-          <Plus className="h-4 w-4" /> Record Cost
+          <Plus className="h-4 w-4" /> {ta('Record Cost')}
         </button>
         {recordCost && (
           <form onSubmit={handleRecordCost} className="flex gap-3 items-end">
             <div>
-              <label className="text-xs text-muted-foreground">Unit Cost</label>
+              <label className="text-xs text-muted-foreground">{ta('Unit Cost')}</label>
               <input type="number" step="0.01" value={unitCost} onChange={e => setUnitCost(e.target.value)} className="w-28 px-3 py-2 rounded-lg border border-border text-sm mt-1" />
             </div>
             <div className="flex-1">
-              <label className="text-xs text-muted-foreground">Note (optional)</label>
+              <label className="text-xs text-muted-foreground">{ta('Note (optional)')}</label>
               <input value={costNote} onChange={e => setCostNote(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border text-sm mt-1" />
             </div>
             <button type="submit" disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
-              {saving ? 'Saving...' : 'Save'}
+              {ta(saving ? 'Saving...' : 'Save')}
             </button>
           </form>
         )}
@@ -155,11 +157,11 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
 
       <div className="mb-5">
         <h3 className="text-sm font-medium text-navy mb-3 flex items-center gap-2">
-          <TrendingUp className="h-4 w-4" /> Price Lists
+          <TrendingUp className="h-4 w-4" /> {ta('Price Lists')}
         </h3>
         <div className="space-y-2">
           {priceLists.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No price lists configured</p>
+            <p className="text-sm text-muted-foreground">{ta('No price lists configured')}</p>
           ) : (
             priceLists.map(pl => {
               const item = pl.items?.[0]
@@ -167,13 +169,13 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
                 <div key={pl.id} className="flex items-center justify-between text-sm py-2 border-b border-border/50 last:border-0">
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{pl.name}</span>
-                    {pl.isDefault && <span className="text-xs px-1.5 py-0.5 rounded bg-gold/10 text-gold">Default</span>}
+                    {pl.isDefault && <span className="text-xs px-1.5 py-0.5 rounded bg-gold/10 text-gold">{ta('Default')}</span>}
                   </div>
                   <div className="flex items-center gap-3">
                     {item ? (
-                      <span className="font-semibold">{item.price.toFixed(2)} {pl.currency}</span>
+                      <span className="font-semibold">{fmtCurrency(item.price)} {pl.currency}</span>
                     ) : (
-                      <button onClick={() => handleToggleItem(pl.id, 'add')} className="text-xs text-gold hover:text-gold/80 transition-colors">Add</button>
+                      <button onClick={() => handleToggleItem(pl.id, 'add')} className="text-xs text-gold hover:text-gold/80 transition-colors">{ta('Add')}</button>
                     )}
                   </div>
                 </div>
@@ -185,20 +187,20 @@ export default function ProductPriceEditor({ productId, costPrice, price }: { pr
 
       <div>
         <h3 className="text-sm font-medium text-navy mb-3 flex items-center gap-2">
-          <History className="h-4 w-4" /> Recent Cost History
+          <History className="h-4 w-4" /> {ta('Recent Cost History')}
         </h3>
         {costHistory.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No cost history recorded</p>
+          <p className="text-sm text-muted-foreground">{ta('No cost history recorded')}</p>
         ) : (
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {costHistory.map(entry => (
               <div key={entry.id} className="flex items-center justify-between text-sm py-2 border-b border-border/50 last:border-0">
                 <div>
-                  <span className="font-medium">{entry.unitCost.toFixed(2)}</span>
-                  <span className="text-muted-foreground ml-2">× {entry.quantity}</span>
+                  <span className="font-medium">{fmtCurrency(entry.unitCost)}</span>
+                  <span className="text-muted-foreground ml-2">× {fmtNum(entry.quantity)}</span>
                   {entry.note && <span className="text-muted-foreground ml-2">— {entry.note}</span>}
                 </div>
-                <span className="text-xs text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString()}</span>
+                <span className="text-xs text-muted-foreground">{fmtDate(entry.createdAt)}</span>
               </div>
             ))}
           </div>

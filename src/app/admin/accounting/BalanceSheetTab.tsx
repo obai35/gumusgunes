@@ -5,8 +5,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Download, Scale, CheckCircle, XCircle } from 'lucide-react'
 import { formatCurrency } from './format'
 import { generatePdf } from '@/lib/pdf-export'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function BalanceSheetTab() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
@@ -16,18 +18,18 @@ export default function BalanceSheetTab() {
     fetch(`/api/admin/accounting/balance-sheet?date=${date}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => { setData(d); setLoading(false) })
-      .catch(() => { toast.error('Failed to load balance sheet'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load balance sheet')); setLoading(false) })
   }
 
   useEffect(() => { fetchBS() }, [date])
 
   if (loading) return <div className="space-y-4"><Skeleton className="h-32 w-full" /><Skeleton className="h-64 w-full" /></div>
-  if (!data) return <div className="text-sm text-muted-foreground">No data</div>
+  if (!data) return <div className="text-sm text-muted-foreground">{ta('No data')}</div>
 
   const sectionColors: Record<string, { text: string; bg: string; label: string }> = {
-    asset: { text: 'text-green-600', bg: 'bg-green-50', label: 'Assets' },
-    liability: { text: 'text-blue-600', bg: 'bg-blue-50', label: 'Liabilities' },
-    equity: { text: 'text-purple-600', bg: 'bg-purple-50', label: 'Equity' },
+    asset: { text: 'text-green-600', bg: 'bg-green-50', label: ta('Assets') },
+    liability: { text: 'text-blue-600', bg: 'bg-blue-50', label: ta('Liabilities') },
+    equity: { text: 'text-purple-600', bg: 'bg-purple-50', label: ta('Equity') },
   }
 
   function handleExportCSV() {
@@ -37,10 +39,10 @@ export default function BalanceSheetTab() {
         rows.push({ Type: sectionColors[type]?.label || type, Account: item.name, Balance: item.balance })
       }
     }
-    rows.push({ Type: '', Account: 'Total Assets', Balance: data.totalAssets })
-    rows.push({ Type: '', Account: 'Total Liabilities', Balance: data.totalLiabilities })
-    rows.push({ Type: '', Account: 'Total Equity', Balance: data.totalEquity })
-    const csv = ['Type,Account,Balance', ...rows.map(r => `"${r.Type}","${r.Account}",${r.Balance}`)].join('\n')
+    rows.push({ Type: '', Account: ta('Total Assets'), Balance: data.totalAssets })
+    rows.push({ Type: '', Account: ta('Total Liabilities'), Balance: data.totalLiabilities })
+    rows.push({ Type: '', Account: ta('Total Equity'), Balance: data.totalEquity })
+    const csv = [ta('Type') + ',' + ta('Account') + ',' + ta('Balance'), ...rows.map(r => `"${r.Type}","${r.Account}",${r.Balance}`)].join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'balance-sheet.csv'; a.click()
   }
@@ -49,30 +51,30 @@ export default function BalanceSheetTab() {
     <div className="space-y-6">
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <label className="text-xs font-medium text-muted-foreground">As of date:</label>
+          <label className="text-xs font-medium text-muted-foreground">{ta('As of date')}:</label>
           <input type="date" value={date} onChange={e => setDate(e.target.value)} className="px-3 py-1.5 border border-border rounded-lg text-sm" />
         </div>
         <button onClick={handleExportCSV} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5">
-          <Download className="h-4 w-4" /> CSV
+          <Download className="h-4 w-4" /> {ta('CSV')}
         </button>
         <button
           onClick={() => {
-            const rows = [['Type', 'Account', 'Balance']]
+            const rows = [[ta('Type'), ta('Account'), ta('Balance')]]
             for (const [type, items] of Object.entries(data.groups || {})) {
               for (const item of items as any[]) {
                 rows.push([sectionColors[type]?.label || type, item.name, String(item.balance)])
               }
             }
-            rows.push(['', 'Total Assets', String(data.totalAssets)])
-            rows.push(['', 'Total Liabilities', String(data.totalLiabilities)])
-            rows.push(['', 'Total Equity', String(data.totalEquity)])
+            rows.push(['', ta('Total Assets'), String(data.totalAssets)])
+            rows.push(['', ta('Total Liabilities'), String(data.totalLiabilities)])
+            rows.push(['', ta('Total Equity'), String(data.totalEquity)])
             const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n')
             const blob = new Blob([csv], { type: 'application/vnd.ms-excel' })
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'balance-sheet.xls'; a.click()
           }}
           className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-1.5"
         >
-          <Download className="h-4 w-4" /> Excel
+          <Download className="h-4 w-4" /> {ta('Excel')}
         </button>
         <button
           onClick={async () => {
@@ -83,24 +85,24 @@ export default function BalanceSheetTab() {
               }
             }
             await generatePdf({
-              title: 'Balance Sheet',
-              subtitle: `As of ${new Date(data.asOfDate).toLocaleDateString()}`,
-              columns: ['Type', 'Account', 'Balance'],
+              title: ta('Balance Sheet'),
+              subtitle: `${ta('As of')} ${new Date(data.asOfDate).toLocaleDateString()}`,
+              columns: [ta('Type'), ta('Account'), ta('Balance')],
               rows,
               footers: [
-                { label: 'Total Assets', value: formatCurrency(data.totalAssets) },
-                { label: 'Total Liabilities', value: formatCurrency(data.totalLiabilities) },
-                { label: 'Total Equity', value: formatCurrency(data.totalEquity) },
+                { label: ta('Total Assets'), value: formatCurrency(data.totalAssets) },
+                { label: ta('Total Liabilities'), value: formatCurrency(data.totalLiabilities) },
+                { label: ta('Total Equity'), value: formatCurrency(data.totalEquity) },
               ],
             })
           }}
           className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-1.5"
         >
-          <Download className="h-4 w-4" /> PDF
+          <Download className="h-4 w-4" /> {ta('PDF')}
         </button>
         <div className={`ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${data.balanced ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
           {data.balanced ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
-          {data.balanced ? 'Balanced' : 'Out of Balance'}
+          {data.balanced ? ta('Balanced') : ta('Out of Balance')}
         </div>
       </div>
 
@@ -123,9 +125,9 @@ export default function BalanceSheetTab() {
               <h3 className="font-semibold text-navy">{cfg.label}</h3>
             </div>
             <table className="w-full text-sm">
-              <thead><tr className="text-left text-muted-foreground border-b border-border"><th className="p-3 font-medium">Account</th><th className="p-3 font-medium text-right">Balance</th></tr></thead>
+              <thead><tr className="text-left text-muted-foreground border-b border-border"><th className="p-3 font-medium">{ta('Account')}</th><th className="p-3 font-medium text-right">{ta('Balance')}</th></tr></thead>
               <tbody>
-                {items.length === 0 && <tr><td colSpan={2} className="p-4 text-center text-muted-foreground">No accounts</td></tr>}
+                {items.length === 0 && <tr><td colSpan={2} className="p-4 text-center text-muted-foreground">{ta('No accounts')}</td></tr>}
                 {items.map((item: any) => (
                   <tr key={item.code} className="border-b border-border/50 hover:bg-gray-50">
                     <td className="p-3 font-medium text-navy">{item.name}</td>
@@ -133,7 +135,7 @@ export default function BalanceSheetTab() {
                   </tr>
                 ))}
                 <tr className={`${cfg.bg} font-semibold border-t-2 border-border`}>
-                  <td className="p-3 text-navy">Total {cfg.label}</td>
+                  <td className="p-3 text-navy">{ta('Total')} {cfg.label}</td>
                   <td className={`p-3 text-right ${cfg.text}`}>
                     {formatCurrency(type === 'asset' ? data.totalAssets : type === 'liability' ? data.totalLiabilities : data.totalEquity)}
                   </td>
@@ -148,13 +150,13 @@ export default function BalanceSheetTab() {
         <div className="flex items-center gap-3">
           <Scale className="h-6 w-6 opacity-80" />
           <div>
-            <p className="text-sm opacity-80">Accounting Equation</p>
+            <p className="text-sm opacity-80">{ta('Accounting Equation')}</p>
             <p className="text-lg font-bold mt-1">Assets = Liabilities + Equity</p>
           </div>
           <div className="ml-auto text-right">
             <p className="text-sm font-mono opacity-90">{formatCurrency(data.totalAssets)} = {formatCurrency(data.totalLiabilities)} + {formatCurrency(data.totalEquity)}</p>
             <p className={`text-xs mt-1 font-medium ${data.balanced ? 'text-green-300' : 'text-red-300'}`}>
-              {data.balanced ? '✓ Balanced' : '✗ Out of balance by ' + formatCurrency(Math.abs(data.totalAssets - (data.totalLiabilities + data.totalEquity)))}
+              {data.balanced ? '✓ ' + ta('Balanced') : '✗ ' + ta('Out of balance by') + ' ' + formatCurrency(Math.abs(data.totalAssets - (data.totalLiabilities + data.totalEquity)))}
             </p>
           </div>
         </div>

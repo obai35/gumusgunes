@@ -2,19 +2,21 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { Building2, Plus, Trash2, RefreshCw, FileText, DollarSign, ArrowRightLeft, CheckCircle, XCircle, TrendingUp, TrendingDown, Download } from 'lucide-react'
 import { formatCurrency } from './format'
 
 type SubTab = 'groups' | 'inter-company' | 'runs' | 'reports'
 
 export default function ConsolidationTab() {
+  const { ta } = useAdminTranslate()
   const [subTab, setSubTab] = useState<SubTab>('groups')
 
   const subTabs: { key: SubTab; label: string; icon: any }[] = [
-    { key: 'groups', label: 'Groups', icon: Building2 },
-    { key: 'inter-company', label: 'Inter-Company', icon: ArrowRightLeft },
-    { key: 'runs', label: 'Consolidation Runs', icon: RefreshCw },
-    { key: 'reports', label: 'Consolidated Reports', icon: FileText },
+    { key: 'groups', label: ta('Groups'), icon: Building2 },
+    { key: 'inter-company', label: ta('Inter-Company'), icon: ArrowRightLeft },
+    { key: 'runs', label: ta('Consolidation Runs'), icon: RefreshCw },
+    { key: 'reports', label: ta('Consolidated Reports'), icon: FileText },
   ]
 
   return (
@@ -37,6 +39,7 @@ export default function ConsolidationTab() {
 }
 
 function GroupsView() {
+  const { ta, fmtNum, fmtDate } = useAdminTranslate()
   const [groups, setGroups] = useState<any[]>([])
   const [stores, setStores] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,7 +53,7 @@ function GroupsView() {
     fetch('/api/admin/accounting/groups')
       .then(r => r.json())
       .then(d => { setGroups(d.groups || []); setLoading(false) })
-      .catch(() => { toast.error('Failed to load groups'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load groups')); setLoading(false) })
   }
 
   useEffect(() => {
@@ -67,8 +70,8 @@ function GroupsView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     })
-    if (res.ok) { toast.success('Group created'); setShowCreate(false); fetchGroups() }
-    else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    if (res.ok) { toast.success(ta('Group created')); setShowCreate(false); fetchGroups() }
+    else { const d = await res.json(); toast.error(d.error || ta('Failed')) }
   }
 
   async function handleAddEntity() {
@@ -78,14 +81,14 @@ function GroupsView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ entityStoreId: addEntityStoreId, ownershipPct: parseFloat(addEntityPct) }),
     })
-    if (res.ok) { toast.success('Entity added'); setAddEntityStoreId(''); setAddEntityPct('100'); fetchGroupDetail(selectedGroup.id) }
-    else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    if (res.ok) { toast.success(ta('Entity added')); setAddEntityStoreId(''); setAddEntityPct('100'); fetchGroupDetail(selectedGroup.id) }
+    else { const d = await res.json(); toast.error(d.error || ta('Failed')) }
   }
 
   async function handleRemoveEntity(entityId: string) {
-    if (!confirm('Remove entity from group?')) return
+    if (!confirm(ta('Remove entity from group?'))) return
     const res = await fetch(`/api/admin/accounting/groups/${selectedGroup!.id}/entities?entityId=${entityId}`, { method: 'DELETE' })
-    if (res.ok) { toast.success('Entity removed'); fetchGroupDetail(selectedGroup!.id) }
+    if (res.ok) { toast.success(ta('Entity removed')); fetchGroupDetail(selectedGroup!.id) }
     else toast.error('Failed')
   }
 
@@ -95,9 +98,9 @@ function GroupsView() {
   }
 
   async function handleDeleteGroup(id: string) {
-    if (!confirm('Delete this group and all related data?')) return
+    if (!confirm(ta('Delete this group and all related data?'))) return
     const res = await fetch(`/api/admin/accounting/groups/${id}`, { method: 'DELETE' })
-    if (res.ok) { toast.success('Group deleted'); setSelectedGroup(null); fetchGroups() }
+    if (res.ok) { toast.success(ta('Group deleted')); setSelectedGroup(null); fetchGroups() }
     else toast.error('Failed')
   }
 
@@ -107,24 +110,24 @@ function GroupsView() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-1 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-navy">Groups</h3>
+          <h3 className="text-sm font-semibold text-navy">{ta('Groups')}</h3>
           <button onClick={() => setShowCreate(!showCreate)} className="p-1.5 bg-navy text-silver rounded-lg hover:bg-navy/90 transition-colors"><Plus className="h-4 w-4" /></button>
         </div>
 
         {showCreate && (
           <form onSubmit={handleCreate} className="bg-navy/5 rounded-xl p-4 space-y-3 border border-navy/10">
-            <input name="name" required placeholder="Group name" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+            <input name="name" required placeholder={ta('Group name')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             <input name="slug" required placeholder="group-slug" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             <select name="currency" className="w-full px-3 py-2 border border-border rounded-lg text-sm">
               <option value="EGP">EGP</option>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
             </select>
-            <button type="submit" className="w-full px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">Create Group</button>
+            <button type="submit" className="w-full px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">{ta('Create Group')}</button>
           </form>
         )}
 
-        {groups.length === 0 && <p className="text-sm text-muted-foreground">No groups yet</p>}
+        {groups.length === 0 && <p className="text-sm text-muted-foreground">{ta('No groups yet')}</p>}
         {groups.map(g => (
           <div key={g.id} onClick={() => fetchGroupDetail(g.id)}
             className={`p-3 rounded-xl border cursor-pointer transition-colors ${selectedGroup?.id === g.id ? 'border-navy bg-navy/5' : 'border-border hover:border-navy/30'}`}>
@@ -132,7 +135,7 @@ function GroupsView() {
               <p className="font-medium text-sm text-navy">{g.name}</p>
               <button onClick={(e) => { e.stopPropagation(); handleDeleteGroup(g.id) }} className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">{g.entities?.length || 0} entities</p>
+            <p className="text-xs text-muted-foreground mt-1">{fmtNum(g.entities?.length || 0)} {ta('entities')}</p>
           </div>
         ))}
       </div>
@@ -144,17 +147,17 @@ function GroupsView() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-navy">{selectedGroup.name}</h3>
-                  <p className="text-xs text-muted-foreground">Currency: {selectedGroup.currency}</p>
+                  <p className="text-xs text-muted-foreground">{ta('Currency:')} {selectedGroup.currency}</p>
                 </div>
               </div>
 
-              <h4 className="text-sm font-semibold text-navy mb-3">Entities ({selectedGroup.entities?.length || 0})</h4>
+              <h4 className="text-sm font-semibold text-navy mb-3">{ta(`Entities (${selectedGroup.entities?.length || 0})`)}</h4>
               <div className="space-y-2 mb-4">
                 {selectedGroup.entities?.map((e: any) => (
                   <div key={e.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="text-sm font-medium text-navy">{e.entityStore?.name || e.entityStoreId}</p>
-                      <p className="text-xs text-muted-foreground">{e.ownershipPct}% · {e.consolidationMethod} {e.isPrimary ? '· Primary' : ''}</p>
+                      <p className="text-xs text-muted-foreground">{fmtNum(e.ownershipPct)}% · {e.consolidationMethod} {e.isPrimary ? ta('· Primary') : ''}</p>
                     </div>
                     <button onClick={() => handleRemoveEntity(e.id)} className="p-1 text-red-400 hover:text-red-600 rounded"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
@@ -163,21 +166,21 @@ function GroupsView() {
 
               <div className="flex gap-2">
                 <select value={addEntityStoreId} onChange={e => setAddEntityStoreId(e.target.value)} className="flex-1 px-3 py-2 border border-border rounded-lg text-sm">
-                  <option value="">Select store...</option>
+                  <option value="">{ta('Select store...')}</option>
                   {stores?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
                 <input type="number" value={addEntityPct} onChange={e => setAddEntityPct(e.target.value)} placeholder="%" className="w-20 px-3 py-2 border border-border rounded-lg text-sm" />
-                <button onClick={handleAddEntity} disabled={!addEntityStoreId} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">Add</button>
+                <button onClick={handleAddEntity} disabled={!addEntityStoreId} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">{ta('Add')}</button>
               </div>
             </div>
 
             {selectedGroup.interCompanyTxns?.length > 0 && (
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="text-sm font-semibold text-navy mb-3">Recent IC Transactions</h4>
+                <h4 className="text-sm font-semibold text-navy mb-3">{ta('Recent IC Transactions')}</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {selectedGroup.interCompanyTxns.slice(0, 20).map((t: any) => (
                     <div key={t.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
-                      <span className="text-muted-foreground text-xs">{new Date(t.date).toLocaleDateString()}</span>
+                      <span className="text-muted-foreground text-xs">{fmtDate(t.date)}</span>
                       <span className="text-navy font-medium">{t.fromStore?.name || t.fromStoreId} → {t.toStore?.name || t.toStoreId}</span>
                       <span className="font-medium">{formatCurrency(t.amount)}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${t.status === 'eliminated' ? 'bg-green-100 text-green-700' : t.status === 'settled' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}`}>{t.status}</span>
@@ -189,14 +192,14 @@ function GroupsView() {
 
             {selectedGroup.consolidationRuns?.length > 0 && (
               <div className="bg-white rounded-xl border border-border p-5">
-                <h4 className="text-sm font-semibold text-navy mb-3">Recent Runs</h4>
+                <h4 className="text-sm font-semibold text-navy mb-3">{ta('Recent Runs')}</h4>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {selectedGroup.consolidationRuns.map((r: any) => (
                     <div key={r.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg text-sm">
-                      <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground">{fmtDate(r.createdAt)}</span>
                       <span className="text-xs">{r.periodStart?.slice(0, 10)} - {r.periodEnd?.slice(0, 10)}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === 'completed' ? 'bg-green-100 text-green-700' : r.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{r.status}</span>
-                      <span className="text-xs text-muted-foreground">{r.eliminatedTxns} eliminated</span>
+                      <span className="text-xs text-muted-foreground">{fmtNum(r.eliminatedTxns)} {ta('eliminated')}</span>
                     </div>
                   ))}
                 </div>
@@ -204,7 +207,7 @@ function GroupsView() {
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">Select a group to manage</div>
+          <div className="flex items-center justify-center h-48 text-sm text-muted-foreground">{ta('Select a group to manage')}</div>
         )}
       </div>
     </div>
@@ -212,6 +215,7 @@ function GroupsView() {
 }
 
 function InterCompanyView() {
+  const { ta, fmtDate } = useAdminTranslate()
   const [groups, setGroups] = useState<any[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [transactions, setTransactions] = useState<any[]>([])
@@ -243,8 +247,8 @@ function InterCompanyView() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, amount: parseFloat(data.amount as string), groupId: selectedGroupId }),
     })
-    if (res.ok) { toast.success('Transaction recorded'); setShowRecord(false); fetch(`/api/admin/accounting/inter-company?groupId=${selectedGroupId}`).then(r => r.json()).then(d => setTransactions(d.transactions || [])) }
-    else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    if (res.ok) { toast.success(ta('Transaction recorded')); setShowRecord(false); fetch(`/api/admin/accounting/inter-company?groupId=${selectedGroupId}`).then(r => r.json()).then(d => setTransactions(d.transactions || [])) }
+    else { const d = await res.json(); toast.error(d.error || ta('Failed')) }
   }
 
   return (
@@ -254,7 +258,7 @@ function InterCompanyView() {
           {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
         <button onClick={() => setShowRecord(!showRecord)} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">
-          <Plus className="h-4 w-4" /> Record
+          <Plus className="h-4 w-4" /> {ta('Record')}
         </button>
       </div>
 
@@ -262,57 +266,57 @@ function InterCompanyView() {
         <form onSubmit={handleRecord} className="bg-navy/5 rounded-xl p-4 border border-navy/10 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <select name="fromStoreId" required className="px-3 py-2 border border-border rounded-lg text-sm">
-              <option value="">From Store</option>
+              <option value="">{ta('From Store')}</option>
               {groups.find(g => g.id === selectedGroupId)?.entities?.map((e: any) => (
                 <option key={e.id} value={e.entityStoreId}>{e.entityStore?.name || e.entityStoreId}</option>
               ))}
             </select>
             <select name="toStoreId" required className="px-3 py-2 border border-border rounded-lg text-sm">
-              <option value="">To Store</option>
+              <option value="">{ta('To Store')}</option>
               {groups.find(g => g.id === selectedGroupId)?.entities?.map((e: any) => (
                 <option key={e.id} value={e.entityStoreId}>{e.entityStore?.name || e.entityStoreId}</option>
               ))}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <input name="amount" type="number" step="0.01" required placeholder="Amount" className="px-3 py-2 border border-border rounded-lg text-sm" />
+            <input name="amount" type="number" step="0.01" required placeholder={ta('Amount')} className="px-3 py-2 border border-border rounded-lg text-sm" />
             <select name="type" className="px-3 py-2 border border-border rounded-lg text-sm">
-              <option value="sale">Sale</option>
-              <option value="purchase">Purchase</option>
-              <option value="loan">Loan</option>
-              <option value="dividend">Dividend</option>
-              <option value="service_fee">Service Fee</option>
-              <option value="expense_allocation">Expense Allocation</option>
+              <option value="sale">{ta('Sale')}</option>
+              <option value="purchase">{ta('Purchase')}</option>
+              <option value="loan">{ta('Loan')}</option>
+              <option value="dividend">{ta('Dividend')}</option>
+              <option value="service_fee">{ta('Service Fee')}</option>
+              <option value="expense_allocation">{ta('Expense Allocation')}</option>
             </select>
           </div>
-          <input name="description" required placeholder="Description" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+          <input name="description" required placeholder={ta('Description')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           <div className="flex gap-2">
-            <button type="submit" className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">Record</button>
-            <button type="button" onClick={() => setShowRecord(false)} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">Cancel</button>
+            <button type="submit" className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">{ta('Record')}</button>
+            <button type="button" onClick={() => setShowRecord(false)} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground">{ta('Cancel')}</button>
           </div>
         </form>
       )}
 
       {loading ? <Skeleton className="h-40 w-full" /> : transactions.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No inter-company transactions</p>
+        <p className="text-sm text-muted-foreground">{ta('No inter-company transactions')}</p>
       ) : (
         <div className="bg-white rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
-                <th className="p-3 font-medium">Date</th>
-                <th className="p-3 font-medium">From</th>
-                <th className="p-3 font-medium">To</th>
-                <th className="p-3 font-medium text-right">Amount</th>
-                <th className="p-3 font-medium">Type</th>
-                <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium">Description</th>
+                <th className="p-3 font-medium">{ta('Date')}</th>
+                <th className="p-3 font-medium">{ta('From')}</th>
+                <th className="p-3 font-medium">{ta('To')}</th>
+                <th className="p-3 font-medium text-right">{ta('Amount')}</th>
+                <th className="p-3 font-medium">{ta('Type')}</th>
+                <th className="p-3 font-medium">{ta('Status')}</th>
+                <th className="p-3 font-medium">{ta('Description')}</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map(t => (
                 <tr key={t.id} className="border-b border-border/50 hover:bg-gray-50">
-                  <td className="p-3 text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString()}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{fmtDate(t.date)}</td>
                   <td className="p-3 text-navy font-medium">{t.fromStore?.name || t.fromStoreId}</td>
                   <td className="p-3 text-navy font-medium">{t.toStore?.name || t.toStoreId}</td>
                   <td className="p-3 text-right font-medium">{formatCurrency(t.amount)}</td>
@@ -332,6 +336,7 @@ function InterCompanyView() {
 }
 
 function ConsolidationRunsView() {
+  const { ta, fmtNum, fmtDate } = useAdminTranslate()
   const [groups, setGroups] = useState<any[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [runs, setRuns] = useState<any[]>([])
@@ -357,15 +362,15 @@ function ConsolidationRunsView() {
   }, [selectedGroupId])
 
   async function handleRun() {
-    if (!periodStart || !periodEnd) { toast.error('Period start and end required'); return }
+    if (!periodStart || !periodEnd) { toast.error(ta('Period start and end required')); return }
     setRunning(true)
     const res = await fetch('/api/admin/accounting/consolidation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ groupId: selectedGroupId, periodStart, periodEnd }),
     })
-    if (res.ok) { toast.success('Consolidation completed'); fetch(`/api/admin/accounting/consolidation?groupId=${selectedGroupId}`).then(r => r.json()).then(d => setRuns(d.runs || [])) }
-    else { const d = await res.json(); toast.error(d.error || 'Failed') }
+    if (res.ok) { toast.success(ta('Consolidation completed')); fetch(`/api/admin/accounting/consolidation?groupId=${selectedGroupId}`).then(r => r.json()).then(d => setRuns(d.runs || [])) }
+    else { const d = await res.json(); toast.error(d.error || ta('Failed')) }
     setRunning(false)
   }
 
@@ -373,51 +378,51 @@ function ConsolidationRunsView() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3 items-end">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Group</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Group')}</label>
           <select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm">
             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Period Start</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Period Start')}</label>
           <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Period End</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Period End')}</label>
           <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm" />
         </div>
         <button onClick={handleRun} disabled={running || !periodStart || !periodEnd || !selectedGroupId}
           className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">
-          <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} /> {running ? 'Running...' : 'Run Consolidation'}
+          <RefreshCw className={`h-4 w-4 ${running ? 'animate-spin' : ''}`} /> {running ? ta('Running...') : ta('Run Consolidation')}
         </button>
       </div>
 
       {loading ? <Skeleton className="h-40 w-full" /> : runs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No consolidation runs yet</p>
+        <p className="text-sm text-muted-foreground">{ta('No consolidation runs yet')}</p>
       ) : (
         <div className="bg-white rounded-xl border border-border overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-gray-50 text-left text-muted-foreground">
-                <th className="p-3 font-medium">Date</th>
-                <th className="p-3 font-medium">Period</th>
-                <th className="p-3 font-medium">Status</th>
-                <th className="p-3 font-medium text-right">Eliminated</th>
-                <th className="p-3 font-medium text-right">Revenue</th>
-                <th className="p-3 font-medium text-right">Net Income</th>
-                <th className="p-3 font-medium text-right">Assets</th>
-                <th className="p-3 font-medium">Error</th>
+                <th className="p-3 font-medium">{ta('Date')}</th>
+                <th className="p-3 font-medium">{ta('Period')}</th>
+                <th className="p-3 font-medium">{ta('Status')}</th>
+                <th className="p-3 font-medium text-right">{ta('Eliminated')}</th>
+                <th className="p-3 font-medium text-right">{ta('Revenue')}</th>
+                <th className="p-3 font-medium text-right">{ta('Net Income')}</th>
+                <th className="p-3 font-medium text-right">{ta('Assets')}</th>
+                <th className="p-3 font-medium">{ta('Error')}</th>
               </tr>
             </thead>
             <tbody>
               {runs.map(r => (
                 <tr key={r.id} className="border-b border-border/50 hover:bg-gray-50">
-                  <td className="p-3 text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</td>
+                  <td className="p-3 text-xs text-muted-foreground">{fmtDate(r.createdAt)}</td>
                   <td className="p-3 text-xs text-muted-foreground">{r.periodStart?.slice(0, 10)} - {r.periodEnd?.slice(0, 10)}</td>
                   <td className="p-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === 'completed' ? 'bg-green-100 text-green-700' : r.status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>{r.status}</span>
                   </td>
-                  <td className="p-3 text-right">{r.eliminatedTxns}</td>
+                  <td className="p-3 text-right">{fmtNum(r.eliminatedTxns)}</td>
                   <td className="p-3 text-right font-medium">{formatCurrency(r.totalRevenue)}</td>
                   <td className="p-3 text-right font-medium">
                     <span className={r.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}>{formatCurrency(r.netIncome)}</span>
@@ -435,6 +440,7 @@ function ConsolidationRunsView() {
 }
 
 function ConsolidatedReportsView() {
+  const { ta } = useAdminTranslate()
   const [groups, setGroups] = useState<any[]>([])
   const [selectedGroupId, setSelectedGroupId] = useState('')
   const [reportType, setReportType] = useState<string>('pl')
@@ -461,76 +467,76 @@ function ConsolidatedReportsView() {
     fetch(`/api/admin/accounting/consolidation/reports?${params}`)
       .then(r => r.json())
       .then(d => { if (d.error) toast.error(d.error); else setReport(d.report); setLoading(false) })
-      .catch(() => { toast.error('Failed to load report'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load report')); setLoading(false) })
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3 items-end">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Group</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Group')}</label>
           <select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm">
-            <option value="">Select...</option>
+            <option value="">{ta('Select...')}</option>
             {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Report</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('Report')}</label>
           <select value={reportType} onChange={e => setReportType(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm">
-            <option value="pl">P&L (Consolidated)</option>
-            <option value="balance-sheet">Balance Sheet (Consolidated)</option>
+            <option value="pl">{ta('P&L (Consolidated)')}</option>
+            <option value="balance-sheet">{ta('Balance Sheet (Consolidated)')}</option>
           </select>
         </div>
         {reportType === 'pl' && (
           <>
             <div>
-              <label className="block text-xs font-medium text-muted-foreground mb-1">From</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">{ta('From')}</label>
               <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
           </>
         )}
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">{reportType === 'pl' ? 'To' : 'As of'}</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{reportType === 'pl' ? ta('To') : ta('As of')}</label>
           <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-sm" />
         </div>
         <button onClick={fetchReport} disabled={!selectedGroupId || loading}
           className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50">
-          {loading ? 'Loading...' : 'Generate'}
+          {loading ? ta('Loading...') : ta('Generate')}
         </button>
       </div>
 
       {report && reportType === 'pl' && (
         <div className="bg-white rounded-xl border border-border p-5 space-y-4">
-          <h3 className="text-lg font-semibold text-navy">Consolidated P&L</h3>
+          <h3 className="text-lg font-semibold text-navy">{ta('Consolidated P&L')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">Revenue</p>
+              <p className="text-xs text-muted-foreground">{ta('Revenue')}</p>
               <p className="text-xl font-bold text-navy">{formatCurrency(report.totalRevenue)}</p>
             </div>
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">COGS</p>
+              <p className="text-xs text-muted-foreground">{ta('COGS')}</p>
               <p className="text-xl font-bold text-orange-600">{formatCurrency(report.totalCogs)}</p>
             </div>
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">Gross Profit</p>
+              <p className="text-xs text-muted-foreground">{ta('Gross Profit')}</p>
               <p className="text-xl font-bold text-green-600">{formatCurrency(report.grossProfit)}</p>
             </div>
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">Net Income</p>
+              <p className="text-xs text-muted-foreground">{ta('Net Income')}</p>
               <p className={`text-xl font-bold ${report.netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(report.netIncome)}</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-muted-foreground">Expenses</p>
+              <p className="text-xs text-muted-foreground">{ta('Expenses')}</p>
               <p className="text-lg font-semibold text-navy">{formatCurrency(report.totalExpenses)}</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-muted-foreground">IC Revenue</p>
+              <p className="text-xs text-muted-foreground">{ta('IC Revenue')}</p>
               <p className="text-lg font-semibold text-navy">{formatCurrency(report.totalIcRevenue)}</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-muted-foreground">IC Expense</p>
+              <p className="text-xs text-muted-foreground">{ta('IC Expense')}</p>
               <p className="text-lg font-semibold text-navy">{formatCurrency(report.totalIcExpense)}</p>
             </div>
           </div>
@@ -539,32 +545,32 @@ function ConsolidatedReportsView() {
 
       {report && reportType === 'balance-sheet' && (
         <div className="bg-white rounded-xl border border-border p-5 space-y-4">
-          <h3 className="text-lg font-semibold text-navy">Consolidated Balance Sheet</h3>
+          <h3 className="text-lg font-semibold text-navy">{ta('Consolidated Balance Sheet')}</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">Total Assets</p>
+              <p className="text-xs text-muted-foreground">{ta('Total Assets')}</p>
               <p className="text-xl font-bold text-navy">{formatCurrency(report.totalAssets)}</p>
             </div>
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">Total Liabilities</p>
+              <p className="text-xs text-muted-foreground">{ta('Total Liabilities')}</p>
               <p className="text-xl font-bold text-orange-600">{formatCurrency(report.totalLiabilities)}</p>
             </div>
             <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-xs text-muted-foreground">Total Equity</p>
+              <p className="text-xs text-muted-foreground">{ta('Total Equity')}</p>
               <p className="text-xl font-bold text-green-600">{formatCurrency(report.totalEquity)}</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-muted-foreground">IC Due From</p>
+              <p className="text-xs text-muted-foreground">{ta('IC Due From')}</p>
               <p className="text-lg font-semibold text-navy">{formatCurrency(report.interCompanyDueFrom)}</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-muted-foreground">IC Due To</p>
+              <p className="text-xs text-muted-foreground">{ta('IC Due To')}</p>
               <p className="text-lg font-semibold text-navy">{formatCurrency(report.interCompanyDueTo)}</p>
             </div>
             <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-muted-foreground">IC Elimination</p>
+              <p className="text-xs text-muted-foreground">{ta('IC Elimination')}</p>
               <p className="text-lg font-semibold text-green-600">{formatCurrency(report.icElimination)}</p>
             </div>
           </div>
