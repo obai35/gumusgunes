@@ -16,7 +16,7 @@ export const GET = withAdmin(async (req, { admin }) => {
   const skip = (page - 1) * take
 
   const where: any = {}
-  if (search) where.name = { contains: search }
+  if (search) where.OR = [{ name: { contains: search, mode: 'insensitive' } }, { sku: { contains: search, mode: 'insensitive' } }]
   if (categoryId) where.categoryId = categoryId
   if (lowStock) { where.stock = { lt: 5 }; where.isActive = true }
   const orderBy = lowStock ? { stock: 'asc' as const } : { createdAt: 'desc' as const }

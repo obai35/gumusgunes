@@ -153,6 +153,7 @@ model Product {
   storeId            String
   store              Store               @relation(fields: [storeId], references: [id])
   name               String
+  nameAr             String?
   slug               String              @unique
   description        String
   price              Float

@@ -6,7 +6,7 @@ export const GET = withPosOrAdmin(async (req: NextRequest, { admin }) => {
   const sdb = storeDb(admin.storeId)
   const search = req.nextUrl.searchParams.get('search') || ''
   const suppliers = await sdb.supplier.findMany({
-    where: search ? { name: { contains: search } } : {},
+    where: search ? { name: { contains: search, mode: 'insensitive' } } : {},
     orderBy: { name: 'asc' },
   })
   return NextResponse.json(suppliers)

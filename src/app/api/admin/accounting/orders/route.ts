@@ -19,10 +19,10 @@ export const GET = withAdmin(async (req: NextRequest, { admin }) => {
     const where: any = {}
     if (search) {
       where.OR = [
-        { orderNumber: { contains: search } },
-        { receiptNumber: { contains: search } },
-        { fullName: { contains: search } },
-        { email: { contains: search } },
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { receiptNumber: { contains: search, mode: 'insensitive' } },
+        { fullName: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
       ]
     }
     if (status) where.status = status

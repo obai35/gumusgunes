@@ -27,6 +27,7 @@ export type Review = {
 export type Product = {
   id: string
   name: string
+  nameAr: string | null
   slug: string
   description: string
   price: number
