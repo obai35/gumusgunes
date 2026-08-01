@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { motion } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ExportButton } from '@/components/admin/ExportButton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { Clock, Sun as SunIcon, Moon } from 'lucide-react'
 
 function formatCurrency(v: number) { return `E£${v.toFixed(2)}` }
@@ -28,6 +29,7 @@ const HOUR_LABELS = Array.from({ length: 24 }, (_, i) => {
 })
 
 export default function SalesHeatmapTab() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [from, setFrom] = useState(() => {
@@ -42,7 +44,7 @@ export default function SalesHeatmapTab() {
     fetch(`/api/admin/reports/sales-heatmap?from=${from}&to=${to}`)
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => { setData(d); setLoading(false) })
-      .catch(() => { toast.error('Failed to load heatmap'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load heatmap')); setLoading(false) })
   }
 
   useEffect(() => { fetchData() }, [])
@@ -56,27 +58,27 @@ export default function SalesHeatmapTab() {
       <div className="flex gap-2 flex-wrap items-center">
         <input type="date" value={from} onChange={e => setFrom(e.target.value)}
           className="px-3 py-1.5 border border-border rounded-lg text-sm" />
-        <span className="text-xs text-muted-foreground">to</span>
+        <span className="text-xs text-muted-foreground">{ta('to')}</span>
         <input type="date" value={to} onChange={e => setTo(e.target.value)}
           className="px-3 py-1.5 border border-border rounded-lg text-sm" />
         <button onClick={fetchData}
           className="px-4 py-1.5 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors">
-          Load
+          {ta('Load')}
         </button>
         <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 ml-2">
           <button onClick={() => setMode('revenue')}
             className={`px-3 py-1.5 text-xs rounded-md transition-colors ${mode === 'revenue' ? 'bg-white text-navy shadow-sm font-medium' : 'text-gray-500 hover:text-gray-700'}`}>
-            Revenue
+            {ta('Revenue')}
           </button>
           <button onClick={() => setMode('count')}
             className={`px-3 py-1.5 text-xs rounded-md transition-colors ${mode === 'count' ? 'bg-white text-navy shadow-sm font-medium' : 'text-gray-500 hover:text-gray-700'}`}>
-            Orders
+            {ta('Orders')}
           </button>
         </div>
         <ExportButton
           filename="sales-heatmap"
           columns={
-            data ? [{ header: 'Day/Hour', key: 'day' }, ...Array.from({ length: 24 }, (_, i) => ({ header: HOUR_LABELS[i], key: String(i) }))] : []
+            data ? [{ header: ta('Day/Hour'), key: 'day' }, ...Array.from({ length: 24 }, (_, i) => ({ header: HOUR_LABELS[i], key: String(i) }))] : []
           }
           data={data ? data.grid.map((d: any) => {
             const row: any = { day: d.day }
@@ -89,19 +91,19 @@ export default function SalesHeatmapTab() {
       {data && data.busiestHour && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl border border-border p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Revenue (period)</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Total Revenue (period)')}</p>
             <p className="text-xl font-bold text-green-600">{formatCurrency(data.totals.totalRevenue)}</p>
           </div>
           <div className="bg-white rounded-xl border border-border p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Orders</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Total Orders')}</p>
             <p className="text-xl font-bold text-navy">{data.totals.totalOrders}</p>
           </div>
           <div className="bg-white rounded-xl border border-border p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Busiest Day</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Busiest Day')}</p>
             <p className="text-xl font-bold text-navy">{data.busiestHour.day}</p>
           </div>
           <div className="bg-white rounded-xl border border-border p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Busiest Hour</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{ta('Busiest Hour')}</p>
             <p className="text-xl font-bold text-navy">{HOUR_LABELS[data.busiestHour.hour]}</p>
           </div>
         </div>
@@ -110,7 +112,7 @@ export default function SalesHeatmapTab() {
       <div className="bg-white rounded-xl border border-border p-5 overflow-x-auto">
         <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          Sales {mode === 'revenue' ? 'Revenue' : 'Orders'} Heatmap (Weekday × Hour)
+          {ta('Sales')} {mode === 'revenue' ? ta('Revenue') : ta('Orders')} {ta('Heatmap (Weekday × Hour)')}
         </h3>
         {data && (
           <table className="w-full text-xs">
@@ -135,7 +137,7 @@ export default function SalesHeatmapTab() {
                       <td
                         key={h.hour}
                         className={`p-1 text-center rounded cursor-default ${getHeatColor(val, maxVal)}`}
-                        title={`${d.day} ${HOUR_LABELS[h.hour]}: ${mode === 'revenue' ? formatCurrency(h.revenue) : `${h.count} orders`}`}
+                        title={`${d.day} ${HOUR_LABELS[h.hour]}: ${mode === 'revenue' ? formatCurrency(h.revenue) : `${h.count} ${ta('orders')}`}`}
                       >
                         <span className="text-[10px] font-medium text-gray-700">
                           {mode === 'revenue' ? (h.revenue > 0 ? 'E£' + (h.revenue / 1000).toFixed(0) + 'k' : '') : (h.count > 0 ? h.count : '')}
@@ -149,7 +151,7 @@ export default function SalesHeatmapTab() {
           </table>
         )}
         <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-          <span>Low</span>
+          <span>{ta('Low')}</span>
           <div className="flex gap-0.5">
             <div className="h-3 w-6 rounded bg-gray-50 border border-border" />
             <div className="h-3 w-6 rounded bg-amber-50 border border-amber-100" />
@@ -158,7 +160,7 @@ export default function SalesHeatmapTab() {
             <div className="h-3 w-6 rounded bg-amber-300 border border-amber-400" />
             <div className="h-3 w-6 rounded bg-amber-400 border border-amber-500" />
           </div>
-          <span>High</span>
+          <span>{ta('High')}</span>
         </div>
       </div>
     </motion.div>

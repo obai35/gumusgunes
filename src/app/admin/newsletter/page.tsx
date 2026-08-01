@@ -11,6 +11,7 @@ import { StatsCard } from '@/components/admin/StatsCard'
 import { ExportButton } from '@/components/admin/ExportButton'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Subscriber = {
   id: string
@@ -20,6 +21,7 @@ type Subscriber = {
 }
 
 export default function AdminNewsletter() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -45,10 +47,10 @@ export default function AdminNewsletter() {
           setTotalThisMonth(d.totalThisMonth)
           setTotalPages(d.totalPages)
         } else {
-          toast.error(d.error || 'Failed to load subscribers')
+          toast.error(d.error || ta('Failed to load subscribers'))
         }
       })
-      .catch(() => toast.error('Failed to load subscribers'))
+      .catch(() => toast.error(ta('Failed to load subscribers')))
       .finally(() => setLoading(false))
   }
 
@@ -72,12 +74,12 @@ export default function AdminNewsletter() {
       if (d.ok) {
         setSubscribers(prev => prev.filter(s => s.id !== deleteId))
         setTotal(prev => prev - 1)
-        toast.success('Subscriber deleted')
+        toast.success(ta('Subscriber deleted'))
       } else {
-        toast.error(d.error || 'Failed to delete subscriber')
+        toast.error(d.error || ta('Failed to delete subscriber'))
       }
     } catch {
-      toast.error('Failed to delete subscriber')
+      toast.error(ta('Failed to delete subscriber'))
     } finally {
       setDeleting(null)
     }
@@ -86,7 +88,7 @@ export default function AdminNewsletter() {
   const columns: ColumnDef<Subscriber>[] = useMemo(() => [
     {
       accessorKey: 'email',
-      header: 'Email',
+      header: ta('Email'),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <Mail className="h-4 w-4 text-muted-foreground" />
@@ -96,14 +98,14 @@ export default function AdminNewsletter() {
     },
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => (
         <span className="text-muted-foreground">{row.original.name || '—'}</span>
       ),
     },
     {
       accessorKey: 'createdAt',
-      header: 'Subscribed Date',
+      header: ta('Subscribed Date'),
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">
           {new Date(row.original.createdAt).toLocaleDateString()}
@@ -119,7 +121,7 @@ export default function AdminNewsletter() {
             disabled={deleting === row.original.id}
             onClick={() => setDeleteId(row.original.id)}
             className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-            title="Delete"
+            title={ta('Delete')}
           >
             {deleting === row.original.id ? (
               <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -143,15 +145,15 @@ export default function AdminNewsletter() {
   return (
     <div>
       <PageHeader
-        title="Newsletter Subscribers"
-        subtitle={`${total} subscriber${total !== 1 ? 's' : ''}`}
+        title={ta('Newsletter Subscribers')}
+        subtitle={`${total} ${ta(total !== 1 ? 'subscribers' : 'subscriber')}`}
         actions={
           <ExportButton
             filename={`newsletter-${new Date().toISOString().split('T')[0]}`}
             columns={[
-              { header: 'Email', key: 'Email' },
-              { header: 'Name', key: 'Name' },
-              { header: 'Subscribed Date', key: 'Subscribed Date' },
+              { header: ta('Email'), key: 'Email' },
+              { header: ta('Name'), key: 'Name' },
+              { header: ta('Subscribed Date'), key: 'Subscribed Date' },
             ]}
             data={exportData}
           />
@@ -159,22 +161,22 @@ export default function AdminNewsletter() {
       />
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <StatsCard icon={Users} label="Total Subscribers" value={String(total)} />
-        <StatsCard icon={UserPlus} label="Subscribed This Month" value={String(totalThisMonth)} />
+        <StatsCard icon={Users} label={ta('Total Subscribers')} value={String(total)} />
+        <StatsCard icon={UserPlus} label={ta('Subscribed This Month')} value={String(totalThisMonth)} />
       </div>
 
       <div className="flex flex-wrap gap-3 mb-5 items-center">
         <SearchInput
           value={searchQuery}
           onChange={setSearchQuery}
-          placeholder="Search by email or name..."
+          placeholder={ta('Search by email or name...')}
           className="flex-1 min-w-[200px] max-w-sm"
         />
         <button
           onClick={fetchSubscribers}
           className="px-3 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-navy flex items-center gap-1"
         >
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          <RefreshCw className="h-3.5 w-3.5" /> {ta('Refresh')}
         </button>
       </div>
 
@@ -184,8 +186,8 @@ export default function AdminNewsletter() {
         loading={loading}
         responsiveCards
         keyExtractor={item => item.id}
-        emptyTitle="No subscribers found"
-        emptyDescription="No newsletter subscribers match your search."
+        emptyTitle={ta('No subscribers found')}
+        emptyDescription={ta('No newsletter subscribers match your search.')}
       />
 
       <Pagination
@@ -198,9 +200,9 @@ export default function AdminNewsletter() {
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={open => { if (!open) setDeleteId(null) }}
-        title="Delete subscriber"
-        description="Are you sure you want to delete this subscriber? This action cannot be undone."
-        confirmLabel="Delete"
+        title={ta('Delete subscriber')}
+        description={ta('Are you sure you want to delete this subscriber? This action cannot be undone.')}
+        confirmLabel={ta('Delete')}
         onConfirm={handleDelete}
         destructive
       />
