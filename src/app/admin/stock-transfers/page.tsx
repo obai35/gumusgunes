@@ -162,6 +162,7 @@ function NewTransfer() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={ta('Search products...')} className="w-full pl-9 pr-4 py-2 border border-border rounded-lg text-sm" />
             </div>
+          </div>
           {searchTerm && (
             <div className="max-h-40 overflow-y-auto border border-border rounded-lg mb-4">
               {filteredProducts.slice(0, 10).map((p: any) => (
