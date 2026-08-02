@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Save } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Settings = Record<string, string>
 
@@ -46,6 +47,7 @@ const FIELDS: { key: string; label: string; type?: string; group: string }[] = [
 ]
 
 export default function AdminSettings() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [settings, setSettings] = useState<Settings>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -65,14 +67,14 @@ export default function AdminSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       })
-      if (res.ok) toast.success('Settings saved')
+      if (res.ok) toast.success(ta('Settings saved'))
       else {
         const data = await res.json().catch(() => ({}))
-        toast.error(data.error || `Failed (${res.status})`)
+        toast.error(data.error || ta(`Failed (${res.status})`))
         console.error('Settings save failed:', res.status, data)
       }
     } catch (e) {
-      toast.error('Network error')
+      toast.error(ta('Network error'))
       console.error('Settings save error:', e)
     }
     setSaving(false)
@@ -85,31 +87,31 @@ export default function AdminSettings() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-display font-semibold text-navy">Website Settings</h1>
+        <h1 className="text-2xl font-display font-semibold text-navy">{ta('Website Settings')}</h1>
         <button
           onClick={handleSave}
           disabled={saving}
           className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50"
         >
-          <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Save All'}
+          <Save className="h-4 w-4" /> {saving ? ta('Saving...') : ta('Save All')}
         </button>
       </div>
 
       {groups.map(group => (
         <div key={group} className="mb-8">
-          <h2 className="text-lg font-semibold text-navy mb-3 border-b border-border pb-2">{group}</h2>
+          <h2 className="text-lg font-semibold text-navy mb-3 border-b border-border pb-2">{ta(group)}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {FIELDS.filter(f => f.group === group).map(field => (
               <div key={field.key}>
-                <label className="text-sm font-medium text-navy block mb-1">{field.label}</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta(field.label)}</label>
                 {field.type === 'select' ? (
                   <select
                     value={settings[field.key] || 'true'}
                     onChange={e => setSettings({ ...settings, [field.key]: e.target.value })}
                     className="w-full px-3 py-2 rounded-lg border border-border text-sm"
                   >
-                    <option value="true">Enabled</option>
-                    <option value="false">Disabled</option>
+                    <option value="true">{ta('Enabled')}</option>
+                    <option value="false">{ta('Disabled')}</option>
                   </select>
                 ) : (
                   <input

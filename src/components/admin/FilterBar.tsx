@@ -29,6 +29,7 @@ export function FilterBar({
   children,
   onClearAll, hasActiveFilters = false,
 }: FilterBarProps) {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   return (
     <div className="flex flex-wrap items-center gap-3 p-4 bg-card rounded-xl border-border">
       {statusOptions.length > 0 && onStatusChange && (
@@ -37,9 +38,9 @@ export function FilterBar({
           onChange={e => onStatusChange(e.target.value)}
           className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">All Statuses</option>
+          <option value="">{ta('All Statuses')}</option>
           {statusOptions.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>{ta(o.label)}</option>
           ))}
         </select>
       )}
@@ -50,7 +51,7 @@ export function FilterBar({
           value={dateFrom || ''}
           onChange={e => onDateFromChange(e.target.value)}
           className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="From"
+          placeholder={ta('From')}
         />
       )}
 
@@ -60,7 +61,7 @@ export function FilterBar({
           value={dateTo || ''}
           onChange={e => onDateToChange(e.target.value)}
           className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="To"
+          placeholder={ta('To')}
         />
       )}
 
@@ -70,9 +71,9 @@ export function FilterBar({
           onChange={e => onSourceChange(e.target.value)}
           className="px-3 py-2 rounded-lg border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
         >
-          <option value="">All Sources</option>
+          <option value="">{ta('All Sources')}</option>
           {sourceOptions.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>{ta(o.label)}</option>
           ))}
         </select>
       )}
@@ -82,7 +83,7 @@ export function FilterBar({
       {hasActiveFilters && onClearAll && (
         <Button variant="ghost" size="sm" onClick={onClearAll} className="text-destructive hover:text-destructive/80">
           <X className="h-3 w-3 mr-1" />
-          Clear all
+          {ta('Clear all')}
         </Button>
       )}
     </div>
