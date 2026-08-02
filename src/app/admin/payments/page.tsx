@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import SettingsTab from '@/components/admin/payments/SettingsTab'
 import VerificationTab from '@/components/admin/payments/VerificationTab'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const TABS = [
   { id: 'settings', label: 'Settings' },
@@ -10,11 +11,12 @@ const TABS = [
 ]
 
 export default function AdminPaymentsPage() {
+  const { ta } = useAdminTranslate()
   const [activeTab, setActiveTab] = useState('settings')
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Payment Management</h1>
+      <h1 className="text-2xl font-display font-semibold text-navy mb-6">{ta('Payment Management')}</h1>
       <div className="flex gap-1 mb-6 border-b border-border">
         {TABS.map(tab => (
           <button
@@ -26,7 +28,7 @@ export default function AdminPaymentsPage() {
                 : 'text-muted-foreground hover:text-navy'
             }`}
           >
-            {tab.label}
+            {ta(tab.label)}
           </button>
         ))}
       </div>

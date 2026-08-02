@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { History } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 interface StockHistoryProps {
   productId: string
 }
 
 export default function StockHistory({ productId }: StockHistoryProps) {
+  const { ta, fmtNum, fmtDateTime } = useAdminTranslate()
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -38,10 +40,10 @@ export default function StockHistory({ productId }: StockHistoryProps) {
   return (
     <div className="bg-white rounded-xl border border-border p-5 mt-6">
       <h2 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
-        <History className="h-5 w-5" /> Stock History
+        <History className="h-5 w-5" /> {ta('Stock History')}
       </h2>
       {logs.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No stock history</p>
+        <p className="text-sm text-muted-foreground">{ta('No stock history')}</p>
       ) : (
         <div className="space-y-2 max-h-80 overflow-y-auto">
           {Array.isArray(logs) && logs.map((log: any) => (
@@ -52,9 +54,9 @@ export default function StockHistory({ productId }: StockHistoryProps) {
               </div>
               <div className="flex items-center gap-3">
                 <span className={`font-medium ${log.change > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {log.change > 0 ? '+' : ''}{log.change}
+                  {log.change > 0 ? '+' : ''}{fmtNum(log.change)}
                 </span>
-                <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleString()}</span>
+                <span className="text-xs text-muted-foreground">{fmtDateTime(log.createdAt)}</span>
               </div>
             </div>
           ))}

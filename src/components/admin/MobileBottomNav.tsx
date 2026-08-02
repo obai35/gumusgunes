@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, ShoppingBag, Package, Warehouse, ShoppingCart, Settings,
 } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -17,6 +18,7 @@ const navItems = [
 
 export const MobileBottomNav = memo(function MobileBottomNav() {
   const pathname = usePathname()
+  const { ta } = useAdminTranslate()
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card border-t border-border">
@@ -34,7 +36,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
               }`}
             >
               <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium truncate max-w-full">{item.label}</span>
+              <span className="text-[10px] font-medium truncate max-w-full">{ta(item.label)}</span>
             </Link>
           )
         })}
@@ -47,7 +49,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
           }`}
         >
           <Settings className="h-5 w-5" />
-          <span className="text-[10px] font-medium">More</span>
+          <span className="text-[10px] font-medium">{ta('More')}</span>
         </Link>
       </div>
     </nav>

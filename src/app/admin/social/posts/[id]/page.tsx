@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { ArrowLeft, Send, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ContentTone } from '@/lib/social/groq-content'
 
 type Account = { id: string; accountName: string; platform: string }
@@ -27,6 +28,7 @@ type Post = {
 }
 
 export default function EditPost() {
+  const { ta } = useAdminTranslate()
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -70,14 +72,14 @@ export default function EditPost() {
       })
       setLoading(false)
     }).catch(() => {
-      toast.error('Post not found')
+      toast.error(ta('Post not found'))
       router.push('/admin/social/posts')
     })
   }, [id])
 
   async function generateWithAI() {
     if (!productInput.name) {
-      toast.error('Enter a product name first')
+      toast.error(ta('Enter a product name first'))
       return
     }
     setGenerating(true)
@@ -102,9 +104,9 @@ export default function EditPost() {
         caption: data.caption || f.caption,
         hashtags: data.hashtags?.join(', ') || f.hashtags,
       }))
-      toast.success('AI content generated!')
+      toast.success(ta('AI content generated!'))
     } catch {
-      toast.error('Failed to generate content. Check GROQ_API_KEY.')
+      toast.error(ta('Failed to generate content. Check GROQ_API_KEY.'))
     } finally {
       setGenerating(false)
     }
@@ -126,11 +128,11 @@ export default function EditPost() {
       body: JSON.stringify(body),
     })
     if (res.ok) {
-      toast.success('Post updated')
+      toast.success(ta('Post updated'))
       router.refresh()
     } else {
       const err = await res.json()
-      toast.error(err.error || 'Failed to update')
+      toast.error(err.error || ta('Failed to update'))
     }
     setSaving(false)
   }
@@ -143,15 +145,15 @@ export default function EditPost() {
       body: JSON.stringify({ status: 'published' }),
     })
     if (res.ok) {
-      toast.success('Post published!')
+      toast.success(ta('Post published!'))
       router.refresh()
     } else {
-      toast.error('Failed to publish')
+      toast.error(ta('Failed to publish'))
     }
     setSaving(false)
   }
 
-  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-muted-foreground">{ta('Loading...')}</div>
 
   return (
     <div className="space-y-6 p-6 max-w-3xl">
@@ -159,42 +161,42 @@ export default function EditPost() {
         <Link href="/admin/social/posts" className="p-2 rounded-lg hover:bg-secondary/50 transition-colors">
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </Link>
-        <h1 className="text-2xl font-display font-semibold text-navy">Edit Post</h1>
+        <h1 className="text-2xl font-display font-semibold text-navy">{ta('Edit Post')}</h1>
       </div>
 
       <div className="p-6 rounded-2xl bg-secondary/20 border border-border/30 space-y-4">
         <h2 className="font-semibold flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-gold" /> AI Content Generator
+          <Sparkles className="h-4 w-4 text-gold" /> {ta('AI Content Generator')}
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <input
-            placeholder="Product name"
+            placeholder={ta('Product name')}
             value={productInput.name}
             onChange={e => setProductInput(p => ({ ...p, name: e.target.value }))}
             className="p-3 rounded-xl bg-background border border-border text-sm"
           />
           <input
-            placeholder="Material"
+            placeholder={ta('Material')}
             value={productInput.material}
             onChange={e => setProductInput(p => ({ ...p, material: e.target.value }))}
             className="p-3 rounded-xl bg-background border border-border text-sm"
           />
           <input
-            placeholder="Price"
+            placeholder={ta('Price')}
             type="number"
             value={productInput.price || ''}
             onChange={e => setProductInput(p => ({ ...p, price: Number(e.target.value) }))}
             className="p-3 rounded-xl bg-background border border-border text-sm"
           />
           <input
-            placeholder="Tags (comma separated)"
+            placeholder={ta('Tags (comma separated)')}
             value={productInput.tags}
             onChange={e => setProductInput(p => ({ ...p, tags: e.target.value }))}
             className="p-3 rounded-xl bg-background border border-border text-sm"
           />
           <div className="md:col-span-2">
             <textarea
-              placeholder="Product description"
+              placeholder={ta('Product description')}
               value={productInput.description}
               onChange={e => setProductInput(p => ({ ...p, description: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm resize-none"
@@ -218,7 +220,7 @@ export default function EditPost() {
             disabled={generating}
             className="px-4 py-2.5 bg-gold text-navy-deep rounded-full text-sm font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 flex items-center gap-2"
           >
-            <Sparkles className="h-4 w-4" /> {generating ? 'Generating...' : 'Generate Content'}
+            <Sparkles className="h-4 w-4" /> {generating ? ta('Generating...') : ta('Generate Content')}
           </button>
         </div>
       </div>
@@ -226,49 +228,49 @@ export default function EditPost() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Platform</label>
+            <label className="text-sm font-medium text-navy">{ta('Platform')}</label>
             <select
               value={form.platform}
               onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="instagram">Instagram</option>
-              <option value="facebook">Facebook</option>
+              <option value="instagram">{ta('Instagram')}</option>
+              <option value="facebook">{ta('Facebook')}</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Post Type</label>
+            <label className="text-sm font-medium text-navy">{ta('Post Type')}</label>
             <select
               value={form.postType}
               onChange={e => setForm(f => ({ ...f, postType: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="feed">Feed</option>
-              <option value="reel">Reel</option>
-              <option value="story">Story</option>
-              <option value="carousel">Carousel</option>
+              <option value="feed">{ta('Feed')}</option>
+              <option value="reel">{ta('Reel')}</option>
+              <option value="story">{ta('Story')}</option>
+              <option value="carousel">{ta('Carousel')}</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Status</label>
+            <label className="text-sm font-medium text-navy">{ta('Status')}</label>
             <select
               value={form.status}
               onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="draft">Draft</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="published">Published</option>
+              <option value="draft">{ta('Draft')}</option>
+              <option value="scheduled">{ta('Scheduled')}</option>
+              <option value="published">{ta('Published')}</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Account</label>
+            <label className="text-sm font-medium text-navy">{ta('Account')}</label>
             <select
               value={form.accountId}
               onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="">No account</option>
+              <option value="">{ta('No account')}</option>
               {accounts.map(a => (
                 <option key={a.id} value={a.id}>{a.accountName} ({a.platform})</option>
               ))}
@@ -277,7 +279,7 @@ export default function EditPost() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Media URLs (one per line)</label>
+          <label className="text-sm font-medium text-navy">{ta('Media URLs (one per line)')}</label>
           <textarea
             value={form.mediaUrls}
             onChange={e => setForm(f => ({ ...f, mediaUrls: e.target.value }))}
@@ -287,7 +289,7 @@ export default function EditPost() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Caption</label>
+          <label className="text-sm font-medium text-navy">{ta('Caption')}</label>
           <textarea
             value={form.caption}
             onChange={e => setForm(f => ({ ...f, caption: e.target.value }))}
@@ -297,7 +299,7 @@ export default function EditPost() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Hashtags (comma separated)</label>
+          <label className="text-sm font-medium text-navy">{ta('Hashtags (comma separated)')}</label>
           <input
             value={form.hashtags}
             onChange={e => setForm(f => ({ ...f, hashtags: e.target.value }))}
@@ -311,7 +313,7 @@ export default function EditPost() {
             disabled={saving}
             className="px-6 py-3 bg-navy text-silver rounded-full text-sm font-medium hover:bg-gold hover:text-navy-deep transition-colors disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? ta('Saving...') : ta('Save Changes')}
           </button>
           {form.status !== 'published' && (
             <button
@@ -320,7 +322,7 @@ export default function EditPost() {
               disabled={saving}
               className="px-6 py-3 bg-green-600 text-white rounded-full text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              <Send className="h-4 w-4" /> Publish Now
+              <Send className="h-4 w-4" /> {ta('Publish Now')}
             </button>
           )}
         </div>

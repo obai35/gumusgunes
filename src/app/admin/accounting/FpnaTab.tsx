@@ -9,10 +9,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { RefreshCw, TrendingUp, TrendingDown, DollarSign, BarChart3, Target } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend, ComposedChart, Area } from 'recharts'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type FpnaTabType = 'budget-vs-actual' | 'monthly' | 'projections' | 'kpi'
 
 export default function FpnaTab() {
+  const { ta, fmtCurrency } = useAdminTranslate()
   const [tab, setTab] = useState<FpnaTabType>('budget-vs-actual')
   const [year, setYear] = useState(new Date().getFullYear())
   const [loading, setLoading] = useState(true)
@@ -51,16 +53,13 @@ export default function FpnaTab() {
   }, [fetchData])
 
   const tabs: { key: FpnaTabType; label: string; icon: React.ReactNode }[] = [
-    { key: 'budget-vs-actual', label: 'Budget vs Actual', icon: <Target className="h-4 w-4" /> },
-    { key: 'monthly', label: 'Monthly Trend', icon: <BarChart3 className="h-4 w-4" /> },
-    { key: 'projections', label: 'Financial Projections', icon: <TrendingUp className="h-4 w-4" /> },
-    { key: 'kpi', label: 'KPI Dashboard', icon: <DollarSign className="h-4 w-4" /> },
+    { key: 'budget-vs-actual', label: ta('Budget vs Actual'), icon: <Target className="h-4 w-4" /> },
+    { key: 'monthly', label: ta('Monthly Trend'), icon: <BarChart3 className="h-4 w-4" /> },
+    { key: 'projections', label: ta('Financial Projections'), icon: <TrendingUp className="h-4 w-4" /> },
+    { key: 'kpi', label: ta('KPI Dashboard'), icon: <DollarSign className="h-4 w-4" /> },
   ]
 
   const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i)
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(value)
 
   return (
     <div className="space-y-6">
@@ -69,7 +68,7 @@ export default function FpnaTab() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-600" />
-              <CardTitle>Financial Planning & Analysis</CardTitle>
+              <CardTitle>{ta('Financial Planning & Analysis')}</CardTitle>
             </div>
             <div className="flex items-center gap-2">
               <select
@@ -84,7 +83,7 @@ export default function FpnaTab() {
               </Button>
             </div>
           </div>
-          <CardDescription>Budget variance, financial projections, and key performance indicators</CardDescription>
+          <CardDescription>{ta('Budget variance, financial projections, and key performance indicators')}</CardDescription>
           <div className="flex gap-1 mt-2 flex-wrap">
             {tabs.map(t => (
               <Button
@@ -109,16 +108,16 @@ export default function FpnaTab() {
           ) : (
             <>
               {tab === 'budget-vs-actual' && data && (
-                <BudgetVsActualView data={data} formatCurrency={formatCurrency} />
+                <BudgetVsActualView data={data} formatCurrency={fmtCurrency} />
               )}
               {tab === 'monthly' && data && (
-                <MonthlyView data={data} formatCurrency={formatCurrency} />
+                <MonthlyView data={data} formatCurrency={fmtCurrency} />
               )}
               {tab === 'projections' && data && (
-                <ProjectionsView data={data} formatCurrency={formatCurrency} />
+                <ProjectionsView data={data} formatCurrency={fmtCurrency} />
               )}
               {tab === 'kpi' && data && (
-                <KpiView data={data} formatCurrency={formatCurrency} />
+                <KpiView data={data} formatCurrency={fmtCurrency} />
               )}
             </>
           )}
@@ -129,23 +128,24 @@ export default function FpnaTab() {
 }
 
 function BudgetVsActualView({ data, formatCurrency }: { data: any; formatCurrency: (v: number) => string }) {
+  const { ta } = useAdminTranslate()
   if (!data.items || data.items.length === 0) {
-    return <div className="text-center py-12 text-muted-foreground">No budget data found for this year. Add budgets first.</div>
+    return <div className="text-center py-12 text-muted-foreground">{ta('No budget data found for this year. Add budgets first.')}</div>
   }
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Total Budgeted</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Total Budgeted')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold text-blue-600">{formatCurrency(data.totalBudgeted)}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Total Actual</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Total Actual')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold text-green-600">{formatCurrency(data.totalActual)}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Variance</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Variance')}</CardTitle></CardHeader>
           <CardContent>
             <p className={`text-2xl font-bold ${data.totalVariance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(data.totalVariance)}
@@ -161,8 +161,8 @@ function BudgetVsActualView({ data, formatCurrency }: { data: any; formatCurrenc
           <YAxis />
           <Tooltip formatter={(v: number) => formatCurrency(v)} />
           <Legend />
-          <Bar dataKey="budgeted" name="Budgeted" fill="#3b82f6" />
-          <Bar dataKey="actual" name="Actual" fill="#22c55e" />
+          <Bar dataKey="budgeted" name={ta('Budgeted')} fill="#3b82f6" />
+          <Bar dataKey="actual" name={ta('Actual')} fill="#22c55e" />
         </BarChart>
       </ResponsiveContainer>
 
@@ -170,11 +170,11 @@ function BudgetVsActualView({ data, formatCurrency }: { data: any; formatCurrenc
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-2 px-2">Account</th>
-              <th className="text-right py-2 px-2">Budgeted</th>
-              <th className="text-right py-2 px-2">Actual</th>
-              <th className="text-right py-2 px-2">Variance</th>
-              <th className="text-right py-2 px-2">%</th>
+              <th className="text-left py-2 px-2">{ta('Account')}</th>
+              <th className="text-right py-2 px-2">{ta('Budgeted')}</th>
+              <th className="text-right py-2 px-2">{ta('Actual')}</th>
+              <th className="text-right py-2 px-2">{ta('Variance')}</th>
+              <th className="text-right py-2 px-2">{ta('%')}</th>
             </tr>
           </thead>
           <tbody>
@@ -199,8 +199,9 @@ function BudgetVsActualView({ data, formatCurrency }: { data: any; formatCurrenc
 }
 
 function MonthlyView({ data, formatCurrency }: { data: any; formatCurrency: (v: number) => string }) {
+  const { ta } = useAdminTranslate()
   if (!Array.isArray(data) || data.length === 0) {
-    return <div className="text-center py-12 text-muted-foreground">No monthly data available.</div>
+    return <div className="text-center py-12 text-muted-foreground">{ta('No monthly data available.')}</div>
   }
 
   const chartData = data.map((d: any) => ({
@@ -229,10 +230,10 @@ function MonthlyView({ data, formatCurrency }: { data: any; formatCurrency: (v: 
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-2 px-2">Month</th>
-              <th className="text-right py-2 px-2">Budgeted</th>
-              <th className="text-right py-2 px-2">Actual</th>
-              <th className="text-right py-2 px-2">Variance</th>
+              <th className="text-left py-2 px-2">{ta('Month')}</th>
+              <th className="text-right py-2 px-2">{ta('Budgeted')}</th>
+              <th className="text-right py-2 px-2">{ta('Actual')}</th>
+              <th className="text-right py-2 px-2">{ta('Variance')}</th>
             </tr>
           </thead>
           <tbody>
@@ -254,6 +255,7 @@ function MonthlyView({ data, formatCurrency }: { data: any; formatCurrency: (v: 
 }
 
 function ProjectionsView({ data, formatCurrency }: { data: any; formatCurrency: (v: number) => string }) {
+  const { ta } = useAdminTranslate()
   if (!data) return null
 
   const chartData = [
@@ -265,13 +267,13 @@ function ProjectionsView({ data, formatCurrency }: { data: any; formatCurrency: 
     <div className="space-y-6">
       <div className="grid grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Last Year Revenue</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Last Year Revenue')}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-xl font-bold">{formatCurrency(data.historicalData[data.historicalData.length - 1]?.revenue || 0)}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Revenue Trend</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Revenue Trend')}</CardTitle></CardHeader>
           <CardContent>
             <div className="flex items-center gap-1">
               {data.trends.revenue.slope >= 0 ? <TrendingUp className="h-4 w-4 text-green-600" /> : <TrendingDown className="h-4 w-4 text-red-600" />}
@@ -280,13 +282,13 @@ function ProjectionsView({ data, formatCurrency }: { data: any; formatCurrency: 
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">R² Confidence</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('R² Confidence')}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-xl font-bold">{data.trends.revenue.r2 !== undefined ? data.trends.revenue.r2.toFixed(2) : 'N/A'}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Projection Years</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Projection Years')}</CardTitle></CardHeader>
           <CardContent>
             <p className="text-xl font-bold">{data.projections.length}</p>
           </CardContent>
@@ -309,11 +311,11 @@ function ProjectionsView({ data, formatCurrency }: { data: any; formatCurrency: 
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-2 px-2">Year</th>
-              <th className="text-right py-2 px-2">Projected Revenue</th>
-              <th className="text-right py-2 px-2">Projected Expenses</th>
-              <th className="text-right py-2 px-2">Projected Profit</th>
-              <th className="text-right py-2 px-2">Margin</th>
+              <th className="text-left py-2 px-2">{ta('Year')}</th>
+              <th className="text-right py-2 px-2">{ta('Projected Revenue')}</th>
+              <th className="text-right py-2 px-2">{ta('Projected Expenses')}</th>
+              <th className="text-right py-2 px-2">{ta('Projected Profit')}</th>
+              <th className="text-right py-2 px-2">{ta('Margin')}</th>
             </tr>
           </thead>
           <tbody>
@@ -339,17 +341,18 @@ function ProjectionsView({ data, formatCurrency }: { data: any; formatCurrency: 
 }
 
 function KpiView({ data, formatCurrency }: { data: any; formatCurrency: (v: number) => string }) {
+  const { ta } = useAdminTranslate()
   if (!data) return null
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Revenue</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Revenue')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold text-green-600">{formatCurrency(data.totalRevenue)}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Net Profit</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Net Profit')}</CardTitle></CardHeader>
           <CardContent>
             <p className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatCurrency(data.netProfit)}
@@ -357,26 +360,26 @@ function KpiView({ data, formatCurrency }: { data: any; formatCurrency: (v: numb
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Profit Margin</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Profit Margin')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold">{data.profitMargin.toFixed(1)}%</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Expense Ratio</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Expense Ratio')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold text-orange-600">{data.expenseRatio.toFixed(1)}%</p></CardContent>
         </Card>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Total Assets</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Total Assets')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold">{formatCurrency(data.totalAssets)}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Total Liabilities</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Total Liabilities')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold text-red-600">{formatCurrency(data.totalLiabilities)}</p></CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Current Ratio</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Current Ratio')}</CardTitle></CardHeader>
           <CardContent>
             <p className={`text-2xl font-bold ${data.currentRatio >= 1.5 ? 'text-green-600' : 'text-red-600'}`}>
               {data.currentRatio.toFixed(2)}
@@ -384,18 +387,18 @@ function KpiView({ data, formatCurrency }: { data: any; formatCurrency: (v: numb
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Budget Utilization</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm">{ta('Budget Utilization')}</CardTitle></CardHeader>
           <CardContent><p className="text-2xl font-bold">{data.budgetUtilization.toFixed(1)}%</p></CardContent>
         </Card>
       </div>
 
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={[
-          { metric: 'Revenue', value: data.totalRevenue },
-          { metric: 'Expenses', value: data.totalExpenses },
-          { metric: 'Profit', value: data.netProfit },
-          { metric: 'Assets', value: data.totalAssets },
-          { metric: 'Liabilities', value: data.totalLiabilities },
+          { metric: ta('Revenue'), value: data.totalRevenue },
+          { metric: ta('Expenses'), value: data.totalExpenses },
+          { metric: ta('Profit'), value: data.netProfit },
+          { metric: ta('Assets'), value: data.totalAssets },
+          { metric: ta('Liabilities'), value: data.totalLiabilities },
         ]}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="metric" />

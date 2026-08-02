@@ -6,6 +6,7 @@ import RatesTab from '@/components/admin/shipping/RatesTab'
 import RulesTab from '@/components/admin/shipping/RulesTab'
 import ShipmentsTab from '@/components/admin/shipping/ShipmentsTab'
 import CountriesTab from '@/components/admin/shipping/CountriesTab'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const TABS = [
   { id: 'countries', label: 'Countries' },
@@ -16,11 +17,12 @@ const TABS = [
 ]
 
 export default function AdminShippingPage() {
+  const { ta } = useAdminTranslate()
   const [activeTab, setActiveTab] = useState('methods')
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-semibold text-navy mb-6">Shipping Management</h1>
+      <h1 className="text-2xl font-display font-semibold text-navy mb-6">{ta('Shipping Management')}</h1>
       <div className="flex gap-1 mb-6 border-b border-border">
         {TABS.map(tab => (
           <button
@@ -32,7 +34,7 @@ export default function AdminShippingPage() {
                 : 'text-muted-foreground hover:text-navy'
             }`}
           >
-            {tab.label}
+            {ta(tab.label)}
           </button>
         ))}
       </div>

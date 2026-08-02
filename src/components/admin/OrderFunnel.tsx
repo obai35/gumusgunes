@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { ShoppingBag } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type FunnelStage = { status: string; count: number; label: string; color: string }
 
@@ -17,6 +18,7 @@ type OrderFunnelProps = {
 }
 
 export function OrderFunnel({ loading }: OrderFunnelProps) {
+  const { ta, fmtNum } = useAdminTranslate()
   const [stages, setStages] = useState<FunnelStage[]>(defaultStages)
   const [total, setTotal] = useState(0)
 
@@ -53,9 +55,9 @@ export function OrderFunnel({ loading }: OrderFunnelProps) {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-navy flex items-center gap-2">
           <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          Order Funnel
+          {ta('Order Funnel')}
         </h3>
-        <span className="text-xs text-muted-foreground">{total} total</span>
+        <span className="text-xs text-muted-foreground">{fmtNum(total)} {ta('total')}</span>
       </div>
       <div className="space-y-3">
         {stages.map(stage => (
@@ -63,9 +65,9 @@ export function OrderFunnel({ loading }: OrderFunnelProps) {
             <div className="flex items-center justify-between text-sm mb-1">
               <div className="flex items-center gap-2">
                 <div className={`h-2 w-2 rounded-full ${stage.color}`} />
-                <span className="text-gray-600">{stage.label}</span>
+                <span className="text-gray-600">{ta(stage.label)}</span>
               </div>
-              <span className="font-medium text-navy">{stage.count}</span>
+              <span className="font-medium text-navy">{fmtNum(stage.count)}</span>
             </div>
             <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
               <div

@@ -11,6 +11,7 @@ import InventoryValuationTab from './InventoryValuationTab'
 import MarginAnalysisTab from './MarginAnalysisTab'
 import YoYComparisonTab from './YoYComparisonTab'
 import ForecastingTab from './ForecastingTab'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const TABS = [
   { key: 'custom-report', label: 'Custom Report', icon: BarChart3 },
@@ -24,12 +25,13 @@ const TABS = [
 ]
 
 export default function ReportsPage() {
+  const { ta } = useAdminTranslate()
   const [tab, setTab] = useState('custom-report')
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-semibold text-navy">Reporting & Analytics</h1>
+        <h1 className="text-2xl font-display font-semibold text-navy">{ta('Reporting & Analytics')}</h1>
       </div>
 
       <div className="flex gap-1 border-b border-border overflow-x-auto">
@@ -41,7 +43,7 @@ export default function ReportsPage() {
               tab === t.key ? 'border-navy text-navy' : 'border-transparent text-muted-foreground hover:text-navy'
             }`}
           >
-            {t.label}
+            {ta(t.label)}
           </button>
         ))}
       </div>

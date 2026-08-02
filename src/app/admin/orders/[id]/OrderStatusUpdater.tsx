@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
 const PAYMENT_STATUSES = ['pending', 'paid', 'refunded']
@@ -11,6 +12,7 @@ export function OrderStatusUpdater({ orderId, currentStatus, paymentStatus: curr
   const [status, setStatus] = useState(currentStatus)
   const [paymentStatus, setPaymentStatus] = useState(currentPayment)
   const router = useRouter()
+  const { ta } = useAdminTranslate()
 
   async function updateStatus(field: string, value: string) {
     const res = await fetch('/api/orders/update-status', {
@@ -19,10 +21,10 @@ export function OrderStatusUpdater({ orderId, currentStatus, paymentStatus: curr
       body: JSON.stringify({ orderId, field, value }),
     })
     if (res.ok) {
-      toast.success(`${field} updated to ${value}`)
+      toast.success(ta(`${field} updated to ${value}`))
       router.refresh()
     } else {
-      toast.error('Failed to update')
+      toast.error(ta('Failed to update'))
     }
   }
 

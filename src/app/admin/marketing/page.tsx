@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { ShoppingCart, Tag, Mail, Bell, Search, Gift, Percent, Zap } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 const sections = [
   { href: '/admin/marketing/abandoned-carts', label: 'Abandoned Carts', desc: 'Recover lost sales', icon: ShoppingCart },
@@ -14,12 +15,13 @@ const sections = [
 ]
 
 export default function MarketingDashboard() {
+  const { ta } = useAdminTranslate()
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-navy">Marketing & Sales</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage promotions, campaigns, and customer engagement</p>
+          <h1 className="text-2xl font-display font-semibold text-navy">{ta('Marketing & Sales')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{ta('Manage promotions, campaigns, and customer engagement')}</p>
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -29,8 +31,8 @@ export default function MarketingDashboard() {
             <div className="h-10 w-10 rounded-lg bg-gold/10 flex items-center justify-center mb-3 group-hover:bg-gold/20">
               <item.icon className="h-5 w-5 text-gold" />
             </div>
-            <h3 className="font-semibold text-navy group-hover:text-gold">{item.label}</h3>
-            <p className="text-xs text-muted-foreground mt-1">{item.desc}</p>
+            <h3 className="font-semibold text-navy group-hover:text-gold">{ta(item.label)}</h3>
+            <p className="text-xs text-muted-foreground mt-1">{ta(item.desc)}</p>
           </Link>
         ))}
       </div>

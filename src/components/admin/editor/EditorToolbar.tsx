@@ -2,6 +2,7 @@
 
 import { ChevronDown, Monitor, Tablet, Smartphone, Save, LogOut } from 'lucide-react'
 import { EDITOR_SECTIONS, type SectionKey } from './types'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Device = 'desktop' | 'tablet' | 'mobile'
 
@@ -21,6 +22,7 @@ const DEVICES = [
 ]
 
 export function EditorToolbar({ activeSection, onSectionChange, device, onDeviceChange, onSave, saving }: Props) {
+  const { ta } = useAdminTranslate()
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-border shrink-0 gap-2">
       <div className="flex items-center gap-2">
@@ -31,7 +33,7 @@ export function EditorToolbar({ activeSection, onSectionChange, device, onDevice
             className="appearance-none bg-gray-100 rounded-lg px-3 py-1.5 pr-8 text-sm font-medium text-navy outline-none cursor-pointer"
           >
             {EDITOR_SECTIONS.map(s => (
-              <option key={s.key} value={s.key}>{s.label}</option>
+              <option key={s.key} value={s.key}>{ta(s.label)}</option>
             ))}
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -48,7 +50,7 @@ export function EditorToolbar({ activeSection, onSectionChange, device, onDevice
             }`}
           >
             <d.icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{d.label}</span>
+            <span className="hidden sm:inline">{ta(d.label)}</span>
           </button>
         ))}
       </div>
@@ -60,14 +62,14 @@ export function EditorToolbar({ activeSection, onSectionChange, device, onDevice
           className="flex items-center gap-1.5 px-3 py-1.5 bg-navy text-silver rounded-lg text-xs font-medium hover:bg-navy/90 disabled:opacity-50"
         >
           <Save className="h-3.5 w-3.5" />
-          {saving ? 'Saving...' : 'Save'}
+          {saving ? ta('Saving...') : ta('Save')}
         </button>
         <a
           href="/admin"
           className="flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-navy"
         >
           <LogOut className="h-3.5 w-3.5" />
-          Exit
+          {ta('Exit')}
         </a>
       </div>
     </div>
