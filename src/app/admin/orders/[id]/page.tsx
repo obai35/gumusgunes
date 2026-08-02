@@ -1,39 +1,64 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import { notFound } from 'next/navigation'
-import { db } from '@/lib/db'
-import { cookies } from 'next/headers'
+import { useAdminAuth } from '@/lib/admin-auth-store'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { OrderStatusUpdater } from './OrderStatusUpdater'
 import { PaymentVerification } from './PaymentVerification'
 import ReturnsSection from './ReturnsSection'
 import EditHistory from './EditHistory'
 import OrderDetailActions from './OrderDetailActions'
 
-export const dynamic = 'force-dynamic'
+export default function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency, isAr } = useAdminTranslate()
+  const { user } = useAdminAuth()
+  const [order, setOrder] = useState<any>(null)
+  const [notFoundState, setNotFoundState] = useState(false)
 
-export default async function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const order = await db.order.findUnique({
-    where: { id },
-    include: { items: { include: { product: true } }, discount: true },
-  })
-  if (!order) notFound()
+  useEffect(() => {
+    let cancelled = false
+    params.then(({ id }) => {
+      fetch(`/api/admin/orders/${id}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (cancelled) return
+          if (!data.ok || !data.order) { setNotFoundState(true); return }
+          setOrder(data.order)
+        })
+        .catch(() => {
+          if (!cancelled) setNotFoundState(true)
+        })
+    })
+    return () => { cancelled = true }
+  }, [params])
 
-  const cookieStore = await cookies()
-  const adminId = cookieStore.get('adminId')?.value || ''
+  if (notFoundState) notFound()
+  if (!order) {
+    return <p className="text-sm text-muted-foreground p-4">{ta('Loading...')}</p>
+  }
 
-  const items = order.items.map((i) => ({
+  const adminId = user?.id || ''
+  const items = order.items.map((i: any) => ({
     id: i.id,
     productId: i.productId,
     product: { name: i.product.name },
     quantity: i.quantity,
     price: i.price,
   }))
+  const paymentStatusLabel: Record<string, string> = {
+    paid: 'Paid',
+    unpaid: 'Unpaid',
+    awaiting_verification: 'Awaiting Verification',
+    refunded: 'Refunded',
+  }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-display font-semibold text-navy">Order {order.orderNumber}</h1>
-          <p className="text-sm text-muted-foreground">Placed on {order.createdAt.toLocaleDateString()}</p>
+          <h1 className="text-2xl font-display font-semibold text-navy">{ta('Order')} {order.orderNumber}</h1>
+          <p className="text-sm text-muted-foreground">{ta('Placed on')} {fmtDate(order.createdAt)}</p>
         </div>
         <OrderStatusUpdater orderId={order.id} currentStatus={order.status} paymentStatus={order.paymentStatus} />
       </div>
@@ -41,30 +66,30 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h2 className="font-display font-semibold text-navy mb-4">Items</h2>
+            <h2 className="font-display font-semibold text-navy mb-4">{ta('Items')}</h2>
             <div className="space-y-3">
-              {order.items.map((item) => (
+              {order.items.map((item: any) => (
                 <div key={item.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                   <div className="flex items-center gap-3">
                     <img src={item.product.imageUrl} alt={item.product.name} className="h-12 w-12 rounded-lg object-cover" />
                     <div>
                       <p className="text-sm font-medium text-navy">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">SKU: {item.product.sku} · Qty: {item.quantity}</p>
+                      <p className="text-xs text-muted-foreground">{ta('SKU')}: {item.product.sku} · {ta('Qty')}: {fmtNum(item.quantity)}</p>
                     </div>
                   </div>
-                  <p className="text-sm font-medium text-navy">E£{(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="text-sm font-medium text-navy">{fmtCurrency(item.price * item.quantity)}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="bg-white rounded-xl border border-border p-5">
-            <h2 className="font-display font-semibold text-navy mb-4">Customer</h2>
+            <h2 className="font-display font-semibold text-navy mb-4">{ta('Customer')}</h2>
             <dl className="space-y-2 text-sm">
-              <div className="flex"><dt className="w-24 text-muted-foreground">Name</dt><dd className="text-navy">{order.fullName}</dd></div>
-              <div className="flex"><dt className="w-24 text-muted-foreground">Email</dt><dd className="text-navy">{order.email}</dd></div>
-              {order.phone && <div className="flex"><dt className="w-24 text-muted-foreground">Phone</dt><dd className="text-navy">{order.phone}</dd></div>}
-              <div className="flex"><dt className="w-24 text-muted-foreground">Address</dt><dd className="text-navy">{order.address}, {order.city}, {order.postalCode}, {order.country}</dd></div>
+              <div className="flex"><dt className="w-24 text-muted-foreground">{ta('Name')}</dt><dd className="text-navy">{order.fullName}</dd></div>
+              <div className="flex"><dt className="w-24 text-muted-foreground">{ta('Email')}</dt><dd className="text-navy">{order.email}</dd></div>
+              {order.phone && <div className="flex"><dt className="w-24 text-muted-foreground">{ta('Phone')}</dt><dd className="text-navy">{order.phone}</dd></div>}
+              <div className="flex"><dt className="w-24 text-muted-foreground">{ta('Address')}</dt><dd className="text-navy">{order.address}, {order.city}, {order.postalCode}, {order.country}</dd></div>
             </dl>
           </div>
 
@@ -72,7 +97,7 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
 
           {order.notes && (
             <div className="bg-white rounded-xl border border-border p-5">
-              <h2 className="font-display font-semibold text-navy mb-4">Notes</h2>
+              <h2 className="font-display font-semibold text-navy mb-4">{ta('Notes')}</h2>
               <p className="text-sm text-muted-foreground">{order.notes}</p>
             </div>
           )}
@@ -82,46 +107,46 @@ export default async function AdminOrderDetail({ params }: { params: Promise<{ i
 
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-border p-5">
-            <h2 className="font-display font-semibold text-navy mb-4">Summary</h2>
+            <h2 className="font-display font-semibold text-navy mb-4">{ta('Summary')}</h2>
             <dl className="space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="text-navy">E£{order.subtotal.toFixed(2)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Shipping</dt><dd className="text-navy">{order.shipping === 0 ? 'Free' : `E£${order.shipping.toFixed(2)}`}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">{ta('Subtotal')}</dt><dd className="text-navy">{fmtCurrency(order.subtotal)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">{ta('Shipping')}</dt><dd className="text-navy">{order.shipping === 0 ? ta('Free') : fmtCurrency(order.shipping)}</dd></div>
               {order.discountAmount && order.discountAmount > 0 && (
-                <div className="flex justify-between"><dt className="text-muted-foreground">Discount</dt><dd className="text-green-600">-E£{order.discountAmount.toFixed(2)}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted-foreground">{ta('Discount')}</dt><dd className="text-green-600">-{fmtCurrency(order.discountAmount)}</dd></div>
               )}
-              <div className="flex justify-between"><dt className="text-muted-foreground">Tax</dt><dd className="text-navy">E£{order.tax.toFixed(2)}</dd></div>
-              <div className="flex justify-between pt-2 border-t border-border font-semibold"><dt className="text-navy">Total</dt><dd className="text-navy">E£{order.totalAmount.toFixed(2)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">{ta('Tax')}</dt><dd className="text-navy">{fmtCurrency(order.tax)}</dd></div>
+              <div className="flex justify-between pt-2 border-t border-border font-semibold"><dt className="text-navy">{ta('Total')}</dt><dd className="text-navy">{fmtCurrency(order.totalAmount)}</dd></div>
               {order.refundedAmount > 0 && (
-                <div className="flex justify-between pt-1"><dt className="text-red-600">Refunded</dt><dd className="text-red-600">-E£{order.refundedAmount.toFixed(2)}</dd></div>
+                <div className="flex justify-between pt-1"><dt className="text-red-600">{ta('Refunded')}</dt><dd className="text-red-600">-{fmtCurrency(order.refundedAmount)}</dd></div>
               )}
             </dl>
           </div>
           <div className="bg-white rounded-xl border border-border p-5 space-y-2">
-            <h2 className="font-display font-semibold text-navy mb-3">Payment</h2>
-            <p className="text-sm text-muted-foreground">Method: <span className="font-medium text-navy">{order.paymentMethod}</span></p>
-            <p className="text-sm text-muted-foreground">Status: <span className={`font-medium E£{order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'awaiting_verification' ? 'text-orange-600' : 'text-navy'}`}>{order.paymentStatus}</span></p>
+            <h2 className="font-display font-semibold text-navy mb-3">{ta('Payment')}</h2>
+            <p className="text-sm text-muted-foreground">{ta('Method')}: <span className="font-medium text-navy">{order.paymentMethod}</span></p>
+            <p className="text-sm text-muted-foreground">{ta('Status')}: <span className={`font-medium ${order.paymentStatus === 'paid' ? 'text-green-600' : order.paymentStatus === 'awaiting_verification' ? 'text-orange-600' : 'text-navy'}`}>{ta(paymentStatusLabel[order.paymentStatus] || order.paymentStatus)}</span></p>
             {order.paymentMethod === 'card' && order.stripePaymentIntentId && (
-              <p className="text-xs text-muted-foreground">Stripe ID: <span className="font-mono">{order.stripePaymentIntentId}</span></p>
+              <p className="text-xs text-muted-foreground">{ta('Stripe ID:')} <span className="font-mono">{order.stripePaymentIntentId}</span></p>
             )}
             {order.paymentMethod === 'paypal' && order.paypalOrderId && (
-              <p className="text-xs text-muted-foreground">PayPal ID: <span className="font-mono">{order.paypalOrderId}</span></p>
+              <p className="text-xs text-muted-foreground">{ta('PayPal ID:')} <span className="font-mono">{order.paypalOrderId}</span></p>
             )}
             {order.walletProvider && (
-              <p className="text-xs text-muted-foreground">Wallet: <span className="font-medium text-navy">{order.walletProvider}</span></p>
+              <p className="text-xs text-muted-foreground">{ta('Wallet')}: <span className="font-medium text-navy">{order.walletProvider}</span></p>
             )}
             {order.paymentReference && (
-              <p className="text-xs text-muted-foreground">Reference: <span className="font-mono font-medium text-navy">{order.paymentReference}</span></p>
+              <p className="text-xs text-muted-foreground">{ta('Reference')}: <span className="font-mono font-medium text-navy">{order.paymentReference}</span></p>
             )}
             {order.paymentProofUrl && (
               <div className="mt-2">
-                <p className="text-xs text-muted-foreground mb-1">Payment Proof:</p>
+                <p className="text-xs text-muted-foreground mb-1">{ta('Payment Proof:')}</p>
                 <a href={order.paymentProofUrl} target="_blank" rel="noopener noreferrer">
-                  <img src={order.paymentProofUrl} alt="Payment proof" className="w-full rounded-lg border border-border max-h-40 object-cover" />
+                  <img src={order.paymentProofUrl} alt={ta('Payment Proof')} className="w-full rounded-lg border border-border max-h-40 object-cover" />
                 </a>
               </div>
             )}
             {order.paymentVerifiedAt && (
-              <p className="text-xs text-muted-foreground">Verified: {new Date(order.paymentVerifiedAt).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{ta('Verified')}: {fmtDateTime(order.paymentVerifiedAt)}</p>
             )}
             <PaymentVerification orderId={order.id} paymentStatus={order.paymentStatus} />
           </div>

@@ -382,4 +382,8 @@ export const adminUiAr5: Record<string, string> = {
   'View Stock': 'عرض المخزون',
   'No warehouses yet': 'لا توجد مستودعات بعد',
   'Main Stock': 'المخزون الرئيسي',
+  'This page doesn\'t exist.': 'هذه الصفحة غير موجودة.',
+  'Back to Dashboard': 'العودة إلى لوحة التحكم',
+  'Placed on': 'تم الطلب في',
+  'Free': 'مجاني',
 }

@@ -1,6 +1,11 @@
+'use client'
+
 import Link from 'next/link'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function AdminNotFound() {
+  const { ta } = useAdminTranslate()
+
   return (
     <div className="flex flex-col items-center justify-center p-12 text-center">
       <div className="h-20 w-20 rounded-full bg-secondary flex items-center justify-center mb-6">
@@ -9,12 +14,12 @@ export default function AdminNotFound() {
         </svg>
       </div>
       <h1 className="text-4xl font-display font-semibold text-navy mb-2">404</h1>
-      <p className="text-muted-foreground mb-6">This page doesn&apos;t exist.</p>
+      <p className="text-muted-foreground mb-6">{ta('This page doesn\'t exist.')}</p>
       <Link
         href="/admin"
         className="px-6 py-2.5 bg-navy text-silver rounded-full text-sm font-medium hover:bg-navy/90 transition-colors"
       >
-        Back to Dashboard
+        {ta('Back to Dashboard')}
       </Link>
     </div>
   )

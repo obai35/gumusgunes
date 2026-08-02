@@ -4,6 +4,27 @@ import { db } from '@/lib/db'
 import { storeDb } from '@/lib/store-scoped'
 import { decrypt } from '@/lib/encryption'
 
+export const GET = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }>; admin: any }) => {
+  const sdb = storeDb(admin.storeId)
+  try {
+    const { id } = await params
+    const order = await sdb.order.findUnique({
+      where: { id },
+      include: { items: { include: { product: true } }, discount: true },
+    })
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    if (order.paymentProofUrl) {
+      try { order.paymentProofUrl = decrypt(order.paymentProofUrl) } catch {}
+    }
+    if (order.paymentReference) {
+      try { order.paymentReference = decrypt(order.paymentReference) } catch {}
+    }
+    return NextResponse.json({ ok: true, order })
+  } catch {
+    return NextResponse.json({ error: 'Failed to load order' }, { status: 500 })
+  }
+}, 'orders')
+
 export const PUT = withAdmin(async (req, { params, admin }: { params: Promise<{ id: string }>; admin: any }) => {
   const sdb = storeDb(admin.storeId)
   try {
