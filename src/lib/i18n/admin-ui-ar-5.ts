@@ -386,4 +386,7 @@ export const adminUiAr5: Record<string, string> = {
   'Back to Dashboard': 'العودة إلى لوحة التحكم',
   'Placed on': 'تم الطلب في',
   'Free': 'مجاني',
+  'Day': 'يوم',
+  'Week': 'أسبوع',
+  'to': 'إلى',
 }

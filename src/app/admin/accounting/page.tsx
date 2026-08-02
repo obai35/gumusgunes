@@ -60,13 +60,14 @@ function exportCSVRows(rows: Record<string, any>[], filename: string) {
 const CHART_COLORS = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#06b6d4', '#ec4899']
 
 function RevenueChart({ data }: { data: { date: string; revenue: number }[] }) {
+  const { ta } = useAdminTranslate()
   if (!Array.isArray(data) || data.length === 0) return null
 
   const isMonthly = data.length > 0 && data[0].date.length <= 7
 
   return (
     <div className="bg-white rounded-xl border border-border p-5">
-      <h3 className="text-sm font-semibold text-navy mb-4">Revenue Trend</h3>
+      <h3 className="text-sm font-semibold text-navy mb-4">{ta('Revenue Trend')}</h3>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -870,7 +871,7 @@ function BranchesTab() {
       <div className="flex gap-2 mb-4">
         {['day', 'week', 'month'].map((p) => (
           <button key={p} onClick={() => setPeriod(p)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${period === p ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
-            {p.charAt(0).toUpperCase() + p.slice(1)}
+            {ta(p.charAt(0).toUpperCase() + p.slice(1))}
           </button>
         ))}
         <button onClick={() => window.open(`/api/admin/accounting/export/branches?period=${period}`, '_blank')} className="px-4 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-1.5 ml-auto">
@@ -977,13 +978,13 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
       <div className="flex gap-2 mb-4 flex-wrap items-center">
         {(['day', 'week', 'month', 'year', 'custom'] as const).map((p) => (
           <button key={p} onClick={() => setPeriod(p)} className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors border ${period === p ? 'bg-navy text-silver border-navy' : 'bg-white text-muted-foreground border-border hover:text-navy'}`}>
-            {p.charAt(0).toUpperCase() + p.slice(1)}
+            {ta(p.charAt(0).toUpperCase() + p.slice(1))}
           </button>
         ))}
         {period === 'custom' && (
           <div className="flex items-center gap-2">
             <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
-            <span className="text-xs text-muted-foreground">to</span>
+            <span className="text-xs text-muted-foreground">{ta('to')}</span>
             <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} className="px-2 py-1.5 border border-border rounded-lg text-xs" />
           </div>
         )}
@@ -1002,7 +1003,7 @@ function ExpensesTab({ refreshKey }: { refreshKey: number }) {
       {loading ? (
         <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
       ) : !data ? (
-        <div className="text-muted-foreground text-sm">No data</div>
+        <div className="text-muted-foreground text-sm">{ta('No data')}</div>
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
