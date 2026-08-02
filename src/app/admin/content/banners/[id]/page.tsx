@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function EditBannerPage() {
+  const { ta } = useAdminTranslate()
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
@@ -25,7 +27,7 @@ export default function EditBannerPage() {
       .then(r => r.json())
       .then(data => {
         const banner = Array.isArray(data) ? data.find(b => b.id === id) : null
-        if (!banner) { toast.error('Banner not found'); return }
+        if (!banner) { toast.error(ta('Banner not found')); return }
         setTitle(banner.title || '')
         setImageUrl(banner.imageUrl)
         setLinkUrl(banner.linkUrl || '')
@@ -35,12 +37,12 @@ export default function EditBannerPage() {
         setStartDate(banner.startDate ? banner.startDate.split('T')[0] : '')
         setEndDate(banner.endDate ? banner.endDate.split('T')[0] : '')
       })
-      .catch(() => toast.error('Failed to load banner'))
+      .catch(() => toast.error(ta('Failed to load banner')))
       .finally(() => setLoading(false))
   }, [id])
 
   async function handleSubmit() {
-    if (!imageUrl) { toast.error('Image URL is required'); return }
+    if (!imageUrl) { toast.error(ta('Image URL is required')); return }
     setSaving(true)
     try {
       const res = await fetch(`/api/admin/content/banners/${id}`, {
@@ -52,13 +54,13 @@ export default function EditBannerPage() {
         }),
       })
       if (res.ok) {
-        toast.success('Banner updated')
+        toast.success(ta('Banner updated'))
         router.push('/admin/content/banners')
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed to update')
+        toast.error(e.error || ta('Failed to update'))
       }
-    } catch { toast.error('Failed to update banner') }
+    } catch { toast.error(ta('Failed to update banner')) }
     finally { setSaving(false) }
   }
 
@@ -66,50 +68,50 @@ export default function EditBannerPage() {
 
   return (
     <div>
-      <PageHeader title="Edit Banner" backHref="/admin/content/banners" />
+      <PageHeader title={ta('Edit Banner')} backHref="/admin/content/banners" />
       <div className="bg-white rounded-xl border border-gray-100 p-6 max-w-2xl">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image URL *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Image URL')} *</label>
             <input value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
-            {imageUrl && <img src={imageUrl} alt="Preview" className="mt-2 h-32 w-full object-cover rounded-lg" />}
+            {imageUrl && <img src={imageUrl} alt={ta('Preview')} className="mt-2 h-32 w-full object-cover rounded-lg" />}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-              <input value={title} onChange={e => setTitle(e.target.value)} placeholder="Banner title" className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Title')}</label>
+              <input value={title} onChange={e => setTitle(e.target.value)} placeholder={ta('Banner title')} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Sort Order')}</label>
               <input type="number" value={sortOrder} onChange={e => setSortOrder(Number(e.target.value))} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Link URL</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Link URL')}</label>
             <input value={linkUrl} onChange={e => setLinkUrl(e.target.value)} placeholder="https://..." className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Text Overlay</label>
-            <textarea value={textOverlay} onChange={e => setTextOverlay(e.target.value)} placeholder="Text displayed on the banner" rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Text Overlay')}</label>
+            <textarea value={textOverlay} onChange={e => setTextOverlay(e.target.value)} placeholder={ta('Text displayed on the banner')} rows={2} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Start Date')}</label>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{ta('End Date')}</label>
               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-            Active
+            {ta('Active')}
           </label>
         </div>
         <div className="flex justify-end gap-3 mt-6">
-          <button onClick={() => router.back()} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">Cancel</button>
-          <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? 'Saving...' : 'Update Banner'}</button>
+          <button onClick={() => router.back()} className="px-4 py-2 text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
+          <button onClick={handleSubmit} disabled={saving} className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50">{saving ? ta('Saving...') : ta('Update Banner')}</button>
         </div>
       </div>
     </div>

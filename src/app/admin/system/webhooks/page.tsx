@@ -5,6 +5,7 @@ import { Plus, Webhook, ExternalLink, Play, Clock, CheckCircle2, XCircle } from 
 import { toast } from 'sonner'
 import { DataTable } from '@/components/admin/DataTable'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Switch } from '@/components/ui/switch'
 
@@ -27,6 +28,7 @@ const AVAILABLE_EVENTS = [
 ]
 
 export default function AdminWebhooks() {
+  const { ta, fmtDateTime } = useAdminTranslate()
   const [webhooks, setWebhooks] = useState<WebhookItem[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -46,7 +48,7 @@ export default function AdminWebhooks() {
       const data = await res.json()
       setWebhooks(data.webhooks || [])
     } catch {
-      toast.error('Failed to load webhooks')
+      toast.error(ta('Failed to load webhooks'))
     } finally {
       setLoading(false)
     }
@@ -60,7 +62,7 @@ export default function AdminWebhooks() {
       const data = await res.json()
       setDeliveries(data.deliveries || [])
     } catch {
-      toast.error('Failed to load delivery logs')
+      toast.error(ta('Failed to load delivery logs'))
     }
   }
 
@@ -72,10 +74,10 @@ export default function AdminWebhooks() {
         body: JSON.stringify({ isActive: !webhook.isActive }),
       })
       if (!res.ok) throw new Error()
-      toast.success(`Webhook ${webhook.isActive ? 'disabled' : 'enabled'}`)
+      toast.success(ta(`Webhook ${webhook.isActive ? 'disabled' : 'enabled'}`))
       fetchWebhooks()
     } catch {
-      toast.error('Failed to toggle webhook')
+      toast.error(ta('Failed to toggle webhook'))
     }
   }
 
@@ -85,12 +87,12 @@ export default function AdminWebhooks() {
       const res = await fetch(`/api/admin/system/webhooks/${webhook.id}/test`, { method: 'POST' })
       const data = await res.json()
       if (data.success) {
-        toast.success(`Test delivered in ${data.duration}ms`)
+        toast.success(ta(`Test delivered in ${data.duration}ms`))
       } else {
-        toast.error(`Delivery failed: ${data.error || data.status}`)
+        toast.error(ta(`Delivery failed: ${data.error || data.status}`))
       }
     } catch {
-      toast.error('Test request failed')
+      toast.error(ta('Test request failed'))
     } finally {
       setTesting(null)
     }
@@ -98,7 +100,7 @@ export default function AdminWebhooks() {
 
   async function saveWebhook() {
     if (!form.name || !form.url || form.events.length === 0) {
-      toast.error('Name, URL, and at least one event are required')
+      toast.error(ta('Name, URL, and at least one event are required'))
       return
     }
     try {
@@ -109,19 +111,19 @@ export default function AdminWebhooks() {
           method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         })
         if (!res.ok) throw new Error()
-        toast.success('Webhook updated')
+        toast.success(ta('Webhook updated'))
       } else {
         const res = await fetch('/api/admin/system/webhooks', {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
         })
-        if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Failed to create') }
-        toast.success('Webhook created')
+        if (!res.ok) { const err = await res.json(); throw new Error(err.error || ta('Failed to create')) }
+        toast.success(ta('Webhook created'))
       }
       setShowModal(false); setEditing(null)
       setForm({ name: '', url: '', events: [], isActive: true, secret: '' })
       fetchWebhooks()
     } catch (err: any) {
-      toast.error(err.message || 'Failed to save')
+      toast.error(err.message || ta('Failed to save'))
     }
   }
 
@@ -138,12 +140,12 @@ export default function AdminWebhooks() {
   }
 
   async function deleteWebhook(wh: WebhookItem) {
-    if (!confirm(`Delete webhook "${wh.name}"?`)) return
+    if (!confirm(ta(`Delete webhook "${wh.name}"?`))) return
     try {
       await fetch(`/api/admin/system/webhooks/${wh.id}`, { method: 'DELETE' })
-      toast.success('Webhook deleted')
+      toast.success(ta('Webhook deleted'))
       fetchWebhooks()
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
   }
 
   function toggleEvent(event: string) {
@@ -161,7 +163,7 @@ export default function AdminWebhooks() {
   const columns: ColumnDef<WebhookItem>[] = [
     {
       accessorKey: 'name',
-      header: 'Name',
+      header: ta('Name'),
       cell: ({ row }) => <span className="font-medium text-navy">{row.original.name}</span>,
     },
     {
@@ -175,7 +177,7 @@ export default function AdminWebhooks() {
     },
     {
       accessorKey: 'events',
-      header: 'Events',
+      header: ta('Events'),
       cell: ({ row }) => {
         const events: string[] = JSON.parse(row.original.events || '[]')
         return (
@@ -190,14 +192,14 @@ export default function AdminWebhooks() {
     },
     {
       accessorKey: 'isActive',
-      header: 'Active',
+      header: ta('Active'),
       cell: ({ row }) => (
         <Switch checked={row.original.isActive} onCheckedChange={() => toggleWebhook(row.original)} />
       ),
     },
     {
       accessorKey: '_count.deliveries',
-      header: 'Deliveries',
+      header: ta('Deliveries'),
       cell: ({ row }) => (
         <button
           onClick={() => handleViewDeliveries(row.original)}
@@ -209,10 +211,10 @@ export default function AdminWebhooks() {
     },
     {
       accessorKey: 'lastDeliveryAt',
-      header: 'Last Delivery',
+      header: ta('Last Delivery'),
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground">
-          {row.original.lastDeliveryAt ? new Date(row.original.lastDeliveryAt).toLocaleString() : 'Never'}
+          {row.original.lastDeliveryAt ? fmtDateTime(row.original.lastDeliveryAt) : ta('Never')}
         </span>
       ),
     },
@@ -225,11 +227,11 @@ export default function AdminWebhooks() {
             onClick={() => testWebhook(row.original)}
             disabled={testing === row.original.id}
             className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-navy transition-colors disabled:opacity-50"
-            title="Test delivery"
+            title={ta('Test delivery')}
           >
             <Play className={`h-4 w-4 ${testing === row.original.id ? 'animate-spin' : ''}`} />
           </button>
-          <button onClick={() => openEdit(row.original)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-navy" title="Edit">
+          <button onClick={() => openEdit(row.original)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-navy" title={ta('Edit')}>
             <ExternalLink className="h-4 w-4" />
           </button>
         </div>
@@ -240,11 +242,11 @@ export default function AdminWebhooks() {
   return (
     <div>
       <PageHeader
-        title="Webhooks"
-        subtitle="Configure outbound webhook notifications"
+        title={ta('Webhooks')}
+        subtitle={ta('Configure outbound webhook notifications')}
         actions={
           <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-            <Plus className="h-4 w-4" /> New Webhook
+            <Plus className="h-4 w-4" /> {ta('New Webhook')}
           </button>
         }
       />
@@ -254,33 +256,33 @@ export default function AdminWebhooks() {
         data={webhooks}
         keyExtractor={(w) => w.id}
         loading={loading}
-        emptyTitle="No webhooks configured"
-        emptyDescription="Create a webhook to receive event notifications"
-        emptyAction={{ label: 'Create Webhook', onClick: openCreate }}
+        emptyTitle={ta('No webhooks configured')}
+        emptyDescription={ta('Create a webhook to receive event notifications')}
+        emptyAction={{ label: ta('Create Webhook'), onClick: openCreate }}
       />
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 mx-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-semibold text-navy mb-4">{editing ? 'Edit Webhook' : 'New Webhook'}</h2>
+            <h2 className="text-lg font-semibold text-navy mb-4">{editing ? ta('Edit Webhook') : ta('New Webhook')}</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Name')}</label>
                 <input type="text" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder="e.g. Slack Notifications" />
+                  className="w-full px-3 py-2 rounded-lg border border-border text-sm" placeholder={ta('e.g. Slack Notifications')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Endpoint URL</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Endpoint URL')}</label>
                 <input type="url" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
                   className="w-full px-3 py-2 rounded-lg border border-border text-sm font-mono" placeholder="https://hooks.example.com/..." />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Secret (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{ta('Secret (optional)')}</label>
                 <input type="text" value={form.secret} onChange={e => setForm(f => ({ ...f, secret: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-border text-sm font-mono" placeholder="HMAC signing secret" />
+                  className="w-full px-3 py-2 rounded-lg border border-border text-sm font-mono" placeholder={ta('HMAC signing secret')} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Events</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{ta('Events')}</label>
                 <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto">
                   {AVAILABLE_EVENTS.map(event => (
                     <label key={event} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -297,11 +299,11 @@ export default function AdminWebhooks() {
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => { setShowModal(false); setEditing(null) }} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+              <button onClick={() => { setShowModal(false); setEditing(null) }} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">{ta('Cancel')}</button>
               <button onClick={saveWebhook}
                 disabled={!form.name || !form.url || form.events.length === 0}
                 className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 disabled:opacity-50"
-              >{editing ? 'Update' : 'Create'}</button>
+              >{editing ? ta('Update') : ta('Create')}</button>
             </div>
           </div>
         </div>
@@ -311,11 +313,11 @@ export default function AdminWebhooks() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowDeliveryLogs(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl p-6 mx-4 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-navy">Delivery Logs</h2>
+              <h2 className="text-lg font-semibold text-navy">{ta('Delivery Logs')}</h2>
               <button onClick={() => setShowDeliveryLogs(false)} className="text-gray-400 hover:text-gray-600">&times;</button>
             </div>
             {deliveries.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No deliveries recorded yet.</p>
+              <p className="text-sm text-muted-foreground">{ta('No deliveries recorded yet.')}</p>
             ) : (
               <div className="space-y-3">
                 {deliveries.map((d: any) => (
@@ -330,7 +332,7 @@ export default function AdminWebhooks() {
                         <span className="text-sm font-medium">{d.event}</span>
                         <span className="text-xs text-muted-foreground">{d.webhook?.name || d.webhookId}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">{new Date(d.createdAt).toLocaleString()}</span>
+                      <span className="text-xs text-muted-foreground">{fmtDateTime(d.createdAt)}</span>
                     </div>
                     {d.response && (
                       <pre className="text-xs bg-gray-50 p-2 rounded overflow-x-auto max-h-[100px]">{d.response}</pre>

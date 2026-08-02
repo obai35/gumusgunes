@@ -8,12 +8,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Mail, Activity, FileText, MessageSquareText, Calendar } from 'lucide-react'
-
-function formatCurrency(amount: number): string {
-  return '$' + amount.toFixed(2)
-}
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function CustomerDetailPage() {
+  const { ta, fmtCurrency, fmtDate, fmtDateTime } = useAdminTranslate()
   const { id } = useParams()
   const [customer, setCustomer] = useState<any>(null)
   const [notes, setNotes] = useState<any[]>([])
@@ -36,13 +34,13 @@ export default function CustomerDetailPage() {
         const notesData = await notesRes.json()
         const activityData = await activityRes.json()
         const emailData = await emailRes.json()
-        if (!custRes.ok) { toast.error(custData.error || 'Failed to load'); return }
+        if (!custRes.ok) { toast.error(custData.error || ta('Failed to load')); return }
         setCustomer(custData.customer)
         setNotes(Array.isArray(notesData.notes) ? notesData.notes : [])
         setActivityLogs(Array.isArray(activityData.logs) ? activityData.logs : [])
         setEmailLogs(Array.isArray(emailData.emailLogs) ? emailData.emailLogs : [])
       } catch {
-        toast.error('Failed to load customer details')
+        toast.error(ta('Failed to load customer details'))
       } finally {
         setLoading(false)
       }
@@ -60,19 +58,19 @@ export default function CustomerDetailPage() {
         body: JSON.stringify({ userId: id, note: newNote.trim() }),
       })
       const data = await res.json()
-      if (!res.ok) { toast.error(data.error || 'Failed to add note'); return }
+      if (!res.ok) { toast.error(data.error || ta('Failed to add note')); return }
       setNotes(prev => [data.note, ...prev])
       setNewNote('')
-      toast.success('Note added')
+      toast.success(ta('Note added'))
     } catch {
-      toast.error('Failed to add note')
+      toast.error(ta('Failed to add note'))
     } finally {
       setSavingNote(false)
     }
   }
 
-  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>
-  if (!customer) return <div className="p-8 text-muted-foreground">Customer not found</div>
+  if (loading) return <div className="p-8 text-muted-foreground">{ta('Loading...')}</div>
+  if (!customer) return <div className="p-8 text-muted-foreground">{ta('Customer not found')}</div>
 
   const totalSpend = customer.totalSpend ?? 0
   const orderCount = customer.orders?.length ?? 0
@@ -81,14 +79,14 @@ export default function CustomerDetailPage() {
     <div>
       <PageHeader
         title={customer.name || customer.email}
-        subtitle={`Customer since ${new Date(customer.createdAt).toLocaleDateString()}`}
+        subtitle={ta(`Customer since ${fmtDate(customer.createdAt)}`)}
         backHref="/admin/customers"
       />
 
       <div className="grid grid-cols-4 gap-4 mb-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Orders</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Total Orders')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold text-navy">{orderCount}</p>
@@ -96,15 +94,15 @@ export default function CustomerDetailPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Spend</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Total Spend')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-navy">{formatCurrency(totalSpend)}</p>
+            <p className="text-2xl font-semibold text-navy">{fmtCurrency(totalSpend)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Loyalty Points</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Loyalty Points')}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold text-navy">{customer.loyaltyPoints ?? 0}</p>
@@ -112,37 +110,37 @@ export default function CustomerDetailPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Loyalty Tier</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{ta('Loyalty Tier')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-navy">{customer.loyaltyTier?.name || 'None'}</p>
+            <p className="text-2xl font-semibold text-navy">{customer.loyaltyTier?.name || ta('None')}</p>
           </CardContent>
         </Card>
       </div>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Contact Info</CardTitle>
+          <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider">{ta('Contact Info')}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-1">
-          <p><span className="font-medium">Email:</span> {customer.email}</p>
-          <p><span className="font-medium">Phone:</span> {customer.phone || '—'}</p>
+          <p><span className="font-medium">{ta('Email:')}</span> {customer.email}</p>
+          <p><span className="font-medium">{ta('Phone:')}</span> {customer.phone || '—'}</p>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="orders">
         <TabsList>
           <TabsTrigger value="orders" className="flex items-center gap-1.5">
-            <FileText className="h-4 w-4" /> Orders
+            <FileText className="h-4 w-4" /> {ta('Orders')}
           </TabsTrigger>
           <TabsTrigger value="notes" className="flex items-center gap-1.5">
-            <MessageSquareText className="h-4 w-4" /> Notes ({notes.length})
+            <MessageSquareText className="h-4 w-4" /> {ta('Notes')} ({notes.length})
           </TabsTrigger>
           <TabsTrigger value="activity" className="flex items-center gap-1.5">
-            <Activity className="h-4 w-4" /> Activity
+            <Activity className="h-4 w-4" /> {ta('Activity')}
           </TabsTrigger>
           <TabsTrigger value="email" className="flex items-center gap-1.5">
-            <Mail className="h-4 w-4" /> Email History
+            <Mail className="h-4 w-4" /> {ta('Email History')}
           </TabsTrigger>
         </TabsList>
 
@@ -152,23 +150,23 @@ export default function CustomerDetailPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-gray-50/50 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <th className="px-4 py-3">Order #</th>
-                    <th className="px-4 py-3">Date</th>
-                    <th className="px-4 py-3">Items</th>
-                    <th className="px-4 py-3">Total</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Branch</th>
+                    <th className="px-4 py-3">{ta('Order #')}</th>
+                    <th className="px-4 py-3">{ta('Date')}</th>
+                    <th className="px-4 py-3">{ta('Items')}</th>
+                    <th className="px-4 py-3">{ta('Total')}</th>
+                    <th className="px-4 py-3">{ta('Status')}</th>
+                    <th className="px-4 py-3">{ta('Branch')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {customer.orders.map((o: any) => (
                     <tr key={o.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-navy">{o.orderNumber}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{fmtDate(o.createdAt)}</td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {o.items?.map((i: any) => `${i.product?.name || 'Product'} x${i.quantity}`).join(', ') || '—'}
+                        {o.items?.map((i: any) => `${i.product?.name || ta('Product')} x${i.quantity}`).join(', ') || '—'}
                       </td>
-                      <td className="px-4 py-3 font-medium text-navy">{formatCurrency(o.totalAmount)}</td>
+                      <td className="px-4 py-3 font-medium text-navy">{fmtCurrency(o.totalAmount)}</td>
                       <td className="px-4 py-3">
                         <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                           o.status === 'delivered' ? 'bg-green-100 text-green-700' :
@@ -184,7 +182,7 @@ export default function CustomerDetailPage() {
               </table>
             </div>
           ) : (
-            <Card><CardContent className="p-6 text-center text-muted-foreground">No orders yet</CardContent></Card>
+            <Card><CardContent className="p-6 text-center text-muted-foreground">{ta('No orders yet')}</CardContent></Card>
           )}
         </TabsContent>
 
@@ -195,7 +193,7 @@ export default function CustomerDetailPage() {
                 <textarea
                   value={newNote}
                   onChange={e => setNewNote(e.target.value)}
-                  placeholder="Add a note about this customer..."
+                  placeholder={ta('Add a note about this customer...')}
                   className="flex-1 px-3 py-2 rounded-lg border border-border text-sm resize-none"
                   rows={2}
                 />
@@ -204,14 +202,14 @@ export default function CustomerDetailPage() {
                   disabled={savingNote || !newNote.trim()}
                   className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors disabled:opacity-50 self-end"
                 >
-                  {savingNote ? 'Saving...' : 'Add Note'}
+                  {savingNote ? ta('Saving...') : ta('Add Note')}
                 </button>
               </div>
             </CardContent>
           </Card>
 
           {notes.length === 0 ? (
-            <Card><CardContent className="p-6 text-center text-muted-foreground">No notes yet</CardContent></Card>
+            <Card><CardContent className="p-6 text-center text-muted-foreground">{ta('No notes yet')}</CardContent></Card>
           ) : (
             notes.map((n: any) => (
               <Card key={n.id}>
@@ -220,7 +218,7 @@ export default function CustomerDetailPage() {
                     <p className="text-sm whitespace-pre-wrap">{n.note}</p>
                     <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {new Date(n.createdAt).toLocaleDateString()}
+                      {fmtDate(n.createdAt)}
                     </span>
                   </div>
                 </CardContent>
@@ -231,7 +229,7 @@ export default function CustomerDetailPage() {
 
         <TabsContent value="activity" className="mt-4">
           {activityLogs.length === 0 ? (
-            <Card><CardContent className="p-6 text-center text-muted-foreground">No activity recorded yet</CardContent></Card>
+            <Card><CardContent className="p-6 text-center text-muted-foreground">{ta('No activity recorded yet')}</CardContent></Card>
           ) : (
             <div className="space-y-2">
               {activityLogs.map((log: any) => (
@@ -242,8 +240,8 @@ export default function CustomerDetailPage() {
                       <p className="text-sm font-medium capitalize">{log.action}</p>
                       {log.details && <p className="text-xs text-muted-foreground mt-0.5">{log.details}</p>}
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                        <span>{new Date(log.createdAt).toLocaleString()}</span>
-                        {log.ip && <span>· IP: {log.ip}</span>}
+                        <span>{fmtDateTime(log.createdAt)}</span>
+                        {log.ip && <span>· {ta('IP')}: {log.ip}</span>}
                       </div>
                     </div>
                   </CardContent>
@@ -255,16 +253,16 @@ export default function CustomerDetailPage() {
 
         <TabsContent value="email" className="mt-4">
           {emailLogs.length === 0 ? (
-            <Card><CardContent className="p-6 text-center text-muted-foreground">No emails sent yet</CardContent></Card>
+            <Card><CardContent className="p-6 text-center text-muted-foreground">{ta('No emails sent yet')}</CardContent></Card>
           ) : (
             <div className="bg-white rounded-xl border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-gray-50/50 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Subject</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Sent At</th>
+                    <th className="px-4 py-3">{ta('Type')}</th>
+                    <th className="px-4 py-3">{ta('Subject')}</th>
+                    <th className="px-4 py-3">{ta('Status')}</th>
+                    <th className="px-4 py-3">{ta('Sent At')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
@@ -281,7 +279,7 @@ export default function CustomerDetailPage() {
                           'bg-gray-100 text-gray-700'
                         }`}>{log.status}</span>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{new Date(log.sentAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{fmtDateTime(log.sentAt)}</td>
                     </tr>
                   ))}
                 </tbody>

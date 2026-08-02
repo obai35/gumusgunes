@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Trash2, Plus, Star } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 interface Testimonial {
   id: string
@@ -19,6 +20,7 @@ interface Testimonial {
 
 export function TestimonialsPanel() {
   const { settings, updateSetting } = useEditor()
+  const { ta } = useAdminTranslate()
   let raw: Testimonial[] = []
   try { if (settings.testimonials) raw = JSON.parse(settings.testimonials) } catch {}
   const [testimonials, setTestimonials] = useState<Testimonial[]>(raw)
@@ -47,17 +49,17 @@ export function TestimonialsPanel() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">Customer testimonials displayed on the homepage.</p>
+      <p className="text-sm text-gray-500">{ta('Customer testimonials displayed on the homepage.')}</p>
       {testimonials.map((t) => (
         <div key={t.id} className="border rounded-lg p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">{t.name || 'New Testimonial'}</span>
+            <span className="text-sm font-medium">{t.name || ta('New Testimonial')}</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => toggle(t.id)}
                 className={`text-xs px-2 py-0.5 rounded ${t.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
               >
-                {t.active ? 'Active' : 'Hidden'}
+                {t.active ? ta('Active') : ta('Hidden')}
               </button>
               <button onClick={() => remove(t.id)} className="text-red-500">
                 <Trash2 className="w-4 h-4" />
@@ -66,24 +68,24 @@ export function TestimonialsPanel() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-gray-500">Name</label>
+              <label className="text-xs text-gray-500">{ta('Name')}</label>
               <Input value={t.name} onChange={e => update(t.id, 'name', e.target.value)} />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Role</label>
+              <label className="text-xs text-gray-500">{ta('Role')}</label>
               <Input value={t.role} onChange={e => update(t.id, 'role', e.target.value)} />
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-500">Photo URL</label>
+            <label className="text-xs text-gray-500">{ta('Photo URL')}</label>
             <Input value={t.photo} onChange={e => update(t.id, 'photo', e.target.value)} />
           </div>
           <div>
-            <label className="text-xs text-gray-500">Quote</label>
+            <label className="text-xs text-gray-500">{ta('Quote')}</label>
             <Textarea rows={3} value={t.quote} onChange={e => update(t.id, 'quote', e.target.value)} />
           </div>
           <div>
-            <label className="text-xs text-gray-500">Rating</label>
+            <label className="text-xs text-gray-500">{ta('Rating')}</label>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map(n => (
                 <button key={n} onClick={() => update(t.id, 'rating', n)}>
@@ -95,7 +97,7 @@ export function TestimonialsPanel() {
         </div>
       ))}
       <Button onClick={add} variant="outline" size="sm" className="w-full">
-        <Plus className="w-4 h-4 mr-1" /> Add Testimonial
+        <Plus className="w-4 h-4 mr-1" /> {ta('Add Testimonial')}
       </Button>
     </div>
   )

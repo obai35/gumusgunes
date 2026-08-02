@@ -210,10 +210,10 @@ export default function EditPost() {
             onChange={e => setAiTone(e.target.value as ContentTone)}
             className="p-2.5 rounded-xl bg-background border border-border text-sm"
           >
-            <option value="luxury">Luxury</option>
-            <option value="casual">Casual</option>
-            <option value="promotional">Promotional</option>
-            <option value="educational">Educational</option>
+            <option value="luxury">{ta('Luxury')}</option>
+            <option value="casual">{ta('Casual')}</option>
+            <option value="promotional">{ta('Promotional')}</option>
+            <option value="educational">{ta('Educational')}</option>
           </select>
           <button
             onClick={generateWithAI}
