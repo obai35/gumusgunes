@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { DollarSign, TrendingUp, Package, List, History, Plus, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type Stats = {
   totalProducts: number
@@ -27,6 +28,7 @@ type CostEntry = {
 }
 
 export default function PricingPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [stats, setStats] = useState<Stats | null>(null)
   const [recent, setRecent] = useState<CostEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,22 +40,22 @@ export default function PricingPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-center text-muted-foreground">{ta('Loading...')}</div>
 
   const cards = [
-    { label: 'Active Price Lists', value: stats?.activePriceLists ?? 0, icon: List, href: '/admin/pricing/lists' },
-    { label: 'Products with Costs', value: stats?.productsWithCost ?? 0, icon: Package, href: '/admin/pricing/lists' },
-    { label: 'Avg Margin', value: `${(stats?.avgMargin ?? 0).toFixed(1)}%`, icon: TrendingUp, color: 'text-green-500' },
-    { label: 'Stock Value (Cost)', value: (stats?.totalStockValue ?? 0).toLocaleString(), icon: DollarSign, href: '/admin/pricing/lists' },
-    { label: 'Cost History Entries', value: stats?.costHistoryEntries ?? 0, icon: History, href: '/admin/pricing/lists' },
+    { label: ta('Active Price Lists'), value: fmtNum(stats?.activePriceLists ?? 0), icon: List, href: '/admin/pricing/lists' },
+    { label: ta('Products with Costs'), value: fmtNum(stats?.productsWithCost ?? 0), icon: Package, href: '/admin/pricing/lists' },
+    { label: ta('Avg Margin'), value: `${(stats?.avgMargin ?? 0).toFixed(1)}%`, icon: TrendingUp, color: 'text-green-500' },
+    { label: ta('Stock Value (Cost)'), value: fmtNum(stats?.totalStockValue ?? 0), icon: DollarSign, href: '/admin/pricing/lists' },
+    { label: ta('Cost History Entries'), value: fmtNum(stats?.costHistoryEntries ?? 0), icon: History, href: '/admin/pricing/lists' },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Pricing & Costing</h1>
+        <h1 className="text-2xl font-bold">{ta('Pricing & Costing')}</h1>
         <Link href="/admin/pricing/lists" className="flex items-center gap-1 text-sm text-primary hover:underline">
-          <Plus className="h-4 w-4" /> Manage Price Lists
+          <Plus className="h-4 w-4" /> {ta('Manage Price Lists')}
         </Link>
       </div>
 
@@ -81,8 +83,8 @@ export default function PricingPage() {
 
       <div className="rounded-lg border">
         <div className="border-b px-4 py-3 font-semibold flex items-center gap-2 justify-between">
-          <span className="flex items-center gap-2"><History className="h-4 w-4" /> Recent Cost History</span>
-          <Link href="/admin/pricing/cost-history" className="text-xs font-normal text-primary hover:underline">View All</Link>
+          <span className="flex items-center gap-2"><History className="h-4 w-4" /> {ta('Recent Cost History')}</span>
+          <Link href="/admin/pricing/cost-history" className="text-xs font-normal text-primary hover:underline">{ta('View All')}</Link>
         </div>
         <div className="divide-y">
           {recent.map((e) => (
@@ -97,12 +99,12 @@ export default function PricingPage() {
                 }`}>{e.type}</span>
               </div>
               <div className="text-right">
-                <p className="font-medium">{e.unitCost.toFixed(2)} EGP / unit</p>
-                <p className="text-xs text-muted-foreground">{format(new Date(e.createdAt), 'MMM d, HH:mm')}</p>
+                <p className="font-medium">{fmtCurrency(e.unitCost)} / {ta('unit')}</p>
+                <p className="text-xs text-muted-foreground">{fmtDateTime(e.createdAt)}</p>
               </div>
             </div>
           ))}
-          {recent.length === 0 && <p className="px-4 py-6 text-center text-muted-foreground text-sm">No cost history yet</p>}
+          {recent.length === 0 && <p className="px-4 py-6 text-center text-muted-foreground text-sm">{ta('No cost history yet')}</p>}
         </div>
       </div>
     </div>

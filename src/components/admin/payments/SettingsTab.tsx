@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import MethodFormModal from './MethodFormModal'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type PaymentMethod = {
   id: string; code: string; name: string; nameAr: string | null
@@ -13,6 +14,7 @@ export default function SettingsTab() {
   const [methods, setMethods] = useState<PaymentMethod[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<PaymentMethod | null>(null)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   useEffect(() => { fetchMethods() }, [])
 
@@ -40,20 +42,20 @@ export default function SettingsTab() {
     fetchMethods()
   }
 
-  if (loading) return <div className="text-muted-foreground text-sm">Loading...</div>
+  if (loading) return <div className="text-muted-foreground text-sm">{ta('Loading...')}</div>
 
   return (
     <div>
-      <p className="text-sm text-muted-foreground mb-4">Configure which payment methods are available and their settings.</p>
+      <p className="text-sm text-muted-foreground mb-4">{ta('Configure which payment methods are available and their settings.')}</p>
       <div className="bg-white rounded-xl border border-border overflow-hidden">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-gray-50/50">
-              <th className="text-left px-4 py-3 text-muted-foreground font-medium">Order</th>
-              <th className="text-left px-4 py-3 text-muted-foreground font-medium">Method</th>
-              <th className="text-left px-4 py-3 text-muted-foreground font-medium">Code</th>
-              <th className="text-left px-4 py-3 text-muted-foreground font-medium">Active</th>
-              <th className="text-right px-4 py-3 text-muted-foreground font-medium">Actions</th>
+              <th className="text-left px-4 py-3 text-muted-foreground font-medium">{ta('Order')}</th>
+              <th className="text-left px-4 py-3 text-muted-foreground font-medium">{ta('Method')}</th>
+              <th className="text-left px-4 py-3 text-muted-foreground font-medium">{ta('Code')}</th>
+              <th className="text-left px-4 py-3 text-muted-foreground font-medium">{ta('Active')}</th>
+              <th className="text-right px-4 py-3 text-muted-foreground font-medium">{ta('Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -64,11 +66,11 @@ export default function SettingsTab() {
                 <td className="px-4 py-3 text-muted-foreground font-mono text-xs">{m.code}</td>
                 <td className="px-4 py-3">
                   <button onClick={() => toggleActive(m)} className={`px-2 py-0.5 rounded text-xs font-medium ${m.isActive ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                    {m.isActive ? 'Active' : 'Inactive'}
+                    {m.isActive ? ta('Active') : ta('Inactive')}
                   </button>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => setEditing(m)} className="text-xs text-gold hover:underline">Configure</button>
+                  <button onClick={() => setEditing(m)} className="text-xs text-gold hover:underline">{ta('Configure')}</button>
                 </td>
               </tr>
             ))}

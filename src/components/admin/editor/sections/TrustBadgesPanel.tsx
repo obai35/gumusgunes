@@ -5,6 +5,7 @@ import { useEditor } from '../SectionPanel'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Trash2, Plus, GripVertical } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 interface TrustBadge {
   id: string
@@ -23,6 +24,7 @@ const defaultBadges: TrustBadge[] = [
 
 export function TrustBadgesPanel() {
   const { settings, updateSetting } = useEditor()
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   let raw: TrustBadge[] = defaultBadges
   try { if (settings.trustBadges) raw = JSON.parse(settings.trustBadges) } catch {}
   const [badges, setBadges] = useState<TrustBadge[]>(raw)
@@ -51,17 +53,17 @@ export function TrustBadgesPanel() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">Trust badges displayed on the homepage and checkout.</p>
+      <p className="text-sm text-gray-500">{ta('Trust badges displayed on the homepage and checkout.')}</p>
       {badges.map((badge, idx) => (
         <div key={badge.id} className="border rounded-lg p-3 space-y-2">
           <div className="flex items-center gap-2">
             <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
-            <span className="text-sm font-medium">Badge {idx + 1}</span>
+            <span className="text-sm font-medium">{ta(`Badge ${idx + 1}`)}</span>
             <button
               onClick={() => toggle(badge.id)}
               className={`ml-auto text-xs px-2 py-0.5 rounded ${badge.active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
             >
-              {badge.active ? 'Active' : 'Hidden'}
+              {badge.active ? ta('Active') : ta('Hidden')}
             </button>
             <button onClick={() => remove(badge.id)} className="text-red-500 hover:text-red-700">
               <Trash2 className="w-4 h-4" />
@@ -69,22 +71,22 @@ export function TrustBadgesPanel() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="text-xs text-gray-500">Icon (emoji)</label>
+              <label className="text-xs text-gray-500">{ta('Icon (emoji)')}</label>
               <Input value={badge.icon} onChange={e => update(badge.id, 'icon', e.target.value)} />
             </div>
             <div>
-              <label className="text-xs text-gray-500">Label</label>
+              <label className="text-xs text-gray-500">{ta('Label')}</label>
               <Input value={badge.label} onChange={e => update(badge.id, 'label', e.target.value)} />
             </div>
             <div className="col-span-2">
-              <label className="text-xs text-gray-500">Description</label>
+              <label className="text-xs text-gray-500">{ta('Description')}</label>
               <Input value={badge.desc} onChange={e => update(badge.id, 'desc', e.target.value)} />
             </div>
           </div>
         </div>
       ))}
       <Button onClick={add} variant="outline" size="sm" className="w-full">
-        <Plus className="w-4 h-4 mr-1" /> Add Badge
+        <Plus className="w-4 h-4 mr-1" /> {ta('Add Badge')}
       </Button>
     </div>
   )

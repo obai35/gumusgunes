@@ -104,14 +104,14 @@ export default function MethodFormModal({ method, onSave, onClose }: Props) {
               ) : f.type === 'checkbox' ? (
                 <label className="flex items-center gap-2 text-sm">
                   <input type="checkbox" checked={!!config[f.key]} onChange={e => setConfigValue(f.key, e.target.checked)} className="accent-gold" />
-                  {config[f.key] ? 'Enabled' : 'Disabled'}
+                  {config[f.key] ? ta('Enabled') : ta('Disabled')}
                 </label>
               ) : (
                 <input value={config[f.key] || ''} onChange={e => setConfigValue(f.key, e.target.value)} type={f.type} className="w-full px-3 py-2 border border-border rounded-lg text-sm" />
               )}
             </div>
           ))}
-          <button type="submit" className="w-full px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium">Save</button>
+          <button type="submit" className="w-full px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium">{ta('Save')}</button>
         </form>
       </div>
     </div>

@@ -12,6 +12,7 @@ import { ExportButton } from '@/components/admin/ExportButton'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { useDebounce } from '@/hooks/useDebounce'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import type { ColumnDef } from '@tanstack/react-table'
 
 const statusOptions = [
@@ -31,6 +32,7 @@ const paymentOptions = [
 ]
 
 export default function AdminOrders() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [orders, setOrders] = useState<any[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -66,7 +68,7 @@ export default function AdminOrders() {
           setTotal(d.total || 0)
         }
       })
-      .catch(() => toast.error('Failed to load orders'))
+      .catch(() => toast.error(ta('Failed to load orders')))
       .finally(() => setLoading(false))
   }, [debouncedSearch, statusFilter, paymentFilter, dateFrom, dateTo, page, pageSize])
 
@@ -80,14 +82,14 @@ export default function AdminOrders() {
       })
       const data = await res.json()
       if (data.ok) {
-        toast.success(`Updated ${data.updated} orders to ${status}`)
+        toast.success(ta(`Updated ${data.updated} orders to ${status}`))
         setSelectedIds(new Set())
         setOrders(prev => prev.map(o => selectedIds.has(o.id) ? { ...o, status } : o))
       } else {
-        toast.error(data.error || 'Failed')
+        toast.error(data.error || ta('Failed'))
       }
     } catch {
-      toast.error('Failed to update orders')
+      toast.error(ta('Failed to update orders'))
     } finally {
       setBulkUpdating(false)
     }
@@ -98,7 +100,7 @@ export default function AdminOrders() {
   const columns: ColumnDef<any>[] = [
     {
       accessorKey: 'orderNumber',
-      header: 'Order',
+      header: ta('Order'),
       cell: ({ row }) => (
         <div>
           <span className="font-medium text-navy">{row.original.orderNumber}</span>
@@ -110,7 +112,7 @@ export default function AdminOrders() {
     },
     {
       accessorKey: 'fullName',
-      header: 'Customer',
+      header: ta('Customer'),
       cell: ({ row }) => (
         <div>
           <span className="text-muted-foreground">{row.original.fullName}</span>
@@ -121,25 +123,25 @@ export default function AdminOrders() {
     },
     {
       accessorKey: 'createdAt',
-      header: 'Date',
+      header: ta('Date'),
       enableSorting: true,
-      cell: ({ row }) => <span className="text-muted-foreground">{new Date(row.original.createdAt).toLocaleDateString()}</span>,
+      cell: ({ row }) => <span className="text-muted-foreground">{fmtDate(row.original.createdAt)}</span>,
     },
     {
       accessorKey: 'totalAmount',
-      header: 'Total',
+      header: ta('Total'),
       enableSorting: true,
-      cell: ({ row }) => <span className="font-medium text-navy">${row.original.totalAmount.toFixed(2)}</span>,
+      cell: ({ row }) => <span className="font-medium text-navy">{fmtCurrency(row.original.totalAmount)}</span>,
     },
     {
       accessorKey: 'status',
-      header: 'Status',
+      header: ta('Status'),
       enableSorting: true,
       cell: ({ row }) => <StatusBadge status={row.original.status} />,
     },
     {
       accessorKey: 'paymentStatus',
-      header: 'Payment',
+      header: ta('Payment'),
       cell: ({ row }) => <StatusBadge status={row.original.paymentStatus} />,
     },
     {
@@ -151,7 +153,7 @@ export default function AdminOrders() {
             href={`/admin/orders/${row.original.id}`}
             className="text-gold hover:text-gold/80 inline-flex items-center gap-1 text-xs font-medium"
           >
-            View <ArrowRight className="h-3 w-3" />
+            {ta('View')} <ArrowRight className="h-3 w-3" />
           </Link>
         </div>
       ),
@@ -160,7 +162,7 @@ export default function AdminOrders() {
 
   return (
     <div>
-      <PageHeader title="Orders" />
+      <PageHeader title={ta('Orders')} />
 
       <FilterBar
         status={statusFilter}
@@ -178,21 +180,21 @@ export default function AdminOrders() {
           onChange={e => { setPaymentFilter(e.target.value); setPage(1) }}
           className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
         >
-          <option value="">All Payments</option>
+          <option value="">{ta('All Payments')}</option>
           {paymentOptions.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>{ta(o.label)}</option>
           ))}
         </select>
         <ExportButton
           filename="orders-export"
           columns={[
-            { header: 'Order', key: 'orderNumber' },
-            { header: 'Customer', key: 'fullName' },
-            { header: 'Email', key: 'email' },
-            { header: 'Date', key: 'createdAt' },
-            { header: 'Total', key: 'totalAmount' },
-            { header: 'Status', key: 'status' },
-            { header: 'Payment', key: 'paymentStatus' },
+            { header: ta('Order'), key: 'orderNumber' },
+            { header: ta('Customer'), key: 'fullName' },
+            { header: ta('Email'), key: 'email' },
+            { header: ta('Date'), key: 'createdAt' },
+            { header: ta('Total'), key: 'totalAmount' },
+            { header: ta('Status'), key: 'status' },
+            { header: ta('Payment'), key: 'paymentStatus' },
           ]}
           data={orders}
         />
@@ -207,8 +209,8 @@ export default function AdminOrders() {
         responsiveCards
         selectedIds={selectedIds}
         onSelectionChange={setSelectedIds}
-        emptyTitle="No orders found"
-        emptyDescription="Try adjusting your search or filters"
+        emptyTitle={ta('No orders found')}
+        emptyDescription={ta('Try adjusting your search or filters')}
       />
 
       <Pagination
@@ -224,10 +226,10 @@ export default function AdminOrders() {
         selectedCount={selectedIds.size}
         onClear={() => setSelectedIds(new Set())}
         actions={[
-          { label: 'Mark Processing', onClick: () => handleBulkStatus('processing') },
-          { label: 'Mark Shipped', onClick: () => handleBulkStatus('shipped') },
-          { label: 'Mark Delivered', onClick: () => handleBulkStatus('delivered') },
-          { label: 'Mark Cancelled', onClick: () => handleBulkStatus('cancelled'), variant: 'destructive' },
+          { label: ta('Mark Processing'), onClick: () => handleBulkStatus('processing') },
+          { label: ta('Mark Shipped'), onClick: () => handleBulkStatus('shipped') },
+          { label: ta('Mark Delivered'), onClick: () => handleBulkStatus('delivered') },
+          { label: ta('Mark Cancelled'), onClick: () => handleBulkStatus('cancelled'), variant: 'destructive' },
         ]}
       />
     </div>

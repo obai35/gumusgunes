@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Bot } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function SocialDashboard() {
   const [accounts, setAccounts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   useEffect(() => {
     fetch('/api/admin/social/accounts')
@@ -15,39 +17,39 @@ export default function SocialDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="p-8 text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-muted-foreground">{ta('Loading...')}</div>
 
   return (
     <div className="space-y-8 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-semibold">Social Media</h1>
+        <h1 className="text-2xl font-display font-semibold">{ta('Social Media')}</h1>
         <Link
           href="/admin/social/settings"
           className="px-4 py-2 bg-navy text-silver rounded-full text-sm font-medium hover:bg-gold hover:text-navy-deep transition-colors"
         >
-          Settings
+          {ta('Settings')}
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-6 rounded-2xl bg-secondary/50 border border-border/50">
-          <h2 className="font-semibold mb-2">Instagram</h2>
+          <h2 className="font-semibold mb-2">{ta('Instagram')}</h2>
           {accounts.filter(a => a.platform === 'instagram').length > 0 ? (
             accounts.filter(a => a.platform === 'instagram').map(a => (
               <p key={a.id} className="text-sm text-muted-foreground">{a.accountName}</p>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">Not connected</p>
+            <p className="text-sm text-muted-foreground">{ta('Not connected')}</p>
           )}
         </div>
         <div className="p-6 rounded-2xl bg-secondary/50 border border-border/50">
-          <h2 className="font-semibold mb-2">Facebook</h2>
+          <h2 className="font-semibold mb-2">{ta('Facebook')}</h2>
           {accounts.filter(a => a.platform === 'facebook').length > 0 ? (
             accounts.filter(a => a.platform === 'facebook').map(a => (
               <p key={a.id} className="text-sm text-muted-foreground">{a.accountName}</p>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">Not connected</p>
+            <p className="text-sm text-muted-foreground">{ta('Not connected')}</p>
           )}
         </div>
       </div>
@@ -56,16 +58,16 @@ export default function SocialDashboard() {
         <div className="h-12 w-12 rounded-lg bg-gold/20 flex items-center justify-center mb-3 group-hover:bg-gold/30 transition-colors">
           <Bot className="h-6 w-6 text-gold" />
         </div>
-        <h3 className="font-semibold text-silver mb-1">AI Agent</h3>
-        <p className="text-xs text-silver/60">Trend analysis, video ideas, ad management & insights</p>
+        <h3 className="font-semibold text-silver mb-1">{ta('AI Agent')}</h3>
+        <p className="text-xs text-silver/60">{ta('Trend analysis, video ideas, ad management & insights')}</p>
       </Link>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { href: '/admin/social/posts', label: 'Posts', desc: 'Create & schedule' },
-          { href: '/admin/social/comments', label: 'Comments', desc: 'Moderate replies' },
-          { href: '/admin/social/analytics', label: 'Analytics', desc: 'Performance data' },
-          { href: '/admin/social/campaigns', label: 'Campaigns', desc: 'Automated marketing' },
+          { href: '/admin/social/posts', label: ta('Posts'), desc: ta('Create & schedule') },
+          { href: '/admin/social/comments', label: ta('Comments'), desc: ta('Moderate replies') },
+          { href: '/admin/social/analytics', label: ta('Analytics'), desc: ta('Performance data') },
+          { href: '/admin/social/campaigns', label: ta('Campaigns'), desc: ta('Automated marketing') },
         ].map(item => (
           <Link
             key={item.href}

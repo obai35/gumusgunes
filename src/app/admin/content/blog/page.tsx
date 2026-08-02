@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/admin/PageHeader'
 import { SearchInput } from '@/components/admin/SearchInput'
 import { Pagination } from '@/components/admin/Pagination'
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type BlogPost = {
   id: string; title: string; slug: string; content: string
@@ -28,6 +29,7 @@ export default function BlogListPage() {
   const [totalPages, setTotalPages] = useState(0)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   function fetchPosts() {
     setLoading(true)
@@ -41,7 +43,7 @@ export default function BlogListPage() {
         setTotal(d.total || 0)
         setTotalPages(d.totalPages || 0)
       })
-      .catch(() => toast.error('Failed to load posts'))
+      .catch(() => toast.error(ta('Failed to load posts')))
       .finally(() => setLoading(false))
   }
 
@@ -56,12 +58,12 @@ export default function BlogListPage() {
       if (res.ok) {
         setPosts(prev => prev.filter(p => p.id !== deleteId))
         setTotal(prev => prev - 1)
-        toast.success('Post deleted')
+        toast.success(ta('Post deleted'))
       } else {
         const e = await res.json()
-        toast.error(e.error || 'Failed to delete')
+        toast.error(e.error || ta('Failed to delete'))
       }
-    } catch { toast.error('Failed to delete') }
+    } catch { toast.error(ta('Failed to delete')) }
     finally { setDeleteId(null); setDeleting(false) }
   }
 
@@ -74,14 +76,14 @@ export default function BlogListPage() {
     })
     if (res.ok) {
       setPosts(prev => prev.map(p => p.id === post.id ? { ...p, status: newStatus, publishedAt: newStatus === 'published' ? new Date().toISOString() : p.publishedAt } : p))
-      toast.success(`Post ${newStatus === 'published' ? 'published' : 'unpublished'}`)
-    } else toast.error('Failed to update status')
+      toast.success(ta(`Post ${newStatus === 'published' ? 'published' : 'unpublished'}`))
+    } else toast.error(ta('Failed to update status'))
   }
 
   const columns: ColumnDef<BlogPost>[] = useMemo(() => [
     {
       accessorKey: 'title',
-      header: 'Title',
+      header: ta('Title'),
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           {row.original.featuredImage && (
@@ -98,7 +100,7 @@ export default function BlogListPage() {
     },
     {
       accessorKey: 'status',
-      header: 'Status',
+      header: ta('Status'),
       cell: ({ row }) => (
         <button
           onClick={() => toggleStatus(row.original)}
@@ -113,11 +115,11 @@ export default function BlogListPage() {
     },
     {
       accessorKey: 'publishedAt',
-      header: 'Published',
+      header: ta('Published'),
       cell: ({ row }) => (
         <span className="text-xs text-muted-foreground flex items-center gap-1">
           <Calendar className="h-3 w-3" />
-          {row.original.publishedAt ? new Date(row.original.publishedAt).toLocaleDateString() : '—'}
+          {row.original.publishedAt ? fmtDate(row.original.publishedAt) : '—'}
         </span>
       ),
     },
@@ -135,22 +137,22 @@ export default function BlogListPage() {
         </div>
       ),
     },
-  ], [router])
+  ], [router, ta])
 
   return (
     <div>
       <PageHeader
-        title="Blog Posts"
-        subtitle={`${total} post${total !== 1 ? 's' : ''}`}
+        title={ta('Blog Posts')}
+        subtitle={ta(`${fmtNum(total)} post${total !== 1 ? 's' : ''}`)}
         actions={
           <button onClick={() => router.push('/admin/content/blog/new')} className="flex items-center gap-1.5 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-            <Plus className="h-4 w-4" /> New Post
+            <Plus className="h-4 w-4" /> {ta('New Post')}
           </button>
         }
       />
 
       <div className="mb-5">
-        <SearchInput value={search} onChange={setSearch} placeholder="Search posts..." className="max-w-sm" />
+        <SearchInput value={search} onChange={setSearch} placeholder={ta('Search posts...')} className="max-w-sm" />
       </div>
 
       <DataTable
@@ -158,9 +160,9 @@ export default function BlogListPage() {
         data={posts}
         loading={loading}
         keyExtractor={p => p.id}
-        emptyTitle="No blog posts yet"
-        emptyDescription="Create your first blog post to get started."
-        emptyAction={{ label: 'New Post', onClick: () => router.push('/admin/content/blog/new') }}
+        emptyTitle={ta('No blog posts yet')}
+        emptyDescription={ta('Create your first blog post to get started.')}
+        emptyAction={{ label: ta('New Post'), onClick: () => router.push('/admin/content/blog/new') }}
         onRowClick={p => router.push(`/admin/content/blog/${p.id}`)}
       />
 
@@ -169,9 +171,9 @@ export default function BlogListPage() {
       <ConfirmDialog
         open={deleteId !== null}
         onOpenChange={o => { if (!o) setDeleteId(null) }}
-        title="Delete post"
-        description="Are you sure you want to delete this post? This action cannot be undone."
-        confirmLabel="Delete"
+        title={ta('Delete post')}
+        description={ta('Are you sure you want to delete this post? This action cannot be undone.')}
+        confirmLabel={ta('Delete')}
         onConfirm={handleDelete}
         destructive
       />

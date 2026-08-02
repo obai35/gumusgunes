@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Edit3, Trash2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type SocialPost = {
   id: string
@@ -28,6 +29,7 @@ const statusColors: Record<string, string> = {
 }
 
 export default function SocialPosts() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [posts, setPosts] = useState<SocialPost[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState('')
@@ -45,25 +47,25 @@ export default function SocialPosts() {
   useEffect(() => { fetchPosts() }, [statusFilter])
 
   async function deletePost(id: string) {
-    if (!confirm('Delete this post?')) return
+    if (!confirm(ta('Delete this post?'))) return
     const res = await fetch(`/api/admin/social/posts/${id}`, { method: 'DELETE' })
     if (res.ok) {
-      toast.success('Post deleted')
+      toast.success(ta('Post deleted'))
       fetchPosts()
     } else {
-      toast.error('Failed to delete')
+      toast.error(ta('Failed to delete'))
     }
   }
 
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-display font-semibold text-navy">Social Posts</h1>
+        <h1 className="text-2xl font-display font-semibold text-navy">{ta('Social Posts')}</h1>
         <Link
           href="/admin/social/posts/new"
           className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors"
         >
-          <Plus className="h-4 w-4" /> New Post
+          <Plus className="h-4 w-4" /> {ta('New Post')}
         </Link>
       </div>
 
@@ -78,15 +80,15 @@ export default function SocialPosts() {
                 : 'bg-secondary/50 text-muted-foreground hover:bg-secondary'
             }`}
           >
-            {s || 'All'}
+            {s || ta('All')}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div className="text-muted-foreground text-sm">Loading...</div>
+        <div className="text-muted-foreground text-sm">{ta('Loading...')}</div>
       ) : posts.length === 0 ? (
-        <div className="text-muted-foreground text-sm py-12 text-center">No posts found.</div>
+        <div className="text-muted-foreground text-sm py-12 text-center">{ta('No posts found.')}</div>
       ) : (
         <div className="space-y-3">
           {posts.map(post => (
@@ -110,11 +112,11 @@ export default function SocialPosts() {
                   )}
                 </div>
                 <p className="text-sm text-navy truncate">
-                  {post.caption || <span className="italic text-muted-foreground">No caption</span>}
+                  {post.caption || <span className="italic text-muted-foreground">{ta('No caption')}</span>}
                 </p>
                 {post.scheduledAt && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Scheduled: {new Date(post.scheduledAt).toLocaleString()}
+                    {ta('Scheduled')}: {fmtDateTime(post.scheduledAt)}
                   </p>
                 )}
                 {post.errorLog && (

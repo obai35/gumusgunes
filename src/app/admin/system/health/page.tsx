@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { HeartPulse, Database, Server, HardDrive, Activity, RefreshCw, Clock, AlertTriangle, CheckCircle2, XCircle, Minus } from 'lucide-react'
 import { PageHeader } from '@/components/admin/PageHeader'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type HealthCheck = {
   status: string
@@ -21,6 +22,7 @@ type HealthData = {
 }
 
 export default function AdminSystemHealth() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [data, setData] = useState<HealthData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -60,7 +62,7 @@ export default function AdminSystemHealth() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="System Health" subtitle="Monitor system status and performance" />
+        <PageHeader title={ta('System Health')} subtitle={ta('Monitor system status and performance')} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[1,2,3,4].map(i => (
             <div key={i} className="bg-white rounded-xl border border-border p-6 animate-pulse">
@@ -76,12 +78,12 @@ export default function AdminSystemHealth() {
   if (!data) {
     return (
       <div>
-        <PageHeader title="System Health" subtitle="Monitor system status and performance" />
+        <PageHeader title={ta('System Health')} subtitle={ta('Monitor system status and performance')} />
         <div className="bg-white rounded-xl border border-border p-12 text-center">
           <HeartPulse className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Failed to load health data</p>
+          <p className="text-gray-500">{ta('Failed to load health data')}</p>
           <button onClick={refresh} className="mt-4 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90">
-            Retry
+            {ta('Retry')}
           </button>
         </div>
       </div>
@@ -89,17 +91,17 @@ export default function AdminSystemHealth() {
   }
 
   const summaryCards = [
-    { label: 'Status', value: data.status, icon: HeartPulse, color: data.status === 'healthy' ? 'text-green-600 bg-green-50' : data.status === 'degraded' ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50' },
-    { label: 'Uptime', value: data.uptime, icon: Clock, color: 'text-blue-600 bg-blue-50' },
-    { label: 'Response', value: `${data.latency}ms`, icon: Activity, color: 'text-purple-600 bg-purple-50' },
-    { label: 'Version', value: data.version, icon: Server, color: 'text-gray-600 bg-gray-50' },
+    { label: ta('Status'), value: data.status, icon: HeartPulse, color: data.status === 'healthy' ? 'text-green-600 bg-green-50' : data.status === 'degraded' ? 'text-yellow-600 bg-yellow-50' : 'text-red-600 bg-red-50' },
+    { label: ta('Uptime'), value: data.uptime, icon: Clock, color: 'text-blue-600 bg-blue-50' },
+    { label: ta('Response'), value: `${data.latency}ms`, icon: Activity, color: 'text-purple-600 bg-purple-50' },
+    { label: ta('Version'), value: data.version, icon: Server, color: 'text-gray-600 bg-gray-50' },
   ]
 
   return (
     <div>
       <PageHeader
-        title="System Health"
-        subtitle="Monitor system status and performance"
+        title={ta('System Health')}
+        subtitle={ta('Monitor system status and performance')}
         actions={
           <button
             onClick={refresh}
@@ -107,7 +109,7 @@ export default function AdminSystemHealth() {
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
+            {refreshing ? ta('Refreshing...') : ta('Refresh')}
           </button>
         }
       />
@@ -128,7 +130,7 @@ export default function AdminSystemHealth() {
 
       <div className="bg-white rounded-xl border border-border overflow-hidden">
         <div className="px-6 py-4 border-b border-border">
-          <h2 className="font-semibold text-navy">Service Checks</h2>
+          <h2 className="font-semibold text-navy">{ta('Service Checks')}</h2>
         </div>
         <div className="divide-y divide-border">
           {Object.entries(data.checks).map(([name, check]) => (
@@ -136,7 +138,7 @@ export default function AdminSystemHealth() {
               <div className="flex items-center gap-3">
                 {statusIcon(check.status)}
                 <div>
-                  <span className="text-sm font-medium text-navy capitalize">{name.replace(/([A-Z])/g, ' $1').trim()}</span>
+                  <span className="text-sm font-medium text-navy capitalize">{ta(name.replace(/([A-Z])/g, ' $1').trim())}</span>
                   {check.latency !== undefined && (
                     <span className="text-xs text-muted-foreground ml-2">{check.latency}ms</span>
                   )}
@@ -146,11 +148,11 @@ export default function AdminSystemHealth() {
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                {check.total !== undefined && <span>Total: {check.total}</span>}
-                {check.errors !== undefined && <span>Errors: {check.errors}</span>}
-                {check.rate !== undefined && <span>Rate: {check.rate}</span>}
-                {check.pendingOrders !== undefined && <span>Pending: {check.pendingOrders}</span>}
-                {check.active !== undefined && <span>Active: {check.active}</span>}
+                {check.total !== undefined && <span>{ta('Total')}: {fmtNum(check.total)}</span>}
+                {check.errors !== undefined && <span>{ta('Errors')}: {fmtNum(check.errors)}</span>}
+                {check.rate !== undefined && <span>{ta('Rate')}: {check.rate}</span>}
+                {check.pendingOrders !== undefined && <span>{ta('Pending')}: {fmtNum(check.pendingOrders)}</span>}
+                {check.active !== undefined && <span>{ta('Active')}: {fmtNum(check.active)}</span>}
               </div>
             </div>
           ))}
@@ -158,7 +160,7 @@ export default function AdminSystemHealth() {
       </div>
 
       <div className="mt-4 text-xs text-muted-foreground text-right">
-        Last checked: {new Date(data.timestamp).toLocaleString()}
+        {ta('Last checked')}: {fmtDateTime(data.timestamp)}
       </div>
     </div>
   )

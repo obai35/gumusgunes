@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RefreshCw, Landmark } from 'lucide-react'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 export default function BankFeedTab() {
   const [data, setData] = useState<{ connectors: { id: string; name: string }[]; accounts: any[] } | null>(null)
@@ -10,19 +11,20 @@ export default function BankFeedTab() {
   const [syncing, setSyncing] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState('')
   const [selectedConnector, setSelectedConnector] = useState('mock')
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   function fetchFeeds() {
     setLoading(true)
     fetch('/api/admin/accounting/bank-feeds')
       .then(r => { if (!r.ok) throw new Error(); return r.json() })
       .then(d => { setData(d); setLoading(false) })
-      .catch(() => { toast.error('Failed to load bank feeds'); setLoading(false) })
+      .catch(() => { toast.error(ta('Failed to load bank feeds')); setLoading(false) })
   }
 
   useEffect(() => { fetchFeeds() }, [])
 
   async function handleSync() {
-    if (!selectedAccount) { toast.error('Select a bank account'); return }
+    if (!selectedAccount) { toast.error(ta('Select a bank account')); return }
     setSyncing(true)
     try {
       const res = await fetch('/api/admin/accounting/bank-feeds', {
@@ -32,34 +34,34 @@ export default function BankFeedTab() {
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error)
-      toast.success(`Imported ${result.imported} new transactions`)
+      toast.success(ta(`Imported ${result.imported} new transactions`))
       fetchFeeds()
-    } catch (e: any) { toast.error(e.message || 'Sync failed') }
+    } catch (e: any) { toast.error(e.message || ta('Sync failed')) }
     finally { setSyncing(false) }
   }
 
   if (loading) return <div className="space-y-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-32 w-full" /></div>
-  if (!data) return <div className="text-sm text-muted-foreground">No data</div>
+  if (!data) return <div className="text-sm text-muted-foreground">{ta('No data')}</div>
 
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border border-border p-5">
         <h3 className="text-sm font-semibold text-navy mb-4 flex items-center gap-2">
           <Landmark className="h-4 w-4 text-muted-foreground" />
-          Sync Bank Transactions
+          {ta('Sync Bank Transactions')}
         </h3>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Bank Account</label>
+            <label className="text-xs text-muted-foreground mb-1 block">{ta('Bank Account')}</label>
             <select value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
-              <option value="">Select account...</option>
+              <option value="">{ta('Select account...')}</option>
               {data.accounts.map(acct => (
                 <option key={acct.id} value={acct.id}>{acct.name} ({acct.bankName})</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Connector</label>
+            <label className="text-xs text-muted-foreground mb-1 block">{ta('Connector')}</label>
             <select value={selectedConnector} onChange={e => setSelectedConnector(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
               {data.connectors.map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
@@ -73,14 +75,14 @@ export default function BankFeedTab() {
           className="px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium hover:bg-navy/90 transition-colors flex items-center gap-1.5 disabled:opacity-50"
         >
           <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Syncing...' : 'Fetch Transactions'}
+          {syncing ? ta('Syncing...') : ta('Fetch Transactions')}
         </button>
       </div>
 
       <div className="bg-white rounded-xl border border-border p-5">
-        <h3 className="text-sm font-semibold text-navy mb-4">Bank Accounts</h3>
+        <h3 className="text-sm font-semibold text-navy mb-4">{ta('Bank Accounts')}</h3>
         {data.accounts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No bank accounts configured yet.</p>
+          <p className="text-sm text-muted-foreground">{ta('No bank accounts configured yet.')}</p>
         ) : (
           <div className="grid gap-3">
             {data.accounts.map(acct => (
@@ -91,9 +93,9 @@ export default function BankFeedTab() {
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-bold ${acct.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', minimumFractionDigits: 2 }).format(acct.currentBalance)}
+                    {fmtCurrency(acct.currentBalance)}
                   </p>
-                  <p className="text-xs text-muted-foreground">Opening: {new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP' }).format(acct.openingBalance)}</p>
+                  <p className="text-xs text-muted-foreground">{ta('Opening:')} {fmtCurrency(acct.openingBalance)}</p>
                 </div>
               </div>
             ))}

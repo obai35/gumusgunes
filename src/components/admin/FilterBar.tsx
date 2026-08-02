@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type FilterOption = { label: string; value: string }
 

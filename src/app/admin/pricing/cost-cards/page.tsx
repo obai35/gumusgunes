@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { Search, ArrowLeft, Calculator, RefreshCw, TrendingDown, TrendingUp, ExternalLink, BarChart3, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { formatCurrency } from '../../accounting/format'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type CostCard = {
   id: string; name: string; sku: string; imageUrl: string | null
@@ -29,6 +29,7 @@ export default function CostCardsPage() {
   const [allocating, setAllocating] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [detail, setDetail] = useState<any>(null)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   function fetchData() {
     setLoading(true)
@@ -36,7 +37,7 @@ export default function CostCardsPage() {
     if (filterCosted) params.set('hasCost', 'true')
 
     fetch(`/api/admin/pricing/cost-cards?${params}`)
-      .then(r => r.json()).then(setItems).catch(() => toast.error('Failed to load')).finally(() => setLoading(false))
+      .then(r => r.json()).then(setItems).catch(() => toast.error(ta('Failed to load'))).finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchData() }, [filterCosted])
@@ -46,10 +47,10 @@ export default function CostCardsPage() {
     try {
       const res = await fetch('/api/admin/pricing/calculate', { method: 'POST' })
       const data = await res.json()
-      if (data.errors?.length) toast.warning(`${data.productsCosted} costed with ${data.errors.length} errors`)
-      else toast.success(`Costed ${data.productsCosted} products`)
+      if (data.errors?.length) toast.warning(ta(`${data.productsCosted} costed with ${data.errors.length} errors`))
+      else toast.success(ta(`Costed ${data.productsCosted} products`))
       fetchData()
-    } catch { toast.error('Allocation failed') } finally { setAllocating(false) }
+    } catch { toast.error(ta('Allocation failed')) } finally { setAllocating(false) }
   }
 
   const filtered = items.filter(i =>
@@ -65,46 +66,46 @@ export default function CostCardsPage() {
     )
     return (
       <div className="space-y-1.5 mt-2">
-        {[{ label: 'Material', val: b.materialCost, color: 'bg-blue-500' },
-          { label: 'Labor', val: b.laborCost, color: 'bg-green-500' },
-          { label: 'Mfg OH', val: b.mfgOverhead, color: 'bg-amber-500' },
-          { label: 'Admin OH', val: b.adminOverhead, color: 'bg-purple-500' },
-          { label: 'Selling OH', val: b.sellingOverhead, color: 'bg-rose-500' },
+        {[{ label: ta('Material'), val: b.materialCost, color: 'bg-blue-500' },
+          { label: ta('Labor'), val: b.laborCost, color: 'bg-green-500' },
+          { label: ta('Mfg OH'), val: b.mfgOverhead, color: 'bg-amber-500' },
+          { label: ta('Admin OH'), val: b.adminOverhead, color: 'bg-purple-500' },
+          { label: ta('Selling OH'), val: b.sellingOverhead, color: 'bg-rose-500' },
         ].map(r => (
           <div key={r.label} className="flex items-center gap-2 text-[10px]">
             <span className="w-14 text-muted-foreground">{r.label}</span>
             {bar(r.val, r.color)}
-            <span className="w-16 text-right font-mono">{formatCurrency(r.val)}</span>
+            <span className="w-16 text-right font-mono">{fmtCurrency(r.val)}</span>
           </div>
         ))}
       </div>
     )
   }
 
-  if (loading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>
+  if (loading) return <div className="p-8 text-center text-muted-foreground">{ta('Loading...')}</div>
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
           <Link href="/admin/pricing" className="text-muted-foreground hover:text-primary"><ArrowLeft className="h-5 w-5" /></Link>
-          <h1 className="text-2xl font-bold">Cost Cards</h1>
+          <h1 className="text-2xl font-bold">{ta('Cost Cards')}</h1>
         </div>
         <div className="flex items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={filterCosted} onChange={e => setFilterCosted(e.target.checked)} className="rounded" />
-            Costed only
+            {ta('Costed only')}
           </label>
           <button onClick={runAllocation} disabled={allocating} className="inline-flex items-center gap-1.5 rounded-lg bg-navy text-silver px-3 py-2 text-sm font-medium hover:bg-navy/90 disabled:opacity-50">
             <RefreshCw className={`h-4 w-4 ${allocating ? 'animate-spin' : ''}`} />
-            {allocating ? 'Allocating...' : 'Run Allocation'}
+            {allocating ? ta('Allocating...') : ta('Run Allocation')}
           </button>
         </div>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products by name or SKU..." className="w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm" />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={ta('Search products by name or SKU...')} className="w-full pl-10 pr-4 py-2.5 rounded-lg border text-sm" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -133,8 +134,8 @@ export default function CostCardsPage() {
                   <p className="text-xs text-muted-foreground">{item.sku}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold">{formatCurrency(item.price)}</p>
-                  {item.breakdown?.totalCost && <p className="text-xs text-muted-foreground">Cost: {formatCurrency(item.breakdown.totalCost)}</p>}
+                  <p className="text-sm font-bold">{fmtCurrency(item.price)}</p>
+                  {item.breakdown?.totalCost && <p className="text-xs text-muted-foreground">{ta('Cost:')} {fmtCurrency(item.breakdown.totalCost)}</p>}
                 </div>
               </div>
 
@@ -143,18 +144,18 @@ export default function CostCardsPage() {
                   {breakdownBars(item.breakdown)}
                   <div className="flex items-center justify-between mt-3 pt-2 border-t border-border text-xs">
                     <span className={`font-medium ${marginColor}`}>
-                      {item.breakdown.margin != null ? `${item.breakdown.margin.toFixed(1)}% margin` : 'No price'}
+                      {item.breakdown.margin != null ? ta(`${item.breakdown.margin.toFixed(1)}% margin`) : ta('No price')}
                     </span>
-                    <span className="text-muted-foreground">{new Date(item.breakdown.lastAllocatedAt).toLocaleDateString()}</span>
+                    <span className="text-muted-foreground">{fmtDate(item.breakdown.lastAllocatedAt)}</span>
                   </div>
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground mt-2 italic">No cost breakdown yet. Run allocation.</p>
+                <p className="text-xs text-muted-foreground mt-2 italic">{ta('No cost breakdown yet. Run allocation.')}</p>
               )}
             </motion.div>
           )
         })}
-        {filtered.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">No products found.</div>}
+        {filtered.length === 0 && <div className="col-span-full text-center py-12 text-muted-foreground">{ta('No products found.')}</div>}
       </div>
     </div>
   )

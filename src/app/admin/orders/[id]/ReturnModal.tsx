@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 interface ReturnModalProps {
   orderId: string
@@ -18,6 +19,7 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
   const [refundMethod, setRefundMethod] = useState('store_credit')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
 
   function toggleItem(productId: string, maxQty: number) {
     setSelectedItems((prev) => {
@@ -36,7 +38,7 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
 
   async function handleSubmit() {
     const productIds = Object.keys(selectedItems)
-    if (productIds.length === 0) { toast.error('Select at least one item'); return }
+    if (productIds.length === 0) { toast.error(ta('Select at least one item')); return }
 
     setLoading(true)
     try {
@@ -55,18 +57,18 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
           processedById: adminId,
         }),
       })
-      if (res.ok) { toast.success('Return processed'); onSuccess(); onClose() }
+      if (res.ok) { toast.success(ta('Return processed')); onSuccess(); onClose() }
       else { const e = await res.json(); toast.error(e.error) }
-    } catch { toast.error('Failed to process return') }
+    } catch { toast.error(ta('Failed to process return')) }
     finally { setLoading(false) }
   }
 
   const refundMethodLabels: Record<string, string> = {
-    cash: 'Cash Refund', store_credit: 'Store Credit', no_refund: 'No Refund (Loss)',
+    cash: ta('Cash Refund'), store_credit: ta('Store Credit'), no_refund: ta('No Refund (Loss)'),
   }
   const reasonLabels: Record<string, string> = {
-    customer_change: 'Customer Changed Mind', defective: 'Defective Item',
-    wrong_item: 'Wrong Item Received', damaged: 'Damaged in Transit', other: 'Other',
+    customer_change: ta('Customer Changed Mind'), defective: ta('Defective Item'),
+    wrong_item: ta('Wrong Item Received'), damaged: ta('Damaged in Transit'), other: ta('Other'),
   }
 
   return (
@@ -86,10 +88,10 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
         className="bg-white rounded-xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-navy mb-4">Process Return</h2>
+        <h2 className="text-lg font-semibold text-navy mb-4">{ta('Process Return')}</h2>
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-navy mb-2">Select Items to Return</p>
+            <p className="text-sm font-medium text-navy mb-2">{ta('Select Items to Return')}</p>
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-2 border-b border-border/50">
                 <input
@@ -116,25 +118,25 @@ export default function ReturnModal({ orderId, items, adminId, onClose, onSucces
             ))}
           </div>
           <div>
-            <label className="text-sm font-medium text-navy block mb-1">Reason</label>
+            <label className="text-sm font-medium text-navy block mb-1">{ta('Reason')}</label>
             <select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
               {Object.entries(reasonLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium text-navy block mb-1">Refund Method</label>
+            <label className="text-sm font-medium text-navy block mb-1">{ta('Refund Method')}</label>
             <select value={refundMethod} onChange={(e) => setRefundMethod(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm">
               {Object.entries(refundMethodLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-sm font-medium text-navy block mb-1">Notes</label>
+            <label className="text-sm font-medium text-navy block mb-1">{ta('Notes')}</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-sm" rows={3} />
           </div>
           <div className="flex gap-2 pt-2">
-            <button onClick={onClose} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:text-navy">Cancel</button>
+            <button onClick={onClose} className="px-4 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:text-navy">{ta('Cancel')}</button>
             <button onClick={handleSubmit} disabled={loading} className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50">
-              {loading ? 'Processing...' : 'Process Return'}
+              {loading ? ta('Processing...') : ta('Process Return')}
             </button>
           </div>
         </div>

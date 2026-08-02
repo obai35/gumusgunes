@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 import { Sparkles, ArrowLeft, TrendingUp, Lightbulb, Hash } from 'lucide-react'
 import Link from 'next/link'
 import type { ContentTone } from '@/lib/social/groq-content'
@@ -15,6 +16,7 @@ export default function NewPost() {
   const [generating, setGenerating] = useState(false)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'generate' | 'trends' | 'plan'>('generate')
+  const { ta } = useAdminTranslate()
 
   const [form, setForm] = useState({
     accountId: '',
@@ -50,7 +52,7 @@ export default function NewPost() {
 
   async function generateWithAI() {
     if (!productInput.name) {
-      toast.error('Enter a product name first')
+      toast.error(ta('Enter a product name first'))
       return
     }
     setGenerating(true)
@@ -76,9 +78,9 @@ export default function NewPost() {
         caption: data.caption || f.caption,
         hashtags: data.hashtags?.join(', ') || f.hashtags,
       }))
-      toast.success('AI content generated!')
+      toast.success(ta('AI content generated!'))
     } catch {
-      toast.error('Failed to generate content. Check GROQ_API_KEY.')
+      toast.error(ta('Failed to generate content. Check GROQ_API_KEY.'))
     } finally {
       setGenerating(false)
     }
@@ -86,7 +88,7 @@ export default function NewPost() {
 
   async function analyzeTrend() {
     if (!trendTopic && !trendNiche) {
-      toast.error('Enter a topic or niche to analyze')
+      toast.error(ta('Enter a topic or niche to analyze'))
       return
     }
     setGenerating(true)
@@ -120,9 +122,9 @@ export default function NewPost() {
         }
       }
 
-      toast.success('Trend analysis complete!')
+      toast.success(ta('Trend analysis complete!'))
     } catch {
-      toast.error('Failed to analyze trends')
+      toast.error(ta('Failed to analyze trends'))
     } finally {
       setGenerating(false)
     }
@@ -145,9 +147,9 @@ export default function NewPost() {
       if (!res.ok) throw new Error('Plan generation failed')
       const data = await res.json()
       setPlanData(data)
-      toast.success('Content plan generated!')
+      toast.success(ta('Content plan generated!'))
     } catch {
-      toast.error('Failed to generate content plan')
+      toast.error(ta('Failed to generate content plan'))
     } finally {
       setGenerating(false)
     }
@@ -156,7 +158,7 @@ export default function NewPost() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.mediaUrls) {
-      toast.error('At least one media URL is required')
+      toast.error(ta('At least one media URL is required'))
       return
     }
     setSaving(true)
@@ -171,11 +173,11 @@ export default function NewPost() {
       }),
     })
     if (res.ok) {
-      toast.success('Post created')
+      toast.success(ta('Post created'))
       router.push('/admin/social/posts')
     } else {
       const err = await res.json()
-      toast.error(err.error || 'Failed to create post')
+      toast.error(err.error || ta('Failed to create post'))
     }
     setSaving(false)
   }
@@ -186,15 +188,15 @@ export default function NewPost() {
         <Link href="/admin/social/posts" className="p-2 rounded-lg hover:bg-secondary/50 transition-colors">
           <ArrowLeft className="h-5 w-5 text-muted-foreground" />
         </Link>
-        <h1 className="text-2xl font-display font-semibold text-navy">New Post</h1>
+        <h1 className="text-2xl font-display font-semibold text-navy">{ta('New Post')}</h1>
       </div>
 
       {/* AI Tabs */}
       <div className="flex gap-1 p-1 rounded-xl bg-secondary/30 border border-border/30 w-fit">
         {[
-          { id: 'generate' as const, label: 'Generate', icon: Sparkles },
-          { id: 'trends' as const, label: 'Trends', icon: TrendingUp },
-          { id: 'plan' as const, label: 'Content Plan', icon: Lightbulb },
+          { id: 'generate' as const, label: ta('Generate'), icon: Sparkles },
+          { id: 'trends' as const, label: ta('Trends'), icon: TrendingUp },
+          { id: 'plan' as const, label: ta('Content Plan'), icon: Lightbulb },
         ].map(tab => (
           <button
             key={tab.id}
@@ -213,12 +215,12 @@ export default function NewPost() {
       {activeTab === 'generate' && (
         <div className="p-6 rounded-2xl bg-secondary/20 border border-border/30 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-gold" /> AI Content Generator
+            <Sparkles className="h-4 w-4 text-gold" /> {ta('AI Content Generator')}
           </h2>
-          <p className="text-xs text-muted-foreground">Brand: Gümüş Güneş — Egyptian stainless steel jewelry from Turkey. Arabic captions by default.</p>
+          <p className="text-xs text-muted-foreground">{ta('Brand: Gümüş Güneş — Egyptian stainless steel jewelry from Turkey. Arabic captions by default.')}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <input
-              placeholder="Product name"
+              placeholder={ta('Product name')}
               value={productInput.name}
               onChange={e => setProductInput(p => ({ ...p, name: e.target.value }))}
               className="p-3 rounded-xl bg-background border border-border text-sm"
@@ -230,21 +232,21 @@ export default function NewPost() {
               className="p-3 rounded-xl bg-background border border-border text-sm"
             />
             <input
-              placeholder="Price (EGP)"
+              placeholder={ta('Price (EGP)')}
               type="number"
               value={productInput.price || ''}
               onChange={e => setProductInput(p => ({ ...p, price: Number(e.target.value) }))}
               className="p-3 rounded-xl bg-background border border-border text-sm"
             />
             <input
-              placeholder="Tags (comma separated)"
+              placeholder={ta('Tags (comma separated)')}
               value={productInput.tags}
               onChange={e => setProductInput(p => ({ ...p, tags: e.target.value }))}
               className="p-3 rounded-xl bg-background border border-border text-sm"
             />
             <div className="md:col-span-2">
               <textarea
-                placeholder="Product description"
+                placeholder={ta('Product description')}
                 value={productInput.description}
                 onChange={e => setProductInput(p => ({ ...p, description: e.target.value }))}
                 className="w-full p-3 rounded-xl bg-background border border-border text-sm resize-none"
@@ -268,7 +270,7 @@ export default function NewPost() {
               disabled={generating}
               className="px-4 py-2.5 bg-gold text-navy-deep rounded-full text-sm font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              <Sparkles className="h-4 w-4" /> {generating ? 'Generating...' : 'Generate بالعربي'}
+              <Sparkles className="h-4 w-4" /> {generating ? ta('Generating...') : 'Generate بالعربي'}
             </button>
           </div>
         </div>
@@ -278,11 +280,11 @@ export default function NewPost() {
       {activeTab === 'trends' && (
         <div className="p-6 rounded-2xl bg-secondary/20 border border-border/30 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-gold" /> Trend Analysis & Hashtag Research
+            <TrendingUp className="h-4 w-4 text-gold" /> {ta('Trend Analysis & Hashtag Research')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <input
-              placeholder="Topic to analyze (optional)"
+              placeholder={ta('Topic to analyze (optional)')}
               value={trendTopic}
               onChange={e => setTrendTopic(e.target.value)}
               className="p-3 rounded-xl bg-background border border-border text-sm"
@@ -308,28 +310,28 @@ export default function NewPost() {
             disabled={generating}
             className="px-4 py-2.5 bg-gold text-navy-deep rounded-full text-sm font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 flex items-center gap-2"
           >
-            <TrendingUp className="h-4 w-4" /> {generating ? 'Analyzing...' : 'Analyze Trends'}
+            <TrendingUp className="h-4 w-4" /> {generating ? ta('Analyzing...') : ta('Analyze Trends')}
           </button>
 
           {trendData && (
             <div className="space-y-4 pt-4 border-t border-border/30">
               {trendData.analysis && (
                 <div className="p-4 rounded-xl bg-background border border-border/50">
-                  <h3 className="font-medium mb-2">Analysis</h3>
+                  <h3 className="font-medium mb-2">{ta('Analysis')}</h3>
                   <p className="text-sm text-muted-foreground mb-2">{trendData.analysis.summary}</p>
                   <div className="flex gap-2 items-center">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       trendData.analysis.trending ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
                     }`}>
-                      {trendData.analysis.trending ? 'Trending 🔥' : 'Not trending'}
+                      {trendData.analysis.trending ? ta('Trending 🔥') : ta('Not trending')}
                     </span>
-                    <span className="text-xs text-muted-foreground">Momentum: {trendData.analysis.momentum}</span>
+                    <span className="text-xs text-muted-foreground">{ta('Momentum:')} {trendData.analysis.momentum}</span>
                   </div>
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-background border border-border/50">
-                  <h3 className="font-medium text-sm mb-2 flex items-center gap-1"><Hash className="h-3 w-3" /> Trending</h3>
+                  <h3 className="font-medium text-sm mb-2 flex items-center gap-1"><Hash className="h-3 w-3" /> {ta('Trending')}</h3>
                   <div className="flex flex-wrap gap-1">
                     {(trendData.trending || []).map((h: string) => (
                       <span key={h} className="text-xs px-2 py-1 bg-gold/10 text-gold rounded-full">{h}</span>
@@ -337,7 +339,7 @@ export default function NewPost() {
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-background border border-border/50">
-                  <h3 className="font-medium text-sm mb-2">Regional</h3>
+                  <h3 className="font-medium text-sm mb-2">{ta('Regional')}</h3>
                   <div className="flex flex-wrap gap-1">
                     {(trendData.regional || []).map((h: string) => (
                       <span key={h} className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">{h}</span>
@@ -345,7 +347,7 @@ export default function NewPost() {
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-background border border-border/50">
-                  <h3 className="font-medium text-sm mb-2">Brand Suggestions</h3>
+                  <h3 className="font-medium text-sm mb-2">{ta('Brand Suggestions')}</h3>
                   <div className="flex flex-wrap gap-1">
                     {(trendData.suggestions || []).map((h: string) => (
                       <span key={h} className="text-xs px-2 py-1 bg-navy-deep text-silver rounded-full">{h}</span>
@@ -357,11 +359,11 @@ export default function NewPost() {
                 onClick={() => {
                   const all = [...(trendData.trending || []), ...(trendData.suggestions || [])].join(', ')
                   setForm(f => ({ ...f, hashtags: all }))
-                  toast.success('Hashtags added to post!')
+                  toast.success(ta('Hashtags added to post!'))
                 }}
                 className="text-sm text-gold hover:underline"
               >
-                Use these hashtags
+                {ta('Use these hashtags')}
               </button>
             </div>
           )}
@@ -372,11 +374,11 @@ export default function NewPost() {
       {activeTab === 'plan' && (
         <div className="p-6 rounded-2xl bg-secondary/20 border border-border/30 space-y-4">
           <h2 className="font-semibold flex items-center gap-2">
-            <Lightbulb className="h-4 w-4 text-gold" /> Content Plan Generator
+            <Lightbulb className="h-4 w-4 text-gold" /> {ta('Content Plan Generator')}
           </h2>
           <div className="flex items-center gap-3">
             <input
-              placeholder="Number of posts"
+              placeholder={ta('Number of posts')}
               type="number"
               value={planCount}
               onChange={e => setPlanCount(Number(e.target.value))}
@@ -389,7 +391,7 @@ export default function NewPost() {
               disabled={generating}
               className="px-4 py-2.5 bg-gold text-navy-deep rounded-full text-sm font-medium hover:bg-gold/90 transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              <Lightbulb className="h-4 w-4" /> {generating ? 'Generating...' : 'Generate Plan'}
+              <Lightbulb className="h-4 w-4" /> {generating ? ta('Generating...') : ta('Generate Plan')}
             </button>
           </div>
 
@@ -420,7 +422,7 @@ export default function NewPost() {
               </div>
               {Array.isArray(planData.weekPlan) && planData.weekPlan.length > 0 && (
                 <div className="p-4 rounded-xl bg-secondary/30 border border-border/30">
-                  <h3 className="font-medium text-sm mb-2">Weekly Plan</h3>
+                  <h3 className="font-medium text-sm mb-2">{ta('Weekly Plan')}</h3>
                   <ul className="list-disc list-inside space-y-1">
                     {planData.weekPlan.map((item: string, i: number) => (
                       <li key={i} className="text-sm text-muted-foreground">{item}</li>
@@ -437,44 +439,44 @@ export default function NewPost() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Platform</label>
+            <label className="text-sm font-medium text-navy">{ta('Platform')}</label>
             <select
               value={form.platform}
               onChange={e => setForm(f => ({ ...f, platform: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="instagram">Instagram</option>
-              <option value="facebook">Facebook</option>
+              <option value="instagram">{ta('Instagram')}</option>
+              <option value="facebook">{ta('Facebook')}</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Post Type</label>
+            <label className="text-sm font-medium text-navy">{ta('Post Type')}</label>
             <select
               value={form.postType}
               onChange={e => setForm(f => ({ ...f, postType: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="feed">Feed</option>
-              <option value="reel">Reel</option>
-              <option value="story">Story</option>
-              <option value="carousel">Carousel</option>
+              <option value="feed">{ta('Feed')}</option>
+              <option value="reel">{ta('Reel')}</option>
+              <option value="story">{ta('Story')}</option>
+              <option value="carousel">{ta('Carousel')}</option>
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Account (optional)</label>
+            <label className="text-sm font-medium text-navy">{ta('Account (optional)')}</label>
             <select
               value={form.accountId}
               onChange={e => setForm(f => ({ ...f, accountId: e.target.value }))}
               className="w-full p-3 rounded-xl bg-background border border-border text-sm"
             >
-              <option value="">No account</option>
+              <option value="">{ta('No account')}</option>
               {accounts.map(a => (
                 <option key={a.id} value={a.id}>{a.accountName} ({a.platform})</option>
               ))}
             </select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-navy">Scheduled At (optional)</label>
+            <label className="text-sm font-medium text-navy">{ta('Scheduled At (optional)')}</label>
             <input
               type="datetime-local"
               value={form.scheduledAt}
@@ -485,7 +487,7 @@ export default function NewPost() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Media URLs (one per line)</label>
+          <label className="text-sm font-medium text-navy">{ta('Media URLs (one per line)')}</label>
           <textarea
             placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
             value={form.mediaUrls}
@@ -496,9 +498,9 @@ export default function NewPost() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Caption</label>
+          <label className="text-sm font-medium text-navy">{ta('Caption')}</label>
           <textarea
-            placeholder="Post caption..."
+            placeholder={ta('Post caption...')}
             value={form.caption}
             onChange={e => setForm(f => ({ ...f, caption: e.target.value }))}
             className="w-full p-3 rounded-xl bg-background border border-border text-sm resize-none"
@@ -507,7 +509,7 @@ export default function NewPost() {
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-navy">Hashtags (comma separated)</label>
+          <label className="text-sm font-medium text-navy">{ta('Hashtags (comma separated)')}</label>
           <input
             placeholder="#مجوهرات, #جوموش_جونش, #استانليس_ستيل"
             value={form.hashtags}
@@ -521,7 +523,7 @@ export default function NewPost() {
           disabled={saving}
           className="px-6 py-3 bg-navy text-silver rounded-full text-sm font-medium hover:bg-gold hover:text-navy-deep transition-colors disabled:opacity-50"
         >
-          {saving ? 'Creating...' : 'Create Post'}
+          {saving ? ta('Creating...') : ta('Create Post')}
         </button>
       </form>
     </div>

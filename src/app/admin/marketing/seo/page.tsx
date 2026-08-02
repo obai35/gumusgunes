@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Save } from 'lucide-react'
 import { PageHeader } from '@/components/admin/PageHeader'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAdminTranslate } from '@/lib/i18n/admin-ui'
 
 type S = Record<string, string>
 const FIELDS: { key: string; label: string; type?: string; group: string }[] = [
@@ -24,11 +25,12 @@ const FIELDS: { key: string; label: string; type?: string; group: string }[] = [
 ]
 
 export default function SeoPage() {
+  const { ta, fmtNum, fmtDate, fmtDateTime, fmtCurrency } = useAdminTranslate()
   const [settings, setSettings] = useState<S>({}); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false)
   useEffect(() => { fetch('/api/admin/seo').then(r => r.json()).then(d => { if (d.ok) setSettings(d.settings) }).finally(() => setLoading(false)) }, [])
 
   async function handleSave() {
-    setSaving(true); try { const r = await fetch('/api/admin/seo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) }); if (r.ok) toast.success('Saved'); else toast.error('Failed') } catch { toast.error('Network error') }; setSaving(false)
+    setSaving(true); try { const r = await fetch('/api/admin/seo', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) }); if (r.ok) toast.success(ta('Saved')); else toast.error(ta('Failed')) } catch { toast.error(ta('Network error')) }; setSaving(false)
   }
 
   const groups = [...new Set(FIELDS.map(f => f.group))]
@@ -36,17 +38,17 @@ export default function SeoPage() {
 
   return (
     <div>
-      <PageHeader title="SEO Management" backHref="/admin/marketing" actions={<button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium disabled:opacity-50"><Save className="h-4 w-4" /> {saving ? '...' : 'Save All'}</button>} />
+      <PageHeader title={ta('SEO Management')} backHref="/admin/marketing" actions={<button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-navy text-silver rounded-lg text-sm font-medium disabled:opacity-50"><Save className="h-4 w-4" /> {saving ? ta('...') : ta('Save All')}</button>} />
       {groups.map(group => (
         <div key={group} className="mb-8">
-          <h2 className="text-lg font-semibold text-navy mb-3 border-b border-border pb-2">{group}</h2>
+          <h2 className="text-lg font-semibold text-navy mb-3 border-b border-border pb-2">{ta(group)}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {FIELDS.filter(f => f.group === group).map(field => (
               <div key={field.key} className={field.type === 'textarea' ? 'md:col-span-2' : ''}>
-                <label className="text-sm font-medium text-navy block mb-1">{field.label}</label>
+                <label className="text-sm font-medium text-navy block mb-1">{ta(field.label)}</label>
                 {field.type === 'select' ? (
                   <select value={settings[field.key] || 'true'} onChange={e => setSettings({ ...settings, [field.key]: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-border text-sm">
-                    <option value="true">Enabled</option><option value="false">Disabled</option>
+                    <option value="true">{ta('Enabled')}</option><option value="false">{ta('Disabled')}</option>
                   </select>
                 ) : field.type === 'textarea' ? (
                   <textarea value={settings[field.key] || ''} onChange={e => setSettings({ ...settings, [field.key]: e.target.value })} rows={6} className="w-full px-3 py-2 rounded-lg border border-border text-sm font-mono" />
