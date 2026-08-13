@@ -12,6 +12,7 @@ const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').t
 export const metadata: Metadata = {
   title: 'Recently Viewed — Gümüş Güneş',
   description: 'Pick up where you left off — revisit the handcrafted silver pieces you recently viewed at Gümüş Güneş.',
+  robots: { index: false, follow: false },
 }
 
 export const revalidate = 60

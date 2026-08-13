@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const product = await db.product.findFirst({
     where: { OR: [{ id }, { slug: id }], isActive: true },
-    select: { name: true, description: true, imageUrl: true, price: true },
+    select: { name: true, description: true, imageUrl: true, price: true, slug: true },
   })
 
   if (!product) {
@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: product.name,
     description: product.description.slice(0, 160),
+    alternates: { canonical: `/products/${product.slug}` },
     openGraph: {
       title: product.name,
       description: product.description.slice(0, 160),

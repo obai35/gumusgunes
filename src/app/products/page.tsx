@@ -8,10 +8,17 @@ import type { Metadata } from 'next'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>
+}): Promise<Metadata> {
+  const { category } = await searchParams
+  const canonical = `/products${category ? `?category=${category}` : ''}`
   return {
     title: "All Collections",
     description: "Explore our handcrafted stainless steel accessories — rings, necklaces, earrings, bracelets, and pendants.",
+    alternates: { canonical },
     openGraph: {
       title: "All Collections — Gümüş Güneş",
       description: "Explore our handcrafted stainless steel accessories.",

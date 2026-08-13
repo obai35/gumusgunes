@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
@@ -12,6 +13,19 @@ import { T } from '@/components/store/Translated'
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 export const revalidate = 60
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const page = await db.staticPage.findUnique({
+    where: { slug },
+    select: { title: true, status: true },
+  })
+  if (!page || page.status !== 'published') return {}
+  return {
+    title: page.title,
+    alternates: { canonical: `/page/${slug}` },
+  }
+}
 
 export default async function StaticPageView({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params

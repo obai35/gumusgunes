@@ -359,7 +359,7 @@ Decision matrix — login attempts:
 
 ### Phase 4 — SEO/AEO
 
-- [ ] **Unit 7: Indexing hygiene — sitemap, robots, noindex, canonical (R21)**
+- [x] **Unit 7: Indexing hygiene — sitemap, robots, noindex, canonical (R21)**
 
 **Goal:** Sitemap complete and correct; transactional pages noindex and out of the sitemap; canonicals on canonically-reachable pages; blog fully indexable.
 

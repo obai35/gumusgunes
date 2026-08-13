@@ -4,19 +4,24 @@ import type { MetadataRoute } from 'next'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_URL || 'https://gumusgunes.com'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let products: { slug: string; updatedAt: Date }[] = []
+  let products: { slug: string; updatedAt: Date; imageUrl: string | null }[] = []
   let categories: { slug: string; createdAt: Date }[] = []
+  let blogPosts: { slug: string; updatedAt: Date }[] = []
 
   try {
-    ;[products, categories] = await Promise.all([
+    ;[products, categories, blogPosts] = await Promise.all([
       db.product.findMany({
         where: { isActive: true },
-        select: { slug: true, updatedAt: true },
+        select: { slug: true, updatedAt: true, imageUrl: true },
         take: 5000,
       }),
       db.category.findMany({
         where: { isVisible: true },
         select: { slug: true, createdAt: true },
+      }),
+      db.blogPost.findMany({
+        where: { status: 'published' },
+        select: { slug: true, updatedAt: true },
       }),
     ])
   } catch {
@@ -30,27 +35,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/new-arrivals`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.7 },
     { url: `${BASE_URL}/bestsellers`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.7 },
     { url: `${BASE_URL}/gift-finder`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.6 },
+    { url: `${BASE_URL}/blog`, lastModified: new Date(), changeFrequency: 'weekly' as const, priority: 0.6 },
     { url: `${BASE_URL}/about`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
     { url: `${BASE_URL}/contact`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.4 },
     { url: `${BASE_URL}/faq`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.4 },
     { url: `${BASE_URL}/shipping`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.4 },
     { url: `${BASE_URL}/returns`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.4 },
-    { url: `${BASE_URL}/recently-viewed`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.3 },
-    { url: `${BASE_URL}/rewards`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.3 },
     { url: `${BASE_URL}/privacy`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.2 },
     { url: `${BASE_URL}/terms`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.2 },
     { url: `${BASE_URL}/cookies`, lastModified: new Date(), changeFrequency: 'yearly' as const, priority: 0.2 },
-    { url: `${BASE_URL}/cart`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.3 },
-    { url: `${BASE_URL}/checkout`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.3 },
-    { url: `${BASE_URL}/login`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.1 },
-    { url: `${BASE_URL}/register`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.1 },
   ]
 
-  const productPages = products.map((p) => ({
+  const productPages: MetadataRoute.Sitemap = products.map((p) => ({
     url: `${BASE_URL}/products/${p.slug}`,
     lastModified: p.updatedAt,
     changeFrequency: 'weekly' as const,
     priority: 0.8,
+    images: p.imageUrl ? [p.imageUrl] : undefined,
   }))
 
   const categoryPages = categories.map((c) => ({
@@ -60,5 +61,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }))
 
-  return [...staticPages, ...productPages, ...categoryPages]
+  const blogPages = blogPosts.map((b) => ({
+    url: `${BASE_URL}/blog/${b.slug}`,
+    lastModified: b.updatedAt,
+    changeFrequency: 'monthly' as const,
+    priority: 0.5,
+  }))
+
+  return [...staticPages, ...productPages, ...categoryPages, ...blogPages]
 }

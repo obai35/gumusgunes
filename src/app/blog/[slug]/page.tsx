@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Calendar, ArrowLeft } from 'lucide-react'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
@@ -16,6 +17,20 @@ async function fetchPost(slug: string) {
 }
 
 export const revalidate = 60
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = await db.blogPost.findUnique({
+    where: { slug },
+    select: { title: true, excerpt: true },
+  })
+  if (!post) return {}
+  return {
+    title: post.title,
+    description: post.excerpt || undefined,
+    alternates: { canonical: `/blog/${slug}` },
+  }
+}
 
 export async function generateStaticParams() {
   try {

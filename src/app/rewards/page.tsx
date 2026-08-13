@@ -10,6 +10,7 @@ const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').t
 export const metadata: Metadata = {
   title: 'Rewards — Gümüş Güneş',
   description: 'Join the Gümüş Güneş loyalty program and earn rewards on every handcrafted silver piece you love.',
+  robots: { index: false, follow: false },
 }
 
 export default function RewardsPage() {
