@@ -5,7 +5,7 @@ import { getInventoryValuation, getCOGSReport } from '@/lib/cogs'
 export async function POST(req: NextRequest) {
   const auth = req.headers.get('authorization')
   const expected = process.env.CRON_SECRET
-  if (expected && auth !== `Bearer ${expected}`) {
+  if (!expected || auth !== `Bearer ${expected}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

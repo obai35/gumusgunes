@@ -1,7 +1,19 @@
 import { PrismaClient } from '@prisma/client'
-import { pipeline } from '@huggingface/transformers'
 
 const prisma = new PrismaClient()
+
+type Extractor = (text: string, opts: { pooling: string; normalize: boolean }) => Promise<{ data: Float32Array }>
+
+async function loadExtractor(): Promise<Extractor | null> {
+  try {
+    // @ts-ignore — optional ONNX runtime dependency (removed from package.json)
+    const mod = await import('@huggingface/transformers')
+    const pipeline = (mod as { pipeline: (task: string, model: string) => Promise<Extractor> }).pipeline
+    return await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
+  } catch {
+    return null
+  }
+}
 
 async function main() {
   const rebuild = process.argv.includes('--rebuild')
@@ -74,35 +86,36 @@ async function main() {
     }
   }
 
-  // AI embedding similarity
-  console.log('Generating embeddings with ONNX...')
-  const extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2')
+  // AI embedding similarity (skipped when the optional ONNX runtime is not installed)
+  const extractor = await loadExtractor()
+  if (extractor) {
+    console.log('Generating embeddings with ONNX...')
 
-  for (let i = 0; i < products.length; i++) {
-    const p = products[i]
-    const tags: string[] = typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags
-    const text = `${p.name} ${p.material} ${p.category?.name || ''} ${tags.join(' ')}`
-    const output = await extractor(text, { pooling: 'mean', normalize: true })
-    const embedding = Array.from(output.data)
-    const vectorStr = `[${embedding.join(',')}]`
+    for (let i = 0; i < products.length; i++) {
+      const p = products[i]
+      const tags: string[] = typeof p.tags === 'string' ? JSON.parse(p.tags) : p.tags
+      const text = `${p.name} ${p.material} ${p.category?.name || ''} ${tags.join(' ')}`
+      const output = await extractor(text, { pooling: 'mean', normalize: true })
+      const embedding = Array.from(output.data)
+      const vectorStr = `[${embedding.join(',')}]`
 
-    await prisma.$executeRaw`
+      await prisma.$executeRaw`
       INSERT INTO "ProductEmbedding" ("id", "productId", "vector", "createdAt", "updatedAt")
       VALUES (gen_random_uuid(), ${p.id}, ${vectorStr}, NOW(), NOW())
       ON CONFLICT ("productId")
       DO UPDATE SET "vector" = ${vectorStr}, "updatedAt" = NOW()
     `
 
-    if ((i + 1) % 10 === 0) console.log(`  Embedded ${i + 1}/${products.length}`)
-  }
+      if ((i + 1) % 10 === 0) console.log(`  Embedded ${i + 1}/${products.length}`)
+    }
 
-  // Compute top-5 similarity edges per product
-  console.log('Computing similarity edges...')
-  for (const p of products) {
-    const source = await prisma.productEmbedding.findUnique({ where: { productId: p.id } })
-    if (!source) continue
+    // Compute top-5 similarity edges per product
+    console.log('Computing similarity edges...')
+    for (const p of products) {
+      const source = await prisma.productEmbedding.findUnique({ where: { productId: p.id } })
+      if (!source) continue
 
-    const similar = await prisma.$queryRaw<{ id: string; similarity: number }[]>`
+      const similar = await prisma.$queryRaw<{ id: string; similarity: number }[]>`
       SELECT e."productId" as id, 1 - (e.vector::vector <=> ${source.vector}::vector) as similarity
       FROM "ProductEmbedding" e
       WHERE e."productId" != ${p.id}
@@ -110,11 +123,14 @@ async function main() {
       LIMIT 5
     `
 
-    for (const s of similar) {
-      if (s.similarity >= 0.5) {
-        relations.push({ fromId: p.id, toId: s.id, type: 'SIMILAR_TO', weight: Math.round(s.similarity * 100) / 100 })
+      for (const s of similar) {
+        if (s.similarity >= 0.5) {
+          relations.push({ fromId: p.id, toId: s.id, type: 'SIMILAR_TO', weight: Math.round(s.similarity * 100) / 100 })
+        }
       }
     }
+  } else {
+    console.log('ONNX runtime not installed; skipping AI embeddings and similarity edges')
   }
 
   // Batch insert all relations (deduplicated)
