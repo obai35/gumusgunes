@@ -39,6 +39,7 @@ export function withPosOrAdmin(
               isSuperAdmin: false,
               storeId: branch.storeId,
               branchId: branch.id,
+              totpEnabled: true,
             }
             return await handler(req, { params, admin: posAdmin })
           }

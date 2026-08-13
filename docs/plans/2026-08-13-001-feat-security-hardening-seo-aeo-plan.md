@@ -263,7 +263,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm run test:e2e` POS flow passes; manually in devtools: cookie visible, localStorage empty
 
-- [ ] **Unit 4: Admin 2FA enrollment, backup codes, recovery (R5)**
+- [x] **Unit 4: Admin 2FA enrollment, backup codes, recovery (R5)**
 
 **Goal:** Privileged admins get a complete 2FA lifecycle: enrollment with QR + codes required to prove the secret before persist, single-use hashed backup codes, and recovery; 2FA enforced for privileged roles; factor changes step-up re-authenticated.
 

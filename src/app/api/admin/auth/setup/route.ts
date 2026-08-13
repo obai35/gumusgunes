@@ -1,41 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withRateLimit } from '@/lib/rate-limit'
-import { verifyAdminToken } from '@/lib/admin-auth'
+import { signAdminSetupToken } from '@/lib/admin-auth'
+import { getAdminFromToken } from '@/lib/admin-permissions'
 import { db } from '@/lib/db'
 
 const handler = async (request: NextRequest) => {
   try {
-    const authHeader = request.headers.get('Authorization')
-    if (!authHeader?.startsWith('Bearer ')) {
+    const admin = await getAdminFromToken(request)
+    if (!admin) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const token = authHeader.slice(7)
-    const payload = verifyAdminToken(token)
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-    }
-
-    const admin = await db.admin.findUnique({ where: { id: payload.sub } })
-    if (!admin) {
+    const record = await db.admin.findUnique({ where: { id: admin.id } })
+    if (!record) {
       return NextResponse.json({ error: 'Admin not found' }, { status: 404 })
     }
 
-    if (admin.totpEnabled) {
+    if (record.totpEnabled) {
       return NextResponse.json({ error: '2FA already enabled' }, { status: 400 })
     }
 
     const { generateTotpSecret, generateTotpQrCode } = await import('@/lib/totp')
     const secret = generateTotpSecret()
-    const qrCode = await generateTotpQrCode(secret, admin.email)
+    const qrCode = await generateTotpQrCode(secret, record.email)
 
-    await db.admin.update({ where: { email: admin.email }, data: { totpSecret: secret } })
+    // The secret is NOT persisted here. It travels only inside a short-lived
+    // signed token and is committed only after the admin proves possession of
+    // it via a valid authenticator code (see verify route).
+    const setupToken = signAdminSetupToken(record.id, secret)
 
-    return NextResponse.json({ secret, qrCode })
+    return NextResponse.json({ secret, qrCode, setupToken })
   } catch (e) {
     console.error('Setup 2FA error:', e)
     return NextResponse.json({ error: 'Setup failed' }, { status: 500 })
   }
 }
 
-export const GET = withRateLimit(handler, { limit: 3, window: '60s', failClosed: true })
+export const POST = withRateLimit(handler, { limit: 5, window: '60s', failClosed: true })

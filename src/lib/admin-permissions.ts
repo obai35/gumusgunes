@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdminToken } from './admin-auth'
+import { isPrivilegedAdmin } from './admin-2fa'
 import { db } from './db'
 
 export const ALL_PERMISSIONS = [
@@ -22,6 +23,7 @@ export type AdminInfo = {
   permissions: string[]
   isSuperAdmin: boolean
   storeId: string
+  totpEnabled: boolean
 }
 
 const adminCache = new Map<string, { admin: AdminInfo; expiresAt: number }>()
@@ -57,9 +59,17 @@ export async function getAdminFromToken(req: NextRequest): Promise<AdminInfo | n
   const permissions = admin.roleRel ? JSON.parse(admin.roleRel.permissions) as string[] : []
   const isSuperAdmin = role === 'superadmin' || role === 'super_admin' || role === 'admin'
   const storeId = payload.storeId || admin.storeId
-  const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin, storeId }
+  const result: AdminInfo = { id: admin.id, email: admin.email, name: admin.name, role, permissions, isSuperAdmin, storeId, totpEnabled: admin.totpEnabled }
   adminCache.set(adminId, { admin: result, expiresAt: Date.now() + CACHE_TTL })
   return result
+}
+
+function enrollmentGate(admin: AdminInfo): NextResponse | null {
+  if (admin.totpEnabled || !isPrivilegedAdmin(admin)) return null
+  return NextResponse.json(
+    { error: 'Two-factor authentication must be set up to continue', code: '2FA_ENROLLMENT_REQUIRED' },
+    { status: 403 }
+  )
 }
 
 export function withAdmin(
@@ -75,6 +85,8 @@ export function withAdmin(
       if (requiredPermission && !admin.isSuperAdmin && !admin.permissions.includes(requiredPermission)) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
+      const enrolled = enrollmentGate(admin)
+      if (enrolled) return enrolled
       const params = ctx.params ? await ctx.params : ctx.params
       return await handler(req, { params, admin })
     } catch (err) {
@@ -92,6 +104,8 @@ export function requireAdmin(permission?: Permission) {
     if (permission && !admin.isSuperAdmin && !admin.permissions.includes(permission)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+    const enrolled = enrollmentGate(admin)
+    if (enrolled) return enrolled
     return null
   }
 }

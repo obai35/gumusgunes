@@ -97,6 +97,22 @@ export function passwordResetEmail(token: string, email: string): EmailPayload {
   }
 }
 
+export function adminRecoveryEmail(token: string, email: string): EmailPayload {
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_STORE_URL || 'http://localhost:3000'
+  const link = `${baseUrl}/admin/recovery?token=${token}&email=${encodeURIComponent(email)}`
+  return {
+    to: email,
+    subject: 'Admin Account Recovery - Gümüş Güneş',
+    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+      <h1>Admin Account Recovery</h1>
+      <p>A request was made to disable two-factor authentication on this admin account. If this was you, click the link below. This link expires in 30 minutes.</p>
+      <a href="${link}" style="display: inline-block; padding: 12px 24px; background: #1e3a5f; color: white; text-decoration: none; border-radius: 8px;">Recover Account</a>
+      <p>If you did not request this, ignore this email and contact an administrator immediately.</p>
+    </div>`,
+    text: `Recover your admin account here (expires in 30 minutes): ${link}`,
+  }
+}
+
 export function shipmentNotificationEmail(shipment: { trackingNumber: string; status: string; order?: { orderNumber: string } }): EmailPayload {
   return {
     to: '',
