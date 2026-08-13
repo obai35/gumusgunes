@@ -1,4 +1,5 @@
 import { db } from './db'
+import { logger } from './logger'
 
 export interface AuditEntry {
   adminId: string
@@ -10,16 +11,20 @@ export interface AuditEntry {
 }
 
 export async function logAudit(entry: AuditEntry): Promise<void> {
-  await db.activityLog.create({
-    data: {
-      adminId: entry.adminId,
-      action: entry.action,
-      resource: entry.resource,
-      resourceId: entry.resourceId,
-      storeId: entry.storeId ?? '',
-      details: entry.details ? JSON.stringify(entry.details) : undefined,
-    },
-  })
+  try {
+    await db.activityLog.create({
+      data: {
+        adminId: entry.adminId,
+        action: entry.action,
+        resource: entry.resource,
+        resourceId: entry.resourceId,
+        storeId: entry.storeId ?? '',
+        details: entry.details ? JSON.stringify(entry.details) : undefined,
+      },
+    })
+  } catch (err) {
+    logger.warn({ err, entry }, 'Audit log write failed')
+  }
 }
 
 export async function withAudit<T>(entry: AuditEntry, fn: () => Promise<T>): Promise<T> {
