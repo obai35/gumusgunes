@@ -935,19 +935,22 @@ model Shift {
 }
 
 model Branch {
-  id        String        @id @default(cuid())
-  storeId   String
-  store     Store         @relation(fields: [storeId], references: [id])
-  name      String
-  email     String        @unique
-  password  String
-  phone     String?
-  address   String?
-  isActive  Boolean       @default(true)
-  createdAt DateTime      @default(now())
-  shifts    Shift[]
-  stocks    BranchStock[]
-  expenses  Expense[]
+  id                 String        @id @default(cuid())
+  storeId            String
+  store              Store         @relation(fields: [storeId], references: [id])
+  name               String
+  email              String        @unique
+  password           String
+  phone              String?
+  address            String?
+  isActive           Boolean       @default(true)
+  failedLoginAttempts Int          @default(0)
+  lockedUntil        DateTime?
+  tokenVersion       Int           @default(0)
+  createdAt          DateTime      @default(now())
+  shifts             Shift[]
+  stocks             BranchStock[]
+  expenses           Expense[]
 
   @@index([storeId])
 }
@@ -2374,3 +2377,17 @@ model ProdOpLabor {
   @@index([operationId])
   @@index([storeId])
 }
+
+model BackupCode {
+  id        String    @id @default(cuid())
+  ownerId   String
+  ownerType String // admin | user
+  index     Int
+  hash      String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@unique([ownerId, ownerType, index])
+  @@index([ownerId, ownerType])
+}
+

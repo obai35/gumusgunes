@@ -37,7 +37,7 @@ export default function AdminLogin() {
 
     if (res.ok) {
       if (data.totpRequired) {
-        setTotpPending({ adminId: data.adminId, email })
+        setTotpPending({ email })
         setLoading(false)
         return
       }

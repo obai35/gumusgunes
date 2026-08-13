@@ -19,7 +19,7 @@ export interface DualRateLimitOptions {
   failClosed?: boolean
 }
 
-type ApiHandler = (req: Request, ...args: unknown[]) => unknown
+type ApiHandler = (...args: any[]) => unknown
 
 export function hasRedisConfig(): boolean {
   return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)

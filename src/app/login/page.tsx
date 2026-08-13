@@ -20,7 +20,13 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    if (totpPending) setTotpEmail(totpPending.email)
+    if (totpPending) {
+      setTotpEmail(totpPending.email)
+      return
+    }
+    if (window.location.search.includes('2fa=pending')) {
+      setTotpPending({ tempToken: null, email: '' })
+    }
   }, [totpPending])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -30,8 +36,9 @@ export default function LoginPage() {
     if (!password) newErrors.password = t('auth.login.passwordRequired')
     if (Object.keys(newErrors).length) { setErrors(newErrors); return }
     setLoading(true)
-    const body: any = { email, password }
-    if (totpPending) { body.email = totpEmail; body.totpToken = totpCode }
+    const body: any = totpPending
+      ? { totpToken: totpCode, ...(totpPending.tempToken ? { tempToken: totpPending.tempToken } : {}) }
+      : { email, password }
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -43,7 +50,7 @@ export default function LoginPage() {
       toast.success(t('auth.login.welcomeBackToast'))
       router.push('/')
     } else if (data.totpRequired) {
-      setTotpPending({ userId: data.userId, email: email || totpEmail })
+      setTotpPending({ tempToken: data.tempToken, email: email || totpEmail })
       setLoading(false)
       return
     } else {

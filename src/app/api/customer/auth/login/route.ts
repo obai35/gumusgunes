@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 import { withDualRateLimit } from '@/lib/rate-limit'
-import { verifyPassword, signToken } from '@/lib/customer-auth'
+import { verifyPassword, signToken, signTotpTempToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
+import { lockedFor, recordFailedAttempt, resetFailedAttempts } from '@/lib/lockout'
 import { z } from 'zod'
 
 const LoginSchema = z.object({
@@ -29,17 +29,26 @@ const handler = async (req: NextRequest) => {
       return NextResponse.json({ error: 'This account uses Google sign-in. Please sign in with Google.', code: 'google_only_account' }, { status: 401 })
     }
 
+    const lockedSeconds = lockedFor(user)
+    if (lockedSeconds !== null) {
+      return NextResponse.json(
+        { error: 'Account temporarily locked. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(lockedSeconds) } }
+      )
+    }
+
     const valid = await verifyPassword(password, user.password)
     if (!valid) {
+      await recordFailedAttempt(user, (data) => db.user.update({ where: { id: user.id }, data })).catch(() => {})
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
     if (user.totpEnabled) {
-      const JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET
-      if (!JWT_SECRET) throw new Error('JWT_SECRET not configured')
-      const tempToken = jwt.sign({ userId: user.id, email: user.email, totp: true }, JWT_SECRET, { expiresIn: '5m' })
+      const tempToken = signTotpTempToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
       return NextResponse.json({ requiresTotp: true, tempToken })
     }
+
+    await resetFailedAttempts((data) => db.user.update({ where: { id: user.id }, data })).catch(() => {})
 
     const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.json({

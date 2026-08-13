@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withRateLimit } from '@/lib/rate-limit'
 import crypto from 'crypto'
-import { hashPassword, signToken } from '@/lib/customer-auth'
+import { hashPassword, signToken, signTotpTempToken } from '@/lib/customer-auth'
 import { encryptFields } from '@/lib/field-encryption'
 import { db } from '@/lib/db'
 import { storefrontDb } from '@/lib/storefront-db'
@@ -51,7 +51,8 @@ const handler = async (req: NextRequest) => {
     }
 
     if (user.totpEnabled) {
-      return NextResponse.json({ totpRequired: true, userId: user.id, email: user.email })
+      const tempToken = signTotpTempToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
+      return NextResponse.json({ totpRequired: true, tempToken })
     }
 
     const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })

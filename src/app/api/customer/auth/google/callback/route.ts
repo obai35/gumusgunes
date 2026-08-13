@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { signToken } from '@/lib/customer-auth'
+import { signToken, signTotpTempToken, TEMP_TOKEN_COOKIE } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
 import { storefrontDb } from '@/lib/storefront-db'
 
@@ -106,6 +106,19 @@ export async function GET(req: NextRequest) {
         storeId,
       },
     })
+
+    if (user.totpEnabled) {
+      const tempToken = signTotpTempToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
+      const pendingRedirect = NextResponse.redirect(new URL('/login?2fa=pending', origin))
+      pendingRedirect.cookies.set(TEMP_TOKEN_COOKIE, tempToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+        maxAge: 5 * 60,
+      })
+      return pendingRedirect
+    }
 
     const jwtToken = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.redirect(new URL('/?google_login=success', origin))

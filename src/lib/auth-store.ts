@@ -3,7 +3,7 @@
 import { create } from 'zustand'
 
 type User = { id: string; email: string; name: string; gender?: string }
-type TotpPending = { userId: string; email: string } | null
+type TotpPending = { tempToken: string | null; email: string } | null
 type AuthState = {
   user: User | null
   loading: boolean

@@ -91,7 +91,7 @@ describe('withRateLimit', () => {
 
   it('fails open with a warning when Upstash is not configured', async () => {
     const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {})
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withRateLimit(handler, { limit: 5, window: '30s' })
 
     const res = await wrapped(postRequest())
@@ -105,7 +105,7 @@ describe('withRateLimit', () => {
     process.env.UPSTASH_REDIS_REST_URL = 'https://x'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'y'
     state.behavior.result = { success: false, remaining: 0, reset: Date.now() + 30000 }
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withRateLimit(handler, { limit: 5, window: '30s' })
 
     const res = await wrapped(postRequest('1.2.3.4'))
@@ -119,7 +119,7 @@ describe('withRateLimit', () => {
   it('uses the last X-Forwarded-For hop as the default identifier', async () => {
     process.env.UPSTASH_REDIS_REST_URL = 'https://x'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'y'
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withRateLimit(handler, { limit: 5, window: '30s' })
 
     await wrapped(postRequest('1.2.3.4, 5.6.7.8'))
@@ -132,7 +132,7 @@ describe('withRateLimit', () => {
     process.env.UPSTASH_REDIS_REST_URL = 'https://x'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'y'
     state.behavior.failWith = new Error('redis down')
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withRateLimit(handler, { limit: 5, window: '30s', failClosed: true })
 
     const res = await wrapped(postRequest())
@@ -145,7 +145,7 @@ describe('withRateLimit', () => {
     process.env.UPSTASH_REDIS_REST_URL = 'https://x'
     process.env.UPSTASH_REDIS_REST_TOKEN = 'y'
     state.behavior.failWith = new Error('redis down')
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withRateLimit(handler, { limit: 5, window: '30s', failClosed: false })
 
     const res = await wrapped(postRequest())
@@ -172,7 +172,7 @@ describe('withDualRateLimit', () => {
   })
 
   it('checks both per-IP and per-email buckets (2 limit calls)', async () => {
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withDualRateLimit(handler, {
       limit: 5,
       window: '30s',
@@ -189,7 +189,7 @@ describe('withDualRateLimit', () => {
   })
 
   it('checks only the IP bucket when no email can be parsed', async () => {
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withDualRateLimit(handler, {
       limit: 5,
       window: '30s',
@@ -205,7 +205,7 @@ describe('withDualRateLimit', () => {
 
   it('rejects when the per-email bucket is exhausted, before the handler runs', async () => {
     state.behavior.result = { success: false, remaining: 0, reset: Date.now() + 30000 }
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withDualRateLimit(handler, {
       limit: 5,
       window: '30s',
@@ -221,7 +221,7 @@ describe('withDualRateLimit', () => {
 
   it('rejects when the per-IP bucket is exhausted, even with a fresh email', async () => {
     state.behavior.result = { success: false, remaining: 0, reset: Date.now() + 30000 }
-    const handler = vi.fn(async () => new Response('ok', { status: 200 }))
+    const handler = vi.fn(async (_req: Request) => new Response('ok', { status: 200 }))
     const wrapped = withDualRateLimit(handler, {
       limit: 5,
       window: '30s',

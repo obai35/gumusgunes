@@ -8,10 +8,10 @@ type AdminAuthState = {
   user: AdminUser | null
   loading: boolean
   initialized: boolean
-  totpPending: { adminId: string; email: string } | null
+  totpPending: { email: string } | null
   adminLogin: (user: AdminUser) => void
   logout: () => void
-  setTotpPending: (data: { adminId: string; email: string } | null) => void
+  setTotpPending: (data: { email: string } | null) => void
   fetchUser: () => Promise<void>
 }
 

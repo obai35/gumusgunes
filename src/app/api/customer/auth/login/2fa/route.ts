@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import jwt from 'jsonwebtoken'
 import { withRateLimit } from '@/lib/rate-limit'
 import { verifyTotpCode } from '@/lib/totp'
-import { signToken } from '@/lib/customer-auth'
+import { signToken, verifyTotpTempToken } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
+import { lockedFor, recordFailedAttempt, resetFailedAttempts } from '@/lib/lockout'
 import { z } from 'zod'
 
 const Schema = z.object({
@@ -19,13 +19,9 @@ const handler = async (req: NextRequest) => {
     }
 
     const { tempToken, code } = parsed.data
-    const JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET
-    if (!JWT_SECRET) throw new Error('JWT_SECRET not configured')
 
-    let payload: { userId: string; email: string }
-    try {
-      payload = jwt.verify(tempToken, JWT_SECRET) as { userId: string; email: string }
-    } catch {
+    const payload = verifyTotpTempToken(tempToken)
+    if (!payload) {
       return NextResponse.json({ error: 'Invalid or expired temp token' }, { status: 401 })
     }
 
@@ -33,10 +29,24 @@ const handler = async (req: NextRequest) => {
     if (!user || !user.totpSecret || !user.totpEnabled) {
       return NextResponse.json({ error: '2FA not enabled' }, { status: 400 })
     }
+    if (payload.tokenVersion !== user.tokenVersion) {
+      return NextResponse.json({ error: 'Session revoked. Please sign in again.' }, { status: 401 })
+    }
+
+    const lockedSeconds = lockedFor(user)
+    if (lockedSeconds !== null) {
+      return NextResponse.json(
+        { error: 'Account temporarily locked. Try again later.' },
+        { status: 429, headers: { 'Retry-After': String(lockedSeconds) } }
+      )
+    }
 
     if (!verifyTotpCode(code, user.totpSecret)) {
+      await recordFailedAttempt(user, (data) => db.user.update({ where: { id: user.id }, data })).catch(() => {})
       return NextResponse.json({ error: 'Invalid verification code' }, { status: 400 })
     }
+
+    await resetFailedAttempts((data) => db.user.update({ where: { id: user.id }, data })).catch(() => {})
 
     const token = signToken({ userId: user.id, email: user.email, tokenVersion: user.tokenVersion })
     const response = NextResponse.json({ user: { id: user.id, email: user.email, name: user.name } })
