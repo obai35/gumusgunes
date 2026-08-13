@@ -473,3 +473,36 @@ The implementation must follow this strict order to avoid service disruption:
 10. **File uploads**: Move to private directory
 11. **Remaining fixes**: Cookie cleanup, IDOR audit, password reset flow
 12. **Quality gates**: React strict mode, fix TS errors
+
+## 9. Audit Runbook Appendix (executed 2026-08-14)
+
+Dated findings from the R6 audit pass (plan units 1–6). Pattern: finding → status → exception date.
+
+| # | Finding | Status | Notes |
+|---|---|---|---|
+| 1 | CSRF coverage on all state-changing routes | ✅ PASS | `src/middleware.ts` origin/referer-checks every `/api` POST/PUT/PATCH; DELETE origin-checked; OPTIONS pass-through. `CSRF_EXEMPT` = csp-report + stripe/paypal/whatsapp/meta webhooks only. |
+| 2 | Authz spot-check: admin/POS APIs | ✅ PASS | All state-changing admin/POS routes guarded (`withAdmin`/`requireAdmin`/`withPosOrAdmin`). Only intentionally public endpoints unguarded: admin login, recovery request/confirm, POS login/logout. |
+| 3 | Secrets validated at boot | ✅ PASS | `src/lib/env-check.ts` + root `instrumentation.ts` (`validateEnvAtBoot`). Fail-fast only when `NODE_ENV=production && VERCEL_ENV=production` (previews never brick). Placeholder patterns detected (`<generate`, `xxx`, `changeme`, `your_secret`, `example`). Per-surface key separation asserted. |
+| 4 | `typescript.ignoreBuildErrors: true` | ✅ RESOLVED | Removed from `next.config.ts` 2026-08-14; `next build` now typechecks. `@huggingface/transformers` import in `prisma/seed-graph.ts:9` keeps a documented `@ts-ignore` (optional ONNX runtime dep, removed from package.json). |
+| 5 | Security headers single source | ✅ PASS | Single template in `next.config.ts`; no header duplication with middleware. Live-verified via `curl -sI` on home and `/preview`. |
+| 6 | Env inventory | ✅ DONE | ~66 `process.env.*` usages inventoried 2026-08-14 (required set covered by env-check). |
+
+**Dated exceptions (revisit list):**
+
+- `'unsafe-inline'` in CSP `script-src`/`style-src` — Next.js hydration without a nonce infrastructure. Revisit when adding nonce middleware. (2026-08-14)
+- `payment` permission policy left at default — Stripe PaymentElement wallet persistence. (2026-08-14)
+- UPSTASH Redis pair warn-only at boot — fail-open is R1's documented stance. (2026-08-14)
+- `prisma/seed-graph.ts:9` `@ts-ignore` on `@huggingface/transformers` dynamic import. (2026-08-14)
+
+**Standard verification commands:**
+
+```bash
+npx vitest run              # unit + route tests: 54/54
+npx tsc --noEmit            # typecheck (build previously skipped this)
+npx next build              # production build
+npx next start -p 3999 &    # live header check:
+curl -sI http://localhost:3999/        # expect full CSP, frame-ancestors 'none', Reporting-Endpoints
+curl -sI http://localhost:3999/preview # expect frame-ancestors 'self', XFO SAMEORIGIN
+```
+
+**Boot smoke test:** set `NODE_ENV=production VERCEL_ENV=production` with an empty/placeholder `PASSWORD_PEPPER` → app must refuse to start with a clear error; the same run on a preview deploy (`VERCEL_ENV=preview`) must boot with warnings only.

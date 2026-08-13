@@ -299,7 +299,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm test` green; manual end-to-end on staging admin account: enroll, use code, use backup code, regenerate invalidates old set
 
-- [ ] **Unit 5: Security headers single source of truth (R3)**
+- [x] **Unit 5: Security headers single source of truth (R3)**
 
 **Goal:** One place sets CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy for all storefront/admin/POS pages; uncommitted middleware+config divergence resolved; CSP tightened where the app provably allows.
 
@@ -327,7 +327,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm run test:e2e` header suite passes; `curl -I` on live deployment shows the full header set on `/`, `/products`, `/admin/login`, `/pos/login`
 
-- [ ] **Unit 6: Security audit pass + secrets validated at boot (R6)**
+- [x] **Unit 6: Security audit pass + secrets validated at boot (R6)**
 
 **Goal:** CSRF coverage verified on state-changing routes, authz spot-checked on admin/POS APIs, secrets fail-fast at boot, and the audit checklists documented.
 
