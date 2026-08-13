@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withRateLimit } from '@/lib/rate-limit'
+import { withDualRateLimit } from '@/lib/rate-limit'
 import { verifyPassword, signToken, hashPassword } from '@/lib/customer-auth'
 import { db } from '@/lib/db'
 import { logAudit } from '@/lib/audit'
@@ -62,4 +62,9 @@ const handler = async (req: NextRequest) => {
   }
 }
 
-export const POST = withRateLimit(handler, { limit: 10, window: '60s' })
+export const POST = withDualRateLimit(handler, {
+  limit: 10,
+  window: '60s',
+  emailOf: async (req) => (await req.clone().json().catch(() => null))?.email,
+  failClosed: true,
+})

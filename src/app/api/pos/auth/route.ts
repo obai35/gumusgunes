@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPosCredentials, signPosToken } from '@/lib/pos-auth'
+import { withDualRateLimit } from '@/lib/rate-limit'
 
-export async function POST(req: NextRequest) {
+const handler = async (req: NextRequest) => {
   try {
     const { email, password } = await req.json()
     if (!email || !password) return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
@@ -14,3 +15,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'Login failed' }, { status: 500 })
   }
 }
+
+export const POST = withDualRateLimit(handler, {
+  limit: 5,
+  window: '30s',
+  emailOf: async (req) => (await req.clone().json().catch(() => null))?.email,
+  failClosed: true,
+})

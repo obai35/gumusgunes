@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/customer-auth'
 import { verifyTotpCode } from '@/lib/totp'
 import { db } from '@/lib/db'
+import { withRateLimit } from '@/lib/rate-limit'
 
-export async function POST(req: Request) {
+const handler = async (req: Request) => {
   try {
     const auth = req.headers.get('authorization')
     if (!auth?.startsWith('Bearer ')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -24,3 +25,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Verification failed' }, { status: 500 })
   }
 }
+
+export const POST = withRateLimit(handler, { limit: 5, window: '60s', failClosed: true })
