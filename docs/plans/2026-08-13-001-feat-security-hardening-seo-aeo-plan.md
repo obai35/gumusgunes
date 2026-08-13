@@ -158,7 +158,7 @@ Decision matrix — login attempts:
 
 ### Phase 1 — Security hardening
 
-- [ ] **Unit 1: Complete rate limiting on all auth endpoints (R1)**
+- [x] **Unit 1: Complete rate limiting on all auth endpoints (R1)**
 
 **Goal:** POS login gains rate limiting; admin/customer/2FA endpoints verified and retrofitted to dual buckets; `failClosed` semantics wired; unconfigured state is loud at boot; `/api/pos/auth/me` created so U3 has a cookie-consumer endpoint.
 
@@ -192,7 +192,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm test` green; manual POST to `/api/pos/auth` 6× → 429; admin login behavior unchanged on live
 
-- [ ] **Unit 2: Failed 2FA counts toward lockout on all login surfaces (R4)**
+- [x] **Unit 2: Failed 2FA counts toward lockout on all login surfaces (R4)**
 
 **Goal:** Wrong TOTP codes increment `failedLoginAttempts` wherever TOTP is enforced; customer 2FA becomes enforced on the live login stack; the counter resets only on full authentication success; the lockout-less duplicate customer stack login gains the same lockout as the live stack.
 
@@ -230,7 +230,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm test` green covering all three surfaces; manual: 10 wrong TOTP codes on a test admin → lockedUntil set in DB
 
-- [ ] **Unit 3: POS auth moves to httpOnly cookie (R2)**
+- [x] **Unit 3: POS auth moves to httpOnly cookie (R2)**
 
 **Goal:** POS JWT lives only in an httpOnly, secure, sameSite cookie; localStorage `gg_pos_auth` removed; POS login gets lockout (via U2 helper).
 

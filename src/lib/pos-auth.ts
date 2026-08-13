@@ -1,6 +1,4 @@
 import jwt from 'jsonwebtoken'
-import { hashPassword, verifyPassword } from '@/lib/password'
-import { db } from './db'
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET
@@ -13,14 +11,7 @@ export type PosUser = {
   name: string
   email: string
   branchId: string
-}
-
-export async function verifyPosCredentials(email: string, password: string): Promise<PosUser | null> {
-  const branch = await db.branch.findUnique({ where: { email } })
-  if (!branch || !branch.isActive) return null
-  const valid = await verifyPassword(password, branch.password)
-  if (!valid) return null
-  return { id: branch.id, name: branch.name, email: branch.email, branchId: branch.id }
+  tokenVersion?: number
 }
 
 export function signPosToken(user: PosUser): string {
@@ -34,5 +25,3 @@ export function verifyPosToken(token: string): PosUser | null {
     return null
   }
 }
-
-export { hashPassword, verifyPassword }

@@ -21,8 +21,7 @@ export function withPosOrAdmin(
         return await handler(req, { params, admin })
       }
 
-      const authHeader = req.headers.get('Authorization')
-      const posToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null
+      const posToken = req.cookies.get('__session_pos')?.value ?? null
       if (posToken) {
         const posUser = verifyPosToken(posToken)
         if (posUser) {

@@ -25,19 +25,18 @@ import type { Shift } from '../types'
 
 export default function POSPaymentPage() {
   const router = useRouter()
-  const { token, user } = usePosAuth()
-  const [hydrated, setHydrated] = useState(false)
+  const { user } = usePosAuth()
+  const authLoading = usePosAuth((s) => s.loading)
   const [posHydrated, setPosHydrated] = useState(false)
   const [shift, setShift] = useState<Shift | null>(null)
 
   useEffect(() => {
-    if (usePosAuth.persist.hasHydrated()) {
-      setHydrated(true)
-    } else {
-      const unsub = usePosAuth.persist.onFinishHydration(() => setHydrated(true))
-      return () => unsub()
-    }
+    usePosAuth.getState().fetchUser()
   }, [])
+
+  useEffect(() => {
+    if (!authLoading && !user) router.replace('/pos/login')
+  }, [authLoading, user, router])
 
   useEffect(() => {
     if (usePosStore.persist.hasHydrated()) {
@@ -47,19 +46,6 @@ export default function POSPaymentPage() {
       return () => unsub()
     }
   }, [])
-
-  useEffect(() => {
-    if (hydrated && !token) router.replace('/pos/login')
-  }, [hydrated, token, router])
-
-  useEffect(() => {
-    if (hydrated && token && user?.branchId) {
-      posFetch(`/api/admin/pos/shifts/active?branchId=${user.branchId}`)
-        .then((res) => res.json())
-        .then((data) => { if (data.ok && data.shift) setShift(data.shift) })
-        .catch(() => {})
-    }
-  }, [hydrated, token, user?.branchId])
 
   const pos = usePos()
   const offlineMode = usePosStore((s) => s.offlineMode)
@@ -104,10 +90,10 @@ export default function POSPaymentPage() {
   }, [pos])
 
   useEffect(() => {
-    if (hydrated && token && posHydrated && pos.cart.length === 0 && !pos.receipt && !offlineReceipt) {
+    if (user && posHydrated && pos.cart.length === 0 && !pos.receipt && !offlineReceipt) {
       router.replace('/pos')
     }
-  }, [hydrated, token, posHydrated, pos.cart.length, pos.receipt, offlineReceipt, router])
+  }, [user, posHydrated, pos.cart.length, pos.receipt, offlineReceipt, router])
 
   const handleApplyDiscount = useCallback(async () => {
     if (!pos.discountCode.trim()) return
@@ -296,7 +282,7 @@ export default function POSPaymentPage() {
     },
   })
 
-  if (!hydrated || !token || !posHydrated) return null
+  if (authLoading || !user || !posHydrated) return null
 
   if (offlineReceipt) return (
     <div className="navy-radial min-h-screen">

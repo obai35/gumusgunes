@@ -1,28 +1,34 @@
 'use client'
 
 import { create } from 'zustand'
-import { persist, createJSONStorage } from 'zustand/middleware'
+import { wipeLegacyPosToken } from './pos-client-fetch'
 
 type PosUser = { id: string; name: string; email: string; branchId: string }
 type PosAuthState = {
-  token: string | null
   user: PosUser | null
-  login: (token: string, user: PosUser) => void
+  loading: boolean
+  login: (user: PosUser) => void
   logout: () => void
+  fetchUser: () => Promise<void>
 }
 
-export const usePosAuth = create<PosAuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      user: null,
-      login: (token, user) => set({ token, user }),
-      logout: () => set({ token: null, user: null }),
-    }),
-    {
-      name: 'gg_pos_auth',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ token: state.token, user: state.user }),
+export const usePosAuth = create<PosAuthState>()((set) => ({
+  user: null,
+  loading: true,
+  login: (user) => set({ user, loading: false }),
+  logout: () => set({ user: null }),
+  fetchUser: async () => {
+    wipeLegacyPosToken()
+    try {
+      const res = await fetch('/api/pos/auth/me')
+      if (res.ok) {
+        const data = await res.json()
+        set({ user: data.user, loading: false })
+      } else {
+        set({ user: null, loading: false })
+      }
+    } catch {
+      set({ user: null, loading: false })
     }
-  )
-)
+  },
+}))

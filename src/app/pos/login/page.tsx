@@ -25,7 +25,7 @@ export default function PosLoginPage() {
     })
     const data = await res.json()
     if (res.ok) {
-      usePosAuth.getState().login(data.token, data.user)
+      usePosAuth.getState().login(data.user)
       toast.success(t('auth.posLogin.welcomeToast'))
       router.push('/pos')
     } else {

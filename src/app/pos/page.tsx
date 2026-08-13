@@ -35,21 +35,16 @@ type View = 'pos' | 'orders' | 'records' | 'returns' | 'hall-sale' | 'assessment
 
 export default function POSPage() {
   const router = useRouter()
-  const { token, user, logout } = usePosAuth()
-  const [hydrated, setHydrated] = useState(false)
+  const { user, logout } = usePosAuth()
+  const authLoading = usePosAuth((s) => s.loading)
 
   useEffect(() => {
-    if (usePosAuth.persist.hasHydrated()) {
-      setHydrated(true)
-    } else {
-      const unsub = usePosAuth.persist.onFinishHydration(() => setHydrated(true))
-      return () => unsub()
-    }
+    usePosAuth.getState().fetchUser()
   }, [])
 
   useEffect(() => {
-    if (hydrated && !token) router.replace('/pos/login')
-  }, [hydrated, token, router])
+    if (!authLoading && !user) router.replace('/pos/login')
+  }, [authLoading, user, router])
 
   const pos = usePos()
   const [posHydrated, setPosHydrated] = useState(false)
@@ -92,13 +87,13 @@ export default function POSPage() {
   const setSearch = usePosStore((s) => s.setSearch)
 
   useEffect(() => {
-    if (hydrated && token && user?.branchId) {
+    if (user?.branchId) {
       posFetch(`/api/admin/pos/shifts/active?branchId=${user.branchId}`)
         .then((res) => res.json())
         .then((data) => { if (data.ok && data.shift) setShift(data.shift) })
         .catch(() => {})
     }
-  }, [hydrated, token, user?.branchId])
+  }, [user?.branchId])
 
   useEffect(() => {
     if (view === 'assessment' && shift?.id) {
@@ -231,7 +226,11 @@ export default function POSPage() {
     if (showCustomPrice) customPriceRef.current?.querySelector('input')?.focus()
   }, [showCustomPrice])
 
-  const handleLogout = useCallback(() => { logout(); router.replace('/pos/login') }, [logout, router])
+  const handleLogout = useCallback(async () => {
+    try { await fetch('/api/pos/auth/logout', { method: 'POST' }) } catch {}
+    logout()
+    router.replace('/pos/login')
+  }, [logout, router])
 
   const handleTabChange = useCallback((tab: View) => {
     if (tab !== 'pos' && !shift) {
@@ -251,7 +250,7 @@ export default function POSPage() {
     },
   })
 
-  if (!hydrated || !token || !posHydrated) return null
+  if (authLoading || !user || !posHydrated) return null
 
   if (shiftSummary) {
     return (
