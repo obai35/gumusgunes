@@ -8,7 +8,7 @@ const MAX_OUTPUT = 10 * 1024 * 1024
 const BLOCKED_PATHS = ['.env', '.env.local', '.env.vercel', '.env.production', 'server.log', 'cookies.txt', 'node_modules']
 
 function safePath(p: string): string {
-  const resolved = path.resolve(PROJECT_ROOT, p)
+  const resolved = path.resolve(/* turbopackIgnore: true */ PROJECT_ROOT, p)
   if (!resolved.startsWith(PROJECT_ROOT)) throw new Error('Path outside project directory')
   for (const blocked of BLOCKED_PATHS) {
     if (resolved.toLowerCase().includes(blocked.toLowerCase())) throw new Error('Reading this file is not allowed')
