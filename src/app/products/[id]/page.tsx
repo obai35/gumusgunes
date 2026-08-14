@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import { T } from '@/components/store/Translated'
 import ProductDetailClient from './ProductDetailClient'
+import { SEO_SETTING_KEYS, productMetadata, seoFromSiteSettings, type SeoSettings } from '@/lib/seo'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
@@ -14,33 +15,30 @@ interface Props {
   params: Promise<{ id: string }>
 }
 
+async function getSeoSettings(storeId: string): Promise<SeoSettings> {
+  try {
+    const rows = await db.siteSetting.findMany({
+      where: { storeId, key: { in: [...SEO_SETTING_KEYS] } },
+      select: { key: true, value: true },
+    })
+    return seoFromSiteSettings(rows)
+  } catch {
+    return seoFromSiteSettings([])
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params
   const product = await db.product.findFirst({
     where: { OR: [{ id }, { slug: id }], isActive: true },
-    select: { name: true, description: true, imageUrl: true, price: true, slug: true },
+    select: { name: true, description: true, imageUrl: true, slug: true, storeId: true },
   })
 
   if (!product) {
     return { title: "Product Not Found" }
   }
 
-  return {
-    title: product.name,
-    description: product.description.slice(0, 160),
-    alternates: { canonical: `/products/${product.slug}` },
-    openGraph: {
-      title: product.name,
-      description: product.description.slice(0, 160),
-      images: [{ url: product.imageUrl, width: 1200, height: 1200 }],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: product.name,
-      description: product.description.slice(0, 160),
-      images: [product.imageUrl],
-    },
-  }
+  return productMetadata(product, await getSeoSettings(product.storeId))
 }
 
 export default async function ProductDetailPage({ params }: Props) {

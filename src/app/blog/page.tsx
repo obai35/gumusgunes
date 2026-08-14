@@ -7,24 +7,28 @@ import { Footer } from '@/components/store/Footer'
 import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { T } from '@/components/store/Translated'
+import { SEO_SETTING_KEYS, blogIndexMetadata, seoFromSiteSettings, type SeoSettings } from '@/lib/seo'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: "Blog — Gümüş Güneş",
-  description: "Guides, inspiration, and stories behind our handcrafted stainless steel accessories — rings, necklaces, earrings, bracelets, and pendants.",
-  openGraph: {
-    title: "Blog — Gümüş Güneş",
-    description: "Guides, inspiration, and stories behind our handcrafted stainless steel accessories.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Blog — Gümüş Güneş",
-    description: "Guides, inspiration, and stories behind our handcrafted stainless steel accessories.",
-  },
+async function getSeoSettings(): Promise<SeoSettings> {
+  try {
+    const store = await db.store.findFirst({ select: { id: true } })
+    if (!store) return seoFromSiteSettings([])
+    const rows = await db.siteSetting.findMany({
+      where: { storeId: store.id, key: { in: [...SEO_SETTING_KEYS] } },
+      select: { key: true, value: true },
+    })
+    return seoFromSiteSettings(rows)
+  } catch {
+    return seoFromSiteSettings([])
+  }
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  return blogIndexMetadata(await getSeoSettings())
 }
 
 export default async function BlogPage({

@@ -5,8 +5,24 @@ import dynamic from 'next/dynamic'
 import ProductsPageClient from './ProductsPageClient'
 import { T } from '@/components/store/Translated'
 import type { Metadata } from 'next'
+import { db } from '@/lib/db'
+import { SEO_SETTING_KEYS, categoryMetadata, productsIndexMetadata, seoFromSiteSettings, type SeoSettings } from '@/lib/seo'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
+
+async function getSeoSettings(): Promise<SeoSettings> {
+  try {
+    const store = await db.store.findFirst({ select: { id: true } })
+    if (!store) return seoFromSiteSettings([])
+    const rows = await db.siteSetting.findMany({
+      where: { storeId: store.id, key: { in: [...SEO_SETTING_KEYS] } },
+      select: { key: true, value: true },
+    })
+    return seoFromSiteSettings(rows)
+  } catch {
+    return seoFromSiteSettings([])
+  }
+}
 
 export async function generateMetadata({
   searchParams,
@@ -14,16 +30,14 @@ export async function generateMetadata({
   searchParams: Promise<{ category?: string }>
 }): Promise<Metadata> {
   const { category } = await searchParams
-  const canonical = `/products${category ? `?category=${category}` : ''}`
-  return {
-    title: "All Collections",
-    description: "Explore our handcrafted stainless steel accessories — rings, necklaces, earrings, bracelets, and pendants.",
-    alternates: { canonical },
-    openGraph: {
-      title: "All Collections — Gümüş Güneş",
-      description: "Explore our handcrafted stainless steel accessories.",
-    },
+  const settings = await getSeoSettings()
+  if (category) {
+    try {
+      const cat = await db.category.findFirst({ where: { slug: category }, select: { name: true, slug: true, description: true } })
+      if (cat) return categoryMetadata(cat, settings)
+    } catch {}
   }
+  return productsIndexMetadata(settings)
 }
 
 export default async function ProductsPage() {

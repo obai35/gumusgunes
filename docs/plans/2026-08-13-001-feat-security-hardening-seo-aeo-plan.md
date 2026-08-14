@@ -455,7 +455,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm run test:e2e` aeo suite passes; `curl https://gumusgunes.vercel.app/llms.txt` after deploy; headless walk completes browse→product→cart→checkout-start
 
-- [ ] **Unit 10: Content registry + measurement runbook (R24, R25)**
+- [x] **Unit 10: Content registry + measurement runbook (R24, R25)**
 
 **Goal:** A single content-registry helper produces unique metadata for catalog/blog pages; Search Console verified; AI-citation checks and quarterly audit documented and repeatable.
 

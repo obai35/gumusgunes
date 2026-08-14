@@ -9,11 +9,24 @@ import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import { SafeHtml } from '@/components/ui/SafeHtml'
 import { T } from '@/components/store/Translated'
+import { SEO_SETTING_KEYS, blogMetadata, seoFromSiteSettings, type SeoSettings } from '@/lib/seo'
 
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 async function fetchPost(slug: string) {
   return db.blogPost.findUnique({ where: { slug } })
+}
+
+async function getSeoSettings(storeId: string): Promise<SeoSettings> {
+  try {
+    const rows = await db.siteSetting.findMany({
+      where: { storeId, key: { in: [...SEO_SETTING_KEYS] } },
+      select: { key: true, value: true },
+    })
+    return seoFromSiteSettings(rows)
+  } catch {
+    return seoFromSiteSettings([])
+  }
 }
 
 export const revalidate = 60
@@ -22,27 +35,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const post = await db.blogPost.findUnique({
     where: { slug },
-    select: { title: true, excerpt: true, featuredImage: true },
+    select: { title: true, excerpt: true, featuredImage: true, storeId: true, slug: true },
   })
   if (!post) return {}
-  const description = post.excerpt || undefined
-  return {
-    title: post.title,
-    description,
-    alternates: { canonical: `/blog/${slug}` },
-    openGraph: {
-      title: post.title,
-      description,
-      type: 'article',
-      images: post.featuredImage ? [{ url: post.featuredImage, width: 1200, height: 630 }] : undefined,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: post.title,
-      description,
-      images: post.featuredImage ? [post.featuredImage] : undefined,
-    },
-  }
+  return blogMetadata(post, await getSeoSettings(post.storeId))
 }
 
 export async function generateStaticParams() {
