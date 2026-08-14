@@ -34,6 +34,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: product.description.slice(0, 160),
       images: [{ url: product.imageUrl, width: 1200, height: 1200 }],
     },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description: product.description.slice(0, 160),
+      images: [product.imageUrl],
+    },
   }
 }
 
@@ -57,6 +63,18 @@ export default async function ProductDetailPage({ params }: Props) {
   })
 
   const serialized = JSON.parse(JSON.stringify({ product, related }))
+
+  // Store-driven currency for structured data; fall back to EGP (multi-currency pricing out of scope).
+  let priceCurrency = 'EGP'
+  try {
+    const defaultCurrency = await db.currency.findFirst({
+      where: { storeId: serialized.product.storeId, isDefault: true, isActive: true },
+      select: { code: true },
+    })
+    if (defaultCurrency?.code) priceCurrency = defaultCurrency.code
+  } catch {
+    // currency lookup failure falls back to EGP
+  }
 
   return (
     <>
@@ -85,7 +103,7 @@ export default async function ProductDetailPage({ params }: Props) {
                 offers: {
                   "@type": "Offer",
                   price: serialized.product.price,
-                  priceCurrency: "EGP",
+                  priceCurrency,
                   availability: serialized.product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
                 },
                 aggregateRating: serialized.product.reviewCount > 0 ? {

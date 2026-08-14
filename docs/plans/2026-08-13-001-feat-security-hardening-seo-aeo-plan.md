@@ -391,7 +391,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm run test:e2e` indexing assertions pass; manual: Google Search Console post-sitemap refresh after deployment
 
-- [ ] **Unit 8: Rich metadata, OG/Twitter images, structured-data fixes (R22)**
+- [x] **Unit 8: Rich metadata, OG/Twitter images, structured-data fixes (R22)**
 
 **Goal:** Every public page has unique metadata; OG/Twitter card images exist (1200×630, absolute); JSON-LD valid (Product/Offer currency fixed, BreadcrumbList, Organization, WebSite, BlogPosting for blog).
 

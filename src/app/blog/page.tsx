@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { Calendar, Clock, ArrowRight } from 'lucide-react'
 import { Header } from '@/components/store/Header'
 import { Footer } from '@/components/store/Footer'
@@ -10,6 +11,21 @@ import { T } from '@/components/store/Translated'
 const ConciergeChat = dynamic(() => import('@/components/store/ConciergeChat').then(m => ({ default: m.ConciergeChat })))
 
 export const revalidate = 60
+
+export const metadata: Metadata = {
+  title: "Blog — Gümüş Güneş",
+  description: "Guides, inspiration, and stories behind our handcrafted stainless steel accessories — rings, necklaces, earrings, bracelets, and pendants.",
+  openGraph: {
+    title: "Blog — Gümüş Güneş",
+    description: "Guides, inspiration, and stories behind our handcrafted stainless steel accessories.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog — Gümüş Güneş",
+    description: "Guides, inspiration, and stories behind our handcrafted stainless steel accessories.",
+  },
+}
 
 export default async function BlogPage({
   searchParams,

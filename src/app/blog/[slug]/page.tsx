@@ -22,13 +22,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const post = await db.blogPost.findUnique({
     where: { slug },
-    select: { title: true, excerpt: true },
+    select: { title: true, excerpt: true, featuredImage: true },
   })
   if (!post) return {}
+  const description = post.excerpt || undefined
   return {
     title: post.title,
-    description: post.excerpt || undefined,
+    description,
     alternates: { canonical: `/blog/${slug}` },
+    openGraph: {
+      title: post.title,
+      description,
+      type: 'article',
+      images: post.featuredImage ? [{ url: post.featuredImage, width: 1200, height: 630 }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description,
+      images: post.featuredImage ? [post.featuredImage] : undefined,
+    },
   }
 }
 
@@ -100,6 +113,23 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </article>
       </main>
       <Footer />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            description: post.excerpt || undefined,
+            image: post.featuredImage || undefined,
+            datePublished: post.publishedAt || post.createdAt,
+            dateModified: post.updatedAt,
+            mainEntityOfPage: `https://gumusgunes.com/blog/${post.slug}`,
+            author: { "@type": "Organization", name: "Gümüş Güneş" },
+            publisher: { "@type": "Organization", name: "Gümüş Güneş", url: "https://gumusgunes.com" },
+          }),
+        }}
+      />
       <Suspense fallback={null}><ConciergeChat /></Suspense>
     </>
   )
