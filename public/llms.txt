@@ -1,0 +1,44 @@
+# Gümüş Güneş (Silver Sun)
+
+Gümüş Güneş (Silver Sun) is a jewelry brand specializing in handcrafted premium stainless steel accessories — rings, necklaces, earrings, bracelets, and pendants inspired by the sun, moon, and stars. All pieces are designed in-house, water-resistant, and made for everyday wear.
+
+## Home
+[Gümüş Güneş](https://gumusgunes.com) — Brand homepage: featured collections, bestsellers, new arrivals, and the jewelry design philosophy.
+
+## Products
+[All Products](https://gumusgunes.com/products) — The full catalog of handcrafted stainless steel rings, necklaces, earrings, bracelets, and pendants. Individual products live at `https://gumusgunes.com/products/{slug}`; categories filter the catalog at `https://gumusgunes.com/products?category={slug}`.
+
+## Collections
+[Collections](https://gumusgunes.com/collections) — Curated jewelry collections grouped by theme, material finish, and style.
+
+## New Arrivals
+[New Arrivals](https://gumusgunes.com/new-arrivals) — The most recently added handcrafted pieces.
+
+## Bestsellers
+[Bestsellers](https://gumusgunes.com/bestsellers) — The most popular stainless steel accessories by customer demand.
+
+## Gift Finder
+[Gift Finder](https://gumusgunes.com/gift-finder) — Guided tool for choosing jewelry gifts by recipient, occasion, and budget.
+
+## Blog
+[Blog](https://gumusgunes.com/blog) — Guides and stories about jewelry care, styling, and the craft behind each piece. Posts live at `https://gumusgunes.com/blog/{slug}`.
+
+## About
+[About Gümüş Güneş](https://gumusgunes.com/about) — The brand story, craft process, and materials philosophy.
+
+## Contact & Concierge
+[Contact](https://gumusgunes.com/contact) — Reach the concierge team for sizing help, order questions, and custom requests.
+
+## Shipping
+[Shipping](https://gumusgunes.com/shipping) — Standard (5–8 business days) and express (1–3 business days) delivery within Egypt; international shipping in 7–14 business days.
+
+## Returns
+[Returns](https://gumusgunes.com/returns) — 30-day return policy. Items must be unworn with original packaging; personalized items are final sale.
+
+## FAQ
+[FAQ](https://gumusgunes.com/faq) — Answers to common questions about ordering, payment methods (credit card, Instapay, Vodafone Cash, cash on delivery), shipping, returns, and jewelry care.
+
+## Privacy & Terms
+- [Privacy Policy](https://gumusgunes.com/privacy)
+- [Terms of Service](https://gumusgunes.com/terms)
+- [Cookie Policy](https://gumusgunes.com/cookies)

@@ -425,7 +425,7 @@ Decision matrix — login attempts:
 
 **Verification:** `npm run test:e2e` metadata suite passes; manual rich-results test (Google Rich Results Test) on `/products/[slug]` shows Product rich result
 
-- [ ] **Unit 9: AEO — llms.txt, AI-crawler policy, task-completable storefront (R23)**
+- [x] **Unit 9: AEO — llms.txt, AI-crawler policy, task-completable storefront (R23)**
 
 **Goal:** `llms.txt` served; robots.txt states explicit AI-crawler policy; storefront verified AI-agent-completable (browse → product → cart → checkout).
 
